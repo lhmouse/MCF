@@ -6,19 +6,23 @@
 #define MCF_STREAM_FILTERS_BUFFERING_INPUT_STREAM_FILTER_HPP_
 
 #include "AbstractInputStreamFilter.hpp"
+#include "../SmartPointers/UniquePtr.hpp"
 
 namespace MCF {
 
 class BufferingInputStreamFilter : public AbstractInputStreamFilter {
+private:
+	UniquePtr<unsigned char []> x_pbyBuffer;
+	std::size_t x_uCapacity = 0;
+	std::size_t x_uOffset = 0;
+	std::size_t x_uSize = 0;
+
 public:
 	explicit BufferingInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: AbstractInputStreamFilter(std::move(pUnderlyingStream))
 	{
 	}
 	~BufferingInputStreamFilter() override;
-
-	BufferingInputStreamFilter(BufferingInputStreamFilter &&) noexcept = default;
-	BufferingInputStreamFilter &operator=(BufferingInputStreamFilter &&) noexcept = default;
 
 public:
 	int Peek() override;
@@ -27,16 +31,7 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
-
-	void Swap(BufferingInputStreamFilter &rhs) noexcept {
-		AbstractInputStreamFilter::Y_Swap(rhs);
-		using std::swap;
-	}
-
-public:
-	friend void swap(BufferingInputStreamFilter &lhs, BufferingInputStreamFilter &rhs) noexcept {
-		lhs.Swap(rhs);
-	}
+	void Invalidate() override;
 };
 
 }

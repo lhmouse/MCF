@@ -14,19 +14,14 @@ namespace MCF {
 
 class Crc32OutputStream : public AbstractOutputStream {
 private:
-	int x_nChunkOffset;
+	int x_nChunkOffset = -1;
 	std::uint8_t x_abyChunk[8];
 	std::uint32_t x_u32Reg;
 
 public:
-	Crc32OutputStream() noexcept
-		: x_nChunkOffset(-1)
-	{
+	Crc32OutputStream() noexcept {
 	}
 	~Crc32OutputStream() override;
-
-	Crc32OutputStream(Crc32OutputStream &&) noexcept = default;
-	Crc32OutputStream &operator=(Crc32OutputStream &&) noexcept = default;
 
 private:
 	void X_Initialize() noexcept;
@@ -34,24 +29,12 @@ private:
 	void X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept;
 
 public:
-	void Put(unsigned char byData) override;
-	void Put(const void *pData, std::size_t uSize) override;
-	void Flush(bool bHard) override;
+	void Put(unsigned char byData) noexcept override;
+	void Put(const void *pData, std::size_t uSize) noexcept override;
+	void Flush(bool bHard) noexcept override;
 
 	void Reset() noexcept;
 	std::uint32_t Finalize() noexcept;
-
-	void Swap(Crc32OutputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_nChunkOffset, rhs.x_nChunkOffset);
-		swap(x_abyChunk,     rhs.x_abyChunk);
-		swap(x_u32Reg,       rhs.x_u32Reg);
-	}
-
-public:
-	friend void swap(Crc32OutputStream &lhs, Crc32OutputStream &rhs) noexcept {
-		lhs.Swap(rhs);
-	}
 };
 
 }

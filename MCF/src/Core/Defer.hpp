@@ -18,8 +18,8 @@ namespace Impl_Defer {
 		std::decay_t<PredictorT> vPredictor;
 
 		~DeferredCallback() noexcept(false) {
-			if(vPredictor()){
-				vCallback();
+			if(std::forward<PredictorT>(vPredictor)()){
+				std::forward<CallbackT>(vCallback)();
 			}
 		}
 	};

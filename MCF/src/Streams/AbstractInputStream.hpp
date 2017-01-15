@@ -13,10 +13,10 @@ namespace MCF {
 class AbstractInputStream : public PolyIntrusiveBase<AbstractInputStream> {
 public:
 	AbstractInputStream() noexcept = default;
-	~AbstractInputStream() override = 0;
+	~AbstractInputStream() override;
 
-	AbstractInputStream(AbstractInputStream &&) noexcept = default;
-	AbstractInputStream &operator=(AbstractInputStream &&) noexcept = default;
+	AbstractInputStream(const AbstractInputStream &) = delete;
+	AbstractInputStream &operator=(const AbstractInputStream &) = delete;
 
 public:
 	virtual int Peek() = 0;
@@ -25,6 +25,7 @@ public:
 	virtual std::size_t Peek(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Discard(std::size_t uSize) = 0;
+	virtual void Invalidate() = 0;
 };
 
 }

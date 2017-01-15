@@ -13,16 +13,18 @@ namespace MCF {
 class StringOutputStream : public AbstractOutputStream {
 private:
 	NarrowString x_vString;
+	std::size_t x_uOffset;
 
 public:
-	explicit StringOutputStream(NarrowString vString = NarrowString()) noexcept
-		: x_vString(std::move(vString))
+	StringOutputStream() noexcept
+		: x_vString(), x_uOffset(0)
+	{
+	}
+	explicit StringOutputStream(NarrowString vString, std::size_t uOffset = 0) noexcept
+		: x_vString(std::move(vString)), x_uOffset(uOffset)
 	{
 	}
 	~StringOutputStream() override;
-
-	StringOutputStream(StringOutputStream &&) noexcept = default;
-	StringOutputStream &operator=(StringOutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;
@@ -35,18 +37,16 @@ public:
 	NarrowString &GetString() noexcept {
 		return x_vString;
 	}
-	void SetString(NarrowString vString) noexcept {
+	void SetString(NarrowString &&vString, std::size_t uOffset = 0) noexcept {
 		x_vString = std::move(vString);
+		x_uOffset = uOffset;
 	}
 
-	void Swap(StringOutputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_vString, rhs.x_vString);
+	std::size_t GetOffset() const noexcept {
+		return x_uOffset;
 	}
-
-public:
-	friend void swap(StringOutputStream &lhs, StringOutputStream &rhs) noexcept {
-		lhs.Swap(rhs);
+	void SetOffset(std::size_t uOffset) noexcept {
+		x_uOffset = uOffset;
 	}
 };
 

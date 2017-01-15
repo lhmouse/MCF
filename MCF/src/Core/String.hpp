@@ -36,7 +36,7 @@ public:
 	using Char = typename View::Char;
 
 	enum : std::size_t {
-		kNpos = View::kNpos
+		kNpos = View::kNpos,
 	};
 
 	// 容器需求。
@@ -469,7 +469,7 @@ public:
 		Reserve(uNewCapacity);
 	}
 
-	void Resize(std::size_t uNewSize){
+	Char *Resize(std::size_t uNewSize){
 		const auto uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			Reserve(uNewSize);
@@ -477,6 +477,7 @@ public:
 		} else if(uNewSize < uOldSize){
 			Pop(uOldSize - uNewSize);
 		}
+		return GetData();
 	}
 	Char *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();

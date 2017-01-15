@@ -129,7 +129,7 @@ typedef _MCFCRT_STD uintptr_t __gthread_t;
 
 extern int __MCFCRT_gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT;
 #define __gthread_create __MCFCRT_gthread_create
-extern int __MCFCRT_gthread_join(__gthread_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_gthread_join(__gthread_t __tid, void **_MCFCRT_RESTRICT __exit_code_ret) _MCFCRT_NOEXCEPT;
 #define __gthread_join __MCFCRT_gthread_join
 extern int __MCFCRT_gthread_detach(__gthread_t __tid) _MCFCRT_NOEXCEPT;
 #define __gthread_detach __MCFCRT_gthread_detach
@@ -144,12 +144,12 @@ extern int __MCFCRT_gthread_yield(void) _MCFCRT_NOEXCEPT;
 
 typedef struct timespec __gthread_time_t;
 
-extern int __MCFCRT_gthread_mutex_timedlock(__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_gthread_mutex_timedlock(__gthread_mutex_t *_MCFCRT_RESTRICT __mutex, const __gthread_time_t *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define __gthread_mutex_timedlock __MCFCRT_gthread_mutex_timedlock
-extern int __MCFCRT_gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *restrict __recur_mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *_MCFCRT_RESTRICT __recur_mutex, const __gthread_time_t *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define __gthread_recursive_mutex_timedlock __MCFCRT_gthread_recursive_mutex_timedlock
 
-extern int __MCFCRT_gthread_cond_timedwait(__gthread_cond_t *restrict __cond, __gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_gthread_cond_timedwait(__gthread_cond_t *_MCFCRT_RESTRICT __cond, __gthread_mutex_t *_MCFCRT_RESTRICT __mutex, const __gthread_time_t *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define __gthread_cond_timedwait __MCFCRT_gthread_cond_timedwait
 
 _MCFCRT_EXTERN_C_END

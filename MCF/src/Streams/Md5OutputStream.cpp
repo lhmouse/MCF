@@ -368,10 +368,10 @@ void Md5OutputStream::X_Finalize(std::uint8_t (&abyChunk)[64], unsigned uBytesIn
 	X_Update(abyChunk);
 }
 
-void Md5OutputStream::Put(unsigned char byData){
+void Md5OutputStream::Put(unsigned char byData) noexcept {
 	Put(&byData, 1);
 }
-void Md5OutputStream::Put(const void *pData, std::size_t uSize){
+void Md5OutputStream::Put(const void *pData, std::size_t uSize) noexcept {
 	if(x_nChunkOffset < 0){
 		X_Initialize();
 		x_nChunkOffset = 0;
@@ -400,7 +400,7 @@ void Md5OutputStream::Put(const void *pData, std::size_t uSize){
 	}
 	x_u64BytesTotal += uSize;
 }
-void Md5OutputStream::Flush(bool bHard){
+void Md5OutputStream::Flush(bool bHard) noexcept {
 	(void)bHard;
 }
 

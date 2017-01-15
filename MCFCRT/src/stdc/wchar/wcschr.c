@@ -19,7 +19,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 			return (wchar_t *)rp;
 		}
 		if(rc == 0){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		++rp;
 	}
@@ -36,7 +36,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));
 		mask = (uint32_t)_mm_movemask_epi8(xt);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		rp += 16;
 	}

@@ -155,18 +155,10 @@ pkginclude_Streams_HEADERS = \
 
 pkginclude_StreamFiltersdir = ${pkgincludedir}/StreamFilters
 pkginclude_StreamFilters_HEADERS = \
-	src/StreamFilters/_BufferedInputStream.hpp	\
-	src/StreamFilters/_BufferedOutputStream.hpp	\
 	src/StreamFilters/AbstractInputStreamFilter.hpp	\
 	src/StreamFilters/AbstractOutputStreamFilter.hpp	\
-	src/StreamFilters/Base64InputStreamFilter.hpp	\
-	src/StreamFilters/Base64OutputStreamFilter.hpp	\
-	src/StreamFilters/HexInputStreamFilter.hpp	\
-	src/StreamFilters/HexOutputStreamFilter.hpp	\
 	src/StreamFilters/BufferingInputStreamFilter.hpp	\
-	src/StreamFilters/BufferingOutputStreamFilter.hpp	\
-	src/StreamFilters/TextInputStreamFilter.hpp	\
-	src/StreamFilters/TextOutputStreamFilter.hpp
+	src/StreamFilters/BufferingOutputStreamFilter.hpp
 
 mcf_sources = \
 	src/Core/_KernelObjectBase.cpp	\
@@ -216,18 +208,10 @@ mcf_sources = \
 	src/Streams/StringInputStream.cpp	\
 	src/Streams/StringOutputStream.cpp	\
 	src/Streams/RandomInputStream.cpp	\
-	src/StreamFilters/_BufferedInputStream.cpp	\
-	src/StreamFilters/_BufferedOutputStream.cpp	\
 	src/StreamFilters/AbstractInputStreamFilter.cpp	\
 	src/StreamFilters/AbstractOutputStreamFilter.cpp	\
-	src/StreamFilters/Base64InputStreamFilter.cpp	\
-	src/StreamFilters/Base64OutputStreamFilter.cpp	\
-	src/StreamFilters/HexInputStreamFilter.cpp	\
-	src/StreamFilters/HexOutputStreamFilter.cpp	\
 	src/StreamFilters/BufferingInputStreamFilter.cpp	\
-	src/StreamFilters/BufferingOutputStreamFilter.cpp	\
-	src/StreamFilters/TextInputStreamFilter.cpp	\
-	src/StreamFilters/TextOutputStreamFilter.cpp
+	src/StreamFilters/BufferingOutputStreamFilter.cpp
 
 bin_PROGRAMS = \
 	MCF-1.dll

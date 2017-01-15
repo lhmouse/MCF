@@ -38,7 +38,7 @@ static inline void *_MCFCRT_calloc(_MCFCRT_STD size_t __uCount, _MCFCRT_STD size
 	_MCFCRT_STD size_t __uSize = 0;
 	if((__uCount != 0) && (__uBlockSize != 0)){
 		if(__uCount > SIZE_MAX / __uBlockSize){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		__uSize = __uCount * __uBlockSize;
 	}

@@ -21,7 +21,7 @@ _MCFCRT_EXTERN_C_BEGIN
 extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT {
-	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), nullptr, __destructor ? &__MCFCRT_GthreadTlsDestructor : nullptr, (_MCFCRT_STD intptr_t)__destructor);
+	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_GthreadTlsDestructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return ENOMEM;
 	}
@@ -36,10 +36,10 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN void *__MCFCRT_gthread_getspecific(__gthread_k
 	void *__storage;
 	const bool __success = _MCFCRT_TlsGet(__key, &__storage);
 	if(!__success){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 	if(!__storage){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 	return *(void **)__storage;
 }
@@ -198,7 +198,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_create(__gthread_t *__tid
 	*__tid_ret = __tid;
 	return 0;
 }
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_join(__gthread_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_join(__gthread_t __tid, void **_MCFCRT_RESTRICT __exit_code_ret) _MCFCRT_NOEXCEPT {
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return EDEADLK;
 	}
@@ -210,7 +210,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_join(__gthread_t __tid, v
 		}
 		*__exit_code_ret = __control.__exit_code;
 	} else {
-		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, nullptr);
+		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, _MCFCRT_NULLPTR);
 		if(__error != __MCFCRT_kMopthreadSuccess){
 			return ESRCH;
 		}
@@ -239,7 +239,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_yield(void) _MCFCRT_NOEXC
 	return 0;
 }
 
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *restrict __utc_timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
 	const long double __utc_timeout_ms = (long double)__utc_timeout->tv_sec * 1.0e3l + (long double)__utc_timeout->tv_nsec / 1.0e6l;
 	const long double __utc_now_ms = (long double)_MCFCRT_GetUtcClock();
 	const long double __delta_ms = __utc_timeout_ms - __utc_now_ms;
@@ -257,14 +257,14 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslate
 	return __mono_now_ms + (_MCFCRT_STD uint64_t)(_MCFCRT_STD int64_t)(__delta_ms + 0.999999l);
 }
 
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_mutex_timedlock(__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_mutex_timedlock(__gthread_mutex_t *_MCFCRT_RESTRICT __mutex, const __gthread_time_t *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_GthreadTranslateTimeout(__timeout);
 	if(!_MCFCRT_WaitForMutex(__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 		return ETIMEDOUT;
 	}
 	return 0;
 }
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *restrict __recur_mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *_MCFCRT_RESTRICT __recur_mutex, const __gthread_time_t *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 	const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED);
 	if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
@@ -279,7 +279,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_timedlock
 	return 0;
 }
 
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_timedwait(__gthread_cond_t *restrict __cond, __gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_timedwait(__gthread_cond_t *_MCFCRT_RESTRICT __cond, __gthread_mutex_t *_MCFCRT_RESTRICT __mutex, const __gthread_time_t *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_GthreadTranslateTimeout(__timeout);
 	if(!_MCFCRT_WaitForConditionVariable(__cond, &__MCFCRT_GthreadUnlockCallbackMutex, &__MCFCRT_GthreadRelockCallbackMutex, (_MCFCRT_STD intptr_t)__mutex,
 		_MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT, __mono_timeout_ms))

@@ -14,9 +14,6 @@ public:
 	NullInputStream() noexcept = default;
 	~NullInputStream() override;
 
-	NullInputStream(NullInputStream &&) noexcept = default;
-	NullInputStream &operator=(NullInputStream &&) noexcept = default;
-
 public:
 	int Peek() noexcept override;
 	int Get() noexcept override;
@@ -24,16 +21,7 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Discard(std::size_t uSize) noexcept override;
-
-	void Swap(NullInputStream &rhs) noexcept {
-		using std::swap;
-		(void)rhs;
-	}
-
-public:
-	friend void swap(NullInputStream &lhs, NullInputStream &rhs) noexcept {
-		lhs.Swap(rhs);
-	}
+	void Invalidate() noexcept override;
 };
 
 }

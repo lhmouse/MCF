@@ -18,7 +18,7 @@ typedef struct __MCFCRT_tagThreadHandle {
 	int __n;
 } *_MCFCRT_ThreadHandle;
 
-extern _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc __pfnThreadProc, void *__pParam, bool __bSuspended, _MCFCRT_STD uintptr_t *restrict __puThreadId) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc __pfnThreadProc, void *__pParam, bool __bSuspended, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __puThreadId) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
 extern void _MCFCRT_Sleep(_MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
@@ -68,7 +68,7 @@ typedef struct __MCFCRT_tagTlsKeyHandle {
 	int __n;
 } *_MCFCRT_TlsKeyHandle;
 
-// _MCFCRT_TlsAllocKey() returns `nullptr` upon failure.
+// _MCFCRT_TlsAllocKey() returns `_MCFCRT_NULLPTR` upon failure.
 extern _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(_MCFCRT_STD size_t __uSize, _MCFCRT_TlsConstructor __pfnConstructor, _MCFCRT_TlsDestructor __pfnDestructor, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 
@@ -79,12 +79,12 @@ extern _MCFCRT_STD intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle __hTlsKey
 
 // _MCFCRT_TlsGet() never fails, provided __hTlsKey is a valid key.
 // If the storage for the current thread has not been initialized, a null pointer is returned into *__ppStorage.
-extern bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
 // _MCFCRT_TlsRequire() is identical to _MCFCRT_TlsGet() if the storage for the current thread has already been initialized.
 // If it is not, the storage is allocated and zeroed, then the constructor is called, and if the constructor returns 0, a pointer to the initialized storage is returned into *__ppStorage.
 // If memory allocation fails, `false` is returned when GetLastError() returns ERROR_NOT_ENOUGH_MEMORY.
 // If the constructor returns a non-zero value, the storage is deallocated immediately and `false` is returned when GetLastError() returns that non-zero value.
-extern bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
 
 typedef void (*_MCFCRT_AtThreadExitCallback)(_MCFCRT_STD intptr_t __nContext);
 

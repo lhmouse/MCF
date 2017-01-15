@@ -28,13 +28,6 @@ public:
 	}
 	~FileInputStream() override;
 
-	FileInputStream(FileInputStream &&) noexcept = default;
-	FileInputStream &operator=(FileInputStream &&) noexcept = default;
-
-private:
-	std::size_t X_ReadFromCurrentOffset(void *pData, std::size_t uSize);
-	std::size_t X_DiscardFromCurrentOffset(std::size_t uSize);
-
 public:
 	int Peek() override;
 	int Get() override;
@@ -42,6 +35,7 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
+	void Invalidate() override;
 
 	const File &GetFile() const noexcept {
 		return x_vFile;
@@ -59,17 +53,6 @@ public:
 	}
 	void SetOffset(std::uint64_t u64Offset) noexcept {
 		x_u64Offset = u64Offset;
-	}
-
-	void Swap(FileInputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_vFile,     rhs.x_vFile);
-		swap(x_u64Offset, rhs.x_u64Offset);
-	}
-
-public:
-	friend void swap(FileInputStream &lhs, FileInputStream &rhs) noexcept {
-		lhs.Swap(rhs);
 	}
 };
 

@@ -25,7 +25,7 @@ typedef struct tagAtQuickExitCallbackBlock {
 } AtQuickExitCallbackBlock;
 
 static _MCFCRT_Mutex              g_vAtQuickExitMutex      = { 0 };
-static AtQuickExitCallbackBlock * g_pAtQuickExitLast       = nullptr;
+static AtQuickExitCallbackBlock * g_pAtQuickExitLast       = _MCFCRT_NULLPTR;
 
 static volatile bool              g_bAtQuickExitSpareInUse = false;
 static AtQuickExitCallbackBlock   g_vAtQuickExitSpare;

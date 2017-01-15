@@ -28,13 +28,6 @@ public:
 	}
 	~FileOutputStream() override;
 
-	FileOutputStream(FileOutputStream &&) noexcept = default;
-	FileOutputStream &operator=(FileOutputStream &&) noexcept = default;
-
-private:
-	std::size_t X_WriteFromCurrentOffset(const void *pData, std::size_t uSize);
-	void X_Flush(bool bHard);
-
 public:
 	void Put(unsigned char byData) override;
 	void Put(const void *pData, std::size_t uSize) override;
@@ -56,17 +49,6 @@ public:
 	}
 	void SetOffset(std::uint64_t u64Offset) noexcept {
 		x_u64Offset = u64Offset;
-	}
-
-	void Swap(FileOutputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_vFile,     rhs.x_vFile);
-		swap(x_u64Offset, rhs.x_u64Offset);
-	}
-
-public:
-	friend void swap(FileOutputStream &lhs, FileOutputStream &rhs) noexcept {
-		lhs.Swap(rhs);
 	}
 };
 

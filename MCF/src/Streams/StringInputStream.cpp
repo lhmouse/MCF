@@ -4,7 +4,6 @@
 
 #include "StringInputStream.hpp"
 #include "../Core/MinMax.hpp"
-#include "../Core/CopyMoveFill.hpp"
 
 namespace MCF {
 
@@ -12,63 +11,54 @@ StringInputStream::~StringInputStream(){
 }
 
 int StringInputStream::Peek(){
-	const auto uOffset = x_uOffset;
-	const auto uSizeAvail = x_vString.GetSize();
-	if(uOffset >= uSizeAvail){
-		return -1;
+	int nRet = -1;
+	unsigned char byData;
+	if(StringInputStream::Peek(&byData, 1) >= 1){
+		nRet = byData;
 	}
-	const int nRet = static_cast<unsigned char>(x_vString.UncheckedGet(uOffset));
 	return nRet;
 }
 int StringInputStream::Get(){
-	const auto uOffset = x_uOffset;
-	const auto uSizeAvail = x_vString.GetSize();
-	if(uOffset >= uSizeAvail){
-		return -1;
+	int nRet = -1;
+	unsigned char byData;
+	if(StringInputStream::Get(&byData, 1) >= 1){
+		nRet = byData;
 	}
-	const int nRet = static_cast<unsigned char>(x_vString.UncheckedGet(uOffset));
-	x_uOffset = uOffset + 1;
 	return nRet;
 }
 bool StringInputStream::Discard(){
-	const auto uOffset = x_uOffset;
-	const auto uSizeAvail = x_vString.GetSize();
-	if(uOffset >= uSizeAvail){
-		return false;
+	bool bRet = false;
+	if(StringInputStream::Discard(1) >= 1){
+		bRet = true;
 	}
-	x_uOffset = uOffset + 1;
-	return true;
+	return bRet;
 }
 std::size_t StringInputStream::Peek(void *pData, std::size_t uSize){
-	const auto uOffset = x_uOffset;
-	const auto uSizeAvail = x_vString.GetSize();
-	if(uOffset >= uSizeAvail){
-		return false;
+	std::size_t uBytesTotal = 0;
+	const auto uStringSize = x_vString.GetSize();
+	if(x_uOffset < uStringSize){
+		const auto uBytesRead = Min(uSize, uStringSize - x_uOffset);
+		std::memcpy(pData, x_vString.GetData() + x_uOffset, uBytesRead);
+		uBytesTotal += uBytesRead;
 	}
-	const auto uBytesToCopy = Min(uSize, uSizeAvail - uOffset);
-	CopyN(static_cast<char *>(pData), x_vString.GetBegin() + uOffset, uBytesToCopy);
-	return uBytesToCopy;
+	return uBytesTotal;
 }
 std::size_t StringInputStream::Get(void *pData, std::size_t uSize){
-	const auto uOffset = x_uOffset;
-	const auto uSizeAvail = x_vString.GetSize();
-	if(uOffset >= uSizeAvail){
-		return false;
-	}
-	const auto uBytesToCopy = Min(uSize, uSizeAvail - uOffset);
-	CopyN(static_cast<char *>(pData), x_vString.GetBegin() + uOffset, uBytesToCopy);
-	x_uOffset = uOffset + uBytesToCopy;
-	return uBytesToCopy;
+	const auto uBytesTotal = StringInputStream::Peek(pData, uSize);
+	x_uOffset += uBytesTotal;
+	return uBytesTotal;
 }
 std::size_t StringInputStream::Discard(std::size_t uSize){
-	const auto uOffset = x_uOffset;
-	const auto uSizeAvail = x_vString.GetSize();
-	if(uOffset >= uSizeAvail){
-		return false;
+	std::size_t uBytesTotal = 0;
+	const auto uStringSize = x_vString.GetSize();
+	if(x_uOffset < uStringSize){
+		const auto uBytesDiscarded = Min(uSize, uStringSize - x_uOffset);
+		uBytesTotal += uBytesDiscarded;
 	}
-	const auto uBytesToCopy = Min(uSize, uSizeAvail - uOffset);
-	x_uOffset = uOffset + uBytesToCopy;
-	return uBytesToCopy;
+	x_uOffset += uBytesTotal;
+	return uBytesTotal;
+}
+void StringInputStream::Invalidate(){
 }
 
 }

@@ -34,5 +34,7 @@ std::size_t RandomInputStream::Get(void *pData, std::size_t uSize) noexcept {
 std::size_t RandomInputStream::Discard(std::size_t uSize) noexcept {
 	return uSize;
 }
+void RandomInputStream::Invalidate() noexcept {
+}
 
 }

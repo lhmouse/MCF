@@ -10,10 +10,17 @@ StringOutputStream::~StringOutputStream(){
 }
 
 void StringOutputStream::Put(unsigned char byData){
-	x_vString.Append(static_cast<char>(byData), 1);
+	StringOutputStream::Put(&byData, 1);
 }
 void StringOutputStream::Put(const void *pData, std::size_t uSize){
-	x_vString.Append(static_cast<const char *>(pData), uSize);
+	const auto uBytesTotal = uSize;
+	const auto uWriteEnd = x_uOffset + uBytesTotal;
+	const auto uStringSizeOld = x_vString.GetSize();
+	if(uStringSizeOld < uWriteEnd){
+		x_vString.Append('\0', uWriteEnd - uStringSizeOld);
+	}
+	std::memcpy(x_vString.GetData() + x_uOffset, pData, uBytesTotal);
+	x_uOffset += uBytesTotal;
 }
 void StringOutputStream::Flush(bool bHard){
 	(void)bHard;

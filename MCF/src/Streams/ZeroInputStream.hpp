@@ -11,11 +11,9 @@ namespace MCF {
 
 class ZeroInputStream : public AbstractInputStream {
 public:
-	ZeroInputStream() noexcept = default;
+	ZeroInputStream() noexcept {
+	}
 	~ZeroInputStream() override;
-
-	ZeroInputStream(ZeroInputStream &&) noexcept = default;
-	ZeroInputStream &operator=(ZeroInputStream &&) noexcept = default;
 
 public:
 	int Peek() noexcept override;
@@ -24,16 +22,7 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Discard(std::size_t uSize) noexcept override;
-
-	void Swap(ZeroInputStream &rhs) noexcept {
-		using std::swap;
-		(void)rhs;
-	}
-
-public:
-	friend void swap(ZeroInputStream &lhs, ZeroInputStream &rhs) noexcept {
-		lhs.Swap(rhs);
-	}
+	void Invalidate() noexcept override;
 };
 
 }

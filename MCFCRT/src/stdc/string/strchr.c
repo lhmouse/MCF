@@ -19,7 +19,7 @@ char *strchr(const char *s, int c){
 			return (char *)rp;
 		}
 		if(rc == 0){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		++rp;
 	}
@@ -35,7 +35,7 @@ char *strchr(const char *s, int c){
 		xt = _mm_cmpeq_epi8(xw, xz);
 		mask = (uint32_t)_mm_movemask_epi8(xt);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		rp += 16;
 	}

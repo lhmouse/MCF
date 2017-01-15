@@ -21,9 +21,6 @@ public:
 	}
 	~BufferInputStream() override;
 
-	BufferInputStream(BufferInputStream &&) noexcept = default;
-	BufferInputStream &operator=(BufferInputStream &&) noexcept = default;
-
 public:
 	int Peek() override;
 	int Get() override;
@@ -31,6 +28,7 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
+	void Invalidate() override;
 
 	const StreamBuffer &GetBuffer() const noexcept {
 		return x_vBuffer;
@@ -40,16 +38,6 @@ public:
 	}
 	void SetBuffer(StreamBuffer vBuffer) noexcept {
 		x_vBuffer = std::move(vBuffer);
-	}
-
-	void Swap(BufferInputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_vBuffer, rhs.x_vBuffer);
-	}
-
-public:
-	friend void swap(BufferInputStream &lhs, BufferInputStream &rhs) noexcept {
-		lhs.Swap(rhs);
 	}
 };
 

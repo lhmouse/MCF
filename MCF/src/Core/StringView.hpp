@@ -76,7 +76,7 @@ struct StringEncodingTrait<StringType::kWide> {
 
 namespace Impl_StringView {
 	enum : std::size_t {
-		kNpos = static_cast<std::size_t>(-1)
+		kNpos = static_cast<std::size_t>(-1),
 	};
 
 	template<typename CharT>

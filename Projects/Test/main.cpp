@@ -1,19 +1,24 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/ext/itoa.h>
-#include <MCFCRT/ext/atoi.h>
-#include <cstdio>
+#include <MCF/Core/String.hpp>
+#include <MCF/Streams/StringInputStream.hpp>
+#include <MCF/StreamFilters/BufferingInputStreamFilter.hpp>
+#include <MCF/StreamFilters/BufferingOutputStreamFilter.hpp>
+
+using namespace MCF;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	char str[256] = "-2147483648.123456";
-	char *ep;
-	::_MCFCRT_atoi_result r;
-	std::intptr_t v;
-	ep = ::_MCFCRT_atoi_d(&r, &v, str);
-	std::printf("r = %d, v = %td, chars_eaten = %td\n", r, v, ep - str);
-	ep = ::_MCFCRT_atoi0d(&r, &v, str, 4);
-	std::printf("r = %d, v = %td, chars_eaten = %td\n", r, v, ep - str);
-/*	ep = ::_MCFCRT_itoa_d(str, INT_MIN);
-	std::memcpy(ep, "_meow", 6);
-	std::printf("str = %s\n", str);
-*/	return 0;
+	const auto ss = MakeIntrusive<StringInputStream>();
+	ss->GetString().Append("0123456789abcdefghijklmnopqrstuvwxyz", 36);
+	std::printf("ss = %s\n", ss->GetString().GetStr() + ss->GetOffset());
+	const auto bs = MakeIntrusive<BufferingInputStreamFilter>(ss);
+	for(unsigned i = 0; i < 3; ++i){
+		char str[60];
+		auto len = bs->Get(str, 6);
+		str[len] = 0;
+		std::printf("> i = %u, str = %s\n", i, str);
+	}
+	std::printf("ss = %s\n", ss->GetString().GetStr() + ss->GetOffset());
+	bs->Invalidate();
+	std::printf("ss = %s\n", ss->GetString().GetStr() + ss->GetOffset());
+	return 0;
 }

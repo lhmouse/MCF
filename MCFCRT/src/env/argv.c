@@ -14,12 +14,12 @@
 		wchar_t cmdline[];  // 动态确定。
 		_MCFCRT_ArgItem stub;   // __pwszStr 指向 cmdline，__uLen 是后面的 argv 的元素容量。
 		_MCFCRT_ArgItem argv[]; // _MCFCRT_AllocArgv 返回的指针指向这里。
-		_MCFCRT_ArgItem nil;    // __pwszStr 为 nullptr，__uLen 为 0。
+		_MCFCRT_ArgItem nil;    // __pwszStr 为 _MCFCRT_NULLPTR，__uLen 为 0。
 	};
 */
 
 const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszCommandLine){
-	void *pStorage = nullptr;
+	void *pStorage = _MCFCRT_NULLPTR;
 
 	const size_t uCommandLineSize = (wcslen(pwszCommandLine) + 1) * sizeof(wchar_t);
 	const size_t uPrefixSize = ((uCommandLineSize - 1) / alignof(_MCFCRT_ArgItem) + 1) * alignof(_MCFCRT_ArgItem);
@@ -151,7 +151,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 		break;
 	}
 
-	pArgv[uArgc].__pwszStr = nullptr;
+	pArgv[uArgc].__pwszStr = _MCFCRT_NULLPTR;
 	pArgv[uArgc].__uLen = 0;
 
 	*puArgc = uArgc;
@@ -160,7 +160,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 jBadAlloc:
 	_MCFCRT_free(pStorage);
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	return nullptr;
+	return _MCFCRT_NULLPTR;
 }
 
 const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *puArgc){

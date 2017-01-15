@@ -31,14 +31,14 @@ void *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAd
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const size_t uRawSize = __MCFCRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 #else
 	const size_t uRawSize = uSize;
 #endif
 
 	for(;;){
-		unsigned char *pbyRet = nullptr;
+		unsigned char *pbyRet = _MCFCRT_NULLPTR;
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
@@ -76,7 +76,7 @@ void *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAd
 		}
 
 		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pbyRetAddr))){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 	}
 }
@@ -88,7 +88,7 @@ void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, cons
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const size_t uRawSize = __MCFCRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 #else
 	const size_t uRawSize = uSize;
@@ -123,7 +123,7 @@ void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, cons
 #endif
 
 	for(;;){
-		unsigned char *pbyRet = nullptr;
+		unsigned char *pbyRet = _MCFCRT_NULLPTR;
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
@@ -155,7 +155,7 @@ void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, cons
 		}
 
 		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pbyRetAddr))){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 	}
 }

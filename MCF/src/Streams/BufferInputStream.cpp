@@ -27,5 +27,7 @@ std::size_t BufferInputStream::Get(void *pData, std::size_t uSize){
 std::size_t BufferInputStream::Discard(std::size_t uSize){
 	return x_vBuffer.Discard(uSize);
 }
+void BufferInputStream::Invalidate(){
+}
 
 }

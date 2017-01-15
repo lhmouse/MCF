@@ -21,9 +21,6 @@ public:
 	}
 	~BufferOutputStream() override;
 
-	BufferOutputStream(BufferOutputStream &&) noexcept = default;
-	BufferOutputStream &operator=(BufferOutputStream &&) noexcept = default;
-
 public:
 	void Put(unsigned char byData) override;
 	void Put(const void *pData, std::size_t uSize) override;
@@ -37,16 +34,6 @@ public:
 	}
 	void SetBuffer(StreamBuffer vBuffer) noexcept {
 		x_vBuffer = std::move(vBuffer);
-	}
-
-	void Swap(BufferOutputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_vBuffer, rhs.x_vBuffer);
-	}
-
-public:
-	friend void swap(BufferOutputStream &lhs, BufferOutputStream &rhs) noexcept {
-		lhs.Swap(rhs);
 	}
 };
 

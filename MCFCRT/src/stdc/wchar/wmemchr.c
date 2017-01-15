@@ -16,7 +16,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & 30) != 0){
 		if(rp == rend){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		const wchar_t rc = *rp;
 		if(rc == c){
@@ -39,7 +39,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	}
 	for(;;){
 		if(rp == rend){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		const wchar_t rc = *rp;
 		if(rc == c){

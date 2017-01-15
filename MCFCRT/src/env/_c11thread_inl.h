@@ -37,7 +37,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_cnd_destroy(cnd_t *__cond_c) _
 	(void)__cond_c;
 }
 
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTranslateTimeout(const struct timespec *restrict __utc_timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTranslateTimeout(const struct timespec *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
 	const long double __utc_timeout_ms = (long double)__utc_timeout->tv_sec * 1.0e3l + (long double)__utc_timeout->tv_nsec / 1.0e6l;
 	const long double __utc_now_ms = (long double)_MCFCRT_GetUtcClock();
 	const long double __delta_ms = __utc_timeout_ms - __utc_now_ms;
@@ -55,7 +55,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTrans
 	return __mono_now_ms + (_MCFCRT_STD uint64_t)(_MCFCRT_STD int64_t)(__delta_ms + 0.999999l);
 }
 
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
 	if(!_MCFCRT_WaitForConditionVariable(&(__cond_c->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c,
 		_MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT, __mono_timeout_ms))
@@ -65,7 +65,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *restrict _
 	return thrd_success;
 }
 
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_wait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c) _MCFCRT_NOEXCEPT {
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_wait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c) _MCFCRT_NOEXCEPT {
 	_MCFCRT_WaitForConditionVariableForever(&(__cond_c->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c,
 		_MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT);
 	return thrd_success;
@@ -106,7 +106,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_lock(mtx_t *__mutex_c) _MCF
 	}
 	return thrd_success;
 }
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT  {
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT  {
 	if(__mutex_c->__mask & mtx_recursive){
 		const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 		const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__mutex_c->__owner), __ATOMIC_RELAXED);
@@ -194,7 +194,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_join(thrd_t __tid, int *__
 		}
 		*__exit_code_ret = __control.__exit_code;
 	} else {
-		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, nullptr);
+		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, _MCFCRT_NULLPTR);
 		if(__error != __MCFCRT_kMopthreadSuccess){
 			return thrd_error; // XXX: ESRCH
 		}
@@ -255,7 +255,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_thrd_yield(void) _MCFCRT_NOEXC
 extern void __MCFCRT_C11threadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT {
-	const tss_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), nullptr, __destructor ? &__MCFCRT_C11threadTlsDestructor : nullptr, (_MCFCRT_STD intptr_t)__destructor);
+	const tss_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_C11threadTlsDestructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return thrd_nomem;
 	}
@@ -269,10 +269,10 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void *__MCFCRT_tss_get(tss_t __key) _MCFCRT_
 	void *__storage;
 	const bool __success = _MCFCRT_TlsGet(__key, &__storage);
 	if(!__success){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 	if(!__storage){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 	return *(void **)__storage;
 }

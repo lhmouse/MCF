@@ -26,44 +26,47 @@ template<typename ObjectT>
 class PolyIntrusiveBase : public Impl_PolyIntrusivePtr::Unknown {
 public:
 	template<typename OtherT = ObjectT>
-	IntrusivePtr<const volatile OtherT, DefaultDeleter<PolyIntrusiveBase>> Share() const volatile {
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkShared<const volatile OtherT>(this);
+	IntrusivePtr<const volatile OtherT, DefaultDeleter<Deletable>> Share() const volatile {
+		return IntrusiveBase<Deletable>::Y_ForkShared<const volatile OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusivePtr<const OtherT, DefaultDeleter<PolyIntrusiveBase>> Share() const {
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkShared<const OtherT>(this);
+	IntrusivePtr<const OtherT, DefaultDeleter<Deletable>> Share() const {
+		return IntrusiveBase<Deletable>::Y_ForkShared<const OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusivePtr<volatile OtherT, DefaultDeleter<PolyIntrusiveBase>> Share() volatile {
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkShared<volatile OtherT>(this);
+	IntrusivePtr<volatile OtherT, DefaultDeleter<Deletable>> Share() volatile {
+		return IntrusiveBase<Deletable>::Y_ForkShared<volatile OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusivePtr<OtherT, DefaultDeleter<PolyIntrusiveBase>> Share(){
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkShared<OtherT>(this);
+	IntrusivePtr<OtherT, DefaultDeleter<Deletable>> Share(){
+		return IntrusiveBase<Deletable>::Y_ForkShared<OtherT>(this);
 	}
 
 	template<typename OtherT = ObjectT>
-	IntrusiveWeakPtr<const volatile OtherT, DefaultDeleter<PolyIntrusiveBase>> Weaken() const volatile {
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkWeak<const volatile OtherT>(this);
+	IntrusiveWeakPtr<const volatile OtherT, DefaultDeleter<Deletable>> Weaken() const volatile {
+		return IntrusiveBase<Deletable>::Y_ForkWeak<const volatile OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusiveWeakPtr<const OtherT, DefaultDeleter<PolyIntrusiveBase>> Weaken() const {
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkWeak<const OtherT>(this);
+	IntrusiveWeakPtr<const OtherT, DefaultDeleter<Deletable>> Weaken() const {
+		return IntrusiveBase<Deletable>::Y_ForkWeak<const OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusiveWeakPtr<volatile OtherT, DefaultDeleter<PolyIntrusiveBase>> Weaken() volatile {
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkWeak<volatile OtherT>(this);
+	IntrusiveWeakPtr<volatile OtherT, DefaultDeleter<Deletable>> Weaken() volatile {
+		return IntrusiveBase<Deletable>::Y_ForkWeak<volatile OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusiveWeakPtr<OtherT, DefaultDeleter<PolyIntrusiveBase>> Weaken(){
-		return IntrusiveBase<Impl_PolyIntrusivePtr::Deletable>::Y_ForkWeak<OtherT>(this);
+	IntrusiveWeakPtr<OtherT, DefaultDeleter<Deletable>> Weaken(){
+		return IntrusiveBase<Deletable>::Y_ForkWeak<OtherT>(this);
 	}
 };
 
 template<typename ObjectT>
-using PolyIntrusivePtr         = IntrusivePtr     <ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+using PolyIntrusivePtr             = IntrusivePtr     <ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
 template<typename ObjectT>
-using PolyIntrusiveWeakPtr     = IntrusiveWeakPtr <ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+using PolyIntrusiveWeakPtr         = IntrusiveWeakPtr <ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+
+using PolyIntrusivePtrUnknown      = PolyIntrusivePtr     <Impl_PolyIntrusivePtr::Unknown>;
+using PolyIntrusiveWeakPtrUnknown  = PolyIntrusiveWeakPtr <Impl_PolyIntrusivePtr::Unknown>;
 
 }
 

@@ -27,7 +27,7 @@ extern NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 static _MCFCRT_Mutex   g_vMopthreadMutex      = { 0 };
-static _MCFCRT_AvlRoot g_avlMopthreadControls = nullptr;
+static _MCFCRT_AvlRoot g_avlMopthreadControls = _MCFCRT_NULLPTR;
 
 bool __MCFCRT_ThreadEnvInit(void){
 	const DWORD dwTlsIndex = TlsAlloc();
@@ -48,9 +48,9 @@ void __MCFCRT_ThreadEnvUninit(void){
 
 _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	DWORD dwThreadId;
-	const HANDLE hThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, pfnThreadProc, pParam, bSuspended ? CREATE_SUSPENDED : 0, &dwThreadId);
+	const HANDLE hThread = CreateRemoteThread(GetCurrentProcess(), _MCFCRT_NULLPTR, 0, pfnThreadProc, pParam, bSuspended ? CREATE_SUSPENDED : 0, &dwThreadId);
 	if(!hThread){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 	if(puThreadId){
 		*puThreadId = dwThreadId;
@@ -113,7 +113,7 @@ bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle hThread, uint64_t u64UntilFastMo
 	return true;
 }
 void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle hThread){
-	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
+	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, _MCFCRT_NULLPTR);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() failed.");
 }
 
@@ -217,7 +217,7 @@ static unsigned long MopthreadProcNative(void *pParam){
 	__MCFCRT_SEH_TOP_END
 
 	_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	SignalMutexAndExitThread(&g_vMopthreadMutex, pControl, nullptr, 0);
+	SignalMutexAndExitThread(&g_vMopthreadMutex, pControl, _MCFCRT_NULLPTR, 0);
 }
 
 static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams, bool bJoinable){
@@ -370,7 +370,7 @@ static inline void MopthreadGlobalLock(HANDLE *phThread, uintptr_t uTid){
 		_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlMopthreadControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
 		if(!pControl){
-			*phThread = nullptr;
+			*phThread = _MCFCRT_NULLPTR;
 		} else {
 			*phThread = pControl->hThread;
 		}
@@ -505,17 +505,17 @@ static TlsThread *RequireTlsForCurrentThread(void){
 	if(!pThread){
 		pThread = _MCFCRT_malloc(sizeof(TlsThread));
 		if(!pThread){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
-		pThread->avlObjects     = nullptr;
-		pThread->pFirstByThread = nullptr;
-		pThread->pLastByThread  = nullptr;
+		pThread->avlObjects     = _MCFCRT_NULLPTR;
+		pThread->pFirstByThread = _MCFCRT_NULLPTR;
+		pThread->pLastByThread  = _MCFCRT_NULLPTR;
 
 		if(!TlsSetValue(g_dwTlsIndex, pThread)){
 			const DWORD dwErrorCode = GetLastError();
 			_MCFCRT_free(pThread);
 			SetLastError(dwErrorCode);
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 	}
 	return pThread;
@@ -534,7 +534,7 @@ static TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
 	_MCFCRT_ASSERT(pThread);
 
 	if(!pKey){
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 
 	const TlsObjectKey vObjectKey = { pKey, pKey->uCounter };
@@ -547,12 +547,12 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 		const size_t uSizeToAlloc = sizeof(TlsObject) + uSize;
 		if(uSizeToAlloc < sizeof(TlsObject)){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		pObject = _MCFCRT_malloc(uSizeToAlloc);
 		if(!pObject){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 #ifndef NDEBUG
 		memset(pObject, 0xAA, sizeof(*pObject));
@@ -564,7 +564,7 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 			if(dwErrorCode != 0){
 				_MCFCRT_free(pObject);
 				SetLastError(dwErrorCode);
-				return nullptr;
+				return _MCFCRT_NULLPTR;
 			}
 		}
 
@@ -572,7 +572,7 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 		pObject->nContext      = nContext;
 
 		TlsObject *const pPrev = pThread->pLastByThread;
-		TlsObject *const pNext = nullptr;
+		TlsObject *const pNext = _MCFCRT_NULLPTR;
 		if(pPrev){
 			pPrev->pNextByThread = pObject;
 		} else {
@@ -610,7 +610,7 @@ void __MCFCRT_TlsCleanup(void){
 
 		TlsObject *const pPrev = pObject->pPrevByThread;
 		if(pPrev){
-			pPrev->pNextByThread = nullptr;
+			pPrev->pNextByThread = _MCFCRT_NULLPTR;
 		}
 		pThread->pLastByThread = pPrev;
 
@@ -621,7 +621,7 @@ void __MCFCRT_TlsCleanup(void){
 		_MCFCRT_free(pObject);
 	}
 
-	const bool bSucceeded = TlsSetValue(g_dwTlsIndex, nullptr);
+	const bool bSucceeded = TlsSetValue(g_dwTlsIndex, _MCFCRT_NULLPTR);
 	_MCFCRT_ASSERT(bSucceeded);
 	_MCFCRT_free(pThread);
 }
@@ -632,7 +632,7 @@ _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pf
 	TlsKey *const pKey = _MCFCRT_malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 	pKey->uCounter       = __atomic_add_fetch(&s_uTlsKeyCounter, 1, __ATOMIC_RELAXED);
 	pKey->uSize          = uSize;
@@ -675,12 +675,12 @@ bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	}
 	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
-		*ppStorage = nullptr;
+		*ppStorage = _MCFCRT_NULLPTR;
 		return true;
 	}
 	TlsObject *const pObject = GetTlsObject(pThread, pKey);
 	if(!pObject){
-		*ppStorage = nullptr;
+		*ppStorage = _MCFCRT_NULLPTR;
 		return true;
 	}
 	*ppStorage = pObject->abyStorage;
@@ -729,13 +729,13 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	if(!pThread){
 		return false;
 	}
-	AtExitCallbackBlock *pBlock = nullptr;
+	AtExitCallbackBlock *pBlock = _MCFCRT_NULLPTR;
 	TlsObject *pObject = pThread->pLastByThread;
 	if(pObject && (pObject->pfnDestructor == &CrtAtThreadExitDestructor)){
 		pBlock = (void *)pObject->abyStorage;
 	}
 	if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
-		pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallbackBlock), &CrtAtThreadExitConstructor, &CrtAtThreadExitDestructor, 0);
+		pObject = RequireTlsObject(pThread, _MCFCRT_NULLPTR, sizeof(AtExitCallbackBlock), &CrtAtThreadExitConstructor, &CrtAtThreadExitDestructor, 0);
 		if(!pObject){
 			return false;
 		}

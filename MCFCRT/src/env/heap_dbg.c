@@ -58,8 +58,8 @@ static void DumpMemoryLeaks(_MCFCRT_AvlRoot avlBlocks){
 	_MCFCRT_Bail(L"__MCFCRT_HeapDbgUninit() 失败：侦测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 }
 
-static HANDLE          g_hMapAllocator = nullptr;
-static _MCFCRT_AvlRoot g_avlBlocks     = nullptr;
+static HANDLE          g_hMapAllocator = _MCFCRT_NULLPTR;
+static _MCFCRT_AvlRoot g_avlBlocks     = _MCFCRT_NULLPTR;
 
 #endif
 
@@ -81,10 +81,10 @@ bool __MCFCRT_HeapDbgInit(void){
 void __MCFCRT_HeapDbgUninit(void){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const HANDLE hAllocator = g_hMapAllocator;
-	g_hMapAllocator = nullptr;
+	g_hMapAllocator = _MCFCRT_NULLPTR;
 
 	const _MCFCRT_AvlRoot avlBlocks = g_avlBlocks;
-	g_avlBlocks = nullptr;
+	g_avlBlocks = _MCFCRT_NULLPTR;
 
 	DumpMemoryLeaks(avlBlocks);
 	HeapDestroy(hAllocator);

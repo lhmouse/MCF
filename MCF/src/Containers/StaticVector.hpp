@@ -287,13 +287,14 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Resize(std::size_t uSize, const ParamsT &...vParams){
+	Element *Resize(std::size_t uSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		if(uSize > uOldSize){
 			Append(uSize - uOldSize, vParams...);
 		} else {
 			Pop(uOldSize - uSize);
 		}
+		return GetData();
 	}
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){

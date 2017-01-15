@@ -16,14 +16,15 @@ private:
 	std::size_t x_uOffset;
 
 public:
-	explicit StringInputStream(NarrowString vString = NarrowString()) noexcept
-		: x_vString(std::move(vString)), x_uOffset(0)
+	StringInputStream() noexcept
+		: x_vString(), x_uOffset(0)
+	{
+	}
+	explicit StringInputStream(NarrowString vString, std::size_t uOffset = 0) noexcept
+		: x_vString(std::move(vString)), x_uOffset(uOffset)
 	{
 	}
 	~StringInputStream() override;
-
-	StringInputStream(StringInputStream &&) noexcept = default;
-	StringInputStream &operator=(StringInputStream &&) noexcept = default;
 
 public:
 	int Peek() override;
@@ -32,6 +33,7 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
+	void Invalidate() override;
 
 	const NarrowString &GetString() const noexcept {
 		return x_vString;
@@ -39,9 +41,9 @@ public:
 	NarrowString &GetString() noexcept {
 		return x_vString;
 	}
-	void SetString(NarrowString vString) noexcept {
+	void SetString(NarrowString &&vString, std::size_t uOffset = 0) noexcept {
 		x_vString = std::move(vString);
-		x_uOffset = 0;
+		x_uOffset = uOffset;
 	}
 
 	std::size_t GetOffset() const noexcept {
@@ -49,16 +51,6 @@ public:
 	}
 	void SetOffset(std::size_t uOffset) noexcept {
 		x_uOffset = uOffset;
-	}
-
-	void Swap(StringInputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_vString, rhs.x_vString);
-	}
-
-public:
-	friend void swap(StringInputStream &lhs, StringInputStream &rhs) noexcept {
-		lhs.Swap(rhs);
 	}
 };
 

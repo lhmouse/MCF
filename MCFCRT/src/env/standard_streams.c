@@ -42,10 +42,10 @@ static inline void DestroyBuffer(Stream *restrict pStream){
 		HeapFree(GetProcessHeap(), 0, pchStorageBegin);
 	}
 
-	pStream->pStorageBegin = nullptr;
-	pStream->pDataBegin    = nullptr;
-	pStream->pDataEnd      = nullptr;
-	pStream->pStorageEnd   = nullptr;
+	pStream->pStorageBegin = _MCFCRT_NULLPTR;
+	pStream->pDataBegin    = _MCFCRT_NULLPTR;
+	pStream->pDataEnd      = _MCFCRT_NULLPTR;
+	pStream->pStorageEnd   = _MCFCRT_NULLPTR;
 }
 static inline void Reset(Stream *restrict pStream, HANDLE hPipe, bool bBuffered){
 	DestroyBuffer(pStream);
@@ -219,7 +219,7 @@ static inline DWORD Populate(Stream *restrict pStream, size_t uThreshold, size_t
 				break;
 			}
 			DWORD dwCharsRead;
-			if(!ReadConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToRead, &dwCharsRead, nullptr)){
+			if(!ReadConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToRead, &dwCharsRead, _MCFCRT_NULLPTR)){
 				if(dwCharsRead == 0){
 					dwErrorCode = GetLastError();
 				}
@@ -236,7 +236,7 @@ static inline DWORD Populate(Stream *restrict pStream, size_t uThreshold, size_t
 				break;
 			}
 			DWORD dwBytesRead;
-			if(!ReadFile(GetHandle(pStream), GetData(pStream), dwBytesToRead, &dwBytesRead, nullptr)){
+			if(!ReadFile(GetHandle(pStream), GetData(pStream), dwBytesToRead, &dwBytesRead, _MCFCRT_NULLPTR)){
 				if(dwBytesRead == 0){
 					dwErrorCode = GetLastError();
 				}
@@ -271,7 +271,7 @@ static inline DWORD Flush(Stream *restrict pStream, size_t uThreshold){
 				break;
 			}
 			DWORD dwCharsWritten;
-			if(!WriteConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToWrite, &dwCharsWritten, nullptr)){
+			if(!WriteConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToWrite, &dwCharsWritten, _MCFCRT_NULLPTR)){
 				if(dwCharsWritten == 0){
 					dwErrorCode = GetLastError();
 				}
@@ -288,7 +288,7 @@ static inline DWORD Flush(Stream *restrict pStream, size_t uThreshold){
 				break;
 			}
 			DWORD dwBytesWritten;
-			if(!WriteFile(GetHandle(pStream), GetData(pStream), dwBytesToWrite, &dwBytesWritten, nullptr)){
+			if(!WriteFile(GetHandle(pStream), GetData(pStream), dwBytesToWrite, &dwBytesWritten, _MCFCRT_NULLPTR)){
 				if(dwBytesWritten == 0){
 					dwErrorCode = GetLastError();
 				}
@@ -340,9 +340,9 @@ void __MCFCRT_StandardStreamsUninit(void){
 	Flush(&g_vStdOut, 0);
 	Flush(&g_vStdErr, 0);
 
-	Reset(&g_vStdIn,  nullptr, false);
-	Reset(&g_vStdOut, nullptr, false);
-	Reset(&g_vStdErr, nullptr, false);
+	Reset(&g_vStdIn,  _MCFCRT_NULLPTR, false);
+	Reset(&g_vStdOut, _MCFCRT_NULLPTR, false);
+	Reset(&g_vStdErr, _MCFCRT_NULLPTR, false);
 }
 
 int _MCFCRT_PeekStandardInputByte(void){

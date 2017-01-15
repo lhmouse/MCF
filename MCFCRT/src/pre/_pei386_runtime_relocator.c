@@ -39,7 +39,7 @@ static void UnprotectAllSections(UnprotectedSection *restrict pProtectedSections
 			_MCFCRT_Bail(L"VirtualQuery() 失败。");
 		}
 		if((vMemInfo.Protect == PAGE_READWRITE) || (vMemInfo.Protect == PAGE_EXECUTE_READWRITE)){
-			pUnprotected->pBase = nullptr;
+			pUnprotected->pBase = _MCFCRT_NULLPTR;
 			pUnprotected->uSize = 0;
 		} else {
 			if(!VirtualProtect(pBase, uSize, PAGE_EXECUTE_READWRITE, &(pUnprotected->dwOldProtect))){
@@ -115,7 +115,7 @@ void _pei386_runtime_relocator(void){
 	const DWORD *const pdwEnd   = &__RUNTIME_PSEUDO_RELOC_LIST_END__;
 	const size_t uDwordCount    = (size_t)(pdwEnd - pdwBegin);
 
-	const DWORD *pdwTable = nullptr;
+	const DWORD *pdwTable = _MCFCRT_NULLPTR;
 	unsigned uVersion = 0;
 
 	if((uDwordCount >= 2) && ((pdwBegin[0] != 0) || (pdwBegin[1] != 0))){
@@ -129,7 +129,7 @@ void _pei386_runtime_relocator(void){
 		return;
 	}
 
-	const void *pSectionTable = nullptr;
+	const void *pSectionTable = _MCFCRT_NULLPTR;
 	const size_t uSections = GetAllSections(&pSectionTable);
 	UnprotectedSection aUnprotected[uSections];
 	UnprotectAllSections(aUnprotected, pSectionTable, uSections);

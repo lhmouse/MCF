@@ -87,9 +87,9 @@ extern int __MCFCRT_cnd_init(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_cnd_destroy(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
 #define cnd_destroy __MCFCRT_cnd_destroy
 
-extern int __MCFCRT_cnd_timedwait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define cnd_timedwait __MCFCRT_cnd_timedwait
-extern int __MCFCRT_cnd_wait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_wait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c) _MCFCRT_NOEXCEPT;
 #define cnd_wait __MCFCRT_cnd_wait
 extern int __MCFCRT_cnd_signal(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
 #define cnd_signal __MCFCRT_cnd_signal
@@ -104,7 +104,7 @@ extern void __MCFCRT_mtx_destroy(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
 
 extern int __MCFCRT_mtx_lock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
 #define mtx_lock __MCFCRT_mtx_lock
-extern int __MCFCRT_mtx_timedlock(mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define mtx_timedlock __MCFCRT_mtx_timedlock
 extern int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
 #define mtx_trylock __MCFCRT_mtx_trylock

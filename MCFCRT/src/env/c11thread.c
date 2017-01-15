@@ -13,7 +13,7 @@ void __MCFCRT_C11threadTlsDestructor(intptr_t context, void *storage){
 	if(!value){
 		return;
 	}
-	*(void **)storage = nullptr;
+	*(void **)storage = _MCFCRT_NULLPTR;
 
 	(*destructor)(value);
 }

@@ -16,7 +16,7 @@ void *memchr(const void *s, int c, size_t n){
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & 15) != 0){
 		if(rp == rend){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		const char rc = *rp;
 		if(rc == (char)c){
@@ -38,7 +38,7 @@ void *memchr(const void *s, int c, size_t n){
 	}
 	for(;;){
 		if(rp == rend){
-			return nullptr;
+			return _MCFCRT_NULLPTR;
 		}
 		const char rc = *rp;
 		if(rc == (char)c){

@@ -73,7 +73,7 @@ public:
 		FunctionView<void ()> fnAsyncProc = nullptr, FunctionView<void ()> fnCompletionCallback = nullptr) const;
 	std::size_t Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
 		FunctionView<void ()> fnAsyncProc = nullptr, FunctionView<void ()> fnCompletionCallback = nullptr);
-	void HardFlush();
+	void Flush();
 
 	void Swap(File &rhs) noexcept {
 		using std::swap;

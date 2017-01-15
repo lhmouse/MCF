@@ -33,10 +33,10 @@ void Fnv1a32OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uByte
 	}
 }
 
-void Fnv1a32OutputStream::Put(unsigned char byData){
+void Fnv1a32OutputStream::Put(unsigned char byData) noexcept {
 	Put(&byData, 1);
 }
-void Fnv1a32OutputStream::Put(const void *pData, std::size_t uSize){
+void Fnv1a32OutputStream::Put(const void *pData, std::size_t uSize) noexcept {
 	if(x_nChunkOffset < 0){
 		X_Initialize();
 		x_nChunkOffset = 0;
@@ -64,7 +64,7 @@ void Fnv1a32OutputStream::Put(const void *pData, std::size_t uSize){
 		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }
-void Fnv1a32OutputStream::Flush(bool bHard){
+void Fnv1a32OutputStream::Flush(bool bHard) noexcept {
 	(void)bHard;
 }
 

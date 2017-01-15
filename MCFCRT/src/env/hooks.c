@@ -4,7 +4,7 @@
 
 #include "hooks.h"
 
-volatile _MCFCRT_HeapAllocCallback    _MCFCRT_pfnOnHeapAlloc     = nullptr;
-volatile _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc   = nullptr;
-volatile _MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree      = nullptr;
-volatile _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc  = nullptr;
+volatile _MCFCRT_HeapAllocCallback    _MCFCRT_pfnOnHeapAlloc     = _MCFCRT_NULLPTR;
+volatile _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc   = _MCFCRT_NULLPTR;
+volatile _MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree      = _MCFCRT_NULLPTR;
+volatile _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc  = _MCFCRT_NULLPTR;

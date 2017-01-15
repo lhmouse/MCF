@@ -21,19 +21,19 @@ bool NullInputStream::Discard() noexcept {
 std::size_t NullInputStream::Peek(void *pData, std::size_t uSize) noexcept {
 	(void)pData;
 	(void)uSize;
-
 	return 0;
 }
 std::size_t NullInputStream::Get(void *pData, std::size_t uSize) noexcept {
 	(void)pData;
 	(void)uSize;
-
 	return 0;
 }
 std::size_t NullInputStream::Discard(std::size_t uSize) noexcept {
 	(void)uSize;
 
 	return 0;
+}
+void NullInputStream::Invalidate() noexcept {
 }
 
 }

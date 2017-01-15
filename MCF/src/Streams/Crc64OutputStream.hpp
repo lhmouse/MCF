@@ -14,19 +14,14 @@ namespace MCF {
 
 class Crc64OutputStream : public AbstractOutputStream {
 private:
-	int x_nChunkOffset;
+	int x_nChunkOffset = -1;
 	std::uint8_t x_abyChunk[8];
 	std::uint64_t x_u64Reg;
 
 public:
-	Crc64OutputStream() noexcept
-		: x_nChunkOffset(-1)
-	{
+	Crc64OutputStream() noexcept {
 	}
 	~Crc64OutputStream() override;
-
-	Crc64OutputStream(Crc64OutputStream &&) noexcept = default;
-	Crc64OutputStream &operator=(Crc64OutputStream &&) noexcept = default;
 
 private:
 	void X_Initialize() noexcept;
@@ -34,24 +29,12 @@ private:
 	void X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept;
 
 public:
-	void Put(unsigned char byData) override;
-	void Put(const void *pData, std::size_t uSize) override;
-	void Flush(bool bHard) override;
+	void Put(unsigned char byData) noexcept override;
+	void Put(const void *pData, std::size_t uSize) noexcept override;
+	void Flush(bool bHard) noexcept override;
 
 	void Reset() noexcept;
 	std::uint64_t Finalize() noexcept;
-
-	void Swap(Crc64OutputStream &rhs) noexcept {
-		using std::swap;
-		swap(x_nChunkOffset, rhs.x_nChunkOffset);
-		swap(x_abyChunk,     rhs.x_abyChunk);
-		swap(x_u64Reg,       rhs.x_u64Reg);
-	}
-
-public:
-	friend void swap(Crc64OutputStream &lhs, Crc64OutputStream &rhs) noexcept {
-		lhs.Swap(rhs);
-	}
 };
 
 }

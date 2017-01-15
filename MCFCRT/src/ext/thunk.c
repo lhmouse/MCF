@@ -61,8 +61,8 @@ static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _
 }
 
 static _MCFCRT_Mutex    g_vThunkMutex         = { 0 };
-static _MCFCRT_AvlRoot  g_avlThunksByThunk    = nullptr;
-static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;
+static _MCFCRT_AvlRoot  g_avlThunksByThunk    = _MCFCRT_NULLPTR;
+static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = _MCFCRT_NULLPTR;
 
 const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	_MCFCRT_ASSERT(pInit);
@@ -71,7 +71,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
 	if(uThunkSize < uSize){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return nullptr;
+		return _MCFCRT_NULLPTR;
 	}
 
 	unsigned char *pbyRaw;
@@ -90,7 +90,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			if(!pInfo){
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
 				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return nullptr;
+				return _MCFCRT_NULLPTR;
 			}
 			size_t uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
 			if(uChunkSize < uThunkSize){
@@ -101,7 +101,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 				_MCFCRT_free(pInfo);
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
 				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return nullptr;
+				return _MCFCRT_NULLPTR;
 			}
 			pInfo->pChunk     = pChunk;
 			pInfo->uChunkSize = uChunkSize;
@@ -131,7 +131,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 				}
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
 				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return nullptr;
+				return _MCFCRT_NULLPTR;
 			}
 			pSpare->pChunk     = pInfo->pChunk;
 			pSpare->uChunkSize = pInfo->uChunkSize;
@@ -224,8 +224,8 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
 			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 		} else {
-			pPageToRelease = nullptr;
-			pInfoToFree = nullptr;
+			pPageToRelease = _MCFCRT_NULLPTR;
+			pInfoToFree = _MCFCRT_NULLPTR;
 
 			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 			pInfo->uFreeSize = pInfo->uThunkSize;

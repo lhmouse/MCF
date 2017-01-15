@@ -13,10 +13,10 @@ namespace MCF {
 class AbstractOutputStream : public PolyIntrusiveBase<AbstractOutputStream> {
 public:
 	AbstractOutputStream() noexcept = default;
-	~AbstractOutputStream() override = 0;
+	~AbstractOutputStream() override;
 
-	AbstractOutputStream(AbstractOutputStream &&) noexcept = default;
-	AbstractOutputStream &operator=(AbstractOutputStream &&) noexcept = default;
+	AbstractOutputStream(const AbstractOutputStream &) = delete;
+	AbstractOutputStream &operator=(const AbstractOutputStream &) = delete;
 
 public:
 	virtual void Put(unsigned char byData) = 0;

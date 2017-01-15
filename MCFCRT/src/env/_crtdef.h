@@ -32,21 +32,13 @@
 #include <assert.h>
 
 #ifdef __cplusplus
-#   define _MCFCRT_EXTERN_C_BEGIN       extern "C" {
-#   define _MCFCRT_EXTERN_C_END         }
-#   define _MCFCRT_STD                  ::
+#	define _MCFCRT_EXTERN_C_BEGIN       extern "C" {
+#	define _MCFCRT_EXTERN_C_END         }
+#	define _MCFCRT_STD                  ::
 #else
-#   define _MCFCRT_EXTERN_C_BEGIN
-#   define _MCFCRT_EXTERN_C_END
-#   define _MCFCRT_STD                  //
-#endif
-
-#if !defined(restrict)
-#   define restrict                    __restrict__
-#endif
-
-#if !defined(nullptr) && !defined(_MCFCRT_CXX11)
-#   define nullptr                      0
+#	define _MCFCRT_EXTERN_C_BEGIN       //
+#	define _MCFCRT_EXTERN_C_END         //
+#	define _MCFCRT_STD                  //
 #endif
 
 #define __MCFCRT_C_CALLBACK_DECL        __attribute__((__nothrow__, __force_align_arg_pointer__, __aligned__(16)))
@@ -55,14 +47,20 @@
 #define __MCFCRT_C_FASTCALL             __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL
 
 #if defined(_MCFCRT_CXX11)
-#   define _MCFCRT_NOEXCEPT             noexcept
-#   define _MCFCRT_CONSTEXPR            constexpr
+#	define _MCFCRT_NOEXCEPT             noexcept
+#	define _MCFCRT_CONSTEXPR            constexpr
+#	define _MCFCRT_RESTRICT             __restrict__
+#	define _MCFCRT_NULLPTR              nullptr
 #elif defined(__cplusplus)
-#   define _MCFCRT_NOEXCEPT             throw()
-#   define _MCFCRT_CONSTEXPR            static inline
+#	define _MCFCRT_NOEXCEPT             throw()
+#	define _MCFCRT_CONSTEXPR            static inline
+#	define _MCFCRT_RESTRICT             __restrict__
+#	define _MCFCRT_NULLPTR              ((__INTPTR_TYPE__)0)
 #else
-#   define _MCFCRT_NOEXCEPT             //
-#   define _MCFCRT_CONSTEXPR            static inline
+#	define _MCFCRT_NOEXCEPT             //
+#	define _MCFCRT_CONSTEXPR            static inline
+#	define _MCFCRT_RESTRICT             restrict
+#	define _MCFCRT_NULLPTR              ((void *)0)
 #endif
 
 #endif

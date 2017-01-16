@@ -18,11 +18,7 @@ private:
 	std::uint64_t x_u64Offset;
 
 public:
-	FileInputStream() noexcept
-		: x_vFile(), x_u64Offset(0)
-	{
-	}
-	explicit FileInputStream(File &&vFile, std::uint64_t u64Offset = 0) noexcept
+	explicit FileInputStream(File &&vFile = File(), std::uint64_t u64Offset = 0) noexcept
 		: x_vFile(std::move(vFile)), x_u64Offset(u64Offset)
 	{
 	}

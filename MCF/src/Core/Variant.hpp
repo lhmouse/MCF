@@ -41,7 +41,7 @@ private:
 
 private:
 	AlignedStorage<ElementsT...> x_vStorage;
-	int x_nActiveIndex;
+	int x_nActiveIndex = -1;
 
 private:
 	template<typename VisitorT>
@@ -56,27 +56,19 @@ private:
 	}
 
 public:
-	Variant() noexcept
-		: x_nActiveIndex(-1)
-	{
+	Variant() noexcept {
 	}
 	template<typename ParamT,
 		std::enable_if_t<
 			!std::is_base_of<Variant, std::decay_t<ParamT>>::value,
 			int> = 0>
-	Variant(ParamT &&rhs)
-		: Variant()
-	{
+	Variant(ParamT &&rhs){
 		Set(std::forward<ParamT>(rhs));
 	}
-	Variant(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...))
-		: Variant()
-	{
+	Variant(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
 		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
 	}
-	Variant(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...))
-		: Variant()
-	{
+	Variant(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
 		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
 	}
 	Variant &operator=(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {

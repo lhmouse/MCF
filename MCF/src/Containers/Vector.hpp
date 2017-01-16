@@ -312,23 +312,6 @@ public:
 		return GetBegin()[uIndex];
 	}
 
-	template<typename ...ParamsT>
-	Element *Resize(std::size_t uSize, const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
-		if(uSize > uOldSize){
-			Append(uSize - uOldSize, vParams...);
-		} else {
-			Pop(uOldSize - uSize);
-		}
-		return GetData();
-	}
-	template<typename ...ParamsT>
-	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
-		Append(uDeltaSize, vParams...);
-		return GetData() + uOldSize;
-	}
-
 	void Reserve(std::size_t uNewCapacity){
 		const auto uOldCapacity = x_uCapacity;
 		if(uNewCapacity <= uOldCapacity){
@@ -369,6 +352,30 @@ public:
 	void ReserveMore(std::size_t uDeltaCapacity){
 		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, x_uSize);
 		Reserve(uNewCapacity);
+	}
+
+	template<typename ...ParamsT>
+	Element *Resize(std::size_t uSize, const ParamsT &...vParams){
+		const auto uOldSize = x_uSize;
+		if(uSize > uOldSize){
+			Append(uSize - uOldSize, vParams...);
+		} else {
+			Pop(uOldSize - uSize);
+		}
+		return GetData();
+	}
+	template<typename ...ParamsT>
+	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
+		const auto uOldSize = x_uSize;
+		Append(uDeltaSize, vParams...);
+		return GetData() + uOldSize;
+	}
+	std::pair<Element *, std::size_t> ResizeToCapacity() noexcept {
+		const auto uOldSize = GetSize();
+		const auto uNewSize = GetCapacity();
+		const auto uDeltaSize = uNewSize - uOldSize;
+		UncheckedAppend(uDeltaSize);
+		return std::make_pair(GetData() + uOldSize, uDeltaSize);
 	}
 
 	template<typename ...ParamsT>

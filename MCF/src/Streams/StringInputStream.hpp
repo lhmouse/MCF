@@ -16,11 +16,7 @@ private:
 	std::size_t x_uOffset;
 
 public:
-	StringInputStream() noexcept
-		: x_vString(), x_uOffset(0)
-	{
-	}
-	explicit StringInputStream(NarrowString vString, std::size_t uOffset = 0) noexcept
+	explicit StringInputStream(NarrowString vString = NarrowString(), std::size_t uOffset = 0) noexcept
 		: x_vString(std::move(vString)), x_uOffset(uOffset)
 	{
 	}

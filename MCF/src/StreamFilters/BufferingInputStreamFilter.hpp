@@ -6,16 +6,14 @@
 #define MCF_STREAM_FILTERS_BUFFERING_INPUT_STREAM_FILTER_HPP_
 
 #include "AbstractInputStreamFilter.hpp"
-#include "../SmartPointers/UniquePtr.hpp"
+#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class BufferingInputStreamFilter : public AbstractInputStreamFilter {
 private:
-	UniquePtr<unsigned char []> x_pbyBuffer;
-	std::size_t x_uCapacity = 0;
+	Vector<unsigned char> x_vecBuffer;
 	std::size_t x_uOffset = 0;
-	std::size_t x_uSize = 0;
 
 public:
 	explicit BufferingInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept

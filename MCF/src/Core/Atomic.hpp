@@ -34,7 +34,11 @@ private:
 	volatile Element x_vElement;
 
 public:
-	explicit constexpr Atomic(const Element &vElement = Element()) noexcept
+	constexpr Atomic() noexcept
+		: x_vElement()
+	{
+	}
+	explicit constexpr Atomic(const Element &vElement) noexcept
 		: x_vElement(vElement)
 	{
 	}

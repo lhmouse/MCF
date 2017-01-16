@@ -8,7 +8,7 @@
 namespace MCF {
 
 enum : std::size_t {
-	kPopulationSizeThreshold = 1024,
+	kPopulationThreshold = 1024,
 };
 
 BufferingInputStreamFilter::~BufferingInputStreamFilter(){
@@ -43,29 +43,32 @@ bool BufferingInputStreamFilter::Discard(){
 }
 std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize){
 	std::size_t uBytesTotal = 0;
-	if(x_uSize - x_uOffset < uSize){
+	if(x_vecBuffer.GetSize() - x_uOffset < uSize){
 		if(x_uOffset != 0){
 			GetUnderlyingStream()->Discard(x_uOffset);
 			x_uOffset = 0;
 		}
-		x_uSize = 0;
-		if(x_uCapacity < uSize){
-			const auto uNewCapacity = Max(uSize, kPopulationSizeThreshold * 2);
-			UniquePtr<unsigned char []> pbyNewBuffer(new unsigned char[uNewCapacity]);
-			x_pbyBuffer = std::move(pbyNewBuffer);
-			x_uCapacity = uNewCapacity;
+		x_vecBuffer.Clear();
+		x_vecBuffer.Reserve(Max(uSize, kPopulationThreshold * 2));
+		{
+			x_vecBuffer.UncheckedAppend(x_vecBuffer.GetCapacity());
+			try {
+				const auto uBytesRead = GetUnderlyingStream()->Peek(x_vecBuffer.GetData(), x_vecBuffer.GetSize());
+				x_vecBuffer.Pop(x_vecBuffer.GetSize() - uBytesRead);
+			} catch(...){
+				x_vecBuffer.Clear();
+				throw;
+			}
 		}
-		MCF_ASSERT(x_uCapacity >= uSize);
-		x_uSize = GetUnderlyingStream()->Peek(x_pbyBuffer.Get(), x_uCapacity);
-		const auto uBytesCopied = Min(uSize, x_uSize);
+		const auto uBytesCopied = Min(uSize, x_vecBuffer.GetSize());
 		if(uBytesCopied > 0){
-			std::memcpy(pData, x_pbyBuffer.Get(), uBytesCopied);
+			std::memcpy(pData, x_vecBuffer.GetData(), uBytesCopied);
 		}
 		uBytesTotal += uBytesCopied;
 	} else {
 		const auto uBytesCopied = uSize;
 		if(uBytesCopied > 0){
-			std::memcpy(pData, x_pbyBuffer.Get() + x_uOffset, uBytesCopied);
+			std::memcpy(pData, x_vecBuffer.GetData() + x_uOffset, uBytesCopied);
 		}
 		uBytesTotal += uBytesCopied;
 	}
@@ -78,7 +81,7 @@ std::size_t BufferingInputStreamFilter::Get(void *pData, std::size_t uSize){
 }
 std::size_t BufferingInputStreamFilter::Discard(std::size_t uSize){
 	std::size_t uBytesTotal = 0;
-	if(x_uSize - x_uOffset < uSize){
+	if(x_vecBuffer.GetSize() - x_uOffset < uSize){
 		std::size_t uBytesDiscarded;
 		if(x_uOffset != 0){
 			uBytesDiscarded = GetUnderlyingStream()->Discard(x_uOffset + uSize) - x_uOffset;
@@ -86,7 +89,7 @@ std::size_t BufferingInputStreamFilter::Discard(std::size_t uSize){
 		} else {
 			uBytesDiscarded = GetUnderlyingStream()->Discard(uSize);
 		}
-		x_uSize = 0;
+		x_vecBuffer.Clear();
 		uBytesTotal += uBytesDiscarded;
 	} else {
 		const auto uBytesDiscarded = uSize;
@@ -100,7 +103,9 @@ void BufferingInputStreamFilter::Invalidate(){
 		GetUnderlyingStream()->Discard(x_uOffset);
 		x_uOffset = 0;
 	}
-	x_uSize = 0;
+	x_vecBuffer.Clear();
+
+	GetUnderlyingStream()->Invalidate();
 }
 
 }

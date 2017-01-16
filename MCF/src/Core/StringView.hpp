@@ -212,7 +212,7 @@ public:
 	using Char = typename StringEncodingTrait<kTypeT>::Char;
 
 	enum : std::size_t {
-		kNpos = Impl_StringView::kNpos
+		kNpos = Impl_StringView::kNpos,
 	};
 
 	static_assert(std::is_integral<Char>::value, "Char must be an integral type.");

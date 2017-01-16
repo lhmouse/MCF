@@ -12,7 +12,7 @@
 namespace MCF {
 
 namespace Impl_StreamBuffer {
-	struct Chunk;
+	struct Chunk ;
 }
 
 class StreamBuffer {
@@ -21,29 +21,21 @@ public:
 	class WriteIterator;
 
 private:
-	Impl_StreamBuffer::Chunk *x_pFirst;
-	Impl_StreamBuffer::Chunk *x_pLast;
-	std::size_t x_uSize;
+	Impl_StreamBuffer::Chunk *x_pHead = nullptr;
+	Impl_StreamBuffer::Chunk *x_pTail = nullptr;
+	std::size_t x_uSize = 0;
 
 public:
-	constexpr StreamBuffer() noexcept
-		: x_pFirst(nullptr), x_pLast(nullptr), x_uSize(0)
-	{
+	constexpr StreamBuffer() noexcept {
 	}
-	StreamBuffer(unsigned char byData, std::size_t uSize)
-		: StreamBuffer()
-	{
+	StreamBuffer(unsigned char byData, std::size_t uSize){
 		Put(byData, uSize);
 	}
-	StreamBuffer(const void *pData, std::size_t uSize)
-		: StreamBuffer()
-	{
+	StreamBuffer(const void *pData, std::size_t uSize){
 		Put(pData, uSize);
 	}
 	StreamBuffer(const StreamBuffer &rhs);
-	StreamBuffer(StreamBuffer &&rhs) noexcept
-		: StreamBuffer()
-	{
+	StreamBuffer(StreamBuffer &&rhs) noexcept {
 		Swap(rhs);
 	}
 	StreamBuffer &operator=(const StreamBuffer &rhs){
@@ -91,8 +83,8 @@ public:
 
 	void Swap(StreamBuffer &rhs) noexcept {
 		using std::swap;
-		swap(x_pFirst, rhs.x_pFirst);
-		swap(x_pLast,  rhs.x_pLast);
+		swap(x_pHead, rhs.x_pHead);
+		swap(x_pTail,  rhs.x_pTail);
 		swap(x_uSize,  rhs.x_uSize);
 	}
 

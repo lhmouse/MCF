@@ -24,20 +24,16 @@ public:
 private:
 	union X_Block {
 		X_Block *pNext;
-		unsigned char abyData[kElementSize];
+		char achData[kElementSize];
 	};
-	struct alignas(2 * alignof(void *)) X_Control {
-		X_Block *pFirst;
-		X_Block *pLast;
+	struct X_Control {
+		X_Block *pHead;
+		X_Block *pTail;
 	};
-
-private:
-	Atomic<X_Control> x_vControl;
+	alignas(2 * alignof(void *)) Atomic<X_Control> x_vControl;
 
 public:
-	constexpr FixedSizeAllocator() noexcept
-		: x_vControl(X_Control{ nullptr, nullptr })
-	{
+	constexpr FixedSizeAllocator() noexcept {
 	}
 	~FixedSizeAllocator(){
 		Recycle();
@@ -50,7 +46,7 @@ private:
 	void X_Attach(const X_Control &vNewControl) noexcept {
 		auto vControl = x_vControl.Load(kAtomicRelaxed);
 		do {
-			vNewControl.pLast->pNext = vControl.pFirst;
+			vNewControl.pTail->pNext = vControl.pHead;
 		} while(!x_vControl.CompareExchange(vControl, vNewControl, kAtomicRelaxed));
 	}
 	X_Control X_Detach() noexcept {
@@ -59,11 +55,11 @@ private:
 
 	X_Block *X_PooledAllocate() noexcept {
 		const auto vControl = X_Detach();
-		const auto pBlock = vControl.pFirst;
+		const auto pBlock = vControl.pHead;
 		if(pBlock){
 			const auto pNext = pBlock->pNext;
 			if(pNext){
-				X_Attach(X_Control{ pNext, vControl.pLast });
+				X_Attach(X_Control{ pNext, vControl.pTail });
 			}
 		}
 		return pBlock;
@@ -106,7 +102,7 @@ public:
 
 	void Recycle() noexcept {
 		const auto vControl = X_Detach();
-		auto pBlock = vControl.pFirst;
+		auto pBlock = vControl.pHead;
 		while(pBlock){
 			const auto pNext = pBlock->pNext;
 			BackingAllocator()(static_cast<void *>(pBlock));
@@ -115,7 +111,7 @@ public:
 	}
 	void Adopt(FixedSizeAllocator &rhs) noexcept {
 		const auto vControl = rhs.X_Detach();
-		if(vControl.pFirst){
+		if(vControl.pHead){
 			X_Attach(vControl);
 		}
 	}

@@ -28,7 +28,7 @@ private:
 
 public:
 	constexpr FunctionView(std::nullptr_t = nullptr) noexcept
-		: x_pfnLambda(nullptr)
+		: x_pfnLambda(nullptr), x_pContext(nullptr)
 	{
 	}
 	template<typename FuncT,
@@ -37,8 +37,7 @@ public:
 				(std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	FunctionView(const FuncT &vFunc) noexcept
-		: x_pfnLambda([](auto pContext, auto ...vParams){ return DesignatedInvoke<RetT>(static_cast<const FuncT *>(pContext)[0], std::forward<ParamsT>(vParams)...); })
-		, x_pContext(AddressOf(vFunc))
+		: x_pfnLambda([](auto pContext, auto ...vParams){ return DesignatedInvoke<RetT>(static_cast<const FuncT *>(pContext)[0], std::forward<ParamsT>(vParams)...); }), x_pContext(AddressOf(vFunc))
 	{
 	}
 

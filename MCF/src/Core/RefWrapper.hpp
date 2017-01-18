@@ -109,31 +109,20 @@ public:
 
 template<typename ObjectT>
 constexpr RefWrapper<const volatile ObjectT> Ref(const volatile ObjectT &vObject) noexcept {
-	return RefWrapper<const volatile ObjectT>(vObject);
+	return vObject;
 }
-template<typename ObjectT>
-void Ref(const volatile ObjectT &&vObject) noexcept = delete;
-
 template<typename ObjectT>
 constexpr RefWrapper<const ObjectT> Ref(const ObjectT &vObject) noexcept {
-	return RefWrapper<const ObjectT>(vObject);
+	return vObject;
 }
-template<typename ObjectT>
-void Ref(const ObjectT &&vObject) noexcept = delete;
-
 template<typename ObjectT>
 constexpr RefWrapper<volatile ObjectT> Ref(volatile ObjectT &vObject) noexcept {
-	return RefWrapper<volatile ObjectT>(vObject);
+	return vObject;
 }
-template<typename ObjectT>
-void Ref(volatile ObjectT &&vObject) noexcept = delete;
-
 template<typename ObjectT>
 constexpr RefWrapper<ObjectT> Ref(ObjectT &vObject) noexcept {
-	return RefWrapper<ObjectT>(vObject);
+	return vObject;
 }
-template<typename ObjectT>
-void Ref(ObjectT &&vObject) noexcept = delete;
 
 }
 

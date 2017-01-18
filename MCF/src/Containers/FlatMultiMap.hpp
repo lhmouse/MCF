@@ -262,6 +262,9 @@ public:
 	std::size_t GetCapacity() const noexcept {
 		return x_vStorage.GetCapacity();
 	}
+	std::size_t GetCapacityRemaining() const noexcept {
+		return GetCapacity() - GetSize();
+	}
 
 	const Element *GetBegin() const noexcept {
 		return x_vStorage.GetBegin();

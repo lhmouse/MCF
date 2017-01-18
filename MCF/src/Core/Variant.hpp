@@ -56,8 +56,7 @@ private:
 	}
 
 public:
-	Variant() noexcept {
-	}
+	Variant() noexcept = default;
 	template<typename ParamT,
 		std::enable_if_t<
 			!std::is_base_of<Variant, std::decay_t<ParamT>>::value,

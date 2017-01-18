@@ -19,8 +19,7 @@ private:
 	std::uint32_t x_u32Reg;
 
 public:
-	Crc32OutputStream() noexcept {
-	}
+	Crc32OutputStream() noexcept = default;
 	~Crc32OutputStream() override;
 
 private:

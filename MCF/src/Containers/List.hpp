@@ -40,12 +40,12 @@ public:
 	};
 
 private:
-	X_Node *x_pHead;
-	X_Node *x_pTail;
+	X_Node *x_pLast;
+	X_Node *x_pFirst;
 
 public:
 	constexpr List() noexcept
-		: x_pHead(nullptr), x_pTail(nullptr)
+		: x_pLast(nullptr), x_pFirst(nullptr)
 	{
 	}
 	template<typename ...ParamsT>
@@ -69,7 +69,7 @@ public:
 	List(const List &rhs)
 		: List()
 	{
-		auto pNode = rhs.x_pHead;
+		auto pNode = rhs.x_pFirst;
 		while(pNode){
 			const auto pNext = pNode->pNext;
 			const void *const pElementRaw = pNext;
@@ -98,10 +98,10 @@ public:
 public:
 	// 容器需求。
 	bool IsEmpty() const noexcept {
-		return !x_pHead;
+		return !x_pFirst;
 	}
 	void Clear() noexcept {
-		auto pNode = x_pTail;
+		auto pNode = x_pLast;
 		while(pNode){
 			const auto pPrev = pNode->pPrev;
 			void *const pElementRaw = pNode;
@@ -110,13 +110,13 @@ public:
 			Allocator()(pElementRaw);
 			pNode = pPrev;
 		}
-		x_pHead = nullptr;
-		x_pTail  = nullptr;
+		x_pLast  = nullptr;
+		x_pFirst = nullptr;
 	}
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			auto pNode = x_pHead;
+			auto pNode = x_pFirst;
 			while(pNode){
 				const auto pNext = pNode->pNext;
 				void *const pElementRaw = pNode;
@@ -134,18 +134,12 @@ public:
 	}
 
 	const Element *GetFirst() const noexcept {
-		const auto pNode = x_pHead;
-		if(!pNode){
-			return nullptr;
-		}
+		const auto pNode = x_pFirst;
 		const void *const pElementRaw = pNode;
 		return static_cast<const Element *>(pElementRaw);
 	}
 	Element *GetFirst() noexcept {
-		const auto pNode = x_pHead;
-		if(!pNode){
-			return nullptr;
-		}
+		const auto pNode = x_pFirst;
 		void *const pElementRaw = pNode;
 		return static_cast<Element *>(pElementRaw);
 	}
@@ -153,18 +147,12 @@ public:
 		return GetFirst();
 	}
 	const Element *GetLast() const noexcept {
-		const auto pNode = x_pTail;
-		if(!pNode){
-			return nullptr;
-		}
+		const auto pNode = x_pLast;
 		const void *const pElementRaw = pNode;
 		return static_cast<const Element *>(pElementRaw);
 	}
 	Element *GetLast() noexcept {
-		const auto pNode = x_pTail;
-		if(!pNode){
-			return nullptr;
-		}
+		const auto pNode = x_pLast;
 		void *const pElementRaw = pNode;
 		return static_cast<Element *>(pElementRaw);
 	}
@@ -178,9 +166,6 @@ public:
 		const void *pElementRaw = pPos;
 		auto pNode = static_cast<const X_Node *>(pElementRaw);
 		pNode = pNode->pPrev;
-		if(!pNode){
-			return nullptr;
-		}
 		pElementRaw = pNode;
 		return static_cast<const Element *>(pElementRaw);
 	}
@@ -190,9 +175,6 @@ public:
 		void *pElementRaw = pPos;
 		auto pNode = static_cast<X_Node *>(pElementRaw);
 		pNode = pNode->pPrev;
-		if(!pNode){
-			return nullptr;
-		}
 		pElementRaw = pNode;
 		return static_cast<Element *>(pElementRaw);
 	}
@@ -202,9 +184,6 @@ public:
 		const void *pElementRaw = pPos;
 		auto pNode = static_cast<const X_Node *>(pElementRaw);
 		pNode = pNode->pNext;
-		if(!pNode){
-			return nullptr;
-		}
 		pElementRaw = pNode;
 		return static_cast<const Element *>(pElementRaw);
 	}
@@ -214,9 +193,6 @@ public:
 		void *pElementRaw = pPos;
 		auto pNode = static_cast<X_Node *>(pElementRaw);
 		pNode = pNode->pNext;
-		if(!pNode){
-			return nullptr;
-		}
 		pElementRaw = pNode;
 		return static_cast<Element *>(pElementRaw);
 	}
@@ -251,8 +227,8 @@ public:
 
 	void Swap(List &rhs) noexcept {
 		using std::swap;
-		swap(x_pHead, rhs.x_pHead);
-		swap(x_pTail, rhs.x_pTail);
+		swap(x_pLast,  rhs.x_pLast);
+		swap(x_pFirst, rhs.x_pFirst);
 	}
 
 	// List 需求。
@@ -276,18 +252,18 @@ public:
 		}
 		const auto pNewFirst = static_cast<X_Node *>(pNewFirstRaw);
 		pNewFirst->pPrev = nullptr;
-		pNewFirst->pNext = x_pHead;
+		pNewFirst->pNext = x_pFirst;
 
-		const auto pOldFirst = x_pHead;
-		(pOldFirst ? pOldFirst->pPrev : x_pTail) = pNewFirst;
-		x_pHead = pNewFirst;
+		const auto pOldFirst = x_pFirst;
+		*(pOldFirst ? &(pOldFirst->pPrev) : &x_pLast) = pNewFirst;
+		x_pFirst = pNewFirst;
 
 		return *pElement;
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
 		MCF_DEBUG_CHECK(uCount <= CountElements());
 
-		auto pNewFirst = x_pHead;
+		auto pNewFirst = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pNext = pNewFirst->pNext;
 			void *const pElementRaw = pNewFirst;
@@ -296,8 +272,8 @@ public:
 			Allocator()(pElementRaw);
 			pNewFirst = pNext;
 		}
-		(pNewFirst ? pNewFirst->pPrev : x_pTail) = nullptr;
-		x_pHead = pNewFirst;
+		*(pNewFirst ? &(pNewFirst->pPrev) : &x_pLast) = nullptr;
+		x_pFirst = pNewFirst;
 	}
 
 	template<typename ...ParamsT>
@@ -311,19 +287,19 @@ public:
 			throw;
 		}
 		const auto pNewLast = static_cast<X_Node *>(pNewLastRaw);
-		pNewLast->pPrev = x_pTail;
+		pNewLast->pPrev = x_pLast;
 		pNewLast->pNext = nullptr;
 
-		const auto pOldLast = x_pTail;
-		(pOldLast ? pOldLast->pNext : x_pHead) = pNewLast;
-		x_pTail = pNewLast;
+		const auto pOldLast = x_pLast;
+		*(pOldLast ? &(pOldLast->pNext) : &x_pFirst) = pNewLast;
+		x_pLast = pNewLast;
 
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		MCF_DEBUG_CHECK(uCount <= CountElements());
 
-		auto pNewLast = x_pTail;
+		auto pNewLast = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pPrev = pNewLast->pPrev;
 			void *const pElementRaw = pNewLast;
@@ -332,8 +308,8 @@ public:
 			Allocator()(pElementRaw);
 			pNewLast = pPrev;
 		}
-		(pNewLast ? pNewLast->pNext : x_pHead) = nullptr;
-		x_pTail = pNewLast;
+		*(pNewLast ? &(pNewLast->pNext) : &x_pFirst) = nullptr;
+		x_pLast = pNewLast;
 	}
 
 	template<typename ...ParamsT>
@@ -424,24 +400,24 @@ public:
 	Element *Splice(const Element *pInsert, List &lstSrc, const Element *pBegin, const Element *pEnd) noexcept {
 		MCF_DEBUG_CHECK(&lstSrc != this);
 
-		void *const pInsertRaw = const_cast<void *>(static_cast<const void *>(pInsert));
-		void *const pBeginRaw  = const_cast<void *>(static_cast<const void *>(pBegin ));
-		void *const pEndRaw    = const_cast<void *>(static_cast<const void *>(pEnd   ));
+		const auto pInsertRaw  = const_cast<void *>(static_cast<const void *>(pInsert));
 		const auto pInsertNode = static_cast<X_Node *>(pInsertRaw);
-		const auto pBeginNode  = static_cast<X_Node *>(pBeginRaw );
-		const auto pEndNode    = static_cast<X_Node *>(pEndRaw   );
+		const auto pBeginRaw   = const_cast<void *>(static_cast<const void *>(pBegin));
+		const auto pBeginNode  = static_cast<X_Node *>(pBeginRaw);
+		const auto pEndRaw     = const_cast<void *>(static_cast<const void *>(pEnd));
+		const auto pEndNode    = static_cast<X_Node *>(pEndRaw);
 
 		if(pBeginNode != pEndNode){
 			MCF_DEBUG_CHECK(pBeginNode);
 
-			const auto pNodeBeforeBegin = pBeginNode->pPrev;
-			const auto pNodeBeforeEnd = std::exchange(pEndNode ? pEndNode->pPrev : lstSrc.x_pTail, pNodeBeforeBegin);
-			const auto pNodeBeforeInsert = std::exchange(pInsertNode ? pInsertNode->pPrev : x_pTail, pNodeBeforeEnd);
+			const auto pBeginPrev  = pBeginNode->pPrev;
+			const auto pEndPrev    = std::exchange(*(pEndNode ? &(pEndNode->pPrev) : &(lstSrc.x_pLast)), pBeginPrev);
+			const auto pInsertPrev = std::exchange(*(pInsertNode ? &(pInsertNode->pPrev) : &x_pLast), pEndPrev);
 
-			(pNodeBeforeInsert ? pNodeBeforeInsert->pNext : x_pHead) = pBeginNode;
-			(pNodeBeforeBegin ? pNodeBeforeBegin->pNext: lstSrc.x_pHead) = pEndNode;
-			pBeginNode->pPrev = pNodeBeforeInsert;
-			pNodeBeforeEnd->pNext = pInsertNode;
+			*(pInsertPrev ? &(pInsertPrev->pNext) : &x_pFirst) = pBeginNode;
+			*(pBeginPrev ? &(pBeginPrev->pNext) : &lstSrc.x_pFirst) = pEndNode;
+			pBeginNode->pPrev = pInsertPrev;
+			pEndPrev->pNext = pInsertNode;
 		}
 		return const_cast<Element *>(pInsert);
 	}
@@ -457,16 +433,11 @@ public:
 	}
 
 	void Reverse() noexcept {
-		auto ppNext = &x_pHead, ppPrev = &x_pTail;
-		for(;;){
-			const auto pNext = *ppNext;
-			*ppNext = *ppPrev;
-			*ppPrev = pNext;
-			if(!pNext){
-				break;
-			}
-			ppNext = &(pNext->pNext);
-			ppPrev = &(pNext->pPrev);
+		std::swap(x_pFirst, x_pLast);
+		auto pPrev = x_pFirst;
+		while(pPrev){
+			std::swap(pPrev->pNext, pPrev->pPrev);
+			pPrev = pPrev->pNext;
 		}
 	}
 

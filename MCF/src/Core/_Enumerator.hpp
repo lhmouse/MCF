@@ -52,7 +52,7 @@ namespace Impl_Enumerator {
 		}
 
 	public:
-		Element *GetPtr() const noexcept {
+		Element *GetElement() const noexcept {
 			return x_pElement;
 		}
 
@@ -134,7 +134,7 @@ namespace Impl_Enumerator {
 		}
 
 	public:
-		const Element *GetPtr() const noexcept {
+		const Element *GetElement() const noexcept {
 			return x_pElement;
 		}
 

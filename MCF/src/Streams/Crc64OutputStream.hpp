@@ -19,8 +19,7 @@ private:
 	std::uint64_t x_u64Reg;
 
 public:
-	Crc64OutputStream() noexcept {
-	}
+	Crc64OutputStream() noexcept = default;
 	~Crc64OutputStream() override;
 
 private:

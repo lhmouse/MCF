@@ -19,8 +19,7 @@ private:
 	std::uint64_t x_u64BytesTotal;
 
 public:
-	Sha1OutputStream() noexcept {
-	}
+	Sha1OutputStream() noexcept = default;
 	~Sha1OutputStream() override;
 
 private:

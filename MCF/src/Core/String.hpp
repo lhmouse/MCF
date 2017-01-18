@@ -455,6 +455,9 @@ public:
 			return x_vStorage.uSizeAllocated - 1;
 		}
 	}
+	std::size_t GetCapacityRemaining() const noexcept {
+		return GetCapacity() - GetSize();
+	}
 	void Reserve(std::size_t uNewCapacity){
 		const auto uOldCapacity = GetCapacity();
 		if(uNewCapacity <= uOldCapacity){

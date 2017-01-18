@@ -19,8 +19,7 @@ private:
 	std::uint32_t x_u32Reg;
 
 public:
-	Fnv1a32OutputStream() noexcept {
-	}
+	Fnv1a32OutputStream() noexcept = default;
 	~Fnv1a32OutputStream() override;
 
 private:

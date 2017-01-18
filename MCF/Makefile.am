@@ -58,7 +58,6 @@ pkginclude_Core_HEADERS = \
 	src/Core/Endian.hpp	\
 	src/Core/Exception.hpp	\
 	src/Core/File.hpp	\
-	src/Core/FixedSizeAllocator.hpp	\
 	src/Core/Function.hpp	\
 	src/Core/FunctionView.hpp	\
 	src/Core/Invoke.hpp	\
@@ -182,7 +181,6 @@ mcf_sources = \
 	src/Thread/Semaphore.cpp	\
 	src/Thread/Thread.cpp	\
 	src/Thread/UniqueLockBase.cpp	\
-	src/SmartPointers/IntrusivePtr.cpp	\
 	src/SmartPointers/PolyIntrusivePtr.cpp	\
 	src/Random/FastGenerator.cpp	\
 	src/Random/IsaacGenerator.cpp	\

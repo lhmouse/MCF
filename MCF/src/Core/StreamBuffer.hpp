@@ -6,14 +6,9 @@
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
 #include <iterator>
-#include <utility>
 #include <cstddef>
 
 namespace MCF {
-
-namespace Impl_StreamBuffer {
-	struct Chunk ;
-}
 
 class StreamBuffer {
 public:
@@ -21,13 +16,13 @@ public:
 	class WriteIterator;
 
 private:
-	Impl_StreamBuffer::Chunk *x_pHead = nullptr;
-	Impl_StreamBuffer::Chunk *x_pTail = nullptr;
+	struct X_ChunkHeader;
+	X_ChunkHeader *x_pLast = nullptr;
+	X_ChunkHeader *x_pFirst = nullptr;
 	std::size_t x_uSize = 0;
 
 public:
-	constexpr StreamBuffer() noexcept {
-	}
+	constexpr StreamBuffer() noexcept = default;
 	StreamBuffer(unsigned char byData, std::size_t uSize){
 		Put(byData, uSize);
 	}
@@ -46,9 +41,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~StreamBuffer(){
-		Clear();
-	}
+	~StreamBuffer();
 
 public:
 	bool IsEmpty() const noexcept {
@@ -83,8 +76,8 @@ public:
 
 	void Swap(StreamBuffer &rhs) noexcept {
 		using std::swap;
-		swap(x_pHead, rhs.x_pHead);
-		swap(x_pTail,  rhs.x_pTail);
+		swap(x_pLast,  rhs.x_pLast);
+		swap(x_pFirst, rhs.x_pFirst);
 		swap(x_uSize,  rhs.x_uSize);
 	}
 
@@ -96,40 +89,40 @@ public:
 
 class StreamBuffer::ReadIterator : public std::iterator<std::input_iterator_tag, int> {
 private:
-	StreamBuffer *x_psbufOwner;
+	StreamBuffer *x_psbufParent;
 
 public:
-	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
-		: x_psbufOwner(&sbufOwner)
+	explicit constexpr ReadIterator(StreamBuffer &sbufParent) noexcept
+		: x_psbufParent(&sbufParent)
 	{
 	}
 
 public:
 	int operator*() const {
-		return x_psbufOwner->Peek();
+		return x_psbufParent->Peek();
 	}
 	ReadIterator &operator++(){
-		x_psbufOwner->Discard();
+		x_psbufParent->Discard();
 		return *this;
 	}
 	ReadIterator operator++(int){
-		x_psbufOwner->Discard();
+		x_psbufParent->Discard();
 		return *this;
 	}
 };
 class StreamBuffer::WriteIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
 private:
-	StreamBuffer *x_psbufOwner;
+	StreamBuffer *x_psbufParent;
 
 public:
-	explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
-		: x_psbufOwner(&sbufOwner)
+	explicit constexpr WriteIterator(StreamBuffer &sbufParent) noexcept
+		: x_psbufParent(&sbufParent)
 	{
 	}
 
 public:
 	WriteIterator &operator=(unsigned char byData){
-		x_psbufOwner->Put(byData);
+		x_psbufParent->Put(byData);
 		return *this;
 	}
 	WriteIterator &operator*(){

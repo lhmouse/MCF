@@ -8,7 +8,6 @@
 #include "../Core/Assert.hpp"
 #include "../Core/Bail.hpp"
 #include "../Core/DeclVal.hpp"
-#include "../Core/FixedSizeAllocator.hpp"
 #include "../Core/Atomic.hpp"
 #include "../Thread/Mutex.hpp"
 #include "DefaultDeleter.hpp"
@@ -95,25 +94,8 @@ namespace Impl_IntrusivePtr {
 		return RealStaticCastOrDynamicCast<DstT, SrcT>(vSrc, 1);
 	}
 
-	enum : std::size_t {
-		kWeakViewSize = sizeof(void *) * 4,
-	};
-
-	extern FixedSizeAllocator<kWeakViewSize> &GetViewAllocator() noexcept;
-
 	template<typename OwnerT, class DeleterT>
-	class WeakViewTemplate final : public RefCountBase  {
-	public:
-		static void *operator new(std::size_t uSize){
-			static_assert(sizeof(WeakViewTemplate) <= kWeakViewSize, "Please fix this!");
-			MCF_DEBUG_CHECK(uSize == sizeof(WeakViewTemplate));
-
-			return GetViewAllocator().Allocate();
-		}
-		static void operator delete(void *pRaw) noexcept {
-			GetViewAllocator().Deallocate(pRaw);
-		}
-
+	class WeakViewTemplate : public RefCountBase  {
 	private:
 		mutable Mutex x_mtxGuard;
 		OwnerT *x_pOwner;
@@ -157,7 +139,7 @@ namespace Impl_IntrusivePtr {
 
 	template<class DeleterT>
 	class DeletableBase : public RefCountBase {
-	public: // private:
+	public: // XXX: private:
 		using X_WeakView = WeakViewTemplate<DeletableBase, DeleterT>;
 
 	private:
@@ -186,7 +168,7 @@ namespace Impl_IntrusivePtr {
 			}
 		}
 
-	public: // private:
+	public: // XXX: private:
 		X_WeakView *X_RequireView() const volatile {
 			auto pView = x_pView.Load(kAtomicConsume);
 			if(!pView){

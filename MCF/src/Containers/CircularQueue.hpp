@@ -348,6 +348,9 @@ public:
 	std::size_t GetCapacity() const noexcept {
 		return x_uCircularCap - 1;
 	}
+	std::size_t GetCapacityRemaining() const noexcept {
+		return GetCapacity() - GetSize();
+	}
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){

@@ -272,10 +272,11 @@ public:
 public:
 	// 容器需求。
 	bool IsEmpty() const noexcept {
-		return GetSize() == 0;
+		return x_pchBegin == x_pchEnd;
 	}
 	void Clear() noexcept {
-		x_pchEnd = x_pchBegin;
+		x_pchBegin = nullptr;
+		x_pchEnd   = nullptr;
 	}
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){

@@ -51,7 +51,7 @@ std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize){
 		x_vecBuffer.Clear();
 		x_vecBuffer.Reserve(Max(uSize, kPopulationThreshold * 2));
 		{
-			x_vecBuffer.UncheckedAppend(x_vecBuffer.GetCapacity());
+			x_vecBuffer.UncheckedAppend(x_vecBuffer.GetCapacityRemaining());
 			try {
 				const auto uBytesRead = GetUnderlyingStream()->Peek(x_vecBuffer.GetData(), x_vecBuffer.GetSize());
 				x_vecBuffer.Pop(x_vecBuffer.GetSize() - uBytesRead);

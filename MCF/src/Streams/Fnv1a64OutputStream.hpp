@@ -19,8 +19,7 @@ private:
 	std::uint64_t x_u64Reg;
 
 public:
-	Fnv1a64OutputStream() noexcept {
-	}
+	Fnv1a64OutputStream() noexcept = default;
 	~Fnv1a64OutputStream() override;
 
 private:

@@ -235,6 +235,9 @@ public:
 	static constexpr std::size_t GetCapacity() noexcept {
 		return kCapacityT;
 	}
+	std::size_t GetCapacityRemaining() const noexcept {
+		return GetCapacity() - GetSize();
+	}
 
 	const Element *GetBegin() const noexcept {
 		const void *const pElementRaw = x_aStorage;

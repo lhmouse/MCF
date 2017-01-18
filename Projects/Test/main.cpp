@@ -1,27 +1,38 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Streams/StringInputStream.hpp>
-#include <MCF/StreamFilters/BufferingInputStreamFilter.hpp>
-#include <MCFCRT/ext/itoa.h>
+#include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Containers/List.hpp>
 
 using namespace MCF;
 
+template class List<int>;
+
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	const auto is = MakeIntrusive<StringInputStream>("0123456789abcdefghijklmnopqrstuvwxyz"_ns);
-	const auto bs = MakeIntrusive<BufferingInputStreamFilter>(is);
-	std::printf("ss  = %s\n", is->GetString().GetStr() + is->GetOffset());
+	for(std::size_t i = 0; i < 30; ++i){
+		StreamBuffer b1, b2;
+		b1.Put("abcdefghijklmnopqrstuvexyz", 26);
+		b2 = b1.CutOff(i);
 
-	char str[256];
-	auto len = bs->Get(str, 6);
-	str[len] = 0;
-	std::printf("str = %s\n", str);
-	std::printf("ss  = %s\n", is->GetString().GetStr() + is->GetOffset());
+		char str[64];
+		std::size_t len;
+		int c;
 
-	len = bs->Get(str, 6);
-	str[len] = 0;
-	std::printf("str = %s\n", str);
-	std::printf("ss  = %s\n", is->GetString().GetStr() + is->GetOffset());
+		len = 0;
+		while((c = b1.Unput()) >= 0){
+			str[len++] = (char)c;
+		}
+		str[len++] = '$';
+		str[len++] = 0;
+		std::printf("b1 (%2u) : %s\n", len, str);
 
-	bs->Invalidate();
-	std::printf("ss  = %s\n", is->GetString().GetStr() + is->GetOffset());
+		len = 0;
+		while((c = b2.Unput()) >= 0){
+			str[len++] = (char)c;
+		}
+		str[len++] = '$';
+		str[len++] = 0;
+		std::printf("b2 (%2u) : %s\n", len, str);
+
+		std::puts("-----");
+	}
 	return 0;
 }

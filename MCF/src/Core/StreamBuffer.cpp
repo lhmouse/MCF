@@ -3,492 +3,313 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "StreamBuffer.hpp"
+#include "MinMax.hpp"
+#include "_CheckedSizeArithmetic.hpp"
 #include "Assert.hpp"
-#include "FixedSizeAllocator.hpp"
-#include <cstring>
 
 namespace MCF {
 
-constexpr unsigned kChunkSize = 256;
-
-namespace Impl_StreamBuffer {
-	struct Chunk {
-		static void *operator new(std::size_t uSize);
-		static void operator delete(void *pRaw) noexcept;
-
-		Chunk *pPrev;
-		Chunk *pNext;
-
-		unsigned uBegin;
-		unsigned uEnd;
-		unsigned char abyData[kChunkSize];
-	};
-
-	namespace {
-		FixedSizeAllocator<sizeof(Chunk)> g_vChunkAllocator;
+struct StreamBuffer::X_ChunkHeader {
+	static X_ChunkHeader *Create(std::size_t uMinCapacity, X_ChunkHeader *pPrev, X_ChunkHeader *pNext, bool bBackward){
+		const auto uCapacity = Max(uMinCapacity, 1024u);
+		const auto uOrigin = bBackward ? uCapacity : 0u;
+		const auto pChunk = static_cast<X_ChunkHeader *>(::operator new(Impl_CheckedSizeArithmetic::Add(sizeof(X_ChunkHeader), uCapacity)));
+		pChunk->uCapacity = uCapacity;
+		pChunk->pPrev     = pPrev;
+		pChunk->pNext     = pNext;
+		pChunk->uBegin    = uOrigin;
+		pChunk->uEnd      = uOrigin;
+		return pChunk;
+	}
+	static void Destroy(X_ChunkHeader *pChunk) noexcept {
+		::operator delete(pChunk);
 	}
 
-	static void *Chunk::operator new(std::size_t uSize){
-		MCF_ASSERT(uSize == sizeof(Chunk));
+	std::size_t uCapacity;
 
-		return g_vChunkAllocator.Allocate();
+	X_ChunkHeader *pPrev;
+	X_ChunkHeader *pNext;
+
+	std::size_t uBegin;
+	std::size_t uEnd;
+	__extension__ unsigned char abyData[];
+};
+
+StreamBuffer::StreamBuffer(const StreamBuffer &rhs){
+	const auto uSize = rhs.GetSize();
+	const auto pChunk = X_ChunkHeader::Create(uSize, nullptr, nullptr, false);
+	for(auto pSource = rhs.x_pFirst; pSource; pSource = pSource->pNext){
+		const auto uBytesAvail = pSource->uEnd - pSource->uBegin;
+		std::memcpy(pChunk->abyData + pChunk->uEnd, pSource->abyData + pSource->uBegin, uBytesAvail);
+		pChunk->uEnd += uBytesAvail;
 	}
-	static void Chunk::operator delete(void *pRaw) noexcept {
-		g_vChunkAllocator.Deallocate(pRaw);
-	}
+	x_pLast  = pChunk;
+	x_pFirst = pChunk;
+	x_uSize  = uSize;
 }
-
-StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
-	: StreamBuffer()
-{
-	auto *pChunk = rhs.x_pHead;
-	while(pChunk){
-		const auto pNext = pChunk->pNext;
-		Put(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin);
-		pChunk = pNext;
-	}
+StreamBuffer::~StreamBuffer(){
+	Clear();
 }
 
 void StreamBuffer::Clear() noexcept {
-	auto *pChunk = x_pHead;
+	auto pChunk = x_pFirst;
 	while(pChunk){
 		const auto pNext = pChunk->pNext;
-		delete pChunk;
+		X_ChunkHeader::Destroy(pChunk);
 		pChunk = pNext;
 	}
-
-	x_pHead = nullptr;
-	x_pTail  = nullptr;
-	x_uSize  = 0;
+	x_pLast  = nullptr;
+	x_pFirst = nullptr;
+	x_uSize  = 0u;
 }
 
 int StreamBuffer::PeekFront() const noexcept {
-	int nRet = -1;
-
-	auto *pChunk = x_pHead;
-	if(pChunk){
-		nRet = pChunk->abyData[pChunk->uBegin];
+	const auto pChunk = x_pFirst;
+	if(!pChunk){
+		return -1;
 	}
-
-	return nRet;
+	const auto byData = pChunk->abyData[pChunk->uBegin];
+	return byData;
 }
 int StreamBuffer::PeekBack() const noexcept {
-	int nRet = -1;
-
-	auto *pChunk = x_pTail;
+	const auto pChunk = x_pLast;
 	if(!pChunk){
-		nRet = pChunk->abyData[pChunk->uEnd - 1];
+		return -1;
 	}
-
-	return nRet;
+	const auto byData = pChunk->abyData[pChunk->uEnd - 1u];
+	return byData;
 }
 
 int StreamBuffer::Peek() const noexcept {
-	return PeekFront();
+	auto pChunk = x_pFirst;
+	if(!pChunk){
+		return -1;
+	}
+	const auto byData = pChunk->abyData[pChunk->uBegin];
+	return byData;
 }
 int StreamBuffer::Get() noexcept {
-	int nRet = -1;
-
-	auto *pChunk = x_pHead;
-	if(pChunk){
-		nRet = pChunk->abyData[pChunk->uBegin];
-		++(pChunk->uBegin);
-		--x_uSize;
-
-		const auto pNext = pChunk->pNext;
-		if(pChunk->uBegin == pChunk->uEnd){
-			delete pChunk;
-
-			if(pNext){
-				pNext->pPrev = nullptr;
-			} else {
-				x_pTail = nullptr;
-			}
-			x_pHead = pNext;
-		}
-		// pChunk = pNext;
+	auto pChunk = x_pFirst;
+	if(!pChunk){
+		return -1;
 	}
-
-	return nRet;
-}
-bool StreamBuffer::Discard() noexcept {
-	return Get() >= 0;
-}
-void StreamBuffer::Put(unsigned char byData){
-	auto *pChunk = x_pTail;
-	if(!pChunk || (pChunk->uEnd == kChunkSize)){
-		const auto pNext = new Impl_StreamBuffer::Chunk;
-
-		if(pChunk){
-			pChunk->pNext = pNext;
-		} else {
-			x_pHead = pNext;
-		}
-		x_pTail = pNext;
-
-		pNext->pPrev  = pChunk;
-		pNext->pNext  = nullptr;
-		pNext->uBegin = 0;
-		pNext->uEnd   = pNext->uBegin;
-
+	const auto byData = pChunk->abyData[pChunk->uBegin];
+	if(++pChunk->uBegin == pChunk->uEnd){
+		const auto pNext = pChunk->pNext;
+		*(pNext ? &(pNext->pPrev) : &x_pLast) = nullptr;
+		x_pFirst = pNext;
+		X_ChunkHeader::Destroy(pChunk);
 		pChunk = pNext;
 	}
-
+	--x_uSize;
+	return byData;
+}
+bool StreamBuffer::Discard() noexcept {
+	auto pChunk = x_pFirst;
+	if(!pChunk){
+		return false;
+	}
+	if(++pChunk->uBegin == pChunk->uEnd){
+		const auto pNext = pChunk->pNext;
+		*(pNext ? &(pNext->pPrev) : &x_pLast) = nullptr;
+		x_pFirst = pNext;
+		X_ChunkHeader::Destroy(pChunk);
+		pChunk = pNext;
+	}
+	--x_uSize;
+	return true;
+}
+void StreamBuffer::Put(unsigned char byData){
+	auto pChunk = x_pLast;
+	if(!pChunk || (pChunk->uCapacity - pChunk->uEnd < 1u)){
+		const auto pPrev = pChunk;
+		pChunk = X_ChunkHeader::Create(1u, pPrev, nullptr, false);
+		x_pLast = pChunk;
+		*(pPrev ? &(pPrev->pNext) : &x_pFirst) = pChunk;
+	}
 	pChunk->abyData[pChunk->uEnd] = byData;
-	++(pChunk->uEnd);
+	++pChunk->uEnd;
 	++x_uSize;
 }
 int StreamBuffer::Unput() noexcept {
-	int nRet = -1;
-
-	auto *pChunk = x_pTail;
-	if(pChunk){
-		--(pChunk->uEnd);
-		nRet = pChunk->abyData[pChunk->uEnd];
-		--x_uSize;
-
-		const auto pPrev = pChunk->pPrev;
-		if(pChunk->uBegin == pChunk->uEnd){
-			delete pChunk;
-
-			if(pPrev){
-				pPrev->pNext = nullptr;
-			} else {
-				x_pHead = nullptr;
-			}
-			x_pTail = pPrev;
-		}
-		// pChunk = pPrev;
+	auto pChunk = x_pLast;
+	if(!pChunk){
+		return -1;
 	}
-
-	return nRet;
-}
-void StreamBuffer::Unget(unsigned char byData){
-	auto *pChunk = x_pHead;
-	if(!pChunk || (pChunk->uBegin == 0)){
-		const auto pPrev = new Impl_StreamBuffer::Chunk;
-
-		if(pChunk){
-			pChunk->pPrev = pPrev;
-		} else {
-			x_pTail = pPrev;
-		}
-		x_pHead = pPrev;
-
-		pPrev->pPrev  = nullptr;
-		pPrev->pNext  = pChunk;
-		pPrev->uBegin = kChunkSize;
-		pPrev->uEnd   = pPrev->uBegin;
-
+	const auto byData = pChunk->abyData[pChunk->uEnd - 1u];
+	if(--pChunk->uEnd == pChunk->uBegin){
+		const auto pPrev = pChunk->pPrev;
+		x_pLast = pPrev;
+		*(pPrev ? &(pPrev->pNext) : &x_pFirst) = nullptr;
+		X_ChunkHeader::Destroy(pChunk);
 		pChunk = pPrev;
 	}
-
-	--(pChunk->uBegin);
-	pChunk->abyData[pChunk->uBegin] = byData;
+	--x_uSize;
+	return byData;
+}
+void StreamBuffer::Unget(unsigned char byData){
+	auto pChunk = x_pFirst;
+	if(!pChunk || (pChunk->uBegin < 1u)){
+		const auto pNext = pChunk;
+		pChunk = X_ChunkHeader::Create(1u, nullptr, pNext, true);
+		*(pNext ? &(pNext->pPrev) : &x_pLast) = pChunk;
+		x_pFirst = pChunk;
+	}
+	pChunk->abyData[pChunk->uBegin - 1u] = byData;
+	--pChunk->uBegin;
 	++x_uSize;
 }
 
 std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
-	const auto pbyBegin = static_cast<unsigned char *>(pData);
-	const auto pbyEnd = pbyBegin + uSize;
-	auto pbyWrite = pbyBegin;
-
-	auto *pChunk = x_pHead;
-	while((pbyWrite != pbyEnd) && pChunk){
-		const auto uBytesRemaining = static_cast<std::size_t>(pbyEnd - pbyWrite);
-		auto uBytesToCopy = pChunk->uEnd - pChunk->uBegin;
-		if(uBytesToCopy > uBytesRemaining){
-			uBytesToCopy = static_cast<unsigned>(uBytesRemaining);
+	std::size_t uBytesTotal = 0u;
+	auto pChunk = x_pFirst;
+	while(pChunk){
+		const auto uBytesRemaining = uSize - uBytesTotal;
+		if(uBytesRemaining == 0u){
+			break;
 		}
-		std::memcpy(pbyWrite, pChunk->abyData + pChunk->uBegin, uBytesToCopy);
-		pbyWrite += uBytesToCopy;
-
+		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
+		if(uBytesRemaining < uBytesAvail){
+			std::memcpy(static_cast<char *>(pData) + uBytesTotal, pChunk->abyData + pChunk->uBegin, uBytesRemaining);
+			uBytesTotal += uBytesRemaining;
+			break;
+		}
+		std::memcpy(static_cast<char *>(pData) + uBytesTotal, pChunk->abyData + pChunk->uBegin, uBytesAvail);
 		const auto pNext = pChunk->pNext;
 		pChunk = pNext;
+		uBytesTotal += uBytesAvail;
 	}
-
-	return static_cast<std::size_t>(pbyWrite - pbyBegin);
+	return uBytesTotal;
 }
 std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
-	const auto pbyBegin = static_cast<unsigned char *>(pData);
-	const auto pbyEnd = pbyBegin + uSize;
-	auto pbyWrite = pbyBegin;
-
-	auto *pChunk = x_pHead;
-	while((pbyWrite != pbyEnd) && pChunk){
-		const auto uBytesRemaining = static_cast<std::size_t>(pbyEnd - pbyWrite);
-		auto uBytesToCopy = pChunk->uEnd - pChunk->uBegin;
-		if(uBytesToCopy > uBytesRemaining){
-			uBytesToCopy = static_cast<unsigned>(uBytesRemaining);
+	std::size_t uBytesTotal = 0u;
+	auto pChunk = x_pFirst;
+	while(pChunk){
+		const auto uBytesRemaining = uSize - uBytesTotal;
+		if(uBytesRemaining == 0u){
+			break;
 		}
-		std::memcpy(pbyWrite, pChunk->abyData + pChunk->uBegin, uBytesToCopy);
-		pbyWrite += uBytesToCopy;
-		pChunk->uBegin += uBytesToCopy;
-		x_uSize -= uBytesToCopy;
-
+		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
+		if(uBytesRemaining < uBytesAvail){
+			std::memcpy(static_cast<char *>(pData) + uBytesTotal, pChunk->abyData + pChunk->uBegin, uBytesRemaining);
+			pChunk->uBegin += uBytesRemaining;
+			uBytesTotal += uBytesRemaining;
+			break;
+		}
+		std::memcpy(static_cast<char *>(pData) + uBytesTotal, pChunk->abyData + pChunk->uBegin, uBytesAvail);
 		const auto pNext = pChunk->pNext;
-		if(pChunk->uBegin == pChunk->uEnd){
-			delete pChunk;
-
-			if(pNext){
-				pNext->pPrev = nullptr;
-			} else {
-				x_pTail = nullptr;
-			}
-			x_pHead = pNext;
-		}
+		*(pNext ? &(pNext->pPrev) : &x_pLast) = nullptr;
+		x_pFirst = pNext;
+		X_ChunkHeader::Destroy(pChunk);
 		pChunk = pNext;
+		uBytesTotal += uBytesAvail;
 	}
-
-	return static_cast<std::size_t>(pbyWrite - pbyBegin);
+	x_uSize -= uBytesTotal;
+	return uBytesTotal;
 }
 std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
-	std::size_t uBytesDiscarded = 0;
-
-	auto *pChunk = x_pHead;
-	while((uBytesDiscarded != uSize) && pChunk){
-		const auto uBytesRemaining = uSize - uBytesDiscarded;
-		auto uBytesToDiscard = pChunk->uEnd - pChunk->uBegin;
-		if(uBytesToDiscard > uBytesRemaining){
-			uBytesToDiscard = static_cast<unsigned>(uBytesRemaining);
+	std::size_t uBytesTotal = 0u;
+	auto pChunk = x_pFirst;
+	while(pChunk){
+		const auto uBytesRemaining = uSize - uBytesTotal;
+		if(uBytesRemaining == 0u){
+			break;
 		}
-		uBytesDiscarded += uBytesToDiscard;
-		pChunk->uBegin += uBytesToDiscard;
-		x_uSize -= uBytesToDiscard;
-
+		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
+		if(uBytesRemaining < uBytesAvail){
+			pChunk->uBegin += uBytesRemaining;
+			uBytesTotal += uBytesRemaining;
+			break;
+		}
 		const auto pNext = pChunk->pNext;
-		if(pChunk->uBegin == pChunk->uEnd){
-			delete pChunk;
-
-			if(pNext){
-				pNext->pPrev = nullptr;
-			} else {
-				x_pTail = nullptr;
-			}
-			x_pHead = pNext;
-		}
+		*(pNext ? &(pNext->pPrev) : &x_pLast) = nullptr;
+		x_pFirst = pNext;
+		X_ChunkHeader::Destroy(pChunk);
 		pChunk = pNext;
+		uBytesTotal += uBytesAvail;
 	}
-
-	return uBytesDiscarded;
+	x_uSize -= uBytesTotal;
+	return uBytesTotal;
 }
 void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
-	Impl_StreamBuffer::Chunk *pSpHead = nullptr, *pSpTail = nullptr;
-	std::size_t uCapacityAvail = 0;
-
-	const auto pTail = x_pTail;
-	if(pTail){
-		uCapacityAvail += kChunkSize - pTail->uEnd;
+	auto pChunk = x_pLast;
+	if(!pChunk || (pChunk->uCapacity - pChunk->uEnd < uSize)){
+		const auto pPrev = pChunk;
+		pChunk = X_ChunkHeader::Create(uSize, pPrev, nullptr, false);
+		x_pLast = pChunk;
+		*(pPrev ? &(pPrev->pNext) : &x_pFirst) = pChunk;
 	}
-	if(uCapacityAvail < uSize){
-		pSpHead = new Impl_StreamBuffer::Chunk;
-		pSpTail = pSpHead;
-
-		pSpHead->pPrev  = pTail;
-		pSpHead->pNext  = nullptr;
-		pSpHead->uBegin = 0;
-		pSpHead->uEnd   = pSpHead->uBegin;
-
-		uCapacityAvail += kChunkSize;
-
-		try {
-			while(uCapacityAvail < uSize){
-				const auto pChunk = pSpTail;
-				const auto pNext = new Impl_StreamBuffer::Chunk;
-
-				pSpTail->pNext = pNext;
-				pSpTail = pNext;
-
-				pNext->pPrev  = pChunk;
-				pNext->pNext  = nullptr;
-				pNext->uBegin = 0;
-				pNext->uEnd   = pNext->uBegin;
-
-				uCapacityAvail += kChunkSize;
-			}
-		} catch(...){
-			auto pChunk = pSpHead;
-			do {
-				const auto pNext = pChunk->pNext;
-				delete pChunk;
-				pChunk = pNext;
-			} while(pChunk);
-
-			throw;
-		}
-	}
-
-	if(pSpHead){
-		if(pTail){
-			pTail->pNext = pSpHead;
-		} else {
-			x_pHead = pSpHead;
-		}
-		// pSpHead->pPrev = pTail;
-		x_pTail = pSpTail;
-	}
-
-	auto *pChunk = pSpHead;
-	if(pTail){
-		pChunk = pTail;
-	}
-	std::size_t uBytesFilled = 0;
-	while(uBytesFilled != uSize){
-		const auto uBytesRemaining = uSize - uBytesFilled;
-		auto uBytesToCopy = kChunkSize - pChunk->uEnd;
-		if(uBytesToCopy > uBytesRemaining){
-			uBytesToCopy = static_cast<unsigned>(uBytesRemaining);
-		}
-		std::memset(pChunk->abyData + pChunk->uEnd, byData, uBytesToCopy);
-		pChunk->uEnd += uBytesToCopy;
-		x_uSize += uBytesToCopy;
-
-		pChunk = pChunk->pNext;
-	}
+	std::memset(pChunk->abyData + pChunk->uEnd, byData, uSize);
+	pChunk->uEnd += uSize;
+	x_uSize += uSize;
 }
 void StreamBuffer::Put(const void *pData, std::size_t uSize){
-	Impl_StreamBuffer::Chunk *pSpHead = nullptr, *pSpTail = nullptr;
-	std::size_t uCapacityAvail = 0;
-
-	const auto pTail = x_pTail;
-	if(pTail){
-		uCapacityAvail += kChunkSize - pTail->uEnd;
+	auto pChunk = x_pLast;
+	if(!pChunk || (pChunk->uCapacity - pChunk->uEnd < uSize)){
+		const auto pPrev = pChunk;
+		pChunk = X_ChunkHeader::Create(uSize, pPrev, nullptr, false);
+		x_pLast = pChunk;
+		*(pPrev ? &(pPrev->pNext) : &x_pFirst) = pChunk;
 	}
-	if(uCapacityAvail < uSize){
-		pSpHead = new Impl_StreamBuffer::Chunk;
-		pSpTail = pSpHead;
-
-		pSpHead->pPrev  = pTail;
-		pSpHead->pNext  = nullptr;
-		pSpHead->uBegin = 0;
-		pSpHead->uEnd   = pSpHead->uBegin;
-
-		uCapacityAvail += kChunkSize;
-
-		try {
-			while(uCapacityAvail < uSize){
-				const auto pChunk = pSpTail;
-				const auto pNext = new Impl_StreamBuffer::Chunk;
-
-				pSpTail->pNext = pNext;
-				pSpTail = pNext;
-
-				pNext->pPrev  = pChunk;
-				pNext->pNext  = nullptr;
-				pNext->uBegin = 0;
-				pNext->uEnd   = pNext->uBegin;
-
-				uCapacityAvail += kChunkSize;
-			}
-		} catch(...){
-			auto pChunk = pSpHead;
-			do {
-				const auto pNext = pChunk->pNext;
-				delete pChunk;
-				pChunk = pNext;
-			} while(pChunk);
-
-			throw;
-		}
-	}
-
-	if(pSpHead){
-		if(pTail){
-			pTail->pNext = pSpHead;
-		} else {
-			x_pHead = pSpHead;
-		}
-		// pSpHead->pPrev = pTail;
-		x_pTail = pSpTail;
-	}
-
-	auto *pChunk = pSpHead;
-	if(pTail){
-		pChunk = pTail;
-	}
-	const auto pbyBegin = static_cast<const unsigned char *>(pData);
-	const auto pbyEnd = pbyBegin + uSize;
-	auto pbyRead = pbyBegin;
-	while(pbyRead != pbyEnd){
-		const auto uBytesRemaining = static_cast<std::size_t>(pbyEnd - pbyRead);
-		auto uBytesToCopy = kChunkSize - pChunk->uEnd;
-		if(uBytesToCopy > uBytesRemaining){
-			uBytesToCopy = static_cast<unsigned>(uBytesRemaining);
-		}
-		std::memcpy(pChunk->abyData + pChunk->uEnd, pbyRead, uBytesToCopy);
-		pChunk->uEnd += uBytesToCopy;
-		pbyRead += uBytesToCopy;
-		x_uSize += uBytesToCopy;
-
-		pChunk = pChunk->pNext;
-	}
+	std::memcpy(pChunk->abyData + pChunk->uEnd, pData, uSize);
+	pChunk->uEnd += uSize;
+	x_uSize += uSize;
 }
 
 StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
-	std::size_t uBytesCut = 0;
-	const auto pCutBegin = x_pHead;
-	auto pCutEnd = pCutBegin;
-	while((uBytesCut != uOffsetEnd) && pCutEnd){
-		const auto uBytesRemaining = uOffsetEnd - uBytesCut;
-		auto uBytesToCut = pCutEnd->uEnd - pCutEnd->uBegin;
-		if(uBytesToCut > uBytesRemaining){
-			const auto pSplit = new Impl_StreamBuffer::Chunk;
-			const auto pNext = pCutEnd->pNext;
-			const auto uBytesLeft = static_cast<unsigned>(uBytesToCut - uBytesRemaining);
-
-			pSplit->pPrev  = pCutEnd;
-			pSplit->pNext  = pNext;
-			pSplit->uBegin = 0;
-			pSplit->uEnd   = uBytesLeft;
-
-			std::memcpy(pSplit->abyData, pCutEnd->abyData + pCutEnd->uBegin + uBytesRemaining, uBytesLeft);
-			pCutEnd->uEnd -= uBytesLeft;
-
-			pCutEnd->pNext = pSplit;
-			(pNext ? pNext->pPrev : x_pTail) = pSplit;
-
-			uBytesToCut = static_cast<unsigned>(uBytesRemaining);
+	std::size_t uBytesTotal = 0u;
+	auto pChunk = x_pFirst;
+	while(pChunk){
+		const auto uBytesRemaining = uOffsetEnd - uBytesTotal;
+		if(uBytesRemaining == 0u){
+			break;
 		}
-		uBytesCut += uBytesToCut;
-
-		const auto pNext = pCutEnd->pNext;
-		pCutEnd = pNext;
+		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
+		if(uBytesRemaining < uBytesAvail){
+			const auto pPrev = pChunk->pPrev;
+			const auto pNext = pChunk;
+			pChunk = X_ChunkHeader::Create(uBytesRemaining, pPrev, pNext, false);
+			std::memcpy(pChunk->abyData + pChunk->uEnd, pNext->abyData + pNext->uBegin, uBytesRemaining);
+			pChunk->uEnd += uBytesRemaining;
+			pNext->uBegin += uBytesRemaining;
+			*(pPrev ? &(pPrev->pNext) : &x_pFirst) = pChunk;
+			pNext->pPrev = pChunk;
+			pChunk = pNext;
+			uBytesTotal += uBytesRemaining;
+			break;
+		}
+		const auto pNext = pChunk->pNext;
+		pChunk = pNext;
+		uBytesTotal += uBytesAvail;
 	}
 
-	StreamBuffer vHead;
-	if(pCutBegin != pCutEnd){
-		MCF_DEBUG_CHECK(pCutBegin);
-
-		const auto pBeforeEnd = std::exchange(pCutEnd ? pCutEnd->pPrev : x_pTail, nullptr);
-
-		vHead.x_pHead = pCutBegin;
-		vHead.x_pTail = pBeforeEnd;
-		x_pHead = pCutEnd;
-		// pCutBegin->pPrev = nullptr;
-		pBeforeEnd->pNext = nullptr;
-
-		vHead.x_uSize = uBytesCut;
-		x_uSize -= uBytesCut;
+	StreamBuffer ret;
+	if(uBytesTotal != 0){
+		const auto pLastCut = std::exchange(*(pChunk ? &(pChunk->pPrev) : &x_pLast), nullptr);
+		pLastCut->pNext = nullptr;
+		const auto pFirstCut = std::exchange(x_pFirst, pChunk);
+		ret.x_pLast  = pLastCut;
+		ret.x_pFirst = pFirstCut;
+		ret.x_uSize  = uBytesTotal;
+		x_uSize -= uBytesTotal;
 	}
-	return vHead;
+	return ret;
 }
 void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
-	MCF_DEBUG_CHECK(&rhs != this);
+	MCF_ASSERT(&rhs != this);
 
-	const auto pSpHead = rhs.x_pHead;
-	if(pSpHead){
-		const auto pSpTail = rhs.x_pTail;
-		const auto pTail = x_pTail;
-		(pTail ? pTail->pNext : x_pHead) = pSpHead;
-		pSpHead->pPrev = pTail;
-		x_pTail = pSpTail;
-
-		rhs.x_pHead = nullptr;
-		rhs.x_pTail  = nullptr;
-
-		x_uSize += rhs.x_uSize;
-		rhs.x_uSize = 0;
+	const auto pFirstAdd = std::exchange(rhs.x_pFirst, nullptr);
+	if(!pFirstAdd){
+		return;
 	}
+	const auto pLastAdd  = std::exchange(rhs.x_pLast, nullptr);
+	const auto uSizeAdd  = std::exchange(rhs.x_uSize, 0u);
+
+	const auto pLast = x_pLast;
+	x_pLast = pLastAdd;
+	*(pLast ? &(pLast->pNext) : &x_pFirst) = pFirstAdd;
+	pFirstAdd->pPrev = pLast;
+	x_uSize += uSizeAdd;
 }
 
 }

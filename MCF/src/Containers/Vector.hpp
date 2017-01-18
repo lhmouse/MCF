@@ -60,8 +60,8 @@ public:
 	Vector(const Vector &rhs)
 		: Vector()
 	{
-		Reserve(rhs.x_uSize);
-		for(std::size_t i = 0; i < rhs.x_uSize; ++i){
+		Reserve(rhs.GetSize());
+		for(std::size_t i = 0; i < rhs.GetSize(); ++i){
 			UncheckedPush(rhs.x_pStorage[i]);
 		}
 	}
@@ -72,9 +72,9 @@ public:
 	}
 	Vector &operator=(const Vector &rhs){
 		if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
-			Reserve(rhs.x_uSize);
+			Reserve(rhs.GetSize());
 			try {
-				for(std::size_t i = 0; i < rhs.x_uSize; ++i){
+				for(std::size_t i = 0; i < rhs.GetSize(); ++i){
 					UncheckedPush(rhs.x_pStorage[i]);
 				}
 			} catch(...){
@@ -125,7 +125,7 @@ public:
 		return x_uSize == 0;
 	}
 	void Clear() noexcept {
-		Pop(x_uSize);
+		Pop(GetSize());
 	}
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
@@ -201,7 +201,7 @@ public:
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		++uOffset;
-		if(uOffset == x_uSize){
+		if(uOffset == GetSize()){
 			return nullptr;
 		}
 		return pBegin + uOffset;
@@ -212,7 +212,7 @@ public:
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		++uOffset;
-		if(uOffset == x_uSize){
+		if(uOffset == GetSize()){
 			return nullptr;
 		}
 		return pBegin + uOffset;
@@ -269,6 +269,9 @@ public:
 	std::size_t GetCapacity() const noexcept {
 		return x_uCapacity;
 	}
+	std::size_t GetCapacityRemaining() const noexcept {
+		return GetCapacity() - GetSize();
+	}
 
 	const Element *GetBegin() const noexcept {
 		return x_pStorage;
@@ -313,7 +316,7 @@ public:
 	}
 
 	void Reserve(std::size_t uNewCapacity){
-		const auto uOldCapacity = x_uCapacity;
+		const auto uOldCapacity = GetCapacity();
 		if(uNewCapacity <= uOldCapacity){
 			return;
 		}
@@ -329,7 +332,7 @@ public:
 		const auto pOldStorage = x_pStorage;
 		auto pWrite = pNewStorage;
 		try {
-			for(std::size_t i = 0; i < x_uSize; ++i){
+			for(std::size_t i = 0; i < GetSize(); ++i){
 				Construct(pWrite, std::move_if_noexcept(pOldStorage[i]));
 				++pWrite;
 			}
@@ -341,7 +344,7 @@ public:
 			Allocator()(static_cast<void *>(pNewStorage));
 			throw;
 		}
-		for(std::size_t i = x_uSize; i > 0; --i){
+		for(std::size_t i = GetSize(); i > 0; --i){
 			Destruct(pOldStorage + i - 1);
 		}
 		Allocator()(static_cast<void *>(pOldStorage));
@@ -350,13 +353,13 @@ public:
 		x_uCapacity = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, x_uSize);
+		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, GetSize());
 		Reserve(uNewCapacity);
 	}
 
 	template<typename ...ParamsT>
 	Element *Resize(std::size_t uSize, const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = GetSize();
 		if(uSize > uOldSize){
 			Append(uSize - uOldSize, vParams...);
 		} else {
@@ -366,7 +369,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = GetSize();
 		Append(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
 	}
@@ -385,7 +388,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		MCF_DEBUG_CHECK(x_uCapacity - x_uSize > 0);
+		MCF_DEBUG_CHECK(GetCapacity() - GetSize() > 0);
 
 		const auto pElement = x_pStorage + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
@@ -534,7 +537,7 @@ public:
 			x_uSize += 1;
 		} else {
 			auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(1, x_uSize);
-			const auto uCapacity = x_uCapacity;
+			const auto uCapacity = GetCapacity();
 			if(uNewCapacity < uCapacity){
 				uNewCapacity = uCapacity;
 			}
@@ -582,7 +585,7 @@ public:
 				x_uSize += uDeltaSize;
 			} else {
 				auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaSize, x_uSize);
-				const auto uCapacity = x_uCapacity;
+				const auto uCapacity = GetCapacity();
 				if(uNewCapacity < uCapacity){
 					uNewCapacity = uCapacity;
 				}
@@ -636,7 +639,7 @@ public:
 					x_uSize += uDeltaSize;
 				} else {
 					auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaSize, x_uSize);
-					const auto uCapacity = x_uCapacity;
+					const auto uCapacity = GetCapacity();
 					if(uNewCapacity < uCapacity){
 						uNewCapacity = uCapacity;
 					}
@@ -655,7 +658,7 @@ public:
 				}
 			} else {
 				Vector vecTemp;
-				const auto uCapacity = x_uCapacity;
+				const auto uCapacity = GetCapacity();
 				vecTemp.Reserve(uCapacity);
 				for(std::size_t i = 0; i < uOffset; ++i){
 					vecTemp.UncheckedPush(x_pStorage[i]);
@@ -705,7 +708,7 @@ public:
 				x_uSize -= uDeltaSize;
 			} else {
 				Vector vecTemp;
-				const auto uCapacity = x_uCapacity;
+				const auto uCapacity = GetCapacity();
 				vecTemp.Reserve(uCapacity);
 				for(std::size_t i = 0; i < uOffsetBegin; ++i){
 					vecTemp.UncheckedPush(x_pStorage[i]);

@@ -136,6 +136,9 @@ namespace Impl_FlatContainer {
 		std::size_t GetCapacity() const noexcept {
 			return x_uCapacity;
 		}
+		std::size_t GetCapacityRemaining() const noexcept {
+			return GetCapacity() - GetSize();
+		}
 
 		const Element *GetBegin() const noexcept {
 			return x_pStorage;

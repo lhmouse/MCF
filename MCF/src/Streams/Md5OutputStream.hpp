@@ -19,8 +19,7 @@ private:
 	std::uint64_t x_u64BytesTotal;
 
 public:
-	Md5OutputStream() noexcept {
-	}
+	Md5OutputStream() noexcept = default;
 	~Md5OutputStream() override;
 
 private:

@@ -22,7 +22,7 @@ static inline long double fpu_copysign(long double x, long double y){
 float copysignf(float x, float y){
 	float ret;
 #ifdef _WIN64
-	static const uint32_t mmask = 0x7FFFFFFFu;
+	static const uint32_t mmask = (1ull << 31) - 1;
 	__asm__ (
 		"movss xmm2, dword ptr[%3] \n"
 		"xorps xmm0, xmm1 \n"
@@ -40,7 +40,7 @@ float copysignf(float x, float y){
 double copysign(double x, double y){
 	double ret;
 #ifdef _WIN64
-	static const uint64_t mmask = 0x7FFFFFFFFFFFFFFFu;
+	static const uint64_t mmask = (1ull << 63) - 1;
 	__asm__ (
 		"movsd xmm2, qword ptr[%3] \n"
 		"xorpd xmm0, xmm1 \n"

@@ -14,7 +14,7 @@ typedef union tag_x87reg {
 	struct __attribute__((__packed__)) {
 		union {
 			uint64_t f64;
-			struct __attribute__((__packed__)) {
+			struct {
 				uint32_t flo;
 				uint32_t fhi;
 			};
@@ -48,10 +48,16 @@ static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long dou
 	lo->sgn = sgn;
 }
 static inline long double fpu_fma(long double x, long double y, long double z){
+	long double ret = x * y + z;
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, ret);
+	if((exam != __MCFCRT_kFpuExamineNormal) && (exam != __MCFCRT_kFpuExamineDenormal) && (exam != __MCFCRT_kFpuExamineZero)){
+		return ret;
+	}
 	x87reg xlo, xhi, ylo, yhi;
 	break_down(&xlo, &xhi, x);
 	break_down(&ylo, &yhi, y);
-	long double ret = z;
+	ret = z;
 	ret += xhi.f * yhi.f;
 	ret += xhi.f * ylo.f + xlo.f * yhi.f;
 	ret += xlo.f * ylo.f;

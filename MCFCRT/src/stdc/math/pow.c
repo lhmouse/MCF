@@ -10,37 +10,106 @@
 #undef powl
 
 static inline long double fpu_pow(long double x, long double y){
-	if(y == 0){
-		return 1;
-	}
-	if(y == 1){
-		return x;
-	}
+	// ISO/IEC C11 N1570
+	// F.10.4.4 The pow functions
+	//  1. pow(±0, y) returns ±∞ and raises the "divide-by-zero" floating-point exception for y an odd integer < 0.
+	//  2. pow(±0, y) returns +∞ and raises the "divide-by-zero" floating-point exception for y < 0, finite, and not an odd integer.
+	//  3. pow(±0, -∞) returns +∞ and may raise the "divide-by-zero" floating-point exception.
+	//  4. pow(±0, y) returns ±0 for y an odd integer > 0.
+	//  5. pow(±0, y) returns +0 for y > 0 and not an odd integer.
+	//  6. pow(-1, ±∞) returns 1.
+	//  7. pow(+1, y) returns 1 for any y, even a NaN.
+	//  8. pow(x, ±0) returns 1 for any x, even a NaN.
+	//  9. pow(x, y) returns a NaN and raises the "invalid" floating-point exception for finite x < 0 and finite non-integer y.
+	// 10. pow(x, -∞) returns +∞ for |x| < 1.
+	// 11. pow(x, -∞) returns +0 for |x| > 1.
+	// 12. pow(x, +∞) returns +0 for |x| < 1.
+	// 13. pow(x, +∞) returns +∞ for |x| > 1.
+	// 14. pow(-∞, y) returns -0 for y an odd integer < 0.
+	// 15. pow(-∞, y) returns +0 for y < 0 and not an odd integer.
+	// 16. pow(-∞, y) returns -∞ for y an odd integer > 0.
+	// 17. pow(-∞, y) returns +∞ for y > 0 and not an odd integer.
+	// 18. pow(+∞, y) returns +0 for y < 0.
+	// 19. pow(+∞, y) returns +∞ for y > 0.
 
-	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
-	if(sgn == __MCFCRT_kFpuZero){
-		return x;
+	if(x == 1){
+		return 1; // Case 7.
+	}
+	bool ysign;
+	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
+	if(yexam == __MCFCRT_kFpuExamineZero){
+		return 1; // Case 8.
+	}
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	// 注意 MCFCRT 对于 NaN 产生硬件异常，因此不用处理。如果需要处理 NaN 应该添加在这里。
+	if(xexam == __MCFCRT_kFpuExamineZero){
+		if(ysign){
+			if(yexam == __MCFCRT_kFpuExamineInfinity){
+				return 1 / __MCFCRT_fldz(); // Case 3. Raises the exception.
+			}
+			bool bits[3];
+			if(__MCFCRT_fmod(&bits, y, 2) == -1){
+				return x / __MCFCRT_fldz(); // Case 1.
+			}
+			return 1 / __MCFCRT_fldz(); // Case 2.
+		}
+		bool bits[3];
+		if(__MCFCRT_fmod(&bits, y, 2) == 1){
+			return x; // Case 4. Note that x is zero.
+		}
+		return __MCFCRT_fldz(); // Case 5.
+	}
+	if(xexam == __MCFCRT_kFpuExamineInfinity){
+		if(xsign){
+			if(ysign){
+				bool bits[3];
+				if(__MCFCRT_fmod(&bits, y, 2) == -1){
+					return __MCFCRT_fchs(__MCFCRT_fldz()); // Case 14.
+				}
+				return __MCFCRT_fldz(); // Case 15.
+			}
+			bool bits[3];
+			if(__MCFCRT_fmod(&bits, y, 2) == 1){
+				return x; // Case 16. Note that x is -∞.
+			}
+			return __MCFCRT_fchs(x); // Case 17. Note that x is -∞.
+		}
+		if(ysign){
+			return __MCFCRT_fldz(); // Case 18.
+		}
+		return x; // Case 19. Note that x is +∞.
+	}
+	const long double xabs = __MCFCRT_fabs(x);
+	if(yexam == __MCFCRT_kFpuExamineInfinity){
+		if(xabs == 1){
+			return 1; // Case 6. Note that x cannot be 1.
+		}
+		if(ysign){
+			if(xabs < 1){
+				return __MCFCRT_fchs(y); // Case 10. Note that y is -∞.
+			}
+			return __MCFCRT_fldz(); // Case 11.
+		}
+		if(xabs < 1){
+			return __MCFCRT_fldz(); // Case 12.
+		}
+		return y; // Case 13. Note that y is +∞.
+	}
+	bool rsign = false;
+	if(xsign){
+		if(__MCFCRT_frndintany(y) != y){
+			return __builtin_nansl("0x706F77"); // Case 9. Returns "pow".
+		}
+		bool bits[3];
+		rsign = (__MCFCRT_fmod(&bits, y, 2) != 0);
 	}
 	// x^y = 2^(y*log2(x))
-	long double px = x;
-	bool neg;
-	if(sgn == __MCFCRT_kFpuNegative){
-		if(__MCFCRT_frndintany(y) != y){
-			return __builtin_nansl("0x706F77");
-		}
-		unsigned fsw;
-		neg = __MCFCRT_fmod(&fsw, y, 2) != 0;
-	} else {
-		neg = false;
-	}
-	if(neg){
-		px = __MCFCRT_fneg(px);
-	}
-	const long double ylog2x = y * __MCFCRT_fyl2x(__MCFCRT_fld1(), px);
+	const long double ylog2x = y * __MCFCRT_fyl2x(1, xabs);
 	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
-	long double ret = __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
-	if(neg){
-		ret = __MCFCRT_fneg(ret);
+	long double ret = __MCFCRT_fscale(1, i) * (__MCFCRT_f2xm1(m) + 1);
+	if(rsign){
+		ret = __MCFCRT_fchs(ret);
 	}
 	return ret;
 }

@@ -10,8 +10,8 @@
 #undef tanl
 
 static inline long double fpu_tan(long double x){
-	unsigned fsw;
-	const long double reduced = __MCFCRT_fremainder(&fsw, x, __MCFCRT_fldpi());
+	bool bits[3];
+	const long double reduced = __MCFCRT_fremainder(&bits, x, __MCFCRT_fldpi());
 	long double ret = __MCFCRT_ftan_unsafe(reduced);
 	return ret;
 }

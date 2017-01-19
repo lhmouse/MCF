@@ -9,37 +9,45 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-typedef enum __MCFCRT_tagFpuSign {
-	__MCFCRT_kFpuPositive  = 0x00,
-	__MCFCRT_kFpuNegative  = 0x01,
-	__MCFCRT_kFpuZero      = 0x40,
-	__MCFCRT_kFpuUnordered = 0x41,
-} __MCFCRT_FpuSign;
+typedef enum __MCFCRT_tagFpuCompare {
+	__MCFCRT_kFpuComparePositive  = 0x0000,
+	__MCFCRT_kFpuCompareNegative  = 0x0100,
+	__MCFCRT_kFpuCompareZero      = 0x4000,
+	__MCFCRT_kFpuCompareUnordered = 0x4100,
+} __MCFCRT_FpuCompare;
 
-static inline __MCFCRT_FpuSign __MCFCRT_ftest(long double __x) _MCFCRT_NOEXCEPT {
-	__MCFCRT_FpuSign __ret;
+static inline __MCFCRT_FpuCompare __MCFCRT_ftest(long double __x) _MCFCRT_NOEXCEPT {
+	_MCFCRT_STD uint16_t __fsw;
 	__asm__ (
 		"ftst \n"
 		"fstsw ax \n"
-		"shr eax, 8 \n"
-		"and eax, 0x41 \n"
-		: "=a"(__ret)
+		: "=a"(__fsw)
 		: "t"(__x)
 	);
-	return __ret;
+	return (__MCFCRT_FpuCompare)(__fsw & 0x4100);
 }
 
-static inline bool __MCFCRT_fgetsign(long double __x) _MCFCRT_NOEXCEPT {
-	bool __ret;
+typedef enum __MCFCRT_tagFpuExamine {
+	__MCFCRT_kFpuExamineUnsupported = 0x0000,
+	__MCFCRT_kFpuExamineNaN         = 0x0100,
+	__MCFCRT_kFpuExamineNormal      = 0x0400,
+	__MCFCRT_kFpuExamineInfinity    = 0x0500,
+	__MCFCRT_kFpuExamineZero        = 0x4000,
+	__MCFCRT_kFpuExamineEmpty       = 0x4100,
+	__MCFCRT_kFpuExamineDenormal    = 0x4400,
+	__MCFCRT_kFpuExamineReserved    = 0x4500,
+} __MCFCRT_FpuExamine;
+
+static inline __MCFCRT_FpuExamine __MCFCRT_fxam(bool *__sign, long double __x) _MCFCRT_NOEXCEPT {
+	_MCFCRT_STD uint16_t __fsw;
 	__asm__ (
 		"fxam \n"
 		"fstsw ax \n"
-		"shr eax, 9 \n"
-		"and eax, 0x01 \n"
-		: "=a"(__ret)
+		: "=a"(__fsw)
 		: "t"(__x)
 	);
-	return __ret;
+	*__sign = __fsw & 0x0200;
+	return (__MCFCRT_FpuExamine)(__fsw & 0x4500);
 }
 
 static inline long double __MCFCRT_fabs(long double __x) _MCFCRT_NOEXCEPT {
@@ -51,7 +59,7 @@ static inline long double __MCFCRT_fabs(long double __x) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-static inline long double __MCFCRT_fneg(long double __x) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fchs(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fchs \n"
@@ -199,30 +207,38 @@ static inline long double __MCFCRT_fsqrt(long double __x) _MCFCRT_NOEXCEPT {
 	return __ret;
 }
 
-static inline long double __MCFCRT_fmod(unsigned *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fmod(bool (*__bits)[3], long double __x, long double __y) _MCFCRT_NOEXCEPT {
 	long double __ret;
+	_MCFCRT_STD uint16_t __fsw;
 	__asm__ (
 		"1: \n"
 		"	fprem \n"
 		"	fstsw ax \n"
 		"	test ah, 0x04 \n"
 		"	jnz 1b \n"
-		: "=&t"(__ret), "=a"(*__fsw)
+		: "=&t"(__ret), "=a"(__fsw)
 		: "0"(__x), "u"(__y)
 	);
+	(*__bits)[2] = __fsw & 0x0100;
+	(*__bits)[1] = __fsw & 0x4000;
+	(*__bits)[0] = __fsw & 0x0200;
 	return __ret;
 }
-static inline long double __MCFCRT_fremainder(unsigned *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fremainder(bool (*__bits)[3], long double __x, long double __y) _MCFCRT_NOEXCEPT {
 	long double __ret;
+	_MCFCRT_STD uint16_t __fsw;
 	__asm__ (
 		"1: \n"
 		"	fprem1 \n"
 		"	fstsw ax \n"
 		"	test ah, 0x04 \n"
 		"	jnz 1b \n"
-		: "=&t"(__ret), "=a"(*__fsw)
+		: "=&t"(__ret), "=a"(__fsw)
 		: "0"(__x), "u"(__y)
 	);
+	(*__bits)[2] = __fsw & 0x0100;
+	(*__bits)[1] = __fsw & 0x4000;
+	(*__bits)[0] = __fsw & 0x0200;
 	return __ret;
 }
 
@@ -323,6 +339,7 @@ static inline long double __MCFCRT_fyl2xp1(long double __y, long double __x) _MC
 	return __ret;
 }
 
+__attribute__((__const__))
 static inline long double __MCFCRT_fldz(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
@@ -331,6 +348,7 @@ static inline long double __MCFCRT_fldz(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
+__attribute__((__const__))
 static inline long double __MCFCRT_fld1(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
@@ -339,6 +357,7 @@ static inline long double __MCFCRT_fld1(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
+__attribute__((__const__))
 static inline long double __MCFCRT_fldl2e(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
@@ -347,6 +366,7 @@ static inline long double __MCFCRT_fldl2e(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
+__attribute__((__const__))
 static inline long double __MCFCRT_fldl2t(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
@@ -355,6 +375,7 @@ static inline long double __MCFCRT_fldl2t(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
+__attribute__((__const__))
 static inline long double __MCFCRT_fldlg2(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
@@ -363,6 +384,7 @@ static inline long double __MCFCRT_fldlg2(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
+__attribute__((__const__))
 static inline long double __MCFCRT_fldln2(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
@@ -371,6 +393,7 @@ static inline long double __MCFCRT_fldln2(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
+__attribute__((__const__))
 static inline long double __MCFCRT_fldpi(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (

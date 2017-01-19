@@ -10,21 +10,22 @@
 #undef cbrtl
 
 static inline long double fpu_cbrt(long double x){
-	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
-	if(sgn == __MCFCRT_kFpuZero){
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	// 注意 MCFCRT 对于 NaN 产生硬件异常，因此不用处理。如果需要处理 NaN 应该添加在这里。
+	if(xexam == __MCFCRT_kFpuExamineZero){
 		return x;
 	}
-	// x^(1/3) = 2^(log2(x)/3)
-	long double px = x;
-	bool neg = (sgn == __MCFCRT_kFpuNegative);
-	if(neg){
-		px = __MCFCRT_fneg(px);
+	if(xexam == __MCFCRT_kFpuExamineInfinity){
+		return x;
 	}
-	const long double ylog2x = __MCFCRT_fyl2x(__MCFCRT_fld1(), px) / 3;
+	const long double xabs = __MCFCRT_fabs(x);
+	// x^(1/3) = 2^(log2(x)/3)
+	const long double ylog2x = __MCFCRT_fyl2x(1, xabs) / 3;
 	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
-	long double ret = __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
-	if(neg){
-		ret = __MCFCRT_fneg(ret);
+	long double ret = __MCFCRT_fscale(1, i) * (__MCFCRT_f2xm1(m) + 1);
+	if(xsign){
+		ret = __MCFCRT_fchs(ret);
 	}
 	return ret;
 }

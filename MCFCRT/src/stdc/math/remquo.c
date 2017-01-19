@@ -9,32 +9,13 @@
 #undef remquo
 #undef remquol
 
-static const uint8_t quo_table[256] = {
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-	2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7, 2, 6, 3, 7,
-};
-
 static inline long double fpu_remquo(long double x, long double y, int *quo){
-	const bool neg = ((__MCFCRT_ftest(x) == __MCFCRT_kFpuNegative) ^ (__MCFCRT_ftest(y) == __MCFCRT_kFpuNegative));
-	unsigned fsw;
-	const long double rem = __MCFCRT_fremainder(&fsw, x, y);
-	const int sign = -(neg << 3);
-	const int bits = quo_table[(fsw >> 8) & 0xFF];
-	*quo = sign | bits;
+	bool xsign, ysign;
+	__MCFCRT_fxam(&xsign, x);
+	__MCFCRT_fxam(&ysign, y);
+	bool bits[3];
+	const long double rem = __MCFCRT_fremainder(&bits, x, y);
+	*quo = -((xsign ^ ysign) << 3) | (bits[2] << 2) | (bits[1] << 1) | bits[0];
 	return rem;
 }
 

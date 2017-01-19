@@ -5,16 +5,17 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
-#undef lroundf
-#undef lround
-#undef lroundl
+#undef llroundf
+#undef llround
+#undef llroundl
 
 static inline long fpu_lround(long double x){
-	long ret = 0;
-	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
-	if(sgn == __MCFCRT_kFpuNegative){
+	bool sign;
+	__MCFCRT_fxam(&sign, x);
+	long ret;
+	if(sign){
 		__MCFCRT_fisttpl(&ret, x - 0.5l);
-	} else if(sgn == __MCFCRT_kFpuPositive){
+	} else {
 		__MCFCRT_fisttpl(&ret, x + 0.5l);
 	}
 	return ret;

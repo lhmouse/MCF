@@ -10,11 +10,15 @@
 #undef roundl
 
 static inline long double fpu_round(long double x){
-	long double ret = 0;
-	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
-	if(sgn == __MCFCRT_kFpuNegative){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if((exam != __MCFCRT_kFpuExamineNormal) && (exam != __MCFCRT_kFpuExamineDenormal)){
+		return x;
+	}
+	long double ret;
+	if(sign){
 		ret = __MCFCRT_ftrunc(x - 0.5l);
-	} else if(sgn == __MCFCRT_kFpuPositive){
+	} else{
 		ret = __MCFCRT_ftrunc(x + 0.5l);
 	}
 	return ret;

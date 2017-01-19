@@ -11,16 +11,18 @@
 
 static inline long double fpu_copysign(long double x, long double y){
 	long double ret = __MCFCRT_fabs(x);
-	if(__MCFCRT_fgetsign(y)){
-		ret = __MCFCRT_fneg(ret);
+	bool sign;
+	__MCFCRT_fxam(&sign, y);
+	if(sign){
+		ret = __MCFCRT_fchs(ret);
 	}
 	return ret;
 }
 
 float copysignf(float x, float y){
+	float ret;
 #ifdef _WIN64
 	static const uint32_t mmask = 0x7FFFFFFFu;
-	float ret;
 	__asm__ (
 		"movss xmm2, dword ptr[%3] \n"
 		"xorps xmm0, xmm1 \n"
@@ -30,15 +32,15 @@ float copysignf(float x, float y){
 		: "0"(x), "x"(y), "m"(mmask)
 		: "xmm2"
 	);
-	return ret;
 #else
-	return (float)fpu_copysign(x, y);
+	ret = (float)fpu_copysign(x, y);
 #endif
+	return ret;
 }
 double copysign(double x, double y){
+	double ret;
 #ifdef _WIN64
 	static const uint64_t mmask = 0x7FFFFFFFFFFFFFFFu;
-	double ret;
 	__asm__ (
 		"movsd xmm2, qword ptr[%3] \n"
 		"xorpd xmm0, xmm1 \n"
@@ -48,11 +50,13 @@ double copysign(double x, double y){
 		: "0"(x), "x"(y), "m"(mmask)
 		: "xmm2"
 	);
-	return ret;
 #else
-	return (double)fpu_copysign(x, y);
+	ret = (double)fpu_copysign(x, y);
 #endif
+	return ret;
 }
 long double copysignl(long double x, long double y){
-	return (long double)fpu_copysign(x, y);
+	long double ret;
+	ret = fpu_copysign(x, y);
+	return ret;
 }

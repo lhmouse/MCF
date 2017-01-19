@@ -10,11 +10,12 @@
 #undef llroundl
 
 static inline long long fpu_llround(long double x){
-	long long ret = 0;
-	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
-	if(sgn == __MCFCRT_kFpuNegative){
+	bool sign;
+	__MCFCRT_fxam(&sign, x);
+	long long ret;
+	if(sign){
 		__MCFCRT_fisttpll(&ret, x - 0.5l);
-	} else if(sgn == __MCFCRT_kFpuPositive){
+	} else {
 		__MCFCRT_fisttpll(&ret, x + 0.5l);
 	}
 	return ret;

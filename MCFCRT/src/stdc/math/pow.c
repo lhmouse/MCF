@@ -46,13 +46,17 @@ static inline long double fpu_pow(long double x, long double y){
 	if(xexam == __MCFCRT_kFpuExamineZero){
 		if(ysign){
 			if(yexam == __MCFCRT_kFpuExamineInfinity){
-				return 1 / __MCFCRT_fldz(); // Case 3. Raises the exception.
+				return __MCFCRT_fld1() / __MCFCRT_fldz(); // Case 3. Raises the exception.
 			}
 			bool bits[3];
 			if(__MCFCRT_fmod(&bits, y, 2) == -1){
-				return x / __MCFCRT_fldz(); // Case 1.
+				long double sign_unit = __MCFCRT_fld1();
+				if(xsign){
+					sign_unit = __MCFCRT_fchs(sign_unit);
+				}
+				return sign_unit / __MCFCRT_fldz(); // Case 1.
 			}
-			return 1 / __MCFCRT_fldz(); // Case 2.
+			return __MCFCRT_fld1() / __MCFCRT_fldz(); // Case 2.
 		}
 		bool bits[3];
 		if(__MCFCRT_fmod(&bits, y, 2) == 1){

@@ -49,6 +49,7 @@ std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize){
 			x_uOffset = 0;
 		}
 		x_vecBuffer.Clear();
+
 		x_vecBuffer.Reserve(Max(uSize, kPopulationThreshold * 2));
 		{
 			x_vecBuffer.UncheckedAppend(x_vecBuffer.GetCapacityRemaining());
@@ -82,14 +83,13 @@ std::size_t BufferingInputStreamFilter::Get(void *pData, std::size_t uSize){
 std::size_t BufferingInputStreamFilter::Discard(std::size_t uSize){
 	std::size_t uBytesTotal = 0;
 	if(x_vecBuffer.GetSize() - x_uOffset < uSize){
-		std::size_t uBytesDiscarded;
 		if(x_uOffset != 0){
-			uBytesDiscarded = GetUnderlyingStream()->Discard(x_uOffset + uSize) - x_uOffset;
+			GetUnderlyingStream()->Discard(x_uOffset);
 			x_uOffset = 0;
-		} else {
-			uBytesDiscarded = GetUnderlyingStream()->Discard(uSize);
 		}
 		x_vecBuffer.Clear();
+
+		const auto uBytesDiscarded = GetUnderlyingStream()->Discard(uSize);
 		uBytesTotal += uBytesDiscarded;
 	} else {
 		const auto uBytesDiscarded = uSize;

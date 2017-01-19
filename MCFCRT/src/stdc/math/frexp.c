@@ -12,7 +12,7 @@
 static inline long double fpu_frexp(long double x, int *exp){
 	if(x == 0){
 		*exp = 0;
-		return 0;
+		return x;
 	} else {
 		long double n;
 		const long double m = __MCFCRT_fxtract(&n, x);

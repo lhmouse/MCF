@@ -35,7 +35,6 @@ static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long dou
 	if(flo == 0){
 		lo->f64 = 0;
 		lo->exp = 0;
-		lo->sgn = 0;
 	} else {
 		const long shn = _Generic(flo,
 			unsigned:      __builtin_clz,
@@ -45,8 +44,8 @@ static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long dou
 		expm1 &= ~(expm1 >> 31);
 		lo->f64 = (uint64_t)flo << (((shn ^ expm1) & mask) ^ expm1);
 		lo->exp = ((uint32_t)((exp - shn) & mask) << 17) >> 17;
-		lo->sgn = sgn;
 	}
+	lo->sgn = sgn;
 }
 static inline long double fpu_fma(long double x, long double y, long double z){
 	x87reg xlo, xhi, ylo, yhi;

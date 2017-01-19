@@ -19,31 +19,30 @@ static inline long double fpu_pow(long double x, long double y){
 
 	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
 	if(sgn == __MCFCRT_kFpuZero){
-		return 0;
-	} else {
-		// x^y = 2^(y*log2(x))
-		long double px = x;
-		bool neg;
-		if(sgn == __MCFCRT_kFpuNegative){
-			if(__MCFCRT_frndintany(y) != y){
-				return __builtin_nansl("0x706F77");
-			}
-			unsigned fsw;
-			neg = __MCFCRT_fmod(&fsw, y, 2) != 0;
-		} else {
-			neg = false;
-		}
-		if(neg){
-			px = __MCFCRT_fneg(px);
-		}
-		const long double ylog2x = y * __MCFCRT_fyl2x(__MCFCRT_fld1(), px);
-		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
-		long double ret = __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
-		if(neg){
-			ret = __MCFCRT_fneg(ret);
-		}
-		return ret;
+		return x;
 	}
+	// x^y = 2^(y*log2(x))
+	long double px = x;
+	bool neg;
+	if(sgn == __MCFCRT_kFpuNegative){
+		if(__MCFCRT_frndintany(y) != y){
+			return __builtin_nansl("0x706F77");
+		}
+		unsigned fsw;
+		neg = __MCFCRT_fmod(&fsw, y, 2) != 0;
+	} else {
+		neg = false;
+	}
+	if(neg){
+		px = __MCFCRT_fneg(px);
+	}
+	const long double ylog2x = y * __MCFCRT_fyl2x(__MCFCRT_fld1(), px);
+	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
+	long double ret = __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
+	if(neg){
+		ret = __MCFCRT_fneg(ret);
+	}
+	return ret;
 }
 
 float powf(float x, float y){

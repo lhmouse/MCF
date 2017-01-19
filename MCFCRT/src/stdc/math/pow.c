@@ -99,7 +99,7 @@ static inline long double fpu_pow(long double x, long double y){
 	bool rsign = false;
 	if(xsign){
 		if(__MCFCRT_frndintany(y) != y){
-			return __builtin_nansl("0x706F77"); // Case 9. Returns "pow".
+			return __builtin_nansl("0x4D43463A3A706F77") + __MCFCRT_fldz(); // Case 9.
 		}
 		bool bits[3];
 		rsign = (__MCFCRT_fmod(&bits, y, 2) != 0);

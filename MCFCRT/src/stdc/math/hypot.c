@@ -10,6 +10,22 @@
 #undef hypotl
 
 static inline long double fpu_hypot(long double x, long double y){
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	if(xexam == __MCFCRT_kFpuExamineInfinity){
+		return __MCFCRT_fabs(x);
+	}
+	bool ysign;
+	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
+	if(yexam == __MCFCRT_kFpuExamineInfinity){
+		return __MCFCRT_fabs(y);
+	}
+	if(xexam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	if(yexam == __MCFCRT_kFpuExamineNaN){
+		return y;
+	}
 	long double xn, xm, yn, ym;
 	xm = __MCFCRT_fxtract(&xn, x);
 	ym = __MCFCRT_fxtract(&yn, y);

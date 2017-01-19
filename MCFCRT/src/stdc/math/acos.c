@@ -10,6 +10,11 @@
 #undef acosl
 
 static inline long double fpu_acos(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
 	return __MCFCRT_fpatan(__MCFCRT_fsqrt(__MCFCRT_fld1() - x * x), x);
 }
 

@@ -48,10 +48,28 @@ static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long dou
 	lo->sgn = sgn;
 }
 static inline long double fpu_fma(long double x, long double y, long double z){
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	if(xexam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	bool ysign;
+	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
+	if(yexam == __MCFCRT_kFpuExamineNaN){
+		return y;
+	}
+	bool zsign;
+	const __MCFCRT_FpuExamine zexam = __MCFCRT_fxam(&zsign, z);
+	if(zexam == __MCFCRT_kFpuExamineNaN){
+		return z;
+	}
 	long double ret = x * y + z;
-	bool sign;
-	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, ret);
-	if((exam != __MCFCRT_kFpuExamineNormal) && (exam != __MCFCRT_kFpuExamineDenormal) && (exam != __MCFCRT_kFpuExamineZero)){
+	bool rsign;
+	const __MCFCRT_FpuExamine rexam = __MCFCRT_fxam(&rsign, ret);
+	if(rexam == __MCFCRT_kFpuExamineNaN){
+		return ret;
+	}
+	if(rexam == __MCFCRT_kFpuExamineInfinity){
 		return ret;
 	}
 	x87reg xlo, xhi, ylo, yhi;

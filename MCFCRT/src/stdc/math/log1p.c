@@ -10,6 +10,11 @@
 #undef log1pl
 
 static inline long double fpu_log1p(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
 	// 1 - 2^(1/2)/2 = 0.29289321881345247559915563789515
 	if(__MCFCRT_fabs(x) <= 0.2928932188l){
 		return __MCFCRT_fyl2xp1(__MCFCRT_fldln2(), x);

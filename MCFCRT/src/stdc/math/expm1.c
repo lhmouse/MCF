@@ -10,6 +10,20 @@
 #undef expm1l
 
 static inline long double fpu_expm1(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	if(exam == __MCFCRT_kFpuExamineZero){
+		return x;
+	}
+	if(exam == __MCFCRT_kFpuExamineInfinity){
+		if(sign){
+			return __MCFCRT_fchs(__MCFCRT_fld1());
+		}
+		return x;
+	}
 	// e^x = 2^(x*log2(e))
 	const long double xlog2e = x * __MCFCRT_fldl2e();
 	const long double i = __MCFCRT_ftrunc(xlog2e), m = xlog2e - i;

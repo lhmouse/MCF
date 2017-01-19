@@ -12,16 +12,11 @@
 static inline long double fpu_round(long double x){
 	bool sign;
 	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
-	if((exam != __MCFCRT_kFpuExamineNormal) && (exam != __MCFCRT_kFpuExamineDenormal)){
+	if(exam == __MCFCRT_kFpuExamineNaN){
 		return x;
 	}
-	long double ret;
-	if(sign){
-		ret = __MCFCRT_ftrunc(x - 0.5l);
-	} else{
-		ret = __MCFCRT_ftrunc(x + 0.5l);
-	}
-	return ret;
+	return sign ? __MCFCRT_ftrunc(x - 0.5l)
+	            : __MCFCRT_ftrunc(x + 0.5l);
 }
 
 float roundf(float x){

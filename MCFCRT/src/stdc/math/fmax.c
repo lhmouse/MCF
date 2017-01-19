@@ -3,59 +3,31 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "_fpu.h"
 
 #undef fmaxf
 #undef fmax
 #undef fmaxl
 
 static inline long double fpu_fmax(long double x, long double y){
-	long double ret;
-	__asm__ (
-		"fcomi st(1) \n"
-		"fcmovb st, st(1) \n"
-		"fstp st(1) \n"
-		: "=&t"(ret)
-		: "0"(x), "u"(y)
-		: "st(1)"
-	);
-	return ret;
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	if(xexam == __MCFCRT_kFpuExamineNaN){
+		return y;
+	}
+	bool ysign;
+	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
+	if(yexam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	return (x > y) ? x : y;
 }
 
 float fmaxf(float x, float y){
-#ifdef _WIN64
-	float ret;
-	__asm__ (
-		"movaps xmm2, %2 \n"
-		"cmpltps xmm2, xmm0 \n"
-		"xorps xmm0, %2 \n"
-		"andps xmm0, xmm2 \n"
-		"xorps xmm0, %2 \n"
-		: "=Yz"(ret)
-		: "0"(x), "x"(y)
-		: "xmm2"
-	);
-	return ret;
-#else
 	return (float)fpu_fmax(x, y);
-#endif
 }
 double fmax(double x, double y){
-#ifdef _WIN64
-	double ret;
-	__asm__ (
-		"movapd xmm2, %2 \n"
-		"cmpltpd xmm2, xmm0 \n"
-		"xorpd xmm0, %2 \n"
-		"andpd xmm0, xmm2 \n"
-		"xorpd xmm0, %2 \n"
-		: "=Yz"(ret)
-		: "0"(x), "x"(y)
-		: "xmm2"
-	);
-	return ret;
-#else
 	return (double)fpu_fmax(x, y);
-#endif
 }
 long double fmaxl(long double x, long double y){
 	return fpu_fmax(x, y);

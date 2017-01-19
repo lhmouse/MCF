@@ -10,6 +10,11 @@
 #undef tanl
 
 static inline long double fpu_tan(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
 	bool bits[3];
 	const long double reduced = __MCFCRT_fremainder(&bits, x, __MCFCRT_fldpi());
 	long double ret = __MCFCRT_ftan_unsafe(reduced);

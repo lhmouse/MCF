@@ -10,15 +10,24 @@
 #undef frexpl
 
 static inline long double fpu_frexp(long double x, int *exp){
-	if(x == 0){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		*exp = (int)0xDEADBEEF;
+		return x;
+	}
+	if(exam == __MCFCRT_kFpuExamineZero){
 		*exp = 0;
 		return x;
-	} else {
-		long double n;
-		const long double m = __MCFCRT_fxtract(&n, x);
-		__MCFCRT_fistp(exp, n + 1);
-		return m / 2;
 	}
+	if(exam == __MCFCRT_kFpuExamineInfinity){
+		*exp = INT_MAX;
+		return x;
+	}
+	long double n;
+	const long double m = __MCFCRT_fxtract(&n, x);
+	__MCFCRT_fistp(exp, n + 1);
+	return m / 2;
 }
 
 float frexpf(float x, int *exp){

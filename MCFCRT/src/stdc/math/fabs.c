@@ -10,9 +10,9 @@
 #undef fabsl
 
 float fabsf(float x){
+	float ret;
 #ifdef _WIN64
 	static const uint32_t mmask = 0x7FFFFFFFu;
-	float ret;
 	__asm__ (
 		"movss xmm1, dword ptr[%2] \n"
 		"andps xmm0, xmm1 \n"
@@ -20,15 +20,15 @@ float fabsf(float x){
 		: "0"(x), "m"(mmask)
 		: "xmm1"
 	);
-	return ret;
 #else
-	return (float)__MCFCRT_fabs(x);
+	ret = (float)__MCFCRT_fabs(x);
 #endif
+	return ret;
 }
 double fabs(double x){
+	double ret;
 #ifdef _WIN64
 	static const uint64_t mmask = 0x7FFFFFFFFFFFFFFFu;
-	double ret;
 	__asm__ (
 		"movsd xmm1, qword ptr[%2] \n"
 		"andpd xmm0, xmm1 \n"
@@ -36,11 +36,13 @@ double fabs(double x){
 		: "0"(x), "m"(mmask)
 		: "xmm1"
 	);
-	return ret;
 #else
-	return (double)__MCFCRT_fabs(x);
+	ret = (double)__MCFCRT_fabs(x);
 #endif
+	return ret;
 }
 long double fabsl(long double x){
-	return __MCFCRT_fabs(x);
+	long double ret;
+	ret = __MCFCRT_fabs(x);
+	return ret;
 }

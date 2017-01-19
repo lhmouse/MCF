@@ -9,21 +9,38 @@
 #undef modf
 #undef modfl
 
+static inline long double fpu_modf(long double value, long double *iptr){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, value);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		*iptr = value;
+		return value;
+	}
+	if(exam == __MCFCRT_kFpuExamineInfinity){
+		if(sign){
+			*iptr = value;
+			return __MCFCRT_fchs(__MCFCRT_fldz());
+		}
+		*iptr = value;
+		return __MCFCRT_fldz();
+	}
+	const long double i = __MCFCRT_ftrunc(value);
+	*iptr = i;
+	return value - i;
+}
+
 float modff(float value, float *iptr){
-	const long double x = value;
-	const long double i = __MCFCRT_ftrunc(x);
+	long double i;
+	const long double ret = fpu_modf(value, &i);
 	*iptr = (float)i;
-	return (float)(x - i);
+	return (float)ret;
 }
 double modf(double value, double *iptr){
-	const long double x = value;
-	const long double i = __MCFCRT_ftrunc(x);
+	long double i;
+	const long double ret = fpu_modf(value, &i);
 	*iptr = (double)i;
-	return (double)(x - i);
+	return (double)ret;
 }
 long double modfl(long double value, long double *iptr){
-	const long double x = value;
-	const long double i = __MCFCRT_ftrunc(x);
-	*iptr = i;
-	return (x - i);
+	return fpu_modf(value, iptr);
 }

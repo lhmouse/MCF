@@ -9,12 +9,26 @@
 #undef atan2
 #undef atan2l
 
+static inline long double fpu_atan2(long double y, long double x){
+	bool ysign;
+	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
+	if(yexam == __MCFCRT_kFpuExamineNaN){
+		return y;
+	}
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	if(xexam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	return __MCFCRT_fpatan(y, x);
+}
+
 float atan2f(float y, float x){
-	return (float) __MCFCRT_fpatan(y, x);
+	return (float)fpu_atan2(y, x);
 }
 double atan2(double y, double x){
-	return (double)__MCFCRT_fpatan(y, x);
+	return (double)fpu_atan2(y, x);
 }
 long double atan2l(long double y, long double x){
-	return __MCFCRT_fpatan(y, x);
+	return fpu_atan2(y, x);
 }

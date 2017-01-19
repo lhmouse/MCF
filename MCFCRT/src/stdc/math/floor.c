@@ -9,12 +9,21 @@
 #undef floor
 #undef floorl
 
+static inline long double fpu_floor(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	return __MCFCRT_ffloor(x);
+}
+
 float floorf(float x){
-	return (float)__MCFCRT_ffloor(x);
+	return (float)fpu_floor(x);
 }
 double floor(double x){
-	return (double)__MCFCRT_ffloor(x);
+	return (double)fpu_floor(x);
 }
 long double floorl(long double x){
-	return __MCFCRT_ffloor(x);
+	return fpu_floor(x);
 }

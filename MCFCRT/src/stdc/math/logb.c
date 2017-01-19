@@ -9,18 +9,23 @@
 #undef logb
 #undef logbl
 
+static inline long double fpu_logb(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	long double ret;
+	__MCFCRT_fxtract(&ret, x);
+	return ret;
+}
+
 float logbf(float x){
-	long double n;
-	__MCFCRT_fxtract(&n, x);
-	return (float)n;
+	return (float)fpu_logb(x);
 }
 double logb(double x){
-	long double n;
-	__MCFCRT_fxtract(&n, x);
-	return (double)n;
+	return (double)fpu_logb(x);
 }
 long double logbl(long double x){
-	long double n;
-	__MCFCRT_fxtract(&n, x);
-	return n;
+	return fpu_logb(x);
 }

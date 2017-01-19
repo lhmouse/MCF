@@ -10,6 +10,11 @@
 #undef log10l
 
 static inline long double fpu_log10(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
 	return __MCFCRT_fyl2x(__MCFCRT_fldlg2(), x);
 }
 

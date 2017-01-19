@@ -10,6 +10,20 @@
 #undef exp2l
 
 static inline long double fpu_exp2(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	if(exam == __MCFCRT_kFpuExamineZero){
+		return __MCFCRT_fld1();
+	}
+	if(exam == __MCFCRT_kFpuExamineInfinity){
+		if(sign){
+			return __MCFCRT_fldz();
+		}
+		return x;
+	}
 	const long double i = __MCFCRT_frndintany(x), m = x - i;
 	return __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
 }

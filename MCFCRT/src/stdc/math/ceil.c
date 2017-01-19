@@ -9,12 +9,21 @@
 #undef ceil
 #undef ceill
 
+static inline long double fpu_ceil(long double x){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	return __MCFCRT_fceil(x);
+}
+
 float ceilf(float x){
-	return (float)__MCFCRT_fceil(x);
+	return (float)fpu_ceil(x);
 }
 double ceil(double x){
-	return (double)__MCFCRT_fceil(x);
+	return (double)fpu_ceil(x);
 }
 long double ceill(long double x){
-	return __MCFCRT_fceil(x);
+	return fpu_ceil(x);
 }

@@ -9,12 +9,21 @@
 #undef scalbln
 #undef scalblnl
 
-float scalblnf(float x, int n){
-	return (float)__MCFCRT_fscale(x, n);
-}
-double scalbln(double x, int n){
-	return (double)__MCFCRT_fscale(x, n);
-}
-long double scalblnl(long double x, int n){
+static inline long double fpu_scalbln(long double x, long n){
+	bool sign;
+	const __MCFCRT_FpuExamine exam = __MCFCRT_fxam(&sign, x);
+	if(exam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
 	return __MCFCRT_fscale(x, n);
+}
+
+float scalblnf(float x, long n){
+	return (float)fpu_scalbln(x, n);
+}
+double scalbln(double x, long n){
+	return (double)fpu_scalbln(x, n);
+}
+long double scalblnl(long double x, long n){
+	return fpu_scalbln(x, n);
 }

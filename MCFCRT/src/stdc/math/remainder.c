@@ -9,15 +9,39 @@
 #undef remainder
 #undef remainderl
 
-float remainderf(float x, float y){
-	bool bits[3];
-	return (float)__MCFCRT_fremainder(&bits, x, y);
-}
-double remainder(double x, double y){
-	bool bits[3];
-	return (double)__MCFCRT_fremainder(&bits, x, y);
-}
-long double remainderl(long double x, long double y){
+static inline long double fpu_remainder(long double x, long double y){
+	bool xsign;
+	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
+	if(xexam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	if(xexam == __MCFCRT_kFpuExamineInfinity){
+		return __builtin_nansl("0x4D43463A6672656D") + __MCFCRT_fldz();
+	}
+	bool ysign;
+	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
+	if(yexam == __MCFCRT_kFpuExamineNaN){
+		return y;
+	}
+	if(yexam == __MCFCRT_kFpuExamineZero){
+		return __builtin_nansl("0x4D43463A6672656D") + __MCFCRT_fldz();
+	}
+	if(xexam == __MCFCRT_kFpuExamineZero){
+		return x;
+	}
+	if(yexam == __MCFCRT_kFpuExamineInfinity){
+		return x;
+	}
 	bool bits[3];
 	return __MCFCRT_fremainder(&bits, x, y);
+}
+
+float remainderf(float x, float y){
+	return (float)fpu_remainder(x, y);
+}
+double remainder(double x, double y){
+	return (double)fpu_remainder(x, y);
+}
+long double remainderl(long double x, long double y){
+	return fpu_remainder(x, y);
 }

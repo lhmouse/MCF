@@ -4,6 +4,6 @@
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	volatile double val = __builtin_nan("0x12345");
-	std::printf("%g\n", std::fmax(1, val));
+	std::printf("%g\n", std::hypot(val, HUGE_VAL));
 	return 0;
 }

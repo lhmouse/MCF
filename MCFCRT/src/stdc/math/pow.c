@@ -42,7 +42,12 @@ static inline long double fpu_pow(long double x, long double y){
 	}
 	bool xsign;
 	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
-	// 注意 MCFCRT 对于 NaN 产生硬件异常，因此不用处理。如果需要处理 NaN 应该添加在这里。
+	if(xexam == __MCFCRT_kFpuExamineNaN){
+		return x;
+	}
+	if(yexam == __MCFCRT_kFpuExamineNaN){
+		return y;
+	}
 	if(xexam == __MCFCRT_kFpuExamineZero){
 		if(ysign){
 			if(yexam == __MCFCRT_kFpuExamineInfinity){

@@ -8,6 +8,6 @@
 #undef strlen
 
 size_t strlen(const char *s){
-	const char *p = _MCFCRT_rawmemchr(s, 0);
+	const char *const p = _MCFCRT_rawmemchr(s, 0);
 	return (size_t)(p - s);
 }

@@ -8,6 +8,6 @@
 #undef wcslen
 
 size_t wcslen(const wchar_t *s){
-	const wchar_t *p = _MCFCRT_rawwmemchr(s, 0);
+	const wchar_t *const p = _MCFCRT_rawwmemchr(s, 0);
 	return (size_t)(p - s);
 }

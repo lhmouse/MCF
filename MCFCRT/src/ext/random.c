@@ -25,3 +25,6 @@ uint64_t _MCFCRT_GetRandomUint64(void){
 double _MCFCRT_GetRandomDouble(void){
 	return (double)(int64_t)(_MCFCRT_GetRandomUint64() >> 1) / 0x1p63;
 }
+long double _MCFCRT_GetRandomLongDouble(void){
+	return (long double)(int64_t)(_MCFCRT_GetRandomUint64() >> 1) / 0x1p63;
+}

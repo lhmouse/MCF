@@ -19,6 +19,9 @@ inline std::uint64_t GetRandomUint64() noexcept {
 inline double GetRandomDouble() noexcept {
 	return ::_MCFCRT_GetRandomDouble();
 }
+inline long double GetRandomLongDouble() noexcept {
+	return ::_MCFCRT_GetRandomLongDouble();
+}
 
 }
 

@@ -1,9 +1,16 @@
 #include <MCF/StdMCF.hpp>
+#include <MCFCRT/ext/alloca.h>
 #include <cstdio>
-#include <cmath>
+
+__attribute__((__noinline__))
+void foo(void *ptr, char &a){
+	char b;
+	std::printf("ptr = %p, d = %tx\n", ptr, &a - &b);
+}
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	volatile double val = __builtin_nan("0x12345");
-	std::printf("%g\n", std::pow(2, val));
+	char a;
+	auto ptr = _MCFCRT_ALLOCA(2064384);
+	foo(ptr, a);
 	return 0;
 }

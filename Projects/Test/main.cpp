@@ -1,16 +1,12 @@
-#include <MCF/StdMCF.hpp>
-#include <MCFCRT/ext/alloca.h>
+#include <cstdlib>
 #include <cstdio>
 
-__attribute__((__noinline__))
-void foo(void *ptr, char &a){
-	char b;
-	std::printf("ptr = %p, d = %tx\n", ptr, &a - &b);
+static void foo(){
+	thread_local char a;
+	std::printf("%p\n", &a);
 }
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	char a;
-	auto ptr = _MCFCRT_ALLOCA(2064384);
-	foo(ptr, a);
+	std::atexit(&foo);
 	return 0;
 }

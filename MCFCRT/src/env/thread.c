@@ -495,13 +495,20 @@ struct tagTlsThread {
 };
 
 static TlsThread *GetTlsForCurrentThread(void){
-	_MCFCRT_ASSERT(g_dwTlsIndex != TLS_OUT_OF_INDEXES);
-
-	TlsThread *const pThread = TlsGetValue(g_dwTlsIndex);
+	const DWORD dwTlsIndex = g_dwTlsIndex;
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+		return _MCFCRT_NULLPTR;
+	}
+	TlsThread *const pThread = TlsGetValue(dwTlsIndex);
 	return pThread;
 }
 static TlsThread *RequireTlsForCurrentThread(void){
-	TlsThread *pThread = GetTlsForCurrentThread();
+	const DWORD dwTlsIndex = g_dwTlsIndex;
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+		SetLastError(ERROR_ACCESS_DENIED); // XXX: Pick a better error code?
+		return _MCFCRT_NULLPTR;
+	}
+	TlsThread *pThread = TlsGetValue(dwTlsIndex);
 	if(!pThread){
 		pThread = _MCFCRT_malloc(sizeof(TlsThread));
 		if(!pThread){
@@ -511,7 +518,7 @@ static TlsThread *RequireTlsForCurrentThread(void){
 		pThread->pFirstByThread = _MCFCRT_NULLPTR;
 		pThread->pLastByThread  = _MCFCRT_NULLPTR;
 
-		if(!TlsSetValue(g_dwTlsIndex, pThread)){
+		if(!TlsSetValue(dwTlsIndex, pThread)){
 			const DWORD dwErrorCode = GetLastError();
 			_MCFCRT_free(pThread);
 			SetLastError(dwErrorCode);

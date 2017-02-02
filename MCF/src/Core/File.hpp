@@ -7,7 +7,6 @@
 
 #include "StringView.hpp"
 #include "_UniqueNtHandle.hpp"
-#include "FunctionView.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -37,27 +36,21 @@ public:
 	};
 
 private:
-	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateFileHandle(const WideStringView &wsvPath, std::uint32_t u32Flags);
-
-private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hFile;
 
 public:
-	constexpr File() noexcept
-		: x_hFile()
-	{
+	constexpr File() noexcept {
 	}
-	File(const WideStringView &wsvPath, std::uint32_t u32Flags)
-		: x_hFile(X_CreateFileHandle(wsvPath, u32Flags))
-	{
-	}
+	File(const WideStringView &wsvPath, std::uint32_t u32Flags);
 
 public:
 	void *GetHandle() const noexcept {
 		return x_hFile.Get();
 	}
 
-	bool IsOpen() const noexcept;
+	bool IsOpen() const noexcept {
+		return !!x_hFile;
+	}
 	void Open(const WideStringView &wsvPath, std::uint32_t u32Flags);
 	bool OpenNothrow(const WideStringView &wsvPath, std::uint32_t u32Flags);
 	void Close() noexcept;
@@ -69,10 +62,8 @@ public:
 	// 1. fnAsyncProc 总是会被执行一次，即使读取或写入操作失败；
 	// 2. 所有的回调函数都可以抛出异常；在这种情况下，异常将在读取或写入操作完成或失败后被重新抛出。
 	// 3. 当且仅当 fnAsyncProc 成功返回且异步操作成功后 fnCompletionCallback 才会被执行。
-	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-		FunctionView<void ()> fnAsyncProc = nullptr, FunctionView<void ()> fnCompletionCallback = nullptr) const;
-	std::size_t Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-		FunctionView<void ()> fnAsyncProc = nullptr, FunctionView<void ()> fnCompletionCallback = nullptr);
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const;
+	std::size_t Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
 	void Flush();
 
 	void Swap(File &rhs) noexcept {

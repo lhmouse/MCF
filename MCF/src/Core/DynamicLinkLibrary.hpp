@@ -32,12 +32,16 @@ public:
 	explicit DynamicLinkLibrary(const WideStringView &wsvPath);
 
 public:
-	bool IsOpen() const noexcept;
+	bool IsOpen() const noexcept {
+		return !!x_hDll;
+	}
+	const void *GetBaseAddress() const noexcept {
+		return x_hDll.Get();
+	}
+
 	void Open(const WideStringView &wsvPath);
 	bool OpenNothrow(const WideStringView &wsvPath);
 	void Close() noexcept;
-
-	const void *GetBaseAddress() const noexcept;
 
 	RawProc GetProcAddressRaw(const NarrowStringView &nsvName) const;
 	RawProc RequireProcAddressRaw(const NarrowStringView &nsvName) const;

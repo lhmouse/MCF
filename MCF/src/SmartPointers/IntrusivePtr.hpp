@@ -157,16 +157,7 @@ namespace Impl_IntrusivePtr {
 		DeletableBase &operator=(const DeletableBase &) noexcept {
 			return *this;
 		}
-		virtual ~DeletableBase(){
-			const auto pView = x_pView.Load(kAtomicConsume);
-			if(pView){
-				if(static_cast<const volatile RefCountBase *>(pView)->DropRef()){
-					delete pView;
-				} else {
-					pView->ClearOwner();
-				}
-			}
-		}
+		virtual ~DeletableBase();
 
 	public: // XXX: private:
 		X_WeakView *X_RequireView() const volatile {
@@ -187,6 +178,18 @@ namespace Impl_IntrusivePtr {
 			X_RequireView();
 		}
 	};
+
+	template<class DeleterT>
+	DeletableBase<DeleterT>::~DeletableBase(){
+		const auto pView = x_pView.Load(kAtomicConsume);
+		if(pView){
+			if(static_cast<const volatile RefCountBase *>(pView)->DropRef()){
+				delete pView;
+			} else {
+				pView->ClearOwner();
+			}
+		}
+	}
 }
 
 template<typename ObjectT, class DeleterT>
@@ -274,17 +277,6 @@ private:
 		}
 		return pElement;
 	}
-	void X_Dispose() noexcept {
-		const auto pElement = x_pElement;
-#ifndef NDEBUG
-		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
-#endif
-		if(pElement){
-			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->DropRef()){
-				Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
-			}
-		}
-	}
 
 public:
 	constexpr IntrusivePtr(std::nullptr_t = nullptr) noexcept
@@ -337,7 +329,15 @@ public:
 		return Reset(std::move(rhs));
 	}
 	~IntrusivePtr(){
-		X_Dispose();
+		const auto pElement = x_pElement;
+#ifndef NDEBUG
+		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
+#endif
+		if(pElement){
+			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->DropRef()){
+				Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
+			}
+		}
 	}
 
 public:
@@ -586,17 +586,6 @@ private:
 	X_WeakView *X_Release() noexcept {
 		return std::exchange(x_pView, nullptr);
 	}
-	void X_Dispose() noexcept {
-		const auto pView = x_pView;
-#ifndef NDEBUG
-		__builtin_memset(&x_pView, 0xEF, sizeof(x_pView));
-#endif
-		if(pView){
-			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->DropRef()){
-				delete pView;
-			}
-		}
-	}
 
 private:
 	constexpr IntrusiveWeakPtr(const X_AdoptionTag &, X_WeakView *pView) noexcept
@@ -655,7 +644,15 @@ public:
 		return Reset(std::move(rhs));
 	}
 	~IntrusiveWeakPtr(){
-		X_Dispose();
+		const auto pView = x_pView;
+#ifndef NDEBUG
+		__builtin_memset(&x_pView, 0xEF, sizeof(x_pView));
+#endif
+		if(pView){
+			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->DropRef()){
+				delete pView;
+			}
+		}
 	}
 
 public:

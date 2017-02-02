@@ -35,9 +35,9 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 		MCF_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"DynamicLinkLibrary: 路径太长。"));
 	}
 	::UNICODE_STRING ustrFileName;
-	ustrFileName.Length             = (USHORT)uSize;
-	ustrFileName.MaximumLength      = (USHORT)uSize;
-	ustrFileName.Buffer             = (PWSTR)wsvPath.GetBegin();
+	ustrFileName.Length        = (USHORT)uSize;
+	ustrFileName.MaximumLength = (USHORT)uSize;
+	ustrFileName.Buffer        = (PWSTR)wsvPath.GetBegin();
 
 	HANDLE hDll;
 	const auto lStatus = ::LdrLoadDll(nullptr, 0, &ustrFileName, &hDll);
@@ -45,10 +45,6 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrLoadDll() 失败。"));
 	}
 	x_hDll.Reset(hDll);
-}
-
-const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
-	return x_hDll.Get();
 }
 
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::GetProcAddressRaw(const NarrowStringView &nsvName) const {
@@ -61,9 +57,9 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::GetProcAddressRaw(const NarrowSt
 		MCF_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"DynamicLinkLibrary: 导出函数名太长。"));
 	}
 	::ANSI_STRING strProcName;
-	strProcName.Length          = (USHORT)uSize;
-	strProcName.MaximumLength   = (USHORT)uSize;
-	strProcName.Buffer          = (PSTR)nsvName.GetBegin();
+	strProcName.Length        = (USHORT)uSize;
+	strProcName.MaximumLength = (USHORT)uSize;
+	strProcName.Buffer        = (PSTR)nsvName.GetBegin();
 
 	::FARPROC pfnProcAddress;
 	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), &strProcName, 0xFFFF, &pfnProcAddress);
@@ -105,9 +101,6 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RequireProcAddressRaw(unsigned u
 	return pfnRet;
 }
 
-bool DynamicLinkLibrary::IsOpen() const noexcept {
-	return !!x_hDll;
-}
 void DynamicLinkLibrary::Open(const WideStringView &wsvPath){
 	DynamicLinkLibrary(wsvPath).Swap(*this);
 }
@@ -121,10 +114,6 @@ bool DynamicLinkLibrary::OpenNothrow(const WideStringView &wsvPath){
 	}
 }
 void DynamicLinkLibrary::Close() noexcept {
-	if(!x_hDll){
-		return;
-	}
-
 	DynamicLinkLibrary().Swap(*this);
 }
 

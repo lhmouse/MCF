@@ -81,19 +81,6 @@ private:
 		}
 		return puRef;
 	}
-	void X_Dispose() noexcept {
-		const auto puRef = x_puRef;
-#ifndef NDEBUG
-		__builtin_memset(&x_puRef,  0xAA, sizeof(x_puRef));
-		__builtin_memset(&x_pszStr, 0xBB, sizeof(x_pszStr));
-#endif
-		if(puRef){
-			if(puRef->Decrement(kAtomicRelaxed) == 0){
-				Destruct(puRef);
-				::operator delete[](puRef);
-			}
-		}
-	}
 
 private:
 	constexpr Rcnts(const X_AdoptionTag &, Atomic<std::size_t> *puRef, const Char *pszStr) noexcept
@@ -123,7 +110,17 @@ public:
 		return *this;
 	}
 	~Rcnts(){
-		X_Dispose();
+		const auto puRef = x_puRef;
+#ifndef NDEBUG
+		__builtin_memset(&x_puRef,  0xAA, sizeof(x_puRef));
+		__builtin_memset(&x_pszStr, 0xBB, sizeof(x_pszStr));
+#endif
+		if(puRef){
+			if(puRef->Decrement(kAtomicRelaxed) == 0){
+				Destruct(puRef);
+				::operator delete[](puRef);
+			}
+		}
 	}
 
 public:

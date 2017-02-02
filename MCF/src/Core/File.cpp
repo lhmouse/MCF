@@ -7,6 +7,7 @@
 #include "String.hpp"
 #include "BinaryOperations.hpp"
 #include "Defer.hpp"
+#include "MinMax.hpp"
 #include <MCFCRT/env/mcfwin.h>
 #include <winternl.h>
 #include <ntdef.h>
@@ -42,26 +43,12 @@ extern NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcR
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
 
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
-
 }
 
 namespace MCF {
 
-namespace {
-	__MCFCRT_C_STDCALL __attribute__((__aligned__(16)))
-	void IoApcCallback(void *pContext, ::IO_STATUS_BLOCK *pIoStatus, ULONG ulReserved) noexcept {
-		(void)pIoStatus;
-		(void)ulReserved;
-
-		const auto pbIoPending = static_cast<bool *>(pContext);
-		*pbIoPending = false;
-	}
-}
-
-Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringView &wsvPath, std::uint32_t u32Flags){
-	constexpr wchar_t kDosDevicePath[] = { L'\\', L'?', L'?' };
+File::File(const WideStringView &wsvPath, std::uint32_t u32Flags){
+	constexpr wchar_t kDosDevicePath[] = { L'\\', L'?', L'?', L'\\' };
 
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > USHRT_MAX){
@@ -112,7 +99,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 		}
 	}
 
-	::ACCESS_MASK dwDesiredAccess = 0;
+	::ACCESS_MASK dwDesiredAccess = SYNCHRONIZE;
 	if(u32Flags & kToRead){
 		dwDesiredAccess |= FILE_GENERIC_READ;
 	}
@@ -121,7 +108,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	}
 
 	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, pustrFullPath, OBJ_CASE_INSENSITIVE, hRootDirectory.Get(), nullptr);
+	InitializeObjectAttributes(&vObjectAttributes, pustrFullPath, 0 /* OBJ_CASE_INSENSITIVE */, hRootDirectory.Get(), nullptr);
 
 	::IO_STATUS_BLOCK vIoStatus;
 
@@ -154,7 +141,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 		dwCreateDisposition = FILE_OPEN;
 	}
 
-	DWORD dwCreateOptions = FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS;
+	DWORD dwCreateOptions = FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS;
 	if(u32Flags & kNoBuffering){
 		dwCreateOptions |= FILE_NO_INTERMEDIATE_BUFFERING;
 	}
@@ -171,14 +158,9 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	if(!NT_SUCCESS(lStatus)){
 		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtCreateFile() 失败。"));
 	}
-	Impl_UniqueNtHandle::UniqueNtHandle hFile(hTemp);
-
-	return hFile;
+	x_hFile.Reset(hTemp);
 }
 
-bool File::IsOpen() const noexcept {
-	return !!x_hFile;
-}
 void File::Open(const WideStringView &wsvPath, std::uint32_t u32Flags){
 	File(wsvPath, u32Flags).Swap(*this);
 }
@@ -229,9 +211,7 @@ void File::Clear(){
 	Resize(0);
 }
 
-std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompletionCallback) const
-{
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const {
 	if(!x_hFile){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
@@ -240,38 +220,18 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		MCF_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
 
-	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
 	vIoStatus.Information = 0;
-	if(uBytesToRead > ULONG_MAX){
-		uBytesToRead = ULONG_MAX;
-	}
+
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, static_cast<ULONG>(uBytesToRead), &liOffset, nullptr);
-	if(fnAsyncProc){
-		fnAsyncProc();
-	}
-	if(lStatus != STATUS_END_OF_FILE){
-		if(!NT_SUCCESS(lStatus)){
-			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtReadFile() 失败。"));
-		}
-		do {
-			::LARGE_INTEGER liTimeout;
-			liTimeout.QuadPart = INT64_MAX;
-			lStatus = ::NtDelayExecution(true, &liTimeout);
-			MCF_ASSERT(NT_SUCCESS(lStatus));
-		} while(bIoPending);
-	}
-
-	if(fnCompletionCallback){
-		fnCompletionCallback();
+	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, nullptr, nullptr, &vIoStatus, pBuffer, static_cast<ULONG>(Min(uBytesToRead, static_cast<ULONG>(-1))), &liOffset, nullptr);
+	if((lStatus != STATUS_END_OF_FILE) && !NT_SUCCESS(lStatus)){
+		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtReadFile() 失败。"));
 	}
 	return vIoStatus.Information;
 }
-std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompletionCallback)
-{
+std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
 	if(!x_hFile){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
@@ -280,32 +240,14 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 		MCF_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
 
-	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
 	vIoStatus.Information = 0;
-	if(uBytesToWrite > ULONG_MAX){
-		uBytesToWrite = ULONG_MAX;
-	}
+
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, static_cast<ULONG>(uBytesToWrite), &liOffset, nullptr);
-	if(fnAsyncProc){
-		fnAsyncProc();
-	}
-	{
-		if(!NT_SUCCESS(lStatus)){
-			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtWriteFile() 失败。"));
-		}
-		do {
-			::LARGE_INTEGER liTimeout;
-			liTimeout.QuadPart = INT64_MAX;
-			lStatus = ::NtDelayExecution(true, &liTimeout);
-			MCF_ASSERT(NT_SUCCESS(lStatus));
-		} while(bIoPending);
-	}
-
-	if(fnCompletionCallback){
-		fnCompletionCallback();
+	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, nullptr, nullptr, &vIoStatus, pBuffer, static_cast<ULONG>(Min(uBytesToWrite, static_cast<ULONG>(-1))), &liOffset, nullptr);
+	if(!NT_SUCCESS(lStatus)){
+		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtWriteFile() 失败。"));
 	}
 	return vIoStatus.Information;
 }

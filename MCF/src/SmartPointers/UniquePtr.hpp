@@ -31,17 +31,6 @@ public:
 private:
 	Element *x_pElement;
 
-private:
-	void X_Dispose() noexcept {
-		const auto pElement = x_pElement;
-#ifndef NDEBUG
-		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
-#endif
-		if(pElement){
-			Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
-		}
-	}
-
 public:
 	constexpr UniquePtr(std::nullptr_t = nullptr) noexcept
 		: x_pElement(nullptr)
@@ -68,7 +57,13 @@ public:
 		return Reset(std::move(rhs));
 	}
 	~UniquePtr(){
-		X_Dispose();
+		const auto pElement = x_pElement;
+#ifndef NDEBUG
+		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
+#endif
+		if(pElement){
+			Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
+		}
 	}
 
 	UniquePtr(const UniquePtr &) = delete;

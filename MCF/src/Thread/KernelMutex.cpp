@@ -36,7 +36,7 @@ extern NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 
 namespace MCF {
 
-Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideStringView &wsvName, std::uint32_t u32Flags){
+KernelMutex::KernelMutex(const WideStringView &wsvName, std::uint32_t u32Flags){
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	const auto uNameSize = wsvName.GetSize() * sizeof(wchar_t);
@@ -78,17 +78,16 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 		}
 		bNameExists = (lStatus == STATUS_OBJECT_NAME_EXISTS);
 	}
-	Impl_UniqueNtHandle::UniqueNtHandle hEvent(hTemp);
+	x_hEvent.Reset(hTemp);
 
 	if(bNameExists){
 		EVENT_BASIC_INFORMATION vBasicInfo;
-		const auto lStatus = ::NtQueryEvent(hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
+		const auto lStatus = ::NtQueryEvent(x_hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
 		MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtQueryEvent() 失败。");
 		if(vBasicInfo.eEventType != SynchronizationEvent){
-			MCF_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelMutex: 内核事件类型不匹配。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH), Rcntws::View(L"KernelMutex: 内核事件类型不匹配。"));
 		}
 	}
-	return hEvent;
 }
 
 bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {

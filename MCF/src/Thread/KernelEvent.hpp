@@ -16,20 +16,14 @@ public:
 	using Handle = Impl_UniqueNtHandle::Handle;
 
 private:
-	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateEventHandle(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags);
-
-private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
 	explicit KernelEvent(bool bInitSet)
-		: x_hEvent(X_CreateEventHandle(bInitSet, nullptr, kSessionLocal))
+		: KernelEvent(bInitSet, nullptr, kSessionLocal)
 	{
 	}
-	KernelEvent(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags)
-		: x_hEvent(X_CreateEventHandle(bInitSet, wsvName, u32Flags))
-	{
-	}
+	KernelEvent(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags);
 
 public:
 	Handle GetHandle() const noexcept {

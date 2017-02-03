@@ -23,7 +23,7 @@ extern NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
 
 namespace MCF {
 
-Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(const WideStringView &wsvName, std::uint32_t u32Flags){
+KernelRecursiveMutex::KernelRecursiveMutex(const WideStringView &wsvName, std::uint32_t u32Flags){
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 
@@ -63,9 +63,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelRecursiveMutex: NtCreateMutant() 失败。"));
 		}
 	}
-	Impl_UniqueNtHandle::UniqueNtHandle hMutex(hTemp);
-
-	return hMutex;
+	x_hMutex.Reset(hTemp);
 }
 
 bool KernelRecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {

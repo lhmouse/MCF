@@ -19,20 +19,14 @@ public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelRecursiveMutex>;
 
 private:
-	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateMutexHandle(const WideStringView &wsvName, std::uint32_t u32Flags);
-
-private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
 public:
 	KernelRecursiveMutex()
-		: x_hMutex(X_CreateMutexHandle(nullptr, kSessionLocal))
+		: KernelRecursiveMutex(nullptr, kSessionLocal)
 	{
 	}
-	KernelRecursiveMutex(const WideStringView &wsvName, std::uint32_t u32Flags)
-		: x_hMutex(X_CreateMutexHandle(wsvName, u32Flags))
-	{
-	}
+	KernelRecursiveMutex(const WideStringView &wsvName, std::uint32_t u32Flags);
 
 public:
 	Handle GetHandle() const noexcept {

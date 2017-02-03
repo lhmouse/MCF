@@ -23,7 +23,7 @@ extern NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *
 
 namespace MCF {
 
-Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags){
+KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags){
 	if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
 		MCF_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"KernelSemaphore: 信号量初始计数太大。"));
 	}
@@ -67,9 +67,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelSemaphore: NtCreateSemaphore() 失败。"));
 		}
 	}
-	Impl_UniqueNtHandle::UniqueNtHandle hSemaphore(hTemp);
-
-	return hSemaphore;
+	x_hSemaphore.Reset(hTemp);
 }
 
 bool KernelSemaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {

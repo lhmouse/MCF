@@ -21,20 +21,14 @@ public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelMutex>;
 
 private:
-	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateEventHandle(const WideStringView &wsvName, std::uint32_t u32Flags);
-
-private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
 	KernelMutex()
-		: x_hEvent(X_CreateEventHandle(nullptr, kSessionLocal))
+		: KernelMutex(nullptr, kSessionLocal)
 	{
 	}
-	KernelMutex(const WideStringView &wsvName, std::uint32_t u32Flags)
-		: x_hEvent(X_CreateEventHandle(wsvName, u32Flags))
-	{
-	}
+	KernelMutex(const WideStringView &wsvName, std::uint32_t u32Flags);
 
 public:
 	Handle GetHandle() const noexcept {

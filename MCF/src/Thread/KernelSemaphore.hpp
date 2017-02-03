@@ -16,20 +16,14 @@ public:
 	using Handle = Impl_UniqueNtHandle::Handle;
 
 private:
-	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags);
-
-private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
 	explicit KernelSemaphore(std::size_t uInitCount)
-		: x_hSemaphore(X_CreateSemaphoreHandle(uInitCount, nullptr, kSessionLocal))
+		: KernelSemaphore(uInitCount, nullptr, kSessionLocal)
 	{
 	}
-	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags)
-		: x_hSemaphore(X_CreateSemaphoreHandle(uInitCount, wsvName, u32Flags))
-	{
-	}
+	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags);
 
 public:
 	Handle GetHandle() const noexcept {

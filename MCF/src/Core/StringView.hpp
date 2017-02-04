@@ -31,45 +31,45 @@ enum class StringType {
 };
 
 template<StringType>
-struct StringEncodingTrait;
+struct StringEncodingTraits;
 
 template<>
-struct StringEncodingTrait<StringType::kUtf8> {
+struct StringEncodingTraits<StringType::kUtf8> {
 	using Char = char;
 	static constexpr int kConversionPreference = 0;
 };
 template<>
-struct StringEncodingTrait<StringType::kUtf16> {
+struct StringEncodingTraits<StringType::kUtf16> {
 	using Char = char16_t;
 	static constexpr int kConversionPreference = -1; // UTF-16
 };
 template<>
-struct StringEncodingTrait<StringType::kUtf32> {
+struct StringEncodingTraits<StringType::kUtf32> {
 	using Char = char32_t;
 	static constexpr int kConversionPreference = 1; // UTF-32
 };
 template<>
-struct StringEncodingTrait<StringType::kCesu8> {
+struct StringEncodingTraits<StringType::kCesu8> {
 	using Char = char;
 	static constexpr int kConversionPreference = 0;
 };
 template<>
-struct StringEncodingTrait<StringType::kAnsi> {
+struct StringEncodingTraits<StringType::kAnsi> {
 	using Char = char;
 	static constexpr int kConversionPreference = -1; // UTF-16
 };
 template<>
-struct StringEncodingTrait<StringType::kModifiedUtf8> {
+struct StringEncodingTraits<StringType::kModifiedUtf8> {
 	using Char = char;
 	static constexpr int kConversionPreference = 0;
 };
 template<>
-struct StringEncodingTrait<StringType::kNarrow> {
+struct StringEncodingTraits<StringType::kNarrow> {
 	using Char = char;
 	static constexpr int kConversionPreference = 0;
 };
 template<>
-struct StringEncodingTrait<StringType::kWide> {
+struct StringEncodingTraits<StringType::kWide> {
 	using Char = wchar_t;
 	static constexpr int kConversionPreference = -1; // UTF-16
 };
@@ -209,7 +209,8 @@ namespace Impl_StringView {
 template<StringType kTypeT>
 class StringView {
 public:
-	using Char = typename StringEncodingTrait<kTypeT>::Char;
+	using Traits = StringEncodingTraits<kTypeT>;
+	using Char   = typename Traits::Char;
 
 	enum : std::size_t {
 		kNpos = Impl_StringView::kNpos,

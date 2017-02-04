@@ -32,8 +32,9 @@ namespace Impl_String {
 template<StringType kTypeT>
 class String {
 public:
-	using View = StringView<kTypeT>;
-	using Char = typename View::Char;
+	using View   = StringView<kTypeT>;
+	using Traits = typename View::Traits;
+	using Char   = typename Traits::Char;
 
 	enum : std::size_t {
 		kNpos = View::kNpos,
@@ -885,9 +886,9 @@ namespace Impl_String {
 	struct Transcoder {
 		template<StringType kDstTypeT>
 		void operator()(String<kDstTypeT> &strDst, const StringView<kSrcTypeT> &svSrc) const {
-			using DstTrait = StringEncodingTrait<kDstTypeT>;
-			using SrcTrait = StringEncodingTrait<kSrcTypeT>;
-			using UnifiedString = String<(DstTrait::kConversionPreference + SrcTrait::kConversionPreference < 0) ? StringType::kUtf16 : StringType::kUtf32>;
+			using DstTraits = StringEncodingTraits<kDstTypeT>;
+			using SrcTraits = StringEncodingTraits<kSrcTypeT>;
+			using UnifiedString = String<(DstTraits::kConversionPreference + SrcTraits::kConversionPreference < 0) ? StringType::kUtf16 : StringType::kUtf32>;
 
 			UnifiedString usTemp;
 			String<kSrcTypeT>::UnifyAppend(usTemp, svSrc);

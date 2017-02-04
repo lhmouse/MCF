@@ -7,26 +7,24 @@
 
 #include "../Core/StringView.hpp"
 #include "../Core/_KernelObjectBase.hpp"
-#include "_UniqueLockTemplate.hpp"
+#include "UniqueLock.hpp"
 #include <cstdint>
 
 namespace MCF {
 
 class KernelRecursiveMutex : public Impl_KernelObjectBase::KernelObjectBase {
-public:
-	using Handle = Impl_UniqueNtHandle::Handle;
-
-	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelRecursiveMutex>;
-
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
 public:
 	KernelRecursiveMutex()
-		: KernelRecursiveMutex(nullptr, kSessionLocal)
+		: KernelRecursiveMutex(nullptr, 0)
 	{
 	}
 	KernelRecursiveMutex(const WideStringView &wsvName, std::uint32_t u32Flags);
+
+	KernelRecursiveMutex(const KernelRecursiveMutex &) = delete;
+	KernelRecursiveMutex &operator=(const KernelRecursiveMutex &) = delete;
 
 public:
 	Handle GetHandle() const noexcept {
@@ -37,30 +35,13 @@ public:
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
-	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
-		UniqueLock vLock(*this, false);
-		vLock.Try(u64UntilFastMonoClock);
-		return vLock;
+	UniqueLock<KernelRecursiveMutex> TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
+		return UniqueLock<KernelRecursiveMutex>(*this, u64UntilFastMonoClock);
 	}
-	UniqueLock GetLock() noexcept {
-		return UniqueLock(*this);
+	UniqueLock<KernelRecursiveMutex> GetLock() noexcept {
+		return UniqueLock<KernelRecursiveMutex>(*this);
 	}
 };
-
-namespace Impl_UniqueLockTemplate {
-	template<>
-	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
-		return x_pOwner->Try(u64UntilFastMonoClock);
-	}
-	template<>
-	inline void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {
-		x_pOwner->Lock();
-	}
-	template<>
-	inline void KernelRecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
-		x_pOwner->Unlock();
-	}
-}
 
 }
 

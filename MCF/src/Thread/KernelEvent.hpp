@@ -12,18 +12,18 @@
 namespace MCF {
 
 class KernelEvent : public Impl_KernelObjectBase::KernelObjectBase {
-public:
-	using Handle = Impl_UniqueNtHandle::Handle;
-
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
 	explicit KernelEvent(bool bInitSet)
-		: KernelEvent(bInitSet, nullptr, kSessionLocal)
+		: KernelEvent(bInitSet, nullptr, 0)
 	{
 	}
 	KernelEvent(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags);
+
+	KernelEvent(const KernelEvent &) = delete;
+	KernelEvent &operator=(const KernelEvent &) = delete;
 
 public:
 	Handle GetHandle() const noexcept {

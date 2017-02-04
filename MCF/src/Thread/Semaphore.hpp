@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_SEMAPHORE_HPP_
 #define MCF_THREAD_SEMAPHORE_HPP_
 
-#include "../Core/Noncopyable.hpp"
 #include "Mutex.hpp"
 #include "ConditionVariable.hpp"
 #include <type_traits>
@@ -14,7 +13,7 @@
 
 namespace MCF {
 
-class Semaphore : MCF_NONCOPYABLE {
+class Semaphore {
 private:
 	mutable Mutex x_mtxGuard;
 	mutable ConditionVariable x_cvWaiter;
@@ -25,6 +24,9 @@ public:
 		: x_mtxGuard(), x_cvWaiter(), x_uCount(uInitCount)
 	{
 	}
+
+	Semaphore(const Semaphore &) = delete;
+	Semaphore &operator=(const Semaphore &) = delete;
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) noexcept;

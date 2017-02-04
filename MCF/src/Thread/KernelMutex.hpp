@@ -7,7 +7,7 @@
 
 #include "../Core/StringView.hpp"
 #include "../Core/_KernelObjectBase.hpp"
-#include "_UniqueLockTemplate.hpp"
+#include "UniqueLock.hpp"
 #include <cstdint>
 
 namespace MCF {
@@ -15,20 +15,18 @@ namespace MCF {
 // 由一个线程锁定的互斥锁可以由另一个线程解锁。
 
 class KernelMutex : public Impl_KernelObjectBase::KernelObjectBase {
-public:
-	using Handle = Impl_UniqueNtHandle::Handle;
-
-	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelMutex>;
-
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
 	KernelMutex()
-		: KernelMutex(nullptr, kSessionLocal)
+		: KernelMutex(nullptr, 0)
 	{
 	}
 	KernelMutex(const WideStringView &wsvName, std::uint32_t u32Flags);
+
+	KernelMutex(const KernelMutex &) = delete;
+	KernelMutex &operator=(const KernelMutex &) = delete;
 
 public:
 	Handle GetHandle() const noexcept {
@@ -39,30 +37,13 @@ public:
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
-	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
-		UniqueLock vLock(*this, false);
-		vLock.Try(u64UntilFastMonoClock);
-		return vLock;
+	UniqueLock<KernelMutex> TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
+		return UniqueLock<KernelMutex>(*this, u64UntilFastMonoClock);
 	}
-	UniqueLock GetLock() noexcept {
-		return UniqueLock(*this);
+	UniqueLock<KernelMutex> GetLock() noexcept {
+		return UniqueLock<KernelMutex>(*this);
 	}
 };
-
-namespace Impl_UniqueLockTemplate {
-	template<>
-	inline bool KernelMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
-		return x_pOwner->Try(u64UntilFastMonoClock);
-	}
-	template<>
-	inline void KernelMutex::UniqueLock::X_DoLock() const noexcept {
-		x_pOwner->Lock();
-	}
-	template<>
-	inline void KernelMutex::UniqueLock::X_DoUnlock() const noexcept {
-		x_pOwner->Unlock();
-	}
-}
 
 }
 

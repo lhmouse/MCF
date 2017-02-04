@@ -5,10 +5,9 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
-#include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/Atomic.hpp"
-#include "_UniqueLockTemplate.hpp"
+#include "UniqueLock.hpp"
 #include <MCFCRT/env/mutex.h>
 #include <type_traits>
 #include <cstddef>
@@ -17,14 +16,11 @@ namespace MCF {
 
 // 由一个线程锁定的互斥锁可以由另一个线程解锁。
 
-class Mutex : MCF_NONCOPYABLE {
+class Mutex {
 public:
 	enum : std::size_t {
 		kSuggestedSpinCount = _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT,
 	};
-
-public:
-	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<Mutex>;
 
 private:
 	::_MCFCRT_Mutex x_vMutex;
@@ -36,12 +32,15 @@ public:
 	{
 	}
 
+	Mutex(const Mutex &) = delete;
+	Mutex &operator=(const Mutex &) = delete;
+
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return x_uSpinCount.Load(kAtomicConsume);
+		return x_uSpinCount.Load(kAtomicRelaxed);
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		x_uSpinCount.Store(uSpinCount, kAtomicRelease);
+		x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
 	}
 
 	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
@@ -54,32 +53,15 @@ public:
 		::_MCFCRT_SignalMutex(&x_vMutex);
 	}
 
-	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
-		UniqueLock vLock(*this, false);
-		vLock.Try(u64UntilFastMonoClock);
-		return vLock;
+	UniqueLock<Mutex> TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
+		return UniqueLock<Mutex>(*this, u64UntilFastMonoClock);
 	}
-	UniqueLock GetLock() noexcept {
-		return UniqueLock(*this);
+	UniqueLock<Mutex> GetLock() noexcept {
+		return UniqueLock<Mutex>(*this);
 	}
 };
 
 static_assert(std::is_trivially_destructible<Mutex>::value, "Hey!");
-
-namespace Impl_UniqueLockTemplate {
-	template<>
-	inline bool Mutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
-		return x_pOwner->Try(u64UntilFastMonoClock);
-	}
-	template<>
-	inline void Mutex::UniqueLock::X_DoLock() const noexcept {
-		x_pOwner->Lock();
-	}
-	template<>
-	inline void Mutex::UniqueLock::X_DoUnlock() const noexcept {
-		x_pOwner->Unlock();
-	}
-}
 
 }
 

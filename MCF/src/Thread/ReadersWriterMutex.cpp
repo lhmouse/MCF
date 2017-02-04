@@ -10,9 +10,9 @@ bool ReadersWriterMutex::TryAsReader(std::uint64_t u64UntilFastMonoClock) noexce
 	if(!x_mtxReaderGuard.Try(u64UntilFastMonoClock)){
 		return false;
 	}
-	if(x_uReaders.Increment(kAtomicRelaxed) == 1){
+	if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
 		if(!x_mtxExclusive.Try(u64UntilFastMonoClock)){
-			x_uReaders.Decrement(kAtomicRelaxed);
+			x_uReaderCount.Decrement(kAtomicRelaxed);
 			x_mtxReaderGuard.Unlock();
 			return false;
 		}
@@ -22,13 +22,13 @@ bool ReadersWriterMutex::TryAsReader(std::uint64_t u64UntilFastMonoClock) noexce
 }
 void ReadersWriterMutex::LockAsReader() noexcept {
 	x_mtxReaderGuard.Lock();
-	if(x_uReaders.Increment(kAtomicRelaxed) == 1){
+	if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
 		x_mtxExclusive.Lock();
 	}
 	x_mtxReaderGuard.Unlock();
 }
 void ReadersWriterMutex::UnlockAsReader() noexcept {
-	if(x_uReaders.Decrement(kAtomicRelaxed) == 0){
+	if(x_uReaderCount.Decrement(kAtomicRelaxed) == 0){
 		x_mtxExclusive.Unlock();
 	}
 }

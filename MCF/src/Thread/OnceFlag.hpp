@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_CALL_ONCE_HPP_
 #define MCF_THREAD_CALL_ONCE_HPP_
 
-#include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include <MCFCRT/env/once_flag.h>
 #include <utility>
@@ -13,7 +12,7 @@
 
 namespace MCF {
 
-class OnceFlag : MCF_NONCOPYABLE {
+class OnceFlag {
 public:
 	enum OnceResult {
 		kTimedOut  = ::_MCFCRT_kOnceResultTimedOut,
@@ -22,41 +21,44 @@ public:
 	};
 
 private:
-	::_MCFCRT_OnceFlag x_vFlag;
+	::_MCFCRT_OnceFlag x_vOnce;
 
 public:
 	constexpr OnceFlag() noexcept
-		: x_vFlag{ 0 }
+		: x_vOnce{ 0 }
 	{
 	}
+
+	OnceFlag(const OnceFlag &) = delete;
+	OnceFlag &operator=(const OnceFlag &) = delete;
 
 public:
 	template<typename FuncT>
 	OnceResult CallOnce(FuncT &&vFunc, std::uint64_t u64UntilFastMonoClock){
-		const auto eResult = ::_MCFCRT_WaitForOnceFlag(&x_vFlag, u64UntilFastMonoClock);
+		const auto eResult = ::_MCFCRT_WaitForOnceFlag(&x_vOnce, u64UntilFastMonoClock);
 		if(eResult == ::_MCFCRT_kOnceResultInitial){
 			try {
 				std::forward<FuncT>(vFunc)();
 			} catch(...){
-				::_MCFCRT_SignalOnceFlagAsAborted(&x_vFlag);
+				::_MCFCRT_SignalOnceFlagAsAborted(&x_vOnce);
 				throw;
 			}
-			::_MCFCRT_SignalOnceFlagAsFinished(&x_vFlag);
+			::_MCFCRT_SignalOnceFlagAsFinished(&x_vOnce);
 		}
 		return static_cast<OnceResult>(eResult);
 	}
 	template<typename FuncT>
 	OnceResult CallOnce(FuncT &&vFunc){
-		const auto eResult = ::_MCFCRT_WaitForOnceFlagForever(&x_vFlag);
+		const auto eResult = ::_MCFCRT_WaitForOnceFlagForever(&x_vOnce);
 		MCF_ASSERT(eResult != ::_MCFCRT_kOnceResultTimedOut);
 		if(eResult == ::_MCFCRT_kOnceResultInitial){
 			try {
 				std::forward<FuncT>(vFunc)();
 			} catch(...){
-				::_MCFCRT_SignalOnceFlagAsAborted(&x_vFlag);
+				::_MCFCRT_SignalOnceFlagAsAborted(&x_vOnce);
 				throw;
 			}
-			::_MCFCRT_SignalOnceFlagAsFinished(&x_vFlag);
+			::_MCFCRT_SignalOnceFlagAsFinished(&x_vOnce);
 		}
 		return static_cast<OnceResult>(eResult);
 	}

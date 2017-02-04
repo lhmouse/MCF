@@ -5,60 +5,78 @@
 #ifndef MCF_THREAD_CONDITION_VARIABLE_HPP_
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
-#include <MCFCRT/env/condition_variable.h>
-#include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/Atomic.hpp"
-#include "UniqueLockBase.hpp"
+#include "UniqueLock.hpp"
+#include <MCFCRT/env/condition_variable.h>
 #include <cstddef>
 #include <type_traits>
 #include <cstdint>
 
 namespace MCF {
 
-class ConditionVariable : MCF_NONCOPYABLE {
+class ConditionVariable {
 public:
 	enum : std::size_t {
 		kSuggestedSpinCount = _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT,
 	};
 
 private:
-	static std::intptr_t X_UnlockCallback(std::intptr_t nContext) noexcept;
-	static void X_RelockCallback(std::intptr_t nContext, std::intptr_t nUnlocked) noexcept;
+	template<typename LockT>
+	static std::intptr_t X_UnlockCallback(std::intptr_t nContext) noexcept {
+		const auto pLock = reinterpret_cast<LockT *>(nContext);
+		const auto pMutex = pLock->Release();
+		MCF_ASSERT(pMutex);
+		pMutex->Unlock();
+		return reinterpret_cast<std::intptr_t>(pMutex);
+	}
+	template<typename LockT>
+	static void X_RelockCallback(std::intptr_t nContext, std::intptr_t nUnlocked) noexcept {
+		const auto pLock = reinterpret_cast<LockT *>(nContext);
+		const auto pMutex = reinterpret_cast<std::decay_t<decltype(pLock->Release())>>(nUnlocked);
+		MCF_ASSERT(pMutex);
+		pLock->Reset(*pMutex);
+	}
 
 private:
-	::_MCFCRT_ConditionVariable x_vConditionVariable;
+	::_MCFCRT_ConditionVariable x_vCond;
 	Atomic<std::size_t> x_uSpinCount;
 
 public:
 	explicit constexpr ConditionVariable(std::size_t uSpinCount = kSuggestedSpinCount) noexcept
-		: x_vConditionVariable{ 0 }, x_uSpinCount(uSpinCount)
+		: x_vCond{ 0 }, x_uSpinCount(uSpinCount)
 	{
 	}
 
+	ConditionVariable(const ConditionVariable &) = delete;
+	ConditionVariable &operator=(const ConditionVariable &) = delete;
+
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return x_uSpinCount.Load(kAtomicConsume);
+		return x_uSpinCount.Load(kAtomicRelaxed);
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		x_uSpinCount.Store(uSpinCount, kAtomicRelease);
+		x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
 	}
 
-	bool Wait(UniqueLockBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
-		return ::_MCFCRT_WaitForConditionVariable(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock), GetSpinCount(), u64UntilFastMonoClock);
+	template<typename LockT>
+	bool Wait(LockT &vLock, std::uint64_t u64UntilFastMonoClock){
+		return ::_MCFCRT_WaitForConditionVariable(&x_vCond, &X_UnlockCallback<LockT>, &X_RelockCallback<LockT>, reinterpret_cast<std::intptr_t>(AddressOf(vLock)), GetSpinCount(), u64UntilFastMonoClock);
 	}
-	bool WaitOrAbandon(UniqueLockBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
-		return ::_MCFCRT_WaitForConditionVariableOrAbandon(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock), GetSpinCount(), u64UntilFastMonoClock);
+	template<typename LockT>
+	bool WaitOrAbandon(LockT &vLock, std::uint64_t u64UntilFastMonoClock){
+		return ::_MCFCRT_WaitForConditionVariableOrAbandon(&x_vCond, &X_UnlockCallback<LockT>, &X_RelockCallback<LockT>, reinterpret_cast<std::intptr_t>(AddressOf(vLock)), GetSpinCount(), u64UntilFastMonoClock);
 	}
-	void Wait(UniqueLockBase &vLock) noexcept {
-		::_MCFCRT_WaitForConditionVariableForever(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock), GetSpinCount());
+	template<typename LockT>
+	void Wait(LockT &vLock){
+		::_MCFCRT_WaitForConditionVariableForever(&x_vCond, &X_UnlockCallback<LockT>, &X_RelockCallback<LockT>, reinterpret_cast<std::intptr_t>(AddressOf(vLock)), GetSpinCount());
 	}
 
 	std::size_t Signal(std::size_t uMaxCountToWakeUp = 1) noexcept {
-		return ::_MCFCRT_SignalConditionVariable(&x_vConditionVariable, uMaxCountToWakeUp);
+		return ::_MCFCRT_SignalConditionVariable(&x_vCond, uMaxCountToWakeUp);
 	}
 	std::size_t Broadcast() noexcept {
-		return ::_MCFCRT_BroadcastConditionVariable(&x_vConditionVariable);
+		return ::_MCFCRT_BroadcastConditionVariable(&x_vCond);
 	}
 };
 

@@ -10,89 +10,81 @@
 
 namespace MCF {
 
-class ReadersWriterMutex : MCF_NONCOPYABLE {
+class ReadersWriterMutex {
 public:
-	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReadersWriterMutex, 1>;
-	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReadersWriterMutex, 2>;
+	enum : std::size_t {
+		kSuggestedSpinCount = Mutex::kSuggestedSpinCount,
+	};
 
-	using SharedLock    = UniqueReaderLock;
-	using ExclusiveLock = UniqueWriterLock;
+	struct MutexTraitsAsReader {
+		static bool Try(ReadersWriterMutex *pMutex, std::uint64_t u64UntilFastMonoClock){
+			return pMutex->TryAsReader(u64UntilFastMonoClock);
+		}
+		static void Lock(ReadersWriterMutex *pMutex){
+			pMutex->LockAsReader();
+		}
+		static void Unlock(ReadersWriterMutex *pMutex){
+			pMutex->UnlockAsReader();
+		}
+	};
+	struct MutexTraitsAsWriter {
+		static bool Try(ReadersWriterMutex *pMutex, std::uint64_t u64UntilFastMonoClock){
+			return pMutex->TryAsWriter(u64UntilFastMonoClock);
+		}
+		static void Lock(ReadersWriterMutex *pMutex){
+			pMutex->LockAsWriter();
+		}
+		static void Unlock(ReadersWriterMutex *pMutex){
+			pMutex->UnlockAsWriter();
+		}
+	};
 
 private:
 	Mutex x_mtxReaderGuard;
 	Mutex x_mtxExclusive;
-	Atomic<std::size_t> x_uReaders;
+	Atomic<std::size_t> x_uReaderCount;
 
 public:
-	explicit constexpr ReadersWriterMutex(std::size_t uSpinCount = Mutex::kSuggestedSpinCount) noexcept
-		: x_mtxReaderGuard(uSpinCount), x_mtxExclusive(0), x_uReaders(0)
+	explicit constexpr ReadersWriterMutex(std::size_t uSpinCount = kSuggestedSpinCount) noexcept
+		: x_mtxReaderGuard(kSuggestedSpinCount), x_mtxExclusive(uSpinCount), x_uReaderCount(0)
 	{
 	}
 
+	ReadersWriterMutex(const ReadersWriterMutex &) = delete;
+	ReadersWriterMutex &operator=(const ReadersWriterMutex &) = delete;
+
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return x_mtxReaderGuard.GetSpinCount();
+		return x_mtxExclusive.GetSpinCount();
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		x_mtxReaderGuard.SetSpinCount(uSpinCount);
+		x_mtxExclusive.SetSpinCount(uSpinCount);
 	}
 
 	bool TryAsReader(std::uint64_t u64UntilFastMonoClock = 0) noexcept;
 	void LockAsReader() noexcept;
 	void UnlockAsReader() noexcept;
 
-	UniqueReaderLock TryGetReaderLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
-		UniqueReaderLock vLock(*this, false);
-		vLock.Try(u64UntilFastMonoClock);
-		return vLock;
+	UniqueLock<ReadersWriterMutex, MutexTraitsAsReader> TryGetLockAsReader(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
+		return UniqueLock<ReadersWriterMutex, MutexTraitsAsReader>(*this, u64UntilFastMonoClock);
 	}
-	UniqueReaderLock GetReaderLock() noexcept {
-		return UniqueReaderLock(*this);
+	UniqueLock<ReadersWriterMutex, MutexTraitsAsReader> GetLockAsReader() noexcept {
+		return UniqueLock<ReadersWriterMutex, MutexTraitsAsReader>(*this);
 	}
 
 	bool TryAsWriter(std::uint64_t u64UntilFastMonoClock = 0) noexcept;
 	void LockAsWriter() noexcept;
 	void UnlockAsWriter() noexcept;
 
-	UniqueWriterLock TryGetWriterLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
-		UniqueWriterLock vLock(*this, false);
-		vLock.Try(u64UntilFastMonoClock);
-		return vLock;
+	UniqueLock<ReadersWriterMutex, MutexTraitsAsWriter> TryGetLockAsWriter(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
+		return UniqueLock<ReadersWriterMutex, MutexTraitsAsWriter>(*this, u64UntilFastMonoClock);
 	}
-	UniqueWriterLock GetWriterLock() noexcept {
-		return UniqueWriterLock(*this);
+	UniqueLock<ReadersWriterMutex, MutexTraitsAsWriter> GetLockAsWriter() noexcept {
+		return UniqueLock<ReadersWriterMutex, MutexTraitsAsWriter>(*this);
 	}
 };
 
 static_assert(std::is_trivially_destructible<ReadersWriterMutex>::value, "Hey!");
-
-namespace Impl_UniqueLockTemplate {
-	template<>
-	inline bool ReadersWriterMutex::UniqueReaderLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
-		return x_pOwner->TryAsReader(u64UntilFastMonoClock);
-	}
-	template<>
-	inline void ReadersWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
-		x_pOwner->LockAsReader();
-	}
-	template<>
-	inline void ReadersWriterMutex::UniqueReaderLock::X_DoUnlock() const noexcept {
-		x_pOwner->UnlockAsReader();
-	}
-
-	template<>
-	inline bool ReadersWriterMutex::UniqueWriterLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
-		return x_pOwner->TryAsWriter(u64UntilFastMonoClock);
-	}
-	template<>
-	inline void ReadersWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
-		x_pOwner->LockAsWriter();
-	}
-	template<>
-	inline void ReadersWriterMutex::UniqueWriterLock::X_DoUnlock() const noexcept {
-		x_pOwner->UnlockAsWriter();
-	}
-}
 
 }
 

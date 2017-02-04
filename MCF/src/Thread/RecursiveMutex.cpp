@@ -17,7 +17,7 @@ bool RecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	const auto uThreadId = Thread::GetCurrentId();
 
 	if(x_uLockingThreadId.Load(kAtomicRelaxed) != uThreadId){
-		if(!x_vMutex.Try(u64UntilFastMonoClock)){
+		if(!x_mtxPlain.Try(u64UntilFastMonoClock)){
 			return false;
 		}
 		x_uLockingThreadId.Store(uThreadId, kAtomicRelaxed);
@@ -30,7 +30,7 @@ void RecursiveMutex::Lock() noexcept {
 	const auto uThreadId = Thread::GetCurrentId();
 
 	if(x_uLockingThreadId.Load(kAtomicRelaxed) != uThreadId){
-		x_vMutex.Lock();
+		x_mtxPlain.Lock();
 		x_uLockingThreadId.Store(uThreadId, kAtomicRelaxed);
 	}
 	const auto uNewCount = ++x_uRecursionCount;
@@ -42,7 +42,7 @@ void RecursiveMutex::Unlock() noexcept {
 	const auto uNewCount = ++x_uRecursionCount;
 	if(uNewCount == 0){
 		x_uLockingThreadId.Store(0, kAtomicRelaxed);
-		x_vMutex.Unlock();
+		x_mtxPlain.Unlock();
 	}
 }
 

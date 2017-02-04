@@ -20,7 +20,7 @@ public:
 	using Closer = CloserT;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-	static_assert(noexcept(Closer()(DeclVal<Handle>())), "Handle closer must not throw.");
+	static_assert(noexcept(Closer()(DeclVal<Handle>())), "Handle closer must not throw exceptions.");
 
 private:
 	Handle x_hObject;
@@ -50,9 +50,6 @@ public:
 		__builtin_memset(&x_hObject, 0xEF, sizeof(x_hObject));
 #endif
 	}
-
-	UniqueHandle(const UniqueHandle &) = delete;
-	UniqueHandle &operator=(const UniqueHandle &) = delete;
 
 public:
 	constexpr bool IsNull() const noexcept {

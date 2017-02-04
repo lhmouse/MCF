@@ -64,7 +64,6 @@ pkginclude_Core_HEADERS = \
 	src/Core/LastError.hpp	\
 	src/Core/Matrix.hpp	\
 	src/Core/MinMax.hpp	\
-	src/Core/Noncopyable.hpp	\
 	src/Core/Optional.hpp	\
 	src/Core/Random.hpp	\
 	src/Core/Rcnts.hpp	\
@@ -80,7 +79,6 @@ pkginclude_Core_HEADERS = \
 
 pkginclude_Threaddir = ${pkgincludedir}/Thread
 pkginclude_Thread_HEADERS = \
-	src/Thread/_UniqueLockTemplate.hpp	\
 	src/Thread/ConditionVariable.hpp	\
 	src/Thread/Event.hpp	\
 	src/Thread/KernelEvent.hpp	\
@@ -94,7 +92,7 @@ pkginclude_Thread_HEADERS = \
 	src/Thread/Semaphore.hpp	\
 	src/Thread/Thread.hpp	\
 	src/Thread/ThreadLocal.hpp	\
-	src/Thread/UniqueLockBase.hpp
+	src/Thread/UniqueLock.hpp
 
 pkginclude_SmartPointersdir = ${pkgincludedir}/SmartPointers
 pkginclude_SmartPointers_HEADERS = \
@@ -170,7 +168,6 @@ mcf_sources = \
 	src/Core/String.cpp	\
 	src/Core/StringView.cpp	\
 	src/Core/Uuid.cpp	\
-	src/Thread/ConditionVariable.cpp	\
 	src/Thread/Event.cpp	\
 	src/Thread/KernelEvent.cpp	\
 	src/Thread/KernelMutex.cpp	\
@@ -180,7 +177,6 @@ mcf_sources = \
 	src/Thread/RecursiveMutex.cpp	\
 	src/Thread/Semaphore.cpp	\
 	src/Thread/Thread.cpp	\
-	src/Thread/UniqueLockBase.cpp	\
 	src/SmartPointers/PolyIntrusivePtr.cpp	\
 	src/Random/FastGenerator.cpp	\
 	src/Random/IsaacGenerator.cpp	\

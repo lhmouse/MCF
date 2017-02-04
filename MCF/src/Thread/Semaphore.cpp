@@ -7,7 +7,7 @@
 namespace MCF {
 
 bool Semaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	while(x_uCount == 0){
 		if(!x_cvWaiter.WaitOrAbandon(vLock, u64UntilFastMonoClock)){
 			return false;
@@ -17,14 +17,14 @@ bool Semaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	return true;
 }
 void Semaphore::Wait() noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	while(x_uCount == 0){
 		x_cvWaiter.Wait(vLock);
 	}
 	--x_uCount;
 }
 std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	const auto uOldCount = x_uCount;
 	const auto uNewCount = uOldCount + uPostCount;
 	MCF_DEBUG_CHECK_MSG(uNewCount >= uOldCount, L"算术运算结果超出可表示范围。");

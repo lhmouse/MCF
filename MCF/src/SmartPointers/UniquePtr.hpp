@@ -66,9 +66,6 @@ public:
 		}
 	}
 
-	UniquePtr(const UniquePtr &) = delete;
-	UniquePtr &operator=(const UniquePtr &) = delete;
-
 public:
 	constexpr bool IsNull() const noexcept {
 		return !x_pElement;

@@ -7,7 +7,7 @@
 namespace MCF {
 
 bool Event::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	while(!x_bSet){
 		if(!x_cvWaiter.WaitOrAbandon(vLock, u64UntilFastMonoClock)){
 			return false;
@@ -16,24 +16,24 @@ bool Event::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	return true;
 }
 void Event::Wait() const noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	while(!x_bSet){
 		x_cvWaiter.Wait(vLock);
 	}
 }
 bool Event::IsSet() const noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	return x_bSet;
 }
 bool Event::Set() noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	const auto bOld = x_bSet;
 	x_bSet = true;
 	x_cvWaiter.Broadcast();
 	return bOld;
 }
 bool Event::Reset() noexcept {
-	Mutex::UniqueLock vLock(x_mtxGuard);
+	auto vLock = x_mtxGuard.GetLock();
 	const auto bOld = x_bSet;
 	x_bSet = false;
 	return bOld;

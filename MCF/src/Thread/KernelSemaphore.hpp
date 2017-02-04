@@ -12,18 +12,18 @@
 namespace MCF {
 
 class KernelSemaphore : public Impl_KernelObjectBase::KernelObjectBase {
-public:
-	using Handle = Impl_UniqueNtHandle::Handle;
-
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
 	explicit KernelSemaphore(std::size_t uInitCount)
-		: KernelSemaphore(uInitCount, nullptr, kSessionLocal)
+		: KernelSemaphore(uInitCount, nullptr, 0)
 	{
 	}
 	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags);
+
+	KernelSemaphore(const KernelSemaphore &) = delete;
+	KernelSemaphore &operator=(const KernelSemaphore &) = delete;
 
 public:
 	Handle GetHandle() const noexcept {

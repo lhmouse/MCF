@@ -108,7 +108,7 @@ namespace Impl_IntrusivePtr {
 
 	public:
 		bool IsOwnerAlive() const noexcept {
-			const Mutex::UniqueLock vLock(x_mtxGuard);
+			const auto vLock = x_mtxGuard.GetLock();
 			const auto pOwner = x_pOwner;
 			if(!pOwner){
 				return false;
@@ -119,13 +119,13 @@ namespace Impl_IntrusivePtr {
 			return true;
 		}
 		void ClearOwner() noexcept {
-			const Mutex::UniqueLock vLock(x_mtxGuard);
+			const auto vLock = x_mtxGuard.GetLock();
 			x_pOwner = nullptr;
 		}
 
 		template<typename OtherT>
 		IntrusivePtr<OtherT, DeleterT> LockOwner() const noexcept {
-			const Mutex::UniqueLock vLock(x_mtxGuard);
+			const auto vLock = x_mtxGuard.GetLock();
 			const auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
 			if(!pOther){
 				return nullptr;

@@ -12,7 +12,9 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 		t.Create([&]{
 			for(unsigned i = 0; i < 100000; ++i){
 				auto l = m.GetLockAsWriter();
-				c++;
+				auto x = c;
+				__builtin_ia32_pause();
+				c = x + 1;
 			}
 		}, false);
 	}

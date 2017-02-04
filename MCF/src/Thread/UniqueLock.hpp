@@ -39,6 +39,10 @@ public:
 		: x_pMutex(nullptr)
 	{
 	}
+	explicit constexpr UniqueLock(MutexT *pMutex) noexcept
+		: x_pMutex(pMutex)
+	{
+	}
 	UniqueLock(MutexT &vMutex, std::uint64_t u64UntilFastMonoClock) noexcept
 		: x_pMutex((Traits::Try(AddressOf(vMutex), u64UntilFastMonoClock) ? AddressOf(vMutex) : nullptr))
 	{

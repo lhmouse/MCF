@@ -25,9 +25,9 @@ private:
 	template<typename LockT>
 	static std::intptr_t X_UnlockCallback(std::intptr_t nContext) noexcept {
 		const auto pLock = reinterpret_cast<LockT *>(nContext);
-		const auto pMutex = pLock->Release();
+		const auto pMutex = pLock->GetMutex();
 		MCF_ASSERT(pMutex);
-		pMutex->Unlock();
+		pLock->Reset();
 		return reinterpret_cast<std::intptr_t>(pMutex);
 	}
 	template<typename LockT>

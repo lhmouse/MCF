@@ -5,13 +5,12 @@
 #ifndef MCF_THREAD_THREAD_HPP_
 #define MCF_THREAD_THREAD_HPP_
 
-#include <MCFCRT/env/thread.h>
-#include "../Core/Assert.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
+#include <MCFCRT/env/thread.h>
 #include <type_traits>
 #include <utility>
-#include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 

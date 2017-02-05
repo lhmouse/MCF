@@ -8,16 +8,14 @@
 
 namespace MCF {
 
-Thread::X_AbstractControlBlock::~X_AbstractControlBlock(){
+Thread::~Thread(){
 }
 
-void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
-	MCF_ASSERT(!x_hThread);
-
+void Thread::X_Spawn(bool bSuspended){
 	struct Helper {
 		__MCFCRT_C_STDCALL
-		static DWORD ThreadProc(LPVOID pParam){
-			const auto pThis = IntrusivePtr<X_AbstractControlBlock>(static_cast<X_AbstractControlBlock *>(pParam));
+		static unsigned long NativeThreadProc(void *pParam){
+			const auto pThis = IntrusivePtr<Thread>(static_cast<Thread *>(pParam));
 
 			__MCFCRT_SEH_TOP_BEGIN
 			{
@@ -29,11 +27,15 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 		}
 	};
 
-	if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &x_uTid))){
+	Handle hTemp;
+	std::uintptr_t uThreadId;
+	if(!(hTemp = ::_MCFCRT_CreateNativeThread(&Helper::NativeThreadProc, this, true, &uThreadId))){
 		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
 	}
-	AddRef();
+	x_hThread.Reset(hTemp);
+	x_uThreadId = uThreadId;
 
+	AddRef();
 	if(!bSuspended){
 		::_MCFCRT_ResumeThread(x_hThread.Get());
 	}

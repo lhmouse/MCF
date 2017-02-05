@@ -8,13 +8,13 @@
 namespace MCF {
 
 bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
-	const auto uThreadId = Thread::GetCurrentId();
+	const auto uThreadId = GetCurrentThreadId();
 
 	return x_uLockingThreadId.Load(kAtomicRelaxed) == uThreadId;
 }
 
 bool RecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
-	const auto uThreadId = Thread::GetCurrentId();
+	const auto uThreadId = GetCurrentThreadId();
 
 	if(x_uLockingThreadId.Load(kAtomicRelaxed) != uThreadId){
 		if(!x_mtxPlain.Try(u64UntilFastMonoClock)){
@@ -27,7 +27,7 @@ bool RecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	return true;
 }
 void RecursiveMutex::Lock() noexcept {
-	const auto uThreadId = Thread::GetCurrentId();
+	const auto uThreadId = GetCurrentThreadId();
 
 	if(x_uLockingThreadId.Load(kAtomicRelaxed) != uThreadId){
 		x_mtxPlain.Lock();

@@ -7,9 +7,9 @@ using namespace MCF;
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	volatile unsigned c = 0;
 	ReadersWriterMutex m;
-	Array<Thread, 20> ts;
+	Array<IntrusivePtr<Thread>, 20> ts;
 	for(auto &t : ts){
-		t.Create([&]{
+		t = MakeThread([&]{
 			for(unsigned i = 0; i < 100000; ++i){
 				auto l = m.GetLockAsWriter();
 				auto x = c;
@@ -19,7 +19,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 		}, false);
 	}
 	for(auto &t : ts){
-		t.Join();
+		t->Wait();
 	}
 	std::printf("c = %u\n", c);
 	return 0;

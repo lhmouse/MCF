@@ -60,7 +60,7 @@ public:
 	virtual ~Thread();
 
 protected:
-	virtual void X_ThreadProc() = 0;
+	virtual void X_ThreadProc() const = 0;
 
 	void X_Spawn(bool bSuspended);
 
@@ -102,7 +102,7 @@ namespace Impl_Thread {
 		~ConcreteThread();
 
 	protected:
-		void X_ThreadProc() override {
+		void X_ThreadProc() const override {
 			std::forward<FunctionT>(x_vFunction)();
 		}
 	};

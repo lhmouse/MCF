@@ -6,55 +6,60 @@
 #define MCF_CORE_BINARY_OPERATIONS_HPP_
 
 #include <type_traits>
-#include <utility>
 #include <cstring>
 
 namespace MCF {
 
-template<typename Tx, typename Ty>
-void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
-	static_assert(!std::is_empty<Tx>::value, "Tx shall not be empty.");
-	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
-	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
+template<typename Ty, typename Tx>
+void BCopy(Ty &dst, const Tx &src) noexcept {
+	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
-	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
+	static_assert(!std::is_empty<Tx>::value,  "Tx shall not be empty.");
+	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
+	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
 
-	std::memcpy(&vDst, &vSrc, sizeof(vDst));
+	std::memcpy(&dst, &src, sizeof(dst));
 }
 
 template<typename Ty>
-void BFill(Ty &vDst, bool bVal) noexcept {
-	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
+void BFill(Ty &dst, bool bVal) noexcept {
+	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 
-	std::memset(&vDst, bVal ? -1 : 0, sizeof(vDst));
+	std::memset(&dst, -bVal, sizeof(dst));
 }
 
-template<typename Tx, typename Ty>
-int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
-	static_assert(!std::is_empty<Tx>::value, "Tx shall not be empty.");
-	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
-	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
+template<typename Ty, typename Tx>
+int BComp(const Ty &dst, const Tx &src) noexcept {
+	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
-	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
+	static_assert(!std::is_empty<Tx>::value,  "Tx shall not be empty.");
+	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
+	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
 
-	return std::memcmp(&vDst, &vSrc, sizeof(vSrc));
+	return std::memcmp(&dst, &src, sizeof(src));
 }
 
-template<typename Tx, typename Ty>
-void BSwap(Tx &vDst, Ty &vSrc) noexcept {
-	static_assert(!std::is_empty<Tx>::value, "Tx shall not be empty.");
-	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
-	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
+template<typename Ty, typename Tx>
+void BSwap(Ty &dst, Tx &src) noexcept {
+	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
-	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
+	static_assert(!std::is_empty<Tx>::value,  "Tx shall not be empty.");
+	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
+	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
 
-	std::swap(reinterpret_cast<unsigned char (&)[sizeof(Tx)]>(vDst), reinterpret_cast<unsigned char (&)[sizeof(Ty)]>(vSrc));
+	for(std::size_t i = 0; i < sizeof(dst); ++i){
+		auto &chd = reinterpret_cast<char (&)[sizeof(dst)]>(dst)[i];
+		auto &chs = reinterpret_cast<char (&)[sizeof(src)]>(src)[i];
+		const char cht = chd;
+		chd = chs;
+		chs = cht;
+	}
 }
 
 template<typename Ty>
-void BZero(Ty &vDst) noexcept {
-	BFill(vDst, false);
+void BZero(Ty &dst) noexcept {
+	BFill(dst, false);
 }
 
 }

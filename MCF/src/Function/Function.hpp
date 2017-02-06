@@ -5,61 +5,77 @@
 #ifndef MCF_FUNCTION_FUNCTION_HPP_
 #define MCF_FUNCTION_FUNCTION_HPP_
 
-#include "Invoke.hpp"
-#include "_ForwardedParam.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
+#include "Invoke.hpp"
+#include "../Core/TupleManipulators.hpp"
 #include <type_traits>
+#include <utility>
+#include <tuple>
 
 namespace MCF {
 
 template<typename PrototypeT>
 class Function {
-	static_assert(((void)sizeof(PrototypeT *), false), "Class template Function instantiated with non-function template type parameter.");
+	static_assert((sizeof(PrototypeT *), false), "Class template Function instantiated with non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>
-class Function<RetT (ParamsT...)> : public IntrusiveBase<Function<RetT (ParamsT...)>> {
+class Function<RetT (ParamsT ...)> : public IntrusiveBase<Function<RetT (ParamsT ...)>> {
+protected:
+	using X_ReturnType      = RetT;
+	using X_ForwardedParams = std::tuple<ParamsT &&...>;
+
+protected:
+	constexpr Function() noexcept {
+	}
+
 public:
 	virtual ~Function();
 
+protected:
+	virtual RetT X_Forward(X_ForwardedParams &&tupParams) const = 0;
+
 public:
-	virtual RetT operator()(ParamsT ...vParams) const = 0;
+	X_ReturnType operator()(ParamsT ...vParams) const {
+		return X_Forward(std::forward_as_tuple(std::forward<ParamsT>(vParams)...));
+	}
 };
 
 template<typename RetT, typename ...ParamsT>
-Function<RetT (ParamsT...)>::~Function(){
+Function<RetT (ParamsT ...)>::~Function(){
 }
 
 namespace Impl_Function {
-	template<typename PrototypeT, typename ActionT>
-	class ConcreteFunction;
+	template<typename PrototypeT, typename FunctionT>
+	class ConcreteFunction : public Function<PrototypeT> {
+	protected:
+		using X_ReturnType      = typename Function<PrototypeT>::X_ReturnType;
+		using X_ForwardedParams = typename Function<PrototypeT>::X_ForwardedParams;
 
-	template<typename RetT, typename ...ParamsT, typename ActionT>
-	class ConcreteFunction<RetT (ParamsT...), ActionT> : public Function<RetT (ParamsT...)> {
 	private:
-		std::decay_t<ActionT> x_vAction;
+		std::decay_t<FunctionT> x_vFunction;
 
 	public:
-		explicit ConcreteFunction(ActionT &vAction)
-			: x_vAction(std::forward<ActionT>(vAction))
+		explicit ConcreteFunction(FunctionT &vFunction)
+			: x_vFunction(std::forward<FunctionT>(vFunction))
 		{
 		}
-		~ConcreteFunction() override;
+		~ConcreteFunction();
 
-	public:
-		RetT operator()(ParamsT ...vParams) const override {
-			return DesignatedInvoke<std::remove_cv_t<RetT>>(x_vAction, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+	protected:
+		X_ReturnType X_Forward(X_ForwardedParams &&tupParams) const override {
+			return Squeeze(x_vFunction, std::move(tupParams));
 		}
 	};
 
-	template<typename RetT, typename ...ParamsT, typename ActionT>
-	ConcreteFunction<RetT (ParamsT...), ActionT>::~ConcreteFunction(){
+	template<typename PrototypeT, typename FunctionT>
+	ConcreteFunction<PrototypeT, FunctionT>::~ConcreteFunction(){
 	}
 }
 
-template<typename PrototypeT, typename ActionT>
-IntrusivePtr<Function<PrototypeT>> MakeFunction(ActionT &&vAction){
-	return MakeIntrusive<Impl_Function::ConcreteFunction<PrototypeT, ActionT>>(vAction);
+template<typename PrototypeT, typename FunctionT>
+IntrusivePtr<Function<PrototypeT>> MakeFunction(FunctionT &&vFunction){
+	return MakeIntrusive<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>>(vFunction);
 }
 
 }

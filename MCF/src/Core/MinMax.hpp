@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_MIN_MAX_HPP_
 #define MCF_CORE_MIN_MAX_HPP_
 
-#include "Comparators.hpp"
 #include <utility>
 #include <type_traits>
 
@@ -18,22 +17,22 @@ namespace Impl_MinMax {
 	}
 }
 
-template<typename ComparatorT = Less, typename FirstT>
+template<typename FirstT>
 constexpr decltype(auto) Min(FirstT &&vFirst){
 	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(vFirst));
 }
-template<typename ComparatorT = Less, typename FirstT>
+template<typename FirstT>
 constexpr decltype(auto) Max(FirstT &&vFirst){
 	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(vFirst));
 }
 
-template<typename ComparatorT = Less, typename FirstT, typename SecondT, typename ...RemainingT>
+template<typename FirstT, typename SecondT, typename ...RemainingT>
 constexpr decltype(auto) Min(FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
-	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Min<ComparatorT>(ComparatorT()(vFirst, vSecond) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...));
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Min((vFirst < vSecond) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...));
 }
-template<typename ComparatorT = Less, typename FirstT, typename SecondT, typename ...RemainingT>
+template<typename FirstT, typename SecondT, typename ...RemainingT>
 constexpr decltype(auto) Max(FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
-	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Max<ComparatorT>(ComparatorT()(vSecond, vFirst) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...));
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Max((vSecond < vFirst) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...));
 }
 
 }

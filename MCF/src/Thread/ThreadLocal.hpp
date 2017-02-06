@@ -54,22 +54,15 @@ private:
 	}
 
 private:
-	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(){
+	UniqueHandle<X_TlsKeyDeleter> x_hTlsKey;
+
+public:
+	explicit ThreadLocal(){
 		const auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer), nullptr, &X_ContainerDestructor, 0);
 		if(!hTemp){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"ThreadLocal: _MCFCRT_TlsAllocKey() 失败。"));
 		}
-		UniqueHandle<X_TlsKeyDeleter> hTlsKey(hTemp);
-		return hTlsKey;
-	}
-
-private:
-	UniqueHandle<X_TlsKeyDeleter> x_hTlsKey;
-
-public:
-	explicit ThreadLocal()
-		: x_hTlsKey(X_AllocateTlsKey())
-	{
+		x_hTlsKey.Reset(hTemp);
 	}
 
 public:

@@ -15,7 +15,7 @@ void Thread::X_Spawn(bool bSuspended){
 	struct Helper {
 		__MCFCRT_C_STDCALL
 		static unsigned long NativeThreadProc(void *pParam){
-			const auto pThis = IntrusivePtr<Thread>(static_cast<Thread *>(pParam));
+			const auto pThis = IntrusivePtr<const Thread>(static_cast<const Thread *>(pParam));
 
 			__MCFCRT_SEH_TOP_BEGIN
 			{

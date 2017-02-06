@@ -2,22 +2,22 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_FUNCTION_FUNCTION_VIEW_HPP_
-#define MCF_FUNCTION_FUNCTION_VIEW_HPP_
+#ifndef MCF_CORE_FUNCTION_VIEW_HPP_
+#define MCF_CORE_FUNCTION_VIEW_HPP_
 
-#include "../Core/Assert.hpp"
-#include "../Core/AddressOf.hpp"
-#include "../Core/DeclVal.hpp"
-#include "../Core/Invoke.hpp"
+#include "Assert.hpp"
+#include "AddressOf.hpp"
+#include "DeclVal.hpp"
+#include "Invoke.hpp"
 #include "_ForwardedParam.hpp"
 #include <type_traits>
 #include <utility>
 
 namespace MCF {
 
-template<typename PrototypeT>
+template<typename FuncT>
 class FunctionView {
-	static_assert(((void)sizeof(PrototypeT *), false), "Class template FunctionView instantiated with non-function template type parameter.");
+	static_assert(((void)sizeof(FuncT), false), "Class template FunctionView instantiated with non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>
@@ -64,6 +64,7 @@ public:
 	}
 	RetT operator()(ParamsT ...vParams) const {
 		MCF_DEBUG_CHECK(x_pfnLambda);
+
 		return (*x_pfnLambda)(x_pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 

@@ -30,7 +30,6 @@ pkginclude_Coredir = ${pkgincludedir}/Core
 pkginclude_Core_HEADERS = \
 	src/Core/_CheckedSizeArithmetic.hpp	\
 	src/Core/_Enumerator.hpp	\
-	src/Core/_ForwardedParam.hpp	\
 	src/Core/_UniqueNtHandle.hpp	\
 	src/Core/_KernelObjectBase.hpp	\
 	src/Core/AddressOf.hpp	\
@@ -41,12 +40,8 @@ pkginclude_Core_HEADERS = \
 	src/Core/Atomic.hpp	\
 	src/Core/Bail.hpp	\
 	src/Core/BinaryOperations.hpp	\
-	src/Core/Bind.hpp	\
-	src/Core/BlackWhiteHole.hpp	\
-	src/Core/Converters.hpp	\
 	src/Core/Clocks.hpp	\
 	src/Core/Clone.hpp	\
-	src/Core/Comparators.hpp	\
 	src/Core/ConstructDestruct.hpp	\
 	src/Core/CountLeadingTrailingZeroes.hpp	\
 	src/Core/CopyMoveFill.hpp	\
@@ -58,9 +53,6 @@ pkginclude_Core_HEADERS = \
 	src/Core/Endian.hpp	\
 	src/Core/Exception.hpp	\
 	src/Core/File.hpp	\
-	src/Core/Function.hpp	\
-	src/Core/FunctionView.hpp	\
-	src/Core/Invoke.hpp	\
 	src/Core/LastError.hpp	\
 	src/Core/Matrix.hpp	\
 	src/Core/MinMax.hpp	\
@@ -117,6 +109,16 @@ pkginclude_Randomdir = ${pkgincludedir}/Random
 pkginclude_Random_HEADERS = \
 	src/Random/FastGenerator.hpp	\
 	src/Random/IsaacGenerator.hpp
+
+pkginclude_Functiondir = ${pkgincludedir}/Function
+pkginclude_Function_HEADERS = \
+	src/Function/Bind.hpp	\
+	src/Function/BlackWhiteHole.hpp	\
+	src/Function/Comparators.hpp	\
+	src/Function/Converters.hpp	\
+	src/Function/Function.hpp	\
+	src/Function/FunctionView.hpp	\
+	src/Function/Invoke.hpp
 
 pkginclude_Utilitiesdir = ${pkgincludedir}/Utilities
 pkginclude_Utilities_HEADERS = \

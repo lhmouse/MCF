@@ -1,4 +1,5 @@
 #include <MCF/Function/Function.hpp>
+#include <cstdio>
 
 using namespace MCF;
 

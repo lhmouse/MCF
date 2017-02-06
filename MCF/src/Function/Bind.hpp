@@ -5,12 +5,12 @@
 #ifndef MCF_FUNCTION_BIND_HPP_
 #define MCF_FUNCTION_BIND_HPP_
 
+#include "../Core/RefWrapper.hpp"
+#include "Invoke.hpp"
+#include "TupleManipulation.hpp"
 #include <type_traits>
 #include <utility>
 #include <tuple>
-#include "Invoke.hpp"
-#include "../Core/RefWrapper.hpp"
-#include "../Core/TupleManipulators.hpp"
 
 namespace MCF {
 

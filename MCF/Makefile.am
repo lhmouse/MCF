@@ -64,7 +64,6 @@ pkginclude_Core_HEADERS = \
 	src/Core/StreamBuffer.hpp	\
 	src/Core/String.hpp	\
 	src/Core/StringView.hpp	\
-	src/Core/TupleManipulators.hpp	\
 	src/Core/UniqueHandle.hpp	\
 	src/Core/Uuid.hpp	\
 	src/Core/Variant.hpp
@@ -118,7 +117,8 @@ pkginclude_Function_HEADERS = \
 	src/Function/Converters.hpp	\
 	src/Function/Function.hpp	\
 	src/Function/FunctionView.hpp	\
-	src/Function/Invoke.hpp
+	src/Function/Invoke.hpp	\
+	src/Function/TupleManipulation.hpp
 
 pkginclude_Utilitiesdir = ${pkgincludedir}/Utilities
 pkginclude_Utilities_HEADERS = \

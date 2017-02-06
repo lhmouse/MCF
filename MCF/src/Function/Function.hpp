@@ -7,7 +7,7 @@
 
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "Invoke.hpp"
-#include "../Core/TupleManipulators.hpp"
+#include "TupleManipulation.hpp"
 #include <type_traits>
 #include <utility>
 #include <tuple>

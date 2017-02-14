@@ -395,10 +395,16 @@ public:
 	}
 	const Char *GetStr() const noexcept {
 		if(x_vStorage.schComplLength >= 0){
-			const_cast<Char &>(x_vStorage.achData[X_GetSmallLength()]) = Char();
+			const auto &chTerminator = x_vStorage.achData[X_GetSmallLength()];
+			if(chTerminator != Char()){
+				const_cast<Char &>(chTerminator) = Char();
+			}
 			return x_vStorage.achData;
 		} else {
-			x_vStorage.pchBegin[x_vStorage.uLength] = Char();
+			auto &chTerminator = x_vStorage.pchBegin[x_vStorage.uLength];
+			if(chTerminator != Char()){
+				const_cast<Char &>(chTerminator) = Char();
+			}
 			return x_vStorage.pchBegin;
 		}
 	}

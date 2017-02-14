@@ -59,7 +59,7 @@ void *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAd
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 				if(!bFillsWithZero){
-					memset(pbyRet, 0xCD, uSize);
+					__builtin_memset(pbyRet, 0xCD, uSize);
 				}
 #endif
 			}
@@ -140,7 +140,7 @@ void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, cons
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 				if(!bFillsWithZero && (uOriginalSize < uSize)){
-					memset(pbyRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
+					__builtin_memset(pbyRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
 				}
 #endif
 			}
@@ -179,7 +179,7 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pbyRetAddr){
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-		memset(pbyRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pbyRaw));
+		__builtin_memset(pbyRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pbyRaw));
 #endif
 		HeapFree(GetProcessHeap(), 0, pbyRaw);
 	}

@@ -9,43 +9,27 @@
 #undef fma
 #undef fmal
 
-// https://en.wikipedia.org/wiki/Extended_precision#x86_Extended_Precision_Format
-typedef union tag_x87reg {
-	struct __attribute__((__packed__)) {
-		union {
-			uint64_t f64;
-			struct {
-				uint32_t flo;
-				uint32_t fhi;
-			};
-		};
-		uint16_t exp : 15;
-		uint16_t sgn :  1;
-	};
-	long double f;
-} x87reg;
+static inline void break_down(__MCFCRT_x87Register *restrict lo, __MCFCRT_x87Register *restrict hi, long double x){
+	hi->__val = x;
+	const uint32_t mts_l = hi->__mts_l;
+	const long exp = hi->__exp;
+	const bool sign = hi->__sign;
+	hi->__mts_l = 0;
 
-static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long double x){
-	hi->f = x;
-	const uint32_t flo = hi->flo;
-	const long     exp = hi->exp;
-	const bool     sgn = hi->sgn;
-	hi->flo = 0;
-
-	if(flo == 0){
-		lo->f64 = 0;
-		lo->exp = 0;
+	if(mts_l == 0){
+		lo->__mts_q = 0;
+		lo->__exp = 0;
 	} else {
-		const long shn = _Generic(flo,
+		const long shn = _Generic(mts_l,
 			unsigned:      __builtin_clz,
-			unsigned long: __builtin_clzl)(flo) + 32;
+			unsigned long: __builtin_clzl)(mts_l) + 32;
 		const long mask = (shn - exp) >> 31;
 		long expm1 = exp - 1;
 		expm1 &= ~(expm1 >> 31);
-		lo->f64 = (uint64_t)flo << (((shn ^ expm1) & mask) ^ expm1);
-		lo->exp = ((uint32_t)((exp - shn) & mask) << 17) >> 17;
+		lo->__mts_q = (uint64_t)mts_l << (((shn ^ expm1) & mask) ^ expm1);
+		lo->__exp = ((uint32_t)((exp - shn) & mask) << 17) >> 17;
 	}
-	lo->sgn = sgn;
+	lo->__sign = sign;
 }
 static inline long double fpu_fma(long double x, long double y, long double z){
 	bool xsign;
@@ -72,13 +56,13 @@ static inline long double fpu_fma(long double x, long double y, long double z){
 	if(rexam == __MCFCRT_kFpuExamineInfinity){
 		return ret;
 	}
-	x87reg xlo, xhi, ylo, yhi;
+	__MCFCRT_x87Register xlo, xhi, ylo, yhi;
 	break_down(&xlo, &xhi, x);
 	break_down(&ylo, &yhi, y);
 	ret = z;
-	ret += xhi.f * yhi.f;
-	ret += xhi.f * ylo.f + xlo.f * yhi.f;
-	ret += xlo.f * ylo.f;
+	ret += xhi.__val * yhi.__val;
+	ret += xhi.__val * ylo.__val + xlo.__val * yhi.__val;
+	ret += xlo.__val * ylo.__val;
 	return ret;
 }
 

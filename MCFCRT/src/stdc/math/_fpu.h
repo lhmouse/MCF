@@ -9,6 +9,22 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+// https://en.wikipedia.org/wiki/Extended_precision#x86_Extended_Precision_Format
+typedef union __MCFCRT_tag_x87Register {
+	struct __attribute__((__packed__)) {
+		__extension__ union {
+			_MCFCRT_STD uint64_t __mts_q;
+			struct {
+				_MCFCRT_STD uint32_t __mts_l;
+				_MCFCRT_STD uint32_t __mts_h;
+			};
+		};
+		_MCFCRT_STD uint16_t __exp : 15;
+		_MCFCRT_STD uint16_t __sign : 1;
+	};
+	long double __val;
+} __MCFCRT_x87Register;
+
 typedef enum __MCFCRT_tagFpuCompare {
 	__MCFCRT_kFpuComparePositive  = 0x0000,
 	__MCFCRT_kFpuCompareNegative  = 0x0100,

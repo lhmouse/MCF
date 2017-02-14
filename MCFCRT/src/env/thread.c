@@ -232,9 +232,9 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 	pControl->pfnProc       = pfnProc;
 	pControl->uSizeOfParams = uSizeOfParams;
 	if(pParams){
-		memcpy(pControl->abyParams, pParams, uSizeOfParams);
+		__builtin_memcpy(pControl->abyParams, pParams, uSizeOfParams);
 	} else {
-		memset(pControl->abyParams, 0, uSizeOfParams);
+		__builtin_memset(pControl->abyParams, 0, uSizeOfParams);
 	}
 	if(bJoinable){
 		pControl->eState = kStateJoinable;
@@ -297,7 +297,7 @@ __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restric
 				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
-					memcpy(pParams, pControl->abyParams, pControl->uSizeOfParams);
+					__builtin_memcpy(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
 				_MCFCRT_CloseThread(pControl->hThread);
 				_MCFCRT_free(pControl);
@@ -308,7 +308,7 @@ __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restric
 				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
-					memcpy(pParams, pControl->abyParams, pControl->uSizeOfParams);
+					__builtin_memcpy(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
 				_MCFCRT_CloseThread(pControl->hThread);
 				_MCFCRT_free(pControl);
@@ -562,9 +562,9 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 			return _MCFCRT_NULLPTR;
 		}
 #ifndef NDEBUG
-		memset(pObject, 0xAA, sizeof(*pObject));
+		__builtin_memset(pObject, 0xAA, sizeof(*pObject));
 #endif
-		memset(pObject->abyStorage, 0, uSize);
+		__builtin_memset(pObject->abyStorage, 0, uSize);
 
 		if(pfnConstructor){
 			const DWORD dwErrorCode = (*pfnConstructor)(nContext, pObject->abyStorage);

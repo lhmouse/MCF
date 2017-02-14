@@ -117,13 +117,12 @@ unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInf
 
 	void **ppGuard1 = (void **)pAddress;
 	void **ppGuard2 = (void **)(pAddress + uSize);
-	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-
-		void *const pTemp1 = EncodeSystemPointer(ppGuard2), *const pTemp2 = EncodeSystemPointer(ppGuard1);
-		memcpy(ppGuard1, &pTemp1, sizeof(void *));
-		memcpy(ppGuard2, &pTemp2, sizeof(void *));
-
+		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
+		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
+		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
+		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
 		++ppGuard2;
 	}
 
@@ -144,15 +143,15 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 	}
 	const size_t uSize = pInfo->__uSize;
 
-	void *const *ppGuard1 = (void *const *)pAddress;
-	void *const *ppGuard2 = (void *const *)(pAddress + uSize);
-	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	void **ppGuard1 = (void **)pAddress;
+	void **ppGuard2 = (void **)(pAddress + uSize);
+	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-
-		void *pTemp1, *pTemp2;
-		memcpy(&pTemp1, ppGuard1, sizeof(void *));
-		memcpy(&pTemp2, ppGuard2, sizeof(void *));
-		if((DecodeSystemPointer(pTemp1) != ppGuard2) || (DecodeSystemPointer(pTemp2) != ppGuard1)){
+		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
+		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
+		if((__builtin_memcmp(ppGuard1, &pTemp1, sizeof(void *)) != 0) ||
+		   (__builtin_memcmp(ppGuard2, &pTemp2, sizeof(void *)) != 0))
+		{
 			wchar_t awchTemp[256];
 			wchar_t *pwcWrite = awchTemp;
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n返回地址：");
@@ -160,7 +159,6 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awchTemp);
 		}
-
 		++ppGuard2;
 	}
 
@@ -178,13 +176,12 @@ unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 
 	void **ppGuard1 = (void **)pAddress;
 	void **ppGuard2 = (void **)(pAddress + uSize);
-	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-
-		void *const pTemp1 = EncodeSystemPointer(ppGuard2), *const pTemp2 = EncodeSystemPointer(ppGuard1);
-		memcpy(ppGuard1, &pTemp1, sizeof(void *));
-		memcpy(ppGuard2, &pTemp2, sizeof(void *));
-
+		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
+		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
+		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
+		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
 		++ppGuard2;
 	}
 
@@ -196,15 +193,15 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pA
 
 	const size_t uSize = HeapSize(GetProcessHeap(), 0, pRaw) - GUARD_BAND_SIZE * 2;
 
-	void *const *ppGuard1 = (void *const *)pAddress;
-	void *const *ppGuard2 = (void *const *)(pAddress + uSize);
-	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	void **ppGuard1 = (void **)pAddress;
+	void **ppGuard2 = (void **)(pAddress + uSize);
+	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-
-		void *pTemp1, *pTemp2;
-		memcpy(&pTemp1, ppGuard1, sizeof(void *));
-		memcpy(&pTemp2, ppGuard2, sizeof(void *));
-		if((DecodeSystemPointer(pTemp1) != ppGuard2) || (DecodeSystemPointer(pTemp2) != ppGuard1)){
+		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
+		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
+		if((__builtin_memcmp(ppGuard1, &pTemp1, sizeof(void *)) != 0) ||
+		   (__builtin_memcmp(ppGuard2, &pTemp2, sizeof(void *)) != 0))
+		{
 			wchar_t awchTemp[256];
 			wchar_t *pwcWrite = awchTemp;
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n返回地址：");
@@ -212,7 +209,6 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pA
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awchTemp);
 		}
-
 		++ppGuard2;
 	}
 }

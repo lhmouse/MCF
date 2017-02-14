@@ -1,29 +1,10 @@
-#include <MCF/Function/Function.hpp>
 #include <cstdio>
+#include <cmath>
+#include <cfloat>
 
-using namespace MCF;
-
-struct foo {
-	foo() noexcept {
-		std::puts(__PRETTY_FUNCTION__);
-	}
-	foo(const foo &) noexcept {
-		std::puts(__PRETTY_FUNCTION__);
-	}
-	foo(foo &&) noexcept {
-		std::puts(__PRETTY_FUNCTION__);
-	}
-	~foo(){
-		std::puts(__PRETTY_FUNCTION__);
-	}
-};
-
-int i = 3;
-auto cl = [&](int j, foo){ return i * j; };
-auto fn = MakeFunction<int (int, foo)>(cl);
+volatile double a = __builtin_nan("0xaaaa"), b = __builtin_nan("0xbbbb");
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	i += 2;
-	std::printf("n = %d\n", (*fn)(7, foo()));
+	std::printf("r = %f\n", std::hypot(a, b));
 	return 0;
 }

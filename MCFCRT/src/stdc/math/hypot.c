@@ -26,7 +26,7 @@ static inline long double fpu_hypot(long double x, long double y){
 		if(yexam == __MCFCRT_kFpuExamineNaN){
 			// If both operands are NaNs, return the bitwise-and'd payload. The result is a QNaN if and only if both operands are QNaNs.
 			// That is because ISO C says `hypot(x, y)`, `hypot(y, x)`, and `hypot(x, -y)` are equivalent.
-			// We should return the same NaN in this case. Note that a NaN compares unequals with any value, including itself.
+			// We should return the same NaN in this case. Note that a NaN compares unequal with any value, including itself.
 			// This difference can be distinguished using `memcmp()`.
 			__MCFCRT_x87Register xr, yr, rr;
 			xr.__val = x;

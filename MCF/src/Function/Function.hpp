@@ -48,10 +48,6 @@ Function<RetT (ParamsT ...)>::~Function(){
 namespace Impl_Function {
 	template<typename PrototypeT, typename FunctionT>
 	class ConcreteFunction : public Function<PrototypeT> {
-	protected:
-		using X_ReturnType      = typename Function<PrototypeT>::X_ReturnType;
-		using X_ForwardedParams = typename Function<PrototypeT>::X_ForwardedParams;
-
 	private:
 		std::decay_t<FunctionT> x_vFunction;
 
@@ -63,7 +59,7 @@ namespace Impl_Function {
 		~ConcreteFunction();
 
 	protected:
-		X_ReturnType X_Forward(X_ForwardedParams &&tupParams) const override {
+		typename Function<PrototypeT>::X_ReturnType X_Forward(typename Function<PrototypeT>::X_ForwardedParams &&tupParams) const override {
 			return Squeeze(x_vFunction, std::move(tupParams));
 		}
 	};

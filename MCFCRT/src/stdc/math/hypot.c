@@ -12,15 +12,15 @@
 static inline long double fpu_hypot(long double x, long double y){
 	bool xsign;
 	const __MCFCRT_FpuExamine xexam = __MCFCRT_fxam(&xsign, x);
-	long double ax = __MCFCRT_fabs(x);
+	long double xa = __MCFCRT_fabs(x);
 	if(xexam == __MCFCRT_kFpuExamineInfinity){
-		return ax;
+		return xa;
 	}
 	bool ysign;
 	const __MCFCRT_FpuExamine yexam = __MCFCRT_fxam(&ysign, y);
-	long double ay = __MCFCRT_fabs(y);
+	long double ya = __MCFCRT_fabs(y);
 	if(yexam == __MCFCRT_kFpuExamineInfinity){
-		return ay;
+		return ya;
 	}
 	if(xexam == __MCFCRT_kFpuExamineNaN){
 		if(yexam == __MCFCRT_kFpuExamineNaN){
@@ -42,21 +42,21 @@ static inline long double fpu_hypot(long double x, long double y){
 		return y;
 	}
 	if(xexam == __MCFCRT_kFpuExamineZero){
-		return ay;
+		return ya;
 	}
 	if(yexam == __MCFCRT_kFpuExamineZero){
-		return ax;
+		return xa;
 	}
-	long double nx, ny, mx, my;
-	mx = __MCFCRT_fxtract(&nx, ax);
-	my = __MCFCRT_fxtract(&ny, ay);
-	if(nx < ny){
+	long double xn, yn, xm, ym;
+	xm = __MCFCRT_fxtract(&xn, xa);
+	ym = __MCFCRT_fxtract(&yn, ya);
+	if(xn < yn){
 		long double t;
-		(t = ax), (ax = ay), (ay = t);
-		(t = nx), (nx = ny), (ny = t);
-		(t = mx), (mx = my), (my = t);
+		(t = xa), (xa = ya), (ya = t);
+		(t = xn), (xn = yn), (yn = t);
+		(t = xm), (xm = ym), (ym = t);
 	}
-	return __MCFCRT_fscale(__MCFCRT_fsqrt(__MCFCRT_fsquare(mx) + __MCFCRT_fsquare(__MCFCRT_fscale(ay, -nx))), nx);
+	return __MCFCRT_fscale(__MCFCRT_fsqrt(__MCFCRT_fsquare(xm) + __MCFCRT_fsquare(__MCFCRT_fscale(ya, -xn))), xn);
 }
 
 float hypotf(float x, float y){

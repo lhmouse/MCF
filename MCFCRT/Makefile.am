@@ -46,6 +46,7 @@ pkginclude_pre_HEADERS = \
 
 pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS = \
+	src/env/_avl_tree_inl.h	\
 	src/env/_c11thread_inl.h	\
 	src/env/_crtdef.h	\
 	src/env/_crtdef.hpp	\

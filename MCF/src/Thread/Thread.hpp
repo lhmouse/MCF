@@ -113,7 +113,7 @@ namespace Impl_Thread {
 }
 
 template<typename FunctionT>
-IntrusivePtr<Thread> MakeThread(FunctionT &&vFunction, bool bSuspended = false){
+IntrusivePtr<Impl_Thread::ConcreteThread<FunctionT>> MakeThread(FunctionT &&vFunction, bool bSuspended = false){
 	return MakeIntrusive<Impl_Thread::ConcreteThread<FunctionT>>(vFunction, bSuspended);
 }
 

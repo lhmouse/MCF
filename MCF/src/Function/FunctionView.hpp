@@ -2,23 +2,42 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_FUNCTION_VIEW_HPP_
-#define MCF_CORE_FUNCTION_VIEW_HPP_
+#ifndef MCF_FUNCTION_FUNCTION_VIEW_HPP_
+#define MCF_FUNCTION_FUNCTION_VIEW_HPP_
 
-#include "Assert.hpp"
-#include "AddressOf.hpp"
-#include "DeclVal.hpp"
 #include "Invoke.hpp"
-#include "_ForwardedParam.hpp"
+#include "TupleManipulation.hpp"
 #include <type_traits>
 #include <utility>
+#include <tuple>
 
 namespace MCF {
 
-template<typename FuncT>
+template<typename PrototypeT>
 class FunctionView {
-	static_assert(((void)sizeof(FuncT), false), "Class template FunctionView instantiated with non-function template type parameter.");
+	static_assert((sizeof(PrototypeT *), false), "Class template FunctionView instantiated with non-function template type parameter.");
 };
+
+template<typename RetT, typename ...ParamsT>
+class FunctionView<RetT (ParamsT ...)> {
+protected:
+	using X_ReturnType      = RetT;
+	using X_ForwardedParams = std::tuple<ParamsT &&...>;
+
+protected:
+	constexpr FunctionView() noexcept {
+	}
+};
+
+
+
+
+
+
+
+
+
+
 
 template<typename RetT, typename ...ParamsT>
 class FunctionView<RetT (ParamsT...)> {

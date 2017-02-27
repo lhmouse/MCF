@@ -47,14 +47,14 @@ public:
 		return reinterpret_cast<FunctionPointerT>(GetRaw());
 	}
 
-	void Swap(Thunk &rhs) noexcept {
+	void Swap(Thunk &vOther) noexcept {
 		using std::swap;
-		swap(x_pThunk, rhs.x_pThunk);
+		swap(x_pThunk, vOther.x_pThunk);
 	}
 
 public:
-	friend void swap(Thunk &lhs, Thunk &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(Thunk &vSelf, Thunk &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

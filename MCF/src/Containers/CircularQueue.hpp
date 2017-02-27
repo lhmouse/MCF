@@ -53,43 +53,43 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	CircularQueue(std::initializer_list<Element> rhs)
-		: CircularQueue(rhs.begin(), rhs.end())
+	CircularQueue(std::initializer_list<Element> ilInitList)
+		: CircularQueue(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	CircularQueue(const CircularQueue &rhs)
+	CircularQueue(const CircularQueue &vOther)
 		: CircularQueue()
 	{
-		Reserve(rhs.GetSize());
-		rhs.X_IterateForward(rhs.x_uBegin, rhs.x_uEnd,
+		Reserve(vOther.GetSize());
+		vOther.X_IterateForward(vOther.x_uBegin, vOther.x_uEnd,
 			[&, this](auto n){
-				this->UncheckedPush(rhs.x_pStorage[n]);
+				this->UncheckedPush(vOther.x_pStorage[n]);
 			});
 	}
-	CircularQueue(CircularQueue &&rhs) noexcept
+	CircularQueue(CircularQueue &&vOther) noexcept
 		: CircularQueue()
 	{
-		rhs.Swap(*this);
+		vOther.Swap(*this);
 	}
-	CircularQueue &operator=(const CircularQueue &rhs){
+	CircularQueue &operator=(const CircularQueue &vOther){
 		if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
-			Reserve(rhs.GetSize());
+			Reserve(vOther.GetSize());
 			try {
-				rhs.X_IterateForward(rhs.x_uBegin, rhs.x_uEnd,
+				vOther.X_IterateForward(vOther.x_uBegin, vOther.x_uEnd,
 					[&, this](auto n){
-						this->UncheckedPush(rhs.x_pStorage[n]);
+						this->UncheckedPush(vOther.x_pStorage[n]);
 					});
 			} catch(...){
 				Clear();
 				throw;
 			}
 		} else {
-			CircularQueue(rhs).Swap(*this);
+			CircularQueue(vOther).Swap(*this);
 		}
 		return *this;
 	}
-	CircularQueue &operator=(CircularQueue &&rhs) noexcept {
-		rhs.Swap(*this);
+	CircularQueue &operator=(CircularQueue &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 	~CircularQueue(){
@@ -333,12 +333,12 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(CircularQueue &rhs) noexcept {
+	void Swap(CircularQueue &vOther) noexcept {
 		using std::swap;
-		swap(x_pStorage,     rhs.x_pStorage);
-		swap(x_uBegin,       rhs.x_uBegin);
-		swap(x_uEnd,         rhs.x_uEnd);
-		swap(x_uCircularCap, rhs.x_uCircularCap);
+		swap(x_pStorage,     vOther.x_pStorage);
+		swap(x_uBegin,       vOther.x_uBegin);
+		swap(x_uEnd,         vOther.x_uEnd);
+		swap(x_uCircularCap, vOther.x_uCircularCap);
 	}
 
 	// CircularQueue 需求。
@@ -1019,27 +1019,27 @@ public:
 	}
 
 public:
-	friend void swap(CircularQueue &lhs, CircularQueue &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(CircularQueue &vSelf, CircularQueue &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const CircularQueue &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const CircularQueue &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(CircularQueue &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(CircularQueue &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const CircularQueue &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const CircularQueue &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const CircularQueue &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const CircularQueue &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(CircularQueue &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(CircularQueue &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const CircularQueue &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const CircularQueue &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

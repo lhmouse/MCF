@@ -30,16 +30,16 @@ public:
 		: x_hObject(Closer()())
 	{
 	}
-	explicit constexpr UniqueHandle(Handle rhs) noexcept
-		: x_hObject(rhs)
+	explicit constexpr UniqueHandle(Handle hObject) noexcept
+		: x_hObject(hObject)
 	{
 	}
-	UniqueHandle(UniqueHandle &&rhs) noexcept
-		: x_hObject(rhs.Release())
+	UniqueHandle(UniqueHandle &&hOther) noexcept
+		: x_hObject(hOther.Release())
 	{
 	}
-	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
-		return Reset(std::move(rhs));
+	UniqueHandle &operator=(UniqueHandle &&hOther) noexcept {
+		return Reset(std::move(hOther));
 	}
 	~UniqueHandle(){
 		const auto hObject = x_hObject;
@@ -62,18 +62,18 @@ public:
 		return std::exchange(x_hObject, Closer()());
 	}
 
-	UniqueHandle &Reset(Handle rhs = Closer()()) noexcept {
-		UniqueHandle(rhs).Swap(*this);
+	UniqueHandle &Reset(Handle hObject = Closer()()) noexcept {
+		UniqueHandle(hObject).Swap(*this);
 		return *this;
 	}
-	UniqueHandle &Reset(UniqueHandle &&rhs) noexcept {
-		UniqueHandle(std::move(rhs)).Swap(*this);
+	UniqueHandle &Reset(UniqueHandle &&hOther) noexcept {
+		UniqueHandle(std::move(hOther)).Swap(*this);
 		return *this;
 	}
 
-	void Swap(UniqueHandle &rhs) noexcept {
+	void Swap(UniqueHandle &hOther) noexcept {
 		using std::swap;
-		swap(x_hObject, rhs.x_hObject);
+		swap(x_hObject, hOther.x_hObject);
 	}
 
 public:
@@ -85,73 +85,73 @@ public:
 	}
 
 	template<class OtherCloserT>
-	constexpr bool operator==(const UniqueHandle<OtherCloserT> &rhs) const noexcept {
-		return x_hObject == rhs.x_hObject;
+	constexpr bool operator==(const UniqueHandle<OtherCloserT> &hOther) const noexcept {
+		return x_hObject == hOther.x_hObject;
 	}
-	constexpr bool operator==(Handle rhs) const noexcept {
-		return x_hObject == rhs;
+	constexpr bool operator==(Handle hOther) const noexcept {
+		return x_hObject == hOther;
 	}
-	friend constexpr bool operator==(Handle lhs, const UniqueHandle &rhs) noexcept {
-		return lhs == rhs.x_hObject;
-	}
-
-	template<class OtherCloserT>
-	constexpr bool operator!=(const UniqueHandle<OtherCloserT> &rhs) const noexcept {
-		return x_hObject != rhs.x_hObject;
-	}
-	constexpr bool operator!=(Handle rhs) const noexcept {
-		return x_hObject != rhs;
-	}
-	friend constexpr bool operator!=(Handle lhs, const UniqueHandle &rhs) noexcept {
-		return lhs != rhs.x_hObject;
+	friend constexpr bool operator==(Handle hSelf, const UniqueHandle &hOther) noexcept {
+		return hSelf == hOther.x_hObject;
 	}
 
 	template<class OtherCloserT>
-	constexpr bool operator<(const UniqueHandle<OtherCloserT> &rhs) const noexcept {
-		return x_hObject < rhs.x_hObject;
+	constexpr bool operator!=(const UniqueHandle<OtherCloserT> &hOther) const noexcept {
+		return x_hObject != hOther.x_hObject;
 	}
-	constexpr bool operator<(Handle rhs) const noexcept {
-		return x_hObject < rhs;
+	constexpr bool operator!=(Handle hOther) const noexcept {
+		return x_hObject != hOther;
 	}
-	friend constexpr bool operator<(Handle lhs, const UniqueHandle &rhs) noexcept {
-		return lhs < rhs.x_hObject;
-	}
-
-	template<class OtherCloserT>
-	constexpr bool operator>(const UniqueHandle<OtherCloserT> &rhs) const noexcept {
-		return x_hObject > rhs.x_hObject;
-	}
-	constexpr bool operator>(Handle rhs) const noexcept {
-		return x_hObject > rhs;
-	}
-	friend constexpr bool operator>(Handle lhs, const UniqueHandle &rhs) noexcept {
-		return lhs > rhs.x_hObject;
+	friend constexpr bool operator!=(Handle hSelf, const UniqueHandle &hOther) noexcept {
+		return hSelf != hOther.x_hObject;
 	}
 
 	template<class OtherCloserT>
-	constexpr bool operator<=(const UniqueHandle<OtherCloserT> &rhs) const noexcept {
-		return x_hObject <= rhs.x_hObject;
+	constexpr bool operator<(const UniqueHandle<OtherCloserT> &hOther) const noexcept {
+		return x_hObject < hOther.x_hObject;
 	}
-	constexpr bool operator<=(Handle rhs) const noexcept {
-		return x_hObject <= rhs;
+	constexpr bool operator<(Handle hOther) const noexcept {
+		return x_hObject < hOther;
 	}
-	friend constexpr bool operator<=(Handle lhs, const UniqueHandle &rhs) noexcept {
-		return lhs <= rhs.x_hObject;
+	friend constexpr bool operator<(Handle hSelf, const UniqueHandle &hOther) noexcept {
+		return hSelf < hOther.x_hObject;
 	}
 
 	template<class OtherCloserT>
-	constexpr bool operator>=(const UniqueHandle<OtherCloserT> &rhs) const noexcept {
-		return x_hObject >= rhs.x_hObject;
+	constexpr bool operator>(const UniqueHandle<OtherCloserT> &hOther) const noexcept {
+		return x_hObject > hOther.x_hObject;
 	}
-	constexpr bool operator>=(Handle rhs) const noexcept {
-		return x_hObject >= rhs;
+	constexpr bool operator>(Handle hOther) const noexcept {
+		return x_hObject > hOther;
 	}
-	friend constexpr bool operator>=(Handle lhs, const UniqueHandle &rhs) noexcept {
-		return lhs >= rhs.x_hObject;
+	friend constexpr bool operator>(Handle hSelf, const UniqueHandle &hOther) noexcept {
+		return hSelf > hOther.x_hObject;
 	}
 
-	friend void swap(UniqueHandle &lhs, UniqueHandle &rhs) noexcept {
-		lhs.Swap(rhs);
+	template<class OtherCloserT>
+	constexpr bool operator<=(const UniqueHandle<OtherCloserT> &hOther) const noexcept {
+		return x_hObject <= hOther.x_hObject;
+	}
+	constexpr bool operator<=(Handle hOther) const noexcept {
+		return x_hObject <= hOther;
+	}
+	friend constexpr bool operator<=(Handle hSelf, const UniqueHandle &hOther) noexcept {
+		return hSelf <= hOther.x_hObject;
+	}
+
+	template<class OtherCloserT>
+	constexpr bool operator>=(const UniqueHandle<OtherCloserT> &hOther) const noexcept {
+		return x_hObject >= hOther.x_hObject;
+	}
+	constexpr bool operator>=(Handle hOther) const noexcept {
+		return x_hObject >= hOther;
+	}
+	friend constexpr bool operator>=(Handle hSelf, const UniqueHandle &hOther) noexcept {
+		return hSelf >= hOther.x_hObject;
+	}
+
+	friend void swap(UniqueHandle &hSelf, UniqueHandle &hOther) noexcept {
+		hSelf.Swap(hOther);
 	}
 };
 

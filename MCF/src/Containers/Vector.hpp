@@ -53,41 +53,41 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	Vector(std::initializer_list<Element> rhs)
-		: Vector(rhs.begin(), rhs.end())
+	Vector(std::initializer_list<Element> ilInitList)
+		: Vector(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	Vector(const Vector &rhs)
+	Vector(const Vector &vOther)
 		: Vector()
 	{
-		Reserve(rhs.GetSize());
-		for(std::size_t i = 0; i < rhs.GetSize(); ++i){
-			UncheckedPush(rhs.x_pStorage[i]);
+		Reserve(vOther.GetSize());
+		for(std::size_t i = 0; i < vOther.GetSize(); ++i){
+			UncheckedPush(vOther.x_pStorage[i]);
 		}
 	}
-	Vector(Vector &&rhs) noexcept
+	Vector(Vector &&vOther) noexcept
 		: Vector()
 	{
-		rhs.Swap(*this);
+		vOther.Swap(*this);
 	}
-	Vector &operator=(const Vector &rhs){
+	Vector &operator=(const Vector &vOther){
 		if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
-			Reserve(rhs.GetSize());
+			Reserve(vOther.GetSize());
 			try {
-				for(std::size_t i = 0; i < rhs.GetSize(); ++i){
-					UncheckedPush(rhs.x_pStorage[i]);
+				for(std::size_t i = 0; i < vOther.GetSize(); ++i){
+					UncheckedPush(vOther.x_pStorage[i]);
 				}
 			} catch(...){
 				Clear();
 				throw;
 			}
 		} else {
-			Vector(rhs).Swap(*this);
+			Vector(vOther).Swap(*this);
 		}
 		return *this;
 	}
-	Vector &operator=(Vector &&rhs) noexcept {
-		rhs.Swap(*this);
+	Vector &operator=(Vector &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 	~Vector(){
@@ -246,11 +246,11 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(Vector &rhs) noexcept {
+	void Swap(Vector &vOther) noexcept {
 		using std::swap;
-		swap(x_pStorage,  rhs.x_pStorage);
-		swap(x_uSize,     rhs.x_uSize);
-		swap(x_uCapacity, rhs.x_uCapacity);
+		swap(x_pStorage,  vOther.x_pStorage);
+		swap(x_uSize,     vOther.x_uSize);
+		swap(x_uCapacity, vOther.x_uCapacity);
 	}
 
 	// Vector 需求。
@@ -743,27 +743,27 @@ public:
 		return ArrayView<Element>(GetData(), GetSize());
 	}
 
-	friend void swap(Vector &lhs, Vector &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(Vector &vSelf, Vector &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const Vector &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const Vector &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(Vector &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(Vector &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const Vector &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const Vector &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const Vector &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const Vector &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(Vector &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(Vector &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const Vector &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const Vector &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

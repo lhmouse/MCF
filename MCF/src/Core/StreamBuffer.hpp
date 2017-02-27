@@ -29,16 +29,16 @@ public:
 	StreamBuffer(const void *pData, std::size_t uSize){
 		Put(pData, uSize);
 	}
-	StreamBuffer(const StreamBuffer &rhs);
-	StreamBuffer(StreamBuffer &&rhs) noexcept {
-		Swap(rhs);
+	StreamBuffer(const StreamBuffer &vOther);
+	StreamBuffer(StreamBuffer &&vOther) noexcept {
+		Swap(vOther);
 	}
-	StreamBuffer &operator=(const StreamBuffer &rhs){
-		StreamBuffer(rhs).Swap(*this);
+	StreamBuffer &operator=(const StreamBuffer &vOther){
+		StreamBuffer(vOther).Swap(*this);
 		return *this;
 	}
-	StreamBuffer &operator=(StreamBuffer &&rhs) noexcept {
-		rhs.Swap(*this);
+	StreamBuffer &operator=(StreamBuffer &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 	~StreamBuffer();
@@ -69,21 +69,21 @@ public:
 	void Put(const void *pData, std::size_t uSize);
 
 	StreamBuffer CutOff(std::size_t uOffsetEnd);
-	void Splice(StreamBuffer &rhs) noexcept;
-	void Splice(StreamBuffer &&rhs) noexcept {
-		Splice(rhs);
+	void Splice(StreamBuffer &vOther) noexcept;
+	void Splice(StreamBuffer &&vOther) noexcept {
+		Splice(vOther);
 	}
 
-	void Swap(StreamBuffer &rhs) noexcept {
+	void Swap(StreamBuffer &vOther) noexcept {
 		using std::swap;
-		swap(x_pLast,  rhs.x_pLast);
-		swap(x_pFirst, rhs.x_pFirst);
-		swap(x_uSize,  rhs.x_uSize);
+		swap(x_pLast,  vOther.x_pLast);
+		swap(x_pFirst, vOther.x_pFirst);
+		swap(x_uSize,  vOther.x_uSize);
 	}
 
 public:
-	friend void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(StreamBuffer &vSelf, StreamBuffer &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

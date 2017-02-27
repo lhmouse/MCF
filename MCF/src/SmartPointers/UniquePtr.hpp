@@ -36,8 +36,8 @@ public:
 		: x_pElement(nullptr)
 	{
 	}
-	explicit UniquePtr(Element *rhs) noexcept
-		: x_pElement(rhs)
+	explicit UniquePtr(Element *pElement) noexcept
+		: x_pElement(pElement)
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -45,16 +45,16 @@ public:
 			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: UniquePtr(rhs.Release())
+	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&pOther) noexcept
+		: UniquePtr(pOther.Release())
 	{
 	}
-	UniquePtr(UniquePtr &&rhs) noexcept
-		: UniquePtr(rhs.Release())
+	UniquePtr(UniquePtr &&pOther) noexcept
+		: UniquePtr(pOther.Release())
 	{
 	}
-	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
-		return Reset(std::move(rhs));
+	UniquePtr &operator=(UniquePtr &&pOther) noexcept {
+		return Reset(std::move(pOther));
 	}
 	~UniquePtr(){
 		const auto pElement = x_pElement;
@@ -81,23 +81,23 @@ public:
 		UniquePtr().Swap(*this);
 		return *this;
 	}
-	UniquePtr &Reset(Element *rhs) noexcept {
-		UniquePtr(rhs).Swap(*this);
+	UniquePtr &Reset(Element *pElement) noexcept {
+		UniquePtr(pElement).Swap(*this);
 		return *this;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT>
-	UniquePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		UniquePtr(std::move(rhs)).Swap(*this);
+	UniquePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&pOther) noexcept {
+		UniquePtr(std::move(pOther)).Swap(*this);
 		return *this;
 	}
-	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
-		UniquePtr(std::move(rhs)).Swap(*this);
+	UniquePtr &Reset(UniquePtr &&pOther) noexcept {
+		UniquePtr(std::move(pOther)).Swap(*this);
 		return *this;
 	}
 
-	void Swap(UniquePtr &rhs) noexcept {
+	void Swap(UniquePtr &pOther) noexcept {
 		using std::swap;
-		swap(x_pElement, rhs.x_pElement);
+		swap(x_pElement, pOther.x_pElement);
 	}
 
 public:
@@ -137,85 +137,85 @@ public:
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	constexpr bool operator==(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return x_pElement == rhs.x_pElement;
+	constexpr bool operator==(const UniquePtr<OtherObjectT, OtherDeleterT> &pOther) const noexcept {
+		return x_pElement == pOther.x_pElement;
 	}
 	template<typename OtherObjectT>
-	constexpr bool operator==(OtherObjectT *rhs) const noexcept {
-		return x_pElement == rhs;
+	constexpr bool operator==(OtherObjectT *pOther) const noexcept {
+		return x_pElement == pOther;
 	}
 	template<typename OtherObjectT>
-	friend constexpr bool operator==(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return lhs == rhs.x_pElement;
+	friend constexpr bool operator==(OtherObjectT *pSelf, const UniquePtr &pOther) noexcept {
+		return pSelf == pOther.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	constexpr bool operator!=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return x_pElement != rhs.x_pElement;
+	constexpr bool operator!=(const UniquePtr<OtherObjectT, OtherDeleterT> &pOther) const noexcept {
+		return x_pElement != pOther.x_pElement;
 	}
 	template<typename OtherObjectT>
-	constexpr bool operator!=(OtherObjectT *rhs) const noexcept {
-		return x_pElement != rhs;
+	constexpr bool operator!=(OtherObjectT *pOther) const noexcept {
+		return x_pElement != pOther;
 	}
 	template<typename OtherObjectT>
-	friend constexpr bool operator!=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return lhs != rhs.x_pElement;
+	friend constexpr bool operator!=(OtherObjectT *pSelf, const UniquePtr &pOther) noexcept {
+		return pSelf != pOther.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	constexpr bool operator<(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return x_pElement < rhs.x_pElement;
+	constexpr bool operator<(const UniquePtr<OtherObjectT, OtherDeleterT> &pOther) const noexcept {
+		return x_pElement < pOther.x_pElement;
 	}
 	template<typename OtherObjectT>
-	constexpr bool operator<(OtherObjectT *rhs) const noexcept {
-		return x_pElement < rhs;
+	constexpr bool operator<(OtherObjectT *pOther) const noexcept {
+		return x_pElement < pOther;
 	}
 	template<typename OtherObjectT>
-	friend constexpr bool operator<(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return lhs < rhs.x_pElement;
+	friend constexpr bool operator<(OtherObjectT *pSelf, const UniquePtr &pOther) noexcept {
+		return pSelf < pOther.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	constexpr bool operator>(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return x_pElement > rhs.x_pElement;
+	constexpr bool operator>(const UniquePtr<OtherObjectT, OtherDeleterT> &pOther) const noexcept {
+		return x_pElement > pOther.x_pElement;
 	}
 	template<typename OtherObjectT>
-	constexpr bool operator>(OtherObjectT *rhs) const noexcept {
-		return x_pElement > rhs;
+	constexpr bool operator>(OtherObjectT *pOther) const noexcept {
+		return x_pElement > pOther;
 	}
 	template<typename OtherObjectT>
-	friend constexpr bool operator>(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return lhs > rhs.x_pElement;
+	friend constexpr bool operator>(OtherObjectT *pSelf, const UniquePtr &pOther) noexcept {
+		return pSelf > pOther.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	constexpr bool operator<=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return x_pElement <= rhs.x_pElement;
+	constexpr bool operator<=(const UniquePtr<OtherObjectT, OtherDeleterT> &pOther) const noexcept {
+		return x_pElement <= pOther.x_pElement;
 	}
 	template<typename OtherObjectT>
-	constexpr bool operator<=(OtherObjectT *rhs) const noexcept {
-		return x_pElement <= rhs;
+	constexpr bool operator<=(OtherObjectT *pOther) const noexcept {
+		return x_pElement <= pOther;
 	}
 	template<typename OtherObjectT>
-	friend constexpr bool operator<=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return lhs <= rhs.x_pElement;
+	friend constexpr bool operator<=(OtherObjectT *pSelf, const UniquePtr &pOther) noexcept {
+		return pSelf <= pOther.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	constexpr bool operator>=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return x_pElement >= rhs.x_pElement;
+	constexpr bool operator>=(const UniquePtr<OtherObjectT, OtherDeleterT> &pOther) const noexcept {
+		return x_pElement >= pOther.x_pElement;
 	}
 	template<typename OtherObjectT>
-	constexpr bool operator>=(OtherObjectT *rhs) const noexcept {
-		return x_pElement >= rhs;
+	constexpr bool operator>=(OtherObjectT *pOther) const noexcept {
+		return x_pElement >= pOther;
 	}
 	template<typename OtherObjectT>
-	friend constexpr bool operator>=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return lhs >= rhs.x_pElement;
+	friend constexpr bool operator>=(OtherObjectT *pSelf, const UniquePtr &pOther) noexcept {
+		return pSelf >= pOther.x_pElement;
 	}
 
-	friend void swap(UniquePtr &lhs, UniquePtr &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(UniquePtr &pSelf, UniquePtr &pOther) noexcept {
+		pSelf.Swap(pOther);
 	}
 };
 

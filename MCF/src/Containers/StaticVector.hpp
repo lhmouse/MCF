@@ -52,28 +52,28 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	StaticVector(std::initializer_list<Element> rhs)
-		: StaticVector(rhs.begin(), rhs.end())
+	StaticVector(std::initializer_list<Element> ilInitList)
+		: StaticVector(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	StaticVector(const StaticVector &rhs) noexcept(std::is_nothrow_copy_constructible<Element>::value)
+	StaticVector(const StaticVector &vOther) noexcept(std::is_nothrow_copy_constructible<Element>::value)
 		: StaticVector()
 	{
-		Append(rhs.GetBegin(), rhs.GetEnd());
+		Append(vOther.GetBegin(), vOther.GetEnd());
 	}
-	StaticVector(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<Element>::value)
+	StaticVector(StaticVector &&vOther) noexcept(std::is_nothrow_move_constructible<Element>::value)
 		: StaticVector()
 	{
-		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
+		Append(std::make_move_iterator(vOther.GetBegin()), std::make_move_iterator(vOther.GetEnd()));
 	}
-	StaticVector &operator=(const StaticVector &rhs) noexcept(std::is_nothrow_copy_constructible<Element>::value) {
+	StaticVector &operator=(const StaticVector &vOther) noexcept(std::is_nothrow_copy_constructible<Element>::value) {
 		Clear();
-		Append(rhs.GetBegin(), rhs.GetEnd());
+		Append(vOther.GetBegin(), vOther.GetEnd());
 		return *this;
 	}
-	StaticVector &operator=(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<Element>::value) {
+	StaticVector &operator=(StaticVector &&vOther) noexcept(std::is_nothrow_move_constructible<Element>::value) {
 		Clear();
-		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
+		Append(std::make_move_iterator(vOther.GetBegin()), std::make_move_iterator(vOther.GetEnd()));
 		return *this;
 	}
 	~StaticVector(){
@@ -209,10 +209,10 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<Element>::value) {
-		auto temp = std::move_if_noexcept(*this);
-		*this = std::move(rhs);
-		rhs = std::move(temp);
+	void Swap(StaticVector &vOther) noexcept(std::is_nothrow_move_constructible<Element>::value) {
+		auto vTemp = std::move_if_noexcept(*this);
+		*this = std::move(vOther);
+		vOther = std::move(vTemp);
 	}
 
 	// StaticVector 需求。
@@ -469,27 +469,27 @@ public:
 		return ArrayView<Element>(GetData(), GetSize());
 	}
 
-	friend void swap(StaticVector &lhs, StaticVector &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
-		lhs.Swap(rhs);
+	friend void swap(StaticVector &vSelf, StaticVector &vOther) noexcept(noexcept(vSelf.Swap(vOther))) {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const StaticVector &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const StaticVector &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(StaticVector &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(StaticVector &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const StaticVector &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const StaticVector &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const StaticVector &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const StaticVector &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(StaticVector &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(StaticVector &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const StaticVector &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const StaticVector &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

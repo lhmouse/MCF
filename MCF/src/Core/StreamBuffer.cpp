@@ -35,10 +35,10 @@ struct StreamBuffer::X_ChunkHeader {
 	__extension__ unsigned char abyData[];
 };
 
-StreamBuffer::StreamBuffer(const StreamBuffer &rhs){
-	const auto uSize = rhs.GetSize();
+StreamBuffer::StreamBuffer(const StreamBuffer &vOther){
+	const auto uSize = vOther.GetSize();
 	const auto pChunk = X_ChunkHeader::Create(uSize, nullptr, nullptr, false);
-	for(auto pSource = rhs.x_pFirst; pSource; pSource = pSource->pNext){
+	for(auto pSource = vOther.x_pFirst; pSource; pSource = pSource->pNext){
 		const auto uBytesAvail = pSource->uEnd - pSource->uBegin;
 		std::memcpy(pChunk->abyData + pChunk->uEnd, pSource->abyData + pSource->uBegin, uBytesAvail);
 		pChunk->uEnd += uBytesAvail;
@@ -283,27 +283,27 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
 		uBytesTotal += uBytesAvail;
 	}
 
-	StreamBuffer ret;
+	StreamBuffer vHead;
 	if(uBytesTotal != 0){
 		const auto pLastCut = std::exchange(*(pChunk ? &(pChunk->pPrev) : &x_pLast), nullptr);
 		pLastCut->pNext = nullptr;
 		const auto pFirstCut = std::exchange(x_pFirst, pChunk);
-		ret.x_pLast  = pLastCut;
-		ret.x_pFirst = pFirstCut;
-		ret.x_uSize  = uBytesTotal;
+		vHead.x_pLast  = pLastCut;
+		vHead.x_pFirst = pFirstCut;
+		vHead.x_uSize  = uBytesTotal;
 		x_uSize -= uBytesTotal;
 	}
-	return ret;
+	return vHead;
 }
-void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
-	MCF_ASSERT(&rhs != this);
+void StreamBuffer::Splice(StreamBuffer &vOther) noexcept {
+	MCF_ASSERT(&vOther != this);
 
-	const auto pFirstAdd = std::exchange(rhs.x_pFirst, nullptr);
+	const auto pFirstAdd = std::exchange(vOther.x_pFirst, nullptr);
 	if(!pFirstAdd){
 		return;
 	}
-	const auto pLastAdd  = std::exchange(rhs.x_pLast, nullptr);
-	const auto uSizeAdd  = std::exchange(rhs.x_uSize, 0u);
+	const auto pLastAdd  = std::exchange(vOther.x_pLast, nullptr);
+	const auto uSizeAdd  = std::exchange(vOther.x_uSize, 0u);
 
 	const auto pLast = x_pLast;
 	x_pLast = pLastAdd;

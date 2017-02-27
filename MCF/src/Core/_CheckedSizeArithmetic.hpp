@@ -11,23 +11,23 @@
 namespace MCF {
 
 namespace Impl_CheckedSizeArithmetic {
-	inline std::size_t Add(std::size_t lhs, std::size_t rhs){
-		if(lhs == 0){
-			return rhs;
+	constexpr std::size_t Add(std::size_t uOpOne, std::size_t uOpTwo){
+		if(uOpOne == 0){
+			return uOpTwo;
 		}
-		if(rhs > static_cast<std::size_t>(-1) - lhs){
+		if(uOpTwo > static_cast<std::size_t>(-1) - uOpOne){
 			throw std::bad_array_new_length();
 		}
-		return lhs + rhs;
+		return uOpOne + uOpTwo;
 	}
-	inline std::size_t Mul(std::size_t lhs, std::size_t rhs){
-		if(lhs == 0){
+	constexpr std::size_t Mul(std::size_t uOpOne, std::size_t uOpTwo){
+		if(uOpOne == 0){
 			return 0;
 		}
-		if(rhs > static_cast<std::size_t>(-1) / lhs){
+		if(uOpTwo > static_cast<std::size_t>(-1) / uOpOne){
 			throw std::bad_array_new_length();
 		}
-		return lhs * rhs;
+		return uOpOne * uOpTwo;
 	}
 }
 

@@ -35,37 +35,37 @@ namespace Impl_FlatContainer {
 			: x_pStorage(nullptr), x_uSize(0), x_uCapacity(0)
 		{
 		}
-		FlatContainer(const FlatContainer &rhs)
+		FlatContainer(const FlatContainer &vOther)
 			: FlatContainer()
 		{
-			Reserve(rhs.x_uSize);
-			for(std::size_t i = 0; i < rhs.x_uSize; ++i){
-				X_UncheckedPush(rhs.x_pStorage[i]);
+			Reserve(vOther.x_uSize);
+			for(std::size_t i = 0; i < vOther.x_uSize; ++i){
+				X_UncheckedPush(vOther.x_pStorage[i]);
 			}
 		}
-		FlatContainer(FlatContainer &&rhs) noexcept
+		FlatContainer(FlatContainer &&vOther) noexcept
 			: FlatContainer()
 		{
-			rhs.Swap(*this);
+			vOther.Swap(*this);
 		}
-		FlatContainer &operator=(const FlatContainer &rhs){
+		FlatContainer &operator=(const FlatContainer &vOther){
 			if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
-				Reserve(rhs.x_uSize);
+				Reserve(vOther.x_uSize);
 				try {
-					for(std::size_t i = 0; i < rhs.x_uSize; ++i){
-						X_UncheckedPush(rhs.x_pStorage[i]);
+					for(std::size_t i = 0; i < vOther.x_uSize; ++i){
+						X_UncheckedPush(vOther.x_pStorage[i]);
 					}
 				} catch(...){
 					Clear();
 					throw;
 				}
 			} else {
-				FlatContainer(rhs).Swap(*this);
+				FlatContainer(vOther).Swap(*this);
 			}
 			return *this;
 		}
-		FlatContainer &operator=(FlatContainer &&rhs) noexcept {
-			rhs.Swap(*this);
+		FlatContainer &operator=(FlatContainer &&vOther) noexcept {
+			vOther.Swap(*this);
 			return *this;
 		}
 		~FlatContainer(){
@@ -117,11 +117,11 @@ namespace Impl_FlatContainer {
 			return itOutput;
 		}
 
-		void Swap(FlatContainer &rhs) noexcept {
+		void Swap(FlatContainer &vOther) noexcept {
 			using std::swap;
-			swap(x_pStorage,  rhs.x_pStorage);
-			swap(x_uSize,     rhs.x_uSize);
-			swap(x_uCapacity, rhs.x_uCapacity);
+			swap(x_pStorage,  vOther.x_pStorage);
+			swap(x_uSize,     vOther.x_uSize);
+			swap(x_uCapacity, vOther.x_uCapacity);
 		}
 
 		const Element *GetData() const noexcept {
@@ -293,8 +293,8 @@ namespace Impl_FlatContainer {
 		}
 
 	public:
-		friend void swap(FlatContainer &lhs, FlatContainer &rhs) noexcept {
-			lhs.Swap(rhs);
+		friend void swap(FlatContainer &vSelf, FlatContainer &vOther) noexcept {
+			vSelf.Swap(vOther);
 		}
 	};
 }

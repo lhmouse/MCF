@@ -77,8 +77,8 @@ private:
 
 private:
 	struct X_MoveCaster {
-		std::pair<KeyT &&, ValueT &&> operator()(Element &rhs) const noexcept {
-			return std::pair<KeyT &&, ValueT &&>(static_cast<KeyT &&>(const_cast<KeyT &>(rhs.first)), static_cast<ValueT &&>(rhs.second));
+		std::pair<KeyT &&, ValueT &&> operator()(Element &vOther) const noexcept {
+			return std::pair<KeyT &&, ValueT &&>(static_cast<KeyT &&>(const_cast<KeyT &>(vOther.first)), static_cast<ValueT &&>(vOther.second));
 		}
 		static constexpr bool kEnabled = std::is_nothrow_move_constructible<KeyT>::value && std::is_nothrow_move_constructible<ValueT>::value;
 	};
@@ -105,24 +105,24 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMap(std::initializer_list<Element> rhs)
-		: FlatMap(rhs.begin(), rhs.end())
+	FlatMap(std::initializer_list<Element> ilInitList)
+		: FlatMap(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	FlatMap(const FlatMap &rhs)
-		: x_vStorage(rhs.x_vStorage)
+	FlatMap(const FlatMap &vOther)
+		: x_vStorage(vOther.x_vStorage)
 	{
 	}
-	FlatMap(FlatMap &&rhs) noexcept
-		: x_vStorage(std::move(rhs.x_vStorage))
+	FlatMap(FlatMap &&vOther) noexcept
+		: x_vStorage(std::move(vOther.x_vStorage))
 	{
 	}
-	FlatMap &operator=(const FlatMap &rhs){
-		FlatMap(rhs).Swap(*this);
+	FlatMap &operator=(const FlatMap &vOther){
+		FlatMap(vOther).Swap(*this);
 		return *this;
 	}
-	FlatMap &operator=(FlatMap &&rhs) noexcept {
-		rhs.Swap(*this);
+	FlatMap &operator=(FlatMap &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 
@@ -243,9 +243,9 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(FlatMap &rhs) noexcept {
+	void Swap(FlatMap &vOther) noexcept {
 		using std::swap;
-		swap(x_vStorage, rhs.x_vStorage);
+		swap(x_vStorage, vOther.x_vStorage);
 	}
 
 	// FlatMap 需求。
@@ -529,27 +529,27 @@ public:
 		return ArrayView<const Element>(GetData(), GetSize());
 	}
 
-	friend void swap(FlatMap &lhs, FlatMap &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(FlatMap &vSelf, FlatMap &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const FlatMap &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const FlatMap &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(FlatMap &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(FlatMap &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const FlatMap &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const FlatMap &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const FlatMap &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const FlatMap &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(FlatMap &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(FlatMap &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const FlatMap &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const FlatMap &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

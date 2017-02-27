@@ -51,12 +51,12 @@ public:
 		: x_pMutex((Traits::Lock(AddressOf(vMutex)), AddressOf(vMutex)))
 	{
 	}
-	UniqueLock(UniqueLock &&rhs) noexcept
-		: x_pMutex(rhs.Release())
+	UniqueLock(UniqueLock &&vOther) noexcept
+		: x_pMutex(vOther.Release())
 	{
 	}
-	UniqueLock &operator=(UniqueLock &&rhs) noexcept {
-		return Reset(std::move(rhs));
+	UniqueLock &operator=(UniqueLock &&vOther) noexcept {
+		return Reset(std::move(vOther));
 	}
 	~UniqueLock(){
 		const auto pMutex = x_pMutex;
@@ -92,14 +92,14 @@ public:
 		UniqueLock(vMutex).Swap(*this);
 		return *this;
 	}
-	UniqueLock &Reset(UniqueLock &&rhs) noexcept {
-		UniqueLock(std::move(rhs)).Swap(*this);
+	UniqueLock &Reset(UniqueLock &&vOther) noexcept {
+		UniqueLock(std::move(vOther)).Swap(*this);
 		return *this;
 	}
 
-	void Swap(UniqueLock &rhs) noexcept {
+	void Swap(UniqueLock &vOther) noexcept {
 		using std::swap;
-		swap(x_pMutex, rhs.x_pMutex);
+		swap(x_pMutex, vOther.x_pMutex);
 	}
 
 public:
@@ -107,8 +107,8 @@ public:
 		return !IsNull();
 	}
 
-	friend void swap(UniqueLock &lhs, UniqueLock &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(UniqueLock &vSelf, UniqueLock &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

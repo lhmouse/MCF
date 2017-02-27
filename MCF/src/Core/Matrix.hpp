@@ -46,106 +46,106 @@ public:
 	}
 
 	Matrix operator+() const {
-		Matrix ret;
+		Matrix vResult;
 #pragma GCC ivdep
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				ret.m_a[r][c] = +(m_a[r][c]);
+				vResult.m_a[r][c] = +(m_a[r][c]);
 			}
 		}
-		return ret;
+		return vResult;
 	}
 	Matrix operator-() const {
-		Matrix ret;
+		Matrix vResult;
 #pragma GCC ivdep
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				ret.m_a[r][c] = -(m_a[r][c]);
+				vResult.m_a[r][c] = -(m_a[r][c]);
 			}
 		}
-		return ret;
+		return vResult;
 	}
 
-	Matrix &operator+=(const Matrix &rhs){
+	Matrix &operator+=(const Matrix &vOther){
 #pragma GCC ivdep
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] += rhs.m_a[r][c];
+				m_a[r][c] += vOther.m_a[r][c];
 			}
 		}
 		return *this;
 	}
-	Matrix &operator-=(const Matrix &rhs){
+	Matrix &operator-=(const Matrix &vOther){
 #pragma GCC ivdep
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] -= rhs.m_a[r][c];
-			}
-		}
-		return *this;
-	}
-
-	Matrix &operator*=(const Element &rhs){
-#pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] *= rhs;
-			}
-		}
-		return *this;
-	}
-	Matrix &operator/=(const Element &rhs){
-#pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] /= rhs;
+				m_a[r][c] -= vOther.m_a[r][c];
 			}
 		}
 		return *this;
 	}
 
-	Matrix operator+(const Matrix &rhs) const {
-		auto ret = *this;
-		ret += rhs;
-		return ret;
+	Matrix &operator*=(const Element &vOther){
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				m_a[r][c] *= vOther;
+			}
+		}
+		return *this;
 	}
-	Matrix operator-(const Matrix &rhs) const {
-		auto ret = *this;
-		ret -= rhs;
-		return ret;
+	Matrix &operator/=(const Element &vOther){
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				m_a[r][c] /= vOther;
+			}
+		}
+		return *this;
 	}
 
-	Matrix operator*(const Element &rhs) const {
-		auto ret = *this;
-		ret *= rhs;
-		return ret;
+	Matrix operator+(const Matrix &vOther) const {
+		auto vResult = *this;
+		vResult += vOther;
+		return vResult;
 	}
-	Matrix operator/(const Element &rhs) const {
-		auto ret = *this;
-		ret /= rhs;
-		return ret;
+	Matrix operator-(const Matrix &vOther) const {
+		auto vResult = *this;
+		vResult -= vOther;
+		return vResult;
+	}
+
+	Matrix operator*(const Element &vOther) const {
+		auto vResult = *this;
+		vResult *= vOther;
+		return vResult;
+	}
+	Matrix operator/(const Element &vOther) const {
+		auto vResult = *this;
+		vResult /= vOther;
+		return vResult;
 	}
 
 	template<std::size_t kOtherColumnsT>
-	Matrix<ElementT, kRowsT, kOtherColumnsT> operator*(const Matrix<ElementT, kColumnsT, kOtherColumnsT> &rhs){
-		auto ret = Matrix<ElementT, kRowsT, kOtherColumnsT>();
+	Matrix<ElementT, kRowsT, kOtherColumnsT> operator*(const Matrix<ElementT, kColumnsT, kOtherColumnsT> &vOther){
+		auto vResult = Matrix<ElementT, kRowsT, kOtherColumnsT>();
 #pragma GCC ivdep
 		for(std::size_t r = 0; r < kRowsT; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kOtherColumnsT; ++c){
 #pragma GCC ivdep
 				for(std::size_t i = 0; i < kColumnsT; ++i){
-					ret[r][c] += m_a[r][i] * rhs[i][c];
+					vResult[r][c] += m_a[r][i] * vOther[i][c];
 				}
 			}
 		}
-		return ret;
+		return vResult;
 	}
 };
 

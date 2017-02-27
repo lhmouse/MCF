@@ -27,9 +27,9 @@ public:
 		return *x_pObject;
 	}
 
-	void Swap(RefWrapper &rhs) noexcept {
+	void Swap(RefWrapper &vOther) noexcept {
 		using std::swap;
-		swap(x_pObject, rhs.x_pObject);
+		swap(x_pObject, vOther.x_pObject);
 	}
 
 public:
@@ -42,68 +42,68 @@ public:
 		return Get()(std::forward<ParamsT>(vParams)...);
 	}
 
-	constexpr bool operator==(const RefWrapper &rhs) const {
-		return Get() == rhs.Get();
+	constexpr bool operator==(const RefWrapper &vOther) const {
+		return Get() == vOther.Get();
 	}
-	constexpr bool operator==(const ObjectT &rhs) const {
-		return Get() == rhs;
+	constexpr bool operator==(const ObjectT &vOther) const {
+		return Get() == vOther;
 	}
-	friend constexpr bool operator==(const ObjectT &lhs, const RefWrapper &rhs){
-		return lhs == rhs.Get();
-	}
-
-	constexpr bool operator!=(const RefWrapper &rhs) const {
-		return Get() != rhs.Get();
-	}
-	constexpr bool operator!=(const ObjectT &rhs) const {
-		return Get() != rhs;
-	}
-	friend constexpr bool operator!=(const ObjectT &lhs, const RefWrapper &rhs){
-		return lhs != rhs.Get();
+	friend constexpr bool operator==(const ObjectT &vSelf, const RefWrapper &vOther){
+		return vSelf == vOther.Get();
 	}
 
-	constexpr bool operator<(const RefWrapper &rhs) const {
-		return Get() < rhs.Get();
+	constexpr bool operator!=(const RefWrapper &vOther) const {
+		return Get() != vOther.Get();
 	}
-	constexpr bool operator<(const ObjectT &rhs) const {
-		return Get() < rhs;
+	constexpr bool operator!=(const ObjectT &vOther) const {
+		return Get() != vOther;
 	}
-	friend constexpr bool operator<(const ObjectT &lhs, const RefWrapper &rhs){
-		return lhs < rhs.Get();
-	}
-
-	constexpr bool operator>(const RefWrapper &rhs) const {
-		return Get() > rhs.Get();
-	}
-	constexpr bool operator>(const ObjectT &rhs) const {
-		return Get() > rhs;
-	}
-	friend constexpr bool operator>(const ObjectT &lhs, const RefWrapper &rhs){
-		return lhs > rhs.Get();
+	friend constexpr bool operator!=(const ObjectT &vSelf, const RefWrapper &vOther){
+		return vSelf != vOther.Get();
 	}
 
-	constexpr bool operator<=(const RefWrapper &rhs) const {
-		return Get() <= rhs.Get();
+	constexpr bool operator<(const RefWrapper &vOther) const {
+		return Get() < vOther.Get();
 	}
-	constexpr bool operator<=(const ObjectT &rhs) const {
-		return Get() <= rhs;
+	constexpr bool operator<(const ObjectT &vOther) const {
+		return Get() < vOther;
 	}
-	friend constexpr bool operator<=(const ObjectT &lhs, const RefWrapper &rhs){
-		return lhs <= rhs.Get();
-	}
-
-	constexpr bool operator>=(const RefWrapper &rhs) const {
-		return Get() >= rhs.Get();
-	}
-	constexpr bool operator>=(const ObjectT &rhs) const {
-		return Get() >= rhs;
-	}
-	friend constexpr bool operator>=(const ObjectT &lhs, const RefWrapper &rhs){
-		return lhs >= rhs.Get();
+	friend constexpr bool operator<(const ObjectT &vSelf, const RefWrapper &vOther){
+		return vSelf < vOther.Get();
 	}
 
-	friend void swap(RefWrapper &lhs, RefWrapper &rhs) noexcept {
-		lhs.Swap(rhs);
+	constexpr bool operator>(const RefWrapper &vOther) const {
+		return Get() > vOther.Get();
+	}
+	constexpr bool operator>(const ObjectT &vOther) const {
+		return Get() > vOther;
+	}
+	friend constexpr bool operator>(const ObjectT &vSelf, const RefWrapper &vOther){
+		return vSelf > vOther.Get();
+	}
+
+	constexpr bool operator<=(const RefWrapper &vOther) const {
+		return Get() <= vOther.Get();
+	}
+	constexpr bool operator<=(const ObjectT &vOther) const {
+		return Get() <= vOther;
+	}
+	friend constexpr bool operator<=(const ObjectT &vSelf, const RefWrapper &vOther){
+		return vSelf <= vOther.Get();
+	}
+
+	constexpr bool operator>=(const RefWrapper &vOther) const {
+		return Get() >= vOther.Get();
+	}
+	constexpr bool operator>=(const ObjectT &vOther) const {
+		return Get() >= vOther;
+	}
+	friend constexpr bool operator>=(const ObjectT &vSelf, const RefWrapper &vOther){
+		return vSelf >= vOther.Get();
+	}
+
+	friend void swap(RefWrapper &vSelf, RefWrapper &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

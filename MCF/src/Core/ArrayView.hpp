@@ -33,8 +33,8 @@ public:
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayView(Element &rhs) noexcept
-		: x_pBegin(AddressOf(rhs)), x_uSize(1)
+	constexpr ArrayView(Element &vScalar) noexcept
+		: x_pBegin(AddressOf(vScalar)), x_uSize(1)
 	{
 	}
 	constexpr ArrayView(Element *pBegin, std::size_t uSize) noexcept
@@ -42,8 +42,8 @@ public:
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+	constexpr ArrayView(Element (&vScalar)[kSizeT]) noexcept
+		: x_pBegin(vScalar), x_uSize(kSizeT)
 	{
 	}
 
@@ -156,10 +156,10 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(ArrayView &rhs) noexcept {
+	void Swap(ArrayView &avOther) noexcept {
 		using std::swap;
-		swap(x_pBegin, rhs.x_pBegin);
-		swap(x_uSize,  rhs.x_uSize);
+		swap(x_pBegin, avOther.x_pBegin);
+		swap(x_uSize,  avOther.x_uSize);
 	}
 
 	// ArrayView 需求。
@@ -199,17 +199,17 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	friend decltype(auto) begin(const ArrayView &rhs) noexcept {
-		return rhs.GetBegin();
+	friend decltype(auto) begin(const ArrayView &avOther) noexcept {
+		return avOther.GetBegin();
 	}
-	friend decltype(auto) cbegin(const ArrayView &rhs) noexcept {
-		return rhs.GetBegin();
+	friend decltype(auto) cbegin(const ArrayView &avOther) noexcept {
+		return avOther.GetBegin();
 	}
-	friend decltype(auto) end(const ArrayView &rhs) noexcept {
-		return rhs.GetEnd();
+	friend decltype(auto) end(const ArrayView &avOther) noexcept {
+		return avOther.GetEnd();
 	}
-	friend decltype(auto) cend(const ArrayView &rhs) noexcept {
-		return rhs.GetEnd();
+	friend decltype(auto) cend(const ArrayView &avOther) noexcept {
+		return avOther.GetEnd();
 	}
 };
 
@@ -230,8 +230,8 @@ public:
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayView(Element &rhs) noexcept
-		: x_pBegin(AddressOf(rhs)), x_uSize(1)
+	constexpr ArrayView(Element &vScalar) noexcept
+		: x_pBegin(AddressOf(vScalar)), x_uSize(1)
 	{
 	}
 	constexpr ArrayView(Element *pBegin, std::size_t uSize) noexcept
@@ -239,16 +239,16 @@ public:
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+	constexpr ArrayView(Element (&vArray)[kSizeT]) noexcept
+		: x_pBegin(vArray), x_uSize(kSizeT)
 	{
 	}
-	constexpr ArrayView(const ArrayView<Element> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+	constexpr ArrayView(const ArrayView<Element> &avOther) noexcept
+		: x_pBegin(avOther.GetData()), x_uSize(avOther.GetSize())
 	{
 	}
-	constexpr ArrayView(std::initializer_list<Element> rhs) noexcept
-		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
+	constexpr ArrayView(std::initializer_list<Element> ilElements) noexcept
+		: x_pBegin(ilElements.begin()), x_uSize(ilElements.size())
 	{
 	}
 
@@ -361,10 +361,10 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(ArrayView &rhs) noexcept {
+	void Swap(ArrayView &avOther) noexcept {
 		using std::swap;
-		swap(x_pBegin, rhs.x_pBegin);
-		swap(x_uSize,  rhs.x_uSize);
+		swap(x_pBegin, avOther.x_pBegin);
+		swap(x_uSize,  avOther.x_uSize);
 	}
 
 	// ArrayView 需求。
@@ -404,17 +404,17 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	friend decltype(auto) begin(const ArrayView &rhs) noexcept {
-		return rhs.GetBegin();
+	friend decltype(auto) begin(const ArrayView &avOther) noexcept {
+		return avOther.GetBegin();
 	}
-	friend decltype(auto) cbegin(const ArrayView &rhs) noexcept {
-		return rhs.GetBegin();
+	friend decltype(auto) cbegin(const ArrayView &avOther) noexcept {
+		return avOther.GetBegin();
 	}
-	friend decltype(auto) end(const ArrayView &rhs) noexcept {
-		return rhs.GetEnd();
+	friend decltype(auto) end(const ArrayView &avOther) noexcept {
+		return avOther.GetEnd();
 	}
-	friend decltype(auto) cend(const ArrayView &rhs) noexcept {
-		return rhs.GetEnd();
+	friend decltype(auto) cend(const ArrayView &avOther) noexcept {
+		return avOther.GetEnd();
 	}
 };
 

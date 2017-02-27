@@ -74,8 +74,8 @@ private:
 
 private:
 	struct X_MoveCaster {
-		ElementT &&operator()(Element &rhs) const noexcept {
-			return static_cast<ElementT &&>(const_cast<ElementT &>(rhs));
+		ElementT &&operator()(Element &vOther) const noexcept {
+			return static_cast<ElementT &&>(const_cast<ElementT &>(vOther));
 		}
 		static constexpr bool kEnabled = std::is_nothrow_move_constructible<ElementT>::value;
 	};
@@ -102,24 +102,24 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMultiSet(std::initializer_list<Element> rhs)
-		: FlatMultiSet(rhs.begin(), rhs.end())
+	FlatMultiSet(std::initializer_list<Element> ilInitList)
+		: FlatMultiSet(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	FlatMultiSet(const FlatMultiSet &rhs)
-		: x_vStorage(rhs.x_vStorage)
+	FlatMultiSet(const FlatMultiSet &vOther)
+		: x_vStorage(vOther.x_vStorage)
 	{
 	}
-	FlatMultiSet(FlatMultiSet &&rhs) noexcept
-		: x_vStorage(std::move(rhs.x_vStorage))
+	FlatMultiSet(FlatMultiSet &&vOther) noexcept
+		: x_vStorage(std::move(vOther.x_vStorage))
 	{
 	}
-	FlatMultiSet &operator=(const FlatMultiSet &rhs){
-		FlatMultiSet(rhs).Swap(*this);
+	FlatMultiSet &operator=(const FlatMultiSet &vOther){
+		FlatMultiSet(vOther).Swap(*this);
 		return *this;
 	}
-	FlatMultiSet &operator=(FlatMultiSet &&rhs) noexcept {
-		rhs.Swap(*this);
+	FlatMultiSet &operator=(FlatMultiSet &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 
@@ -240,9 +240,9 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(FlatMultiSet &rhs) noexcept {
+	void Swap(FlatMultiSet &vOther) noexcept {
 		using std::swap;
-		swap(x_vStorage, rhs.x_vStorage);
+		swap(x_vStorage, vOther.x_vStorage);
 	}
 
 	// FlatMultiSet 需求。
@@ -506,27 +506,27 @@ public:
 		return ArrayView<const Element>(GetData(), GetSize());
 	}
 
-	friend void swap(FlatMultiSet &lhs, FlatMultiSet &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(FlatMultiSet &vSelf, FlatMultiSet &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const FlatMultiSet &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const FlatMultiSet &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(FlatMultiSet &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(FlatMultiSet &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const FlatMultiSet &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const FlatMultiSet &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const FlatMultiSet &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const FlatMultiSet &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(FlatMultiSet &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(FlatMultiSet &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const FlatMultiSet &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const FlatMultiSet &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

@@ -84,10 +84,10 @@ public:
 		return WideStringView(x_pArgv[uIndex].__pwszStr, x_pArgv[uIndex].__uLen);
 	}
 
-	void Swap(Argv &rhs) noexcept {
+	void Swap(Argv &vOther) noexcept {
 		using std::swap;
-		swap(x_uArgc, rhs.x_uArgc);
-		swap(x_pArgv, rhs.x_pArgv);
+		swap(x_uArgc, vOther.x_uArgc);
+		swap(x_pArgv, vOther.x_pArgv);
 	}
 
 public:
@@ -95,8 +95,8 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	friend void swap(Argv &lhs, Argv &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(Argv &vSelf, Argv &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

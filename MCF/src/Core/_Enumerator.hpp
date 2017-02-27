@@ -57,11 +57,11 @@ namespace Impl_Enumerator {
 		}
 
 	public:
-		bool operator==(const Enumerator &rhs) const noexcept {
-			return x_pElement == rhs.x_pElement;
+		bool operator==(const Enumerator &enOther) const noexcept {
+			return x_pElement == enOther.x_pElement;
 		}
-		bool operator!=(const Enumerator &rhs) const noexcept {
-			return x_pElement != rhs.x_pElement;
+		bool operator!=(const Enumerator &enOther) const noexcept {
+			return x_pElement != enOther.x_pElement;
 		}
 
 		Enumerator &operator++() noexcept {
@@ -128,8 +128,8 @@ namespace Impl_Enumerator {
 			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
 		{
 		}
-		constexpr ConstEnumerator(const Enumerator<ContainerT> &rhs) noexcept
-			: x_pContainer(rhs.x_pContainer), x_pElement(rhs.x_pElement)
+		constexpr ConstEnumerator(const Enumerator<ContainerT> &enOther) noexcept
+			: x_pContainer(enOther.x_pContainer), x_pElement(enOther.x_pElement)
 		{
 		}
 
@@ -139,11 +139,11 @@ namespace Impl_Enumerator {
 		}
 
 	public:
-		bool operator==(const ConstEnumerator &rhs) const noexcept {
-			return x_pElement == rhs.x_pElement;
+		bool operator==(const ConstEnumerator &enOther) const noexcept {
+			return x_pElement == enOther.x_pElement;
 		}
-		bool operator!=(const ConstEnumerator &rhs) const noexcept {
-			return x_pElement != rhs.x_pElement;
+		bool operator!=(const ConstEnumerator &enOther) const noexcept {
+			return x_pElement != enOther.x_pElement;
 		}
 
 		ConstEnumerator &operator++() noexcept {

@@ -103,14 +103,14 @@ public:
 		return pElement;
 	}
 
-	void Swap(ThreadLocal &rhs) noexcept {
+	void Swap(ThreadLocal &vOther) noexcept {
 		using std::swap;
-		swap(x_hTlsKey, rhs.x_hTlsKey);
+		swap(x_hTlsKey, vOther.x_hTlsKey);
 	}
 
 public:
-	friend void swap(ThreadLocal &lhs, ThreadLocal &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(ThreadLocal &vSelf, ThreadLocal &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

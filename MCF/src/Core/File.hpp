@@ -63,9 +63,9 @@ public:
 	std::size_t Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
 	void Flush();
 
-	void Swap(File &rhs) noexcept {
+	void Swap(File &vOther) noexcept {
 		using std::swap;
-		swap(x_hFile, rhs.x_hFile);
+		swap(x_hFile, vOther.x_hFile);
 	}
 
 public:
@@ -73,8 +73,8 @@ public:
 		return IsOpen();
 	}
 
-	friend void swap(File &lhs, File &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(File &vSelf, File &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

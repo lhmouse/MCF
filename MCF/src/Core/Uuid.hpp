@@ -71,12 +71,12 @@ public:
 		return x_vData.aby.UncheckedGet(uIndex);
 	}
 
-	int Compare(const Uuid &rhs) const noexcept {
-		return BComp(GetData(), rhs.GetData());
+	int Compare(const Uuid &vOther) const noexcept {
+		return BComp(GetData(), vOther.GetData());
 	}
 
-	void Swap(Uuid &rhs) noexcept {
-		BSwap(x_vData.aby, rhs.x_vData.aby);
+	void Swap(Uuid &vOther) noexcept {
+		BSwap(x_vData.aby, vOther.x_vData.aby);
 	}
 
 	void Print(Array<char, 36> &achHex, bool bUpperCase = true) const noexcept;
@@ -90,27 +90,27 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	bool operator==(const Uuid &rhs) const noexcept {
-		return Compare(rhs) == 0;
+	bool operator==(const Uuid &vOther) const noexcept {
+		return Compare(vOther) == 0;
 	}
-	bool operator!=(const Uuid &rhs) const noexcept {
-		return Compare(rhs) != 0;
+	bool operator!=(const Uuid &vOther) const noexcept {
+		return Compare(vOther) != 0;
 	}
-	bool operator<(const Uuid &rhs) const noexcept {
-		return Compare(rhs) < 0;
+	bool operator<(const Uuid &vOther) const noexcept {
+		return Compare(vOther) < 0;
 	}
-	bool operator>(const Uuid &rhs) const noexcept {
-		return Compare(rhs) > 0;
+	bool operator>(const Uuid &vOther) const noexcept {
+		return Compare(vOther) > 0;
 	}
-	bool operator<=(const Uuid &rhs) const noexcept {
-		return Compare(rhs) <= 0;
+	bool operator<=(const Uuid &vOther) const noexcept {
+		return Compare(vOther) <= 0;
 	}
-	bool operator>=(const Uuid &rhs) const noexcept {
-		return Compare(rhs) >= 0;
+	bool operator>=(const Uuid &vOther) const noexcept {
+		return Compare(vOther) >= 0;
 	}
 
-	friend void swap(Uuid &lhs, Uuid &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(Uuid &vSelf, Uuid &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

@@ -73,9 +73,9 @@ public:
 		return reinterpret_cast<FunctionPointerT>(RequireProcAddressRaw(uOrdinal));
 	}
 
-	void Swap(DynamicLinkLibrary &rhs) noexcept {
+	void Swap(DynamicLinkLibrary &vOther) noexcept {
 		using std::swap;
-		swap(x_hDll, rhs.x_hDll);
+		swap(x_hDll, vOther.x_hDll);
 	}
 
 public:
@@ -83,8 +83,8 @@ public:
 		return IsOpen();
 	}
 
-	friend void swap(DynamicLinkLibrary &lhs, DynamicLinkLibrary &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(DynamicLinkLibrary &vSelf, DynamicLinkLibrary &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

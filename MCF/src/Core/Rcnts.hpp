@@ -93,20 +93,20 @@ public:
 		: Rcnts(X_AdoptionTag(), nullptr, X_GetNullTerminator())
 	{
 	}
-	Rcnts(const Rcnts &rhs) noexcept
-		: Rcnts(X_AdoptionTag(), rhs.X_Fork(), rhs.x_pszStr)
+	Rcnts(const Rcnts &vOther) noexcept
+		: Rcnts(X_AdoptionTag(), vOther.X_Fork(), vOther.x_pszStr)
 	{
 	}
-	Rcnts(Rcnts &&rhs) noexcept
-		: Rcnts(X_AdoptionTag(), std::exchange(rhs.x_puRef, nullptr), std::exchange(rhs.x_pszStr, X_GetNullTerminator()))
+	Rcnts(Rcnts &&vOther) noexcept
+		: Rcnts(X_AdoptionTag(), std::exchange(vOther.x_puRef, nullptr), std::exchange(vOther.x_pszStr, X_GetNullTerminator()))
 	{
 	}
-	Rcnts &operator=(const Rcnts &rhs) noexcept {
-		Rcnts(rhs).Swap(*this);
+	Rcnts &operator=(const Rcnts &vOther) noexcept {
+		Rcnts(vOther).Swap(*this);
 		return *this;
 	}
-	Rcnts &operator=(Rcnts &&rhs) noexcept {
-		Rcnts(std::move(rhs)).Swap(*this);
+	Rcnts &operator=(Rcnts &&vOther) noexcept {
+		Rcnts(std::move(vOther)).Swap(*this);
 		return *this;
 	}
 	~Rcnts(){
@@ -147,17 +147,17 @@ public:
 		return *this;
 	}
 
-	int Compare(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs);
+	int Compare(const Char *pszOther) const noexcept {
+		return X_Cmp(GetStr(), pszOther);
 	}
-	int Compare(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr());
+	int Compare(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr());
 	}
 
-	void Swap(Rcnts &rhs) noexcept {
+	void Swap(Rcnts &vOther) noexcept {
 		using std::swap;
-		swap(x_puRef,  rhs.x_puRef);
-		swap(x_pszStr, rhs.x_pszStr);
+		swap(x_puRef,  vOther.x_puRef);
+		swap(x_pszStr, vOther.x_pszStr);
 	}
 
 public:
@@ -168,68 +168,68 @@ public:
 		return GetStr();
 	}
 
-	bool operator==(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr()) == 0;
+	bool operator==(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr()) == 0;
 	}
-	bool operator==(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs) == 0;
+	bool operator==(const Char *vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther) == 0;
 	}
-	friend bool operator==(const Char *lhs, const Rcnts &rhs) noexcept {
-		return X_Cmp(lhs, rhs.GetStr()) == 0;
-	}
-
-	bool operator!=(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr()) != 0;
-	}
-	bool operator!=(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs) != 0;
-	}
-	friend bool operator!=(const Char *lhs, const Rcnts &rhs) noexcept {
-		return X_Cmp(lhs, rhs.GetStr()) != 0;
+	friend bool operator==(const Char *vSelf, const Rcnts &vOther) noexcept {
+		return X_Cmp(vSelf, vOther.GetStr()) == 0;
 	}
 
-	bool operator<(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr()) < 0;
+	bool operator!=(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr()) != 0;
 	}
-	bool operator<(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs) < 0;
+	bool operator!=(const Char *vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther) != 0;
 	}
-	friend bool operator<(const Char *lhs, const Rcnts &rhs) noexcept {
-		return X_Cmp(lhs, rhs.GetStr()) < 0;
-	}
-
-	bool operator>(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr()) > 0;
-	}
-	bool operator>(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs) > 0;
-	}
-	friend bool operator>(const Char *lhs, const Rcnts &rhs) noexcept {
-		return X_Cmp(lhs, rhs.GetStr()) > 0;
+	friend bool operator!=(const Char *vSelf, const Rcnts &vOther) noexcept {
+		return X_Cmp(vSelf, vOther.GetStr()) != 0;
 	}
 
-	bool operator<=(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr()) <= 0;
+	bool operator<(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr()) < 0;
 	}
-	bool operator<=(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs) <= 0;
+	bool operator<(const Char *vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther) < 0;
 	}
-	friend bool operator<=(const Char *lhs, const Rcnts &rhs) noexcept {
-		return X_Cmp(lhs, rhs.GetStr()) <= 0;
-	}
-
-	bool operator>=(const Rcnts &rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs.GetStr()) >= 0;
-	}
-	bool operator>=(const Char *rhs) const noexcept {
-		return X_Cmp(GetStr(), rhs) >= 0;
-	}
-	friend bool operator>=(const Char *lhs, const Rcnts &rhs) noexcept {
-		return X_Cmp(lhs, rhs.GetStr()) >= 0;
+	friend bool operator<(const Char *vSelf, const Rcnts &vOther) noexcept {
+		return X_Cmp(vSelf, vOther.GetStr()) < 0;
 	}
 
-	friend void swap(Rcnts &lhs, Rcnts &rhs) noexcept {
-		lhs.Swap(rhs);
+	bool operator>(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr()) > 0;
+	}
+	bool operator>(const Char *vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther) > 0;
+	}
+	friend bool operator>(const Char *vSelf, const Rcnts &vOther) noexcept {
+		return X_Cmp(vSelf, vOther.GetStr()) > 0;
+	}
+
+	bool operator<=(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr()) <= 0;
+	}
+	bool operator<=(const Char *vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther) <= 0;
+	}
+	friend bool operator<=(const Char *vSelf, const Rcnts &vOther) noexcept {
+		return X_Cmp(vSelf, vOther.GetStr()) <= 0;
+	}
+
+	bool operator>=(const Rcnts &vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther.GetStr()) >= 0;
+	}
+	bool operator>=(const Char *vOther) const noexcept {
+		return X_Cmp(GetStr(), vOther) >= 0;
+	}
+	friend bool operator>=(const Char *vSelf, const Rcnts &vOther) noexcept {
+		return X_Cmp(vSelf, vOther.GetStr()) >= 0;
+	}
+
+	friend void swap(Rcnts &vSelf, Rcnts &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

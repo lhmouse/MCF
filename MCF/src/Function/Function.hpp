@@ -70,7 +70,7 @@ namespace Impl_Function {
 }
 
 template<typename PrototypeT, typename FunctionT>
-IntrusivePtr<Function<PrototypeT>> MakeFunction(FunctionT &&vFunction){
+IntrusivePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeFunction(FunctionT &&vFunction){
 	return MakeIntrusive<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>>(vFunction);
 }
 

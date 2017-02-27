@@ -75,8 +75,8 @@ private:
 
 private:
 	struct X_MoveCaster {
-		std::pair<KeyT &&, ValueT &&> operator()(Element &rhs) const noexcept {
-			return std::pair<KeyT &&, ValueT &&>(static_cast<KeyT &&>(const_cast<KeyT &>(rhs.first)), static_cast<ValueT &&>(rhs.second));
+		std::pair<KeyT &&, ValueT &&> operator()(Element &vOther) const noexcept {
+			return std::pair<KeyT &&, ValueT &&>(static_cast<KeyT &&>(const_cast<KeyT &>(vOther.first)), static_cast<ValueT &&>(vOther.second));
 		}
 		static constexpr bool kEnabled = std::is_nothrow_move_constructible<KeyT>::value && std::is_nothrow_move_constructible<ValueT>::value;
 	};
@@ -103,24 +103,24 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMultiMap(std::initializer_list<Element> rhs)
-		: FlatMultiMap(rhs.begin(), rhs.end())
+	FlatMultiMap(std::initializer_list<Element> ilInitList)
+		: FlatMultiMap(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	FlatMultiMap(const FlatMultiMap &rhs)
-		: x_vStorage(rhs.x_vStorage)
+	FlatMultiMap(const FlatMultiMap &vOther)
+		: x_vStorage(vOther.x_vStorage)
 	{
 	}
-	FlatMultiMap(FlatMultiMap &&rhs) noexcept
-		: x_vStorage(std::move(rhs.x_vStorage))
+	FlatMultiMap(FlatMultiMap &&vOther) noexcept
+		: x_vStorage(std::move(vOther.x_vStorage))
 	{
 	}
-	FlatMultiMap &operator=(const FlatMultiMap &rhs){
-		FlatMultiMap(rhs).Swap(*this);
+	FlatMultiMap &operator=(const FlatMultiMap &vOther){
+		FlatMultiMap(vOther).Swap(*this);
 		return *this;
 	}
-	FlatMultiMap &operator=(FlatMultiMap &&rhs) noexcept {
-		rhs.Swap(*this);
+	FlatMultiMap &operator=(FlatMultiMap &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 
@@ -241,9 +241,9 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(FlatMultiMap &rhs) noexcept {
+	void Swap(FlatMultiMap &vOther) noexcept {
 		using std::swap;
-		swap(x_vStorage, rhs.x_vStorage);
+		swap(x_vStorage, vOther.x_vStorage);
 	}
 
 	// FlatMultiMap 需求。
@@ -512,27 +512,27 @@ public:
 		return ArrayView<const Element>(GetData(), GetSize());
 	}
 
-	friend void swap(FlatMultiMap &lhs, FlatMultiMap &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(FlatMultiMap &vSelf, FlatMultiMap &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const FlatMultiMap &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const FlatMultiMap &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(FlatMultiMap &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(FlatMultiMap &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const FlatMultiMap &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const FlatMultiMap &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const FlatMultiMap &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const FlatMultiMap &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(FlatMultiMap &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(FlatMultiMap &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const FlatMultiMap &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const FlatMultiMap &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

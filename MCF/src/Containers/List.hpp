@@ -62,14 +62,14 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	List(std::initializer_list<Element> rhs)
-		: List(rhs.begin(), rhs.end())
+	List(std::initializer_list<Element> ilInitList)
+		: List(ilInitList.begin(), ilInitList.end())
 	{
 	}
-	List(const List &rhs)
+	List(const List &vOther)
 		: List()
 	{
-		auto pNode = rhs.x_pFirst;
+		auto pNode = vOther.x_pFirst;
 		while(pNode){
 			const auto pNext = pNode->pNext;
 			const void *const pElementRaw = pNext;
@@ -78,17 +78,17 @@ public:
 			pNode = pNext;
 		}
 	}
-	List(List &&rhs) noexcept
+	List(List &&vOther) noexcept
 		: List()
 	{
-		rhs.Swap(*this);
+		vOther.Swap(*this);
 	}
-	List &operator=(const List &rhs){
-		List(rhs).Swap(*this);
+	List &operator=(const List &vOther){
+		List(vOther).Swap(*this);
 		return *this;
 	}
-	List &operator=(List &&rhs) noexcept {
-		rhs.Swap(*this);
+	List &operator=(List &&vOther) noexcept {
+		vOther.Swap(*this);
 		return *this;
 	}
 	~List(){
@@ -225,10 +225,10 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(List &rhs) noexcept {
+	void Swap(List &vOther) noexcept {
 		using std::swap;
-		swap(x_pLast,  rhs.x_pLast);
-		swap(x_pFirst, rhs.x_pFirst);
+		swap(x_pLast,  vOther.x_pLast);
+		swap(x_pFirst, vOther.x_pFirst);
 	}
 
 	// List 需求。
@@ -442,27 +442,27 @@ public:
 	}
 
 public:
-	friend void swap(List &lhs, List &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(List &vSelf, List &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 
-	friend decltype(auto) begin(const List &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const List &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(List &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(List &vOther) noexcept {
+		return vOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const List &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const List &vOther) noexcept {
+		return begin(vOther);
 	}
-	friend decltype(auto) end(const List &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const List &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(List &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(List &vOther) noexcept {
+		return vOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const List &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const List &vOther) noexcept {
+		return end(vOther);
 	}
 };
 

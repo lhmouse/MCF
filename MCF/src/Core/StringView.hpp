@@ -261,8 +261,8 @@ public:
 		: StringView(pchBegin, pchBegin + uLen)
 	{
 	}
-	constexpr StringView(std::initializer_list<Char> rhs) noexcept
-		: StringView(rhs.begin(), rhs.size())
+	constexpr StringView(std::initializer_list<Char> ilElements) noexcept
+		: StringView(ilElements.begin(), ilElements.size())
 	{
 	}
 	explicit StringView(const Char *pszBegin) noexcept
@@ -388,10 +388,10 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(StringView &rhs) noexcept {
+	void Swap(StringView &svOther) noexcept {
 		using std::swap;
-		swap(x_pchBegin, rhs.x_pchBegin);
-		swap(x_pchEnd,   rhs.x_pchEnd);
+		swap(x_pchBegin, svOther.x_pchBegin);
+		swap(x_pchEnd,   svOther.x_pchEnd);
 	}
 
 	// StringView 需求。
@@ -420,13 +420,13 @@ public:
 		return GetBegin()[uIndex];
 	}
 
-	int Compare(const StringView &rhs) const noexcept {
+	int Compare(const StringView &svOther) const noexcept {
 		using UChar = std::make_unsigned_t<Char>;
 
 		auto pLRead = GetBegin();
 		const auto pLEnd = GetEnd();
-		auto pRRead = rhs.GetBegin();
-		const auto pREnd = rhs.GetEnd();
+		auto pRRead = svOther.GetBegin();
+		const auto pREnd = svOther.GetEnd();
 		for(;;){
 			const int nLAtEnd = (pLRead == pLEnd) ? 3 : 0;
 			const int nRAtEnd = (pRRead == pREnd) ? 1 : 0;
@@ -456,8 +456,8 @@ public:
 	void Assign(const Char *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	void Assign(std::initializer_list<Char> rhs) noexcept {
-		Assign(rhs.begin(), rhs.end());
+	void Assign(std::initializer_list<Char> ilElements) noexcept {
+		Assign(ilElements.begin(), ilElements.end());
 	}
 	void Assign(const Char *pszBegin) noexcept {
 		Assign(pszBegin, Impl_StringView::StrEndOf(pszBegin));
@@ -568,8 +568,8 @@ public:
 		return FindRepBackward(chToFind, 1, nEnd);
 	}
 
-	bool DoesOverlapWith(const StringView &rhs) const noexcept {
-		return (x_pchBegin < rhs.x_pchEnd) && (rhs.x_pchBegin < x_pchEnd);
+	bool DoesOverlapWith(const StringView &svOther) const noexcept {
+		return (x_pchBegin < svOther.x_pchEnd) && (svOther.x_pchBegin < x_pchEnd);
 	}
 
 public:
@@ -580,46 +580,46 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	bool operator==(const StringView &rhs) noexcept {
-		if(GetSize() != rhs.GetSize()){
+	bool operator==(const StringView &svOther) noexcept {
+		if(GetSize() != svOther.GetSize()){
 			return false;
 		}
-		return Compare(rhs) == 0;
+		return Compare(svOther) == 0;
 	}
-	bool operator!=(const StringView &rhs) noexcept {
-		if(GetSize() != rhs.GetSize()){
+	bool operator!=(const StringView &svOther) noexcept {
+		if(GetSize() != svOther.GetSize()){
 			return true;
 		}
-		return Compare(rhs) != 0;
+		return Compare(svOther) != 0;
 	}
-	bool operator<(const StringView &rhs) noexcept {
-		return Compare(rhs) < 0;
+	bool operator<(const StringView &svOther) noexcept {
+		return Compare(svOther) < 0;
 	}
-	bool operator>(const StringView &rhs) noexcept {
-		return Compare(rhs) > 0;
+	bool operator>(const StringView &svOther) noexcept {
+		return Compare(svOther) > 0;
 	}
-	bool operator<=(const StringView &rhs) noexcept {
-		return Compare(rhs) <= 0;
+	bool operator<=(const StringView &svOther) noexcept {
+		return Compare(svOther) <= 0;
 	}
-	bool operator>=(const StringView &rhs) noexcept {
-		return Compare(rhs) >= 0;
-	}
-
-	friend void swap(StringView &lhs, StringView &rhs) noexcept {
-		lhs.Swap(rhs);
+	bool operator>=(const StringView &svOther) noexcept {
+		return Compare(svOther) >= 0;
 	}
 
-	friend decltype(auto) begin(const StringView &rhs) noexcept {
-		return rhs.GetBegin();
+	friend void swap(StringView &svSelf, StringView &svOther) noexcept {
+		svSelf.Swap(svOther);
 	}
-	friend decltype(auto) cbegin(const StringView &rhs) noexcept {
-		return begin(rhs);
+
+	friend decltype(auto) begin(const StringView &svOther) noexcept {
+		return svOther.GetBegin();
 	}
-	friend decltype(auto) end(const StringView &rhs) noexcept {
-		return rhs.GetEnd();
+	friend decltype(auto) cbegin(const StringView &svOther) noexcept {
+		return begin(svOther);
 	}
-	friend decltype(auto) cend(const StringView &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) end(const StringView &svOther) noexcept {
+		return svOther.GetEnd();
+	}
+	friend decltype(auto) cend(const StringView &svOther) noexcept {
+		return end(svOther);
 	}
 };
 

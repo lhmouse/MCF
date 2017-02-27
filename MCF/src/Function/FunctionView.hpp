@@ -6,7 +6,7 @@
 #define MCF_FUNCTION_FUNCTION_VIEW_HPP_
 
 #include "Invoke.hpp"
-#include "TupleManipulation.hpp"
+#include "rTupleManipulation.hpp"
 #include <type_traits>
 #include <utility>
 #include <tuple>
@@ -71,10 +71,10 @@ public:
 		return *this;
 	}
 
-	void Swap(FunctionView &rhs) noexcept {
+	void Swap(FunctionView &vOther) noexcept {
 		using std::swap;
-		swap(x_pfnLambda, rhs.x_pfnLambda);
-		swap(x_pContext,  rhs.x_pContext);
+		swap(x_pfnLambda, vOther.x_pfnLambda);
+		swap(x_pContext,  vOther.x_pContext);
 	}
 
 public:
@@ -87,8 +87,8 @@ public:
 		return (*x_pfnLambda)(x_pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 
-	friend void swap(FunctionView &lhs, FunctionView &rhs) noexcept {
-		lhs.Swap(rhs);
+	friend void swap(FunctionView &vSelf, FunctionView &vOther) noexcept {
+		vSelf.Swap(vOther);
 	}
 };
 

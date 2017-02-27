@@ -24,12 +24,12 @@ public:
 		std::enable_if_t<
 			!std::is_base_of<Optional, std::decay_t<ParamT>>::value,
 			int> = 0>
-	Optional(ParamT &&rhs)
-		: x_vData(std::move(rhs))
+	Optional(ParamT &&vOther)
+		: x_vData(std::move(vOther))
 	{
 	}
-	Optional(std::exception_ptr rhs) noexcept
-		: x_vData(std::move(rhs))
+	Optional(std::exception_ptr pException) noexcept
+		: x_vData(std::move(pException))
 	{
 	}
 
@@ -84,12 +84,12 @@ public:
 		x_vData.Clear();
 		return *this;
 	}
-	Optional &Reset(ElementT rhs){
-		x_vData.template Set<0>(std::move(rhs));
+	Optional &Reset(ElementT vElement){
+		x_vData.template Set<0>(std::move(vElement));
 		return *this;
 	}
-	Optional &Reset(std::exception_ptr rhs) noexcept {
-		x_vData.template Set<1>(std::move(rhs));
+	Optional &Reset(std::exception_ptr pException) noexcept {
+		x_vData.template Set<1>(std::move(pException));
 		return *this;
 	}
 

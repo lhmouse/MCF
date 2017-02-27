@@ -61,21 +61,21 @@ public:
 		std::enable_if_t<
 			!std::is_base_of<Variant, std::decay_t<ParamT>>::value,
 			int> = 0>
-	Variant(ParamT &&rhs){
-		Set(std::forward<ParamT>(rhs));
+	Variant(ParamT &&vOther){
+		Set(std::forward<ParamT>(vOther));
 	}
-	Variant(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
-		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
+	Variant(const Variant &vOther) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
 	}
-	Variant(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
-		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
+	Variant(Variant &&vOther) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
 	}
-	Variant &operator=(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
-		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
+	Variant &operator=(const Variant &vOther) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
 		return *this;
 	}
-	Variant &operator=(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
-		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
+	Variant &operator=(Variant &&vOther) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
 		return *this;
 	}
 	~Variant(){
@@ -171,15 +171,15 @@ public:
 		X_VisitPointer([&](auto, auto p){ return std::forward<FunctionT>(vFunction)(*p); });
 	}
 
-	void Swap(Variant &rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
-		auto temp = std::move_if_noexcept(*this);
-		*this = std::move(rhs);
-		rhs = std::move(temp);
+	void Swap(Variant &vOther) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
+		auto vTemp = std::move_if_noexcept(*this);
+		*this = std::move(vOther);
+		vOther = std::move(vTemp);
 	}
 
 public:
-	friend void swap(Variant &lhs, Variant &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
-		lhs.Swap(rhs);
+	friend void swap(Variant &vSelf, Variant &vOther) noexcept(noexcept(vSelf.Swap(vOther))) {
+		vSelf.Swap(vOther);
 	}
 };
 

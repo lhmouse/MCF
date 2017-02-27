@@ -18,7 +18,7 @@ namespace MCF {
 
 namespace Impl_Array {
 	template<typename ElementT, std::size_t kSizeT>
-	struct IsNoexceptSwappableChecker {
+	struct NoexceptSwappableChecker {
 		constexpr bool operator()() const noexcept {
 			using std::swap;
 			return noexcept(swap(DeclVal<ElementT (&)[kSizeT]>(), DeclVal<ElementT (&)[kSizeT]>()));
@@ -151,9 +151,9 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(Array &rhs) noexcept(Impl_Array::IsNoexceptSwappableChecker<Element, kSizeT>()()) {
+	void Swap(Array &aOther) noexcept(Impl_Array::NoexceptSwappableChecker<Element, kSizeT>()()) {
 		using std::swap;
-		swap(m_a, rhs.m_a);
+		swap(m_a, aOther.m_a);
 	}
 
 	// Array 需求。
@@ -239,27 +239,27 @@ public:
 		return GetData();
 	}
 
-	friend void swap(Array &lhs, Array &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
-		lhs.Swap(rhs);
+	friend void swap(Array &aSelf, Array &aOther) noexcept(noexcept(aSelf.Swap(aOther))) {
+		aSelf.Swap(aOther);
 	}
 
-	friend decltype(auto) begin(const Array &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(const Array &aOther) noexcept {
+		return aOther.EnumerateFirst();
 	}
-	friend decltype(auto) begin(Array &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	friend decltype(auto) begin(Array &aOther) noexcept {
+		return aOther.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const Array &rhs) noexcept {
-		return begin(rhs);
+	friend decltype(auto) cbegin(const Array &aOther) noexcept {
+		return begin(aOther);
 	}
-	friend decltype(auto) end(const Array &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(const Array &aOther) noexcept {
+		return aOther.EnumerateSingular();
 	}
-	friend decltype(auto) end(Array &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	friend decltype(auto) end(Array &aOther) noexcept {
+		return aOther.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const Array &rhs) noexcept {
-		return end(rhs);
+	friend decltype(auto) cend(const Array &aOther) noexcept {
+		return end(aOther);
 	}
 };
 

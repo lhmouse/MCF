@@ -71,8 +71,8 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN void _MCFCRT_AvlAttachWithHint(_MCFCRT_AvlRoo
 				__pParent = __pMutableHint;
 				__ppRefl = &(__pMutableHint->__pLeft);
 			} else if((*__pfnComparator)(__pNode, __pPrev) >= 0){
-				// 条件：  node        <   hint
-				//         hint->prev  <=  node
+				// Requires: node        <   hint
+				//           hint->prev  <=  node
 				if(__pPrev->__uHeight < __pHint->__uHeight){
 					_MCFCRT_ASSERT(!__pPrev->__pRight);
 
@@ -93,8 +93,8 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN void _MCFCRT_AvlAttachWithHint(_MCFCRT_AvlRoo
 				__pParent = __pMutableHint;
 				__ppRefl = &(__pMutableHint->__pRight);
 			} else if((*__pfnComparator)(__pNode, __pNext) < 0){
-				// 条件：  hint  <=  node
-				//         node  <   hint->next
+				// Requires: hint  <=  node
+				//           node  <   hint->next
 				if(__pHint->__uHeight < __pNext->__uHeight){
 					_MCFCRT_ASSERT(!__pHint->__pRight);
 
@@ -139,11 +139,12 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetLowerBou
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
-		if((*__pfnComparatorNodeOther)(__pCur, __nOther) < 0){
-			__pCur = __pCur->__pRight;
-		} else {
+		const int __nResult = (*__pfnComparatorNodeOther)(__pCur, __nOther);
+		if(__nResult >= 0){
 			__pRet = __pCur;
 			__pCur = __pCur->__pLeft;
+		} else {
+			__pCur = __pCur->__pRight;
 		}
 	}
 	return (_MCFCRT_AvlNodeHeader *)__pRet;
@@ -154,11 +155,12 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetUpperBou
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
-		if((*__pfnComparatorNodeOther)(__pCur, __nOther) <= 0){
-			__pCur = __pCur->__pRight;
-		} else {
+		const int __nResult = (*__pfnComparatorNodeOther)(__pCur, __nOther);
+		if(__nResult > 0){
 			__pRet = __pCur;
 			__pCur = __pCur->__pLeft;
+		} else {
+			__pCur = __pCur->__pRight;
 		}
 	}
 	return (_MCFCRT_AvlNodeHeader *)__pRet;
@@ -166,52 +168,36 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetUpperBou
 __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlFind(const _MCFCRT_AvlRoot *__ppRoot,
 	_MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT
 {
+	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
 		const int __nResult = (*__pfnComparatorNodeOther)(__pCur, __nOther);
-		if(__nResult < 0){
-			__pCur = __pCur->__pRight;
+		if(__nResult == 0){
+			__pRet = __pCur;
+			break;
 		} else if(__nResult > 0){
 			__pCur = __pCur->__pLeft;
 		} else {
-			return (_MCFCRT_AvlNodeHeader *)__pCur;
+			__pCur = __pCur->__pRight;
 		}
 	}
-	return _MCFCRT_NULLPTR;
+	return (_MCFCRT_AvlNodeHeader *)__pRet;
 }
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN void _MCFCRT_AvlGetEqualRange(_MCFCRT_AvlNodeHeader **__ppLower, _MCFCRT_AvlNodeHeader **__ppUpper,
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN void _MCFCRT_AvlGetEqualRange(_MCFCRT_AvlNodeHeader **_MCFCRT_RESTRICT __ppLower, _MCFCRT_AvlNodeHeader **_MCFCRT_RESTRICT __ppUpper,
 	const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT
 {
+	const _MCFCRT_AvlNodeHeader *__pLower = _MCFCRT_NULLPTR;
+	const _MCFCRT_AvlNodeHeader *__pUpper = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *const __pTop = _MCFCRT_AvlFind(__ppRoot, __nOther, __pfnComparatorNodeOther);
-	if(!__pTop){
-		*__ppLower = _MCFCRT_NULLPTR;
-		*__ppUpper = _MCFCRT_NULLPTR;
-	} else {
-		const _MCFCRT_AvlNodeHeader *__pLower = _MCFCRT_NULLPTR, *__pUpper = _MCFCRT_NULLPTR;
-
-		const _MCFCRT_AvlNodeHeader *__pCur = __pTop->__pLeft;
-		while(__pCur){
-			if((*__pfnComparatorNodeOther)(__pCur, __nOther) < 0){
-				__pCur = __pCur->__pRight;
-			} else {
-				__pLower = __pCur;
-				__pCur = __pCur->__pLeft;
-			}
-		}
-
-		__pCur = __pTop->__pRight;
-		while(__pCur){
-			if((*__pfnComparatorNodeOther)(__pCur, __nOther) <= 0){
-				__pCur = __pCur->__pRight;
-			} else {
-				__pUpper = __pCur;
-				__pCur = __pCur->__pLeft;
-			}
-		}
-
-		*__ppLower = (_MCFCRT_AvlNodeHeader *)__pLower;
-		*__ppUpper = (_MCFCRT_AvlNodeHeader *)__pUpper;
+	if(__pTop){
+		const _MCFCRT_AvlNodeHeader *__pTest;
+		__pTest = _MCFCRT_AvlGetLowerBound(&(__pTop->__pLeft), __nOther, __pfnComparatorNodeOther);
+		__pLower = __pTest ? __pTest : __pTop;
+		__pTest = _MCFCRT_AvlGetUpperBound(&(__pTop->__pRight), __nOther, __pfnComparatorNodeOther);
+		__pUpper = __pTest ? __pTest : __pTop;
 	}
+	*__ppLower = (_MCFCRT_AvlNodeHeader *)__pLower;
+	*__ppUpper = (_MCFCRT_AvlNodeHeader *)__pUpper;
 }
 
 _MCFCRT_EXTERN_C_END

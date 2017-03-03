@@ -15,7 +15,7 @@ namespace MCF {
 
 template<typename PrototypeT>
 class FunctionView {
-	static_assert((sizeof(PrototypeT *), false), "Class template FunctionView instantiated with non-function template type parameter.");
+	static_assert((sizeof(PrototypeT *), false), "Class template FunctionView instantiated with a non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>

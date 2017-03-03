@@ -56,40 +56,38 @@ private:
 	}
 
 public:
-	Variant() noexcept = default;
-	template<typename ParamT,
+	Variant() noexcept {
+	}
+	template<typename vOtherT,
 		std::enable_if_t<
-			!std::is_base_of<Variant, std::decay_t<ParamT>>::value,
+			!std::is_base_of<Variant, std::decay_t<vOtherT>>::value,
 			int> = 0>
-	Variant(ParamT &&vOther){
-		Set(std::forward<ParamT>(vOther));
+	Variant(vOtherT &&vOther){
+		Reset(std::forward<vOtherT>(vOther));
 	}
 	Variant(const Variant &vOther) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
-		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Reset<k>(*p); });
 	}
 	Variant(Variant &&vOther) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
-		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Reset<k>(std::move(*p)); });
 	}
 	Variant &operator=(const Variant &vOther) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
-		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Reset<k>(*p); });
 		return *this;
 	}
 	Variant &operator=(Variant &&vOther) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
-		vOther.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
+		vOther.X_VisitPointer([this](auto k, auto p){ this->Reset<k>(std::move(*p)); });
 		return *this;
 	}
 	~Variant(){
-		Clear();
+		Reset();
 	}
 
 public:
 	int GetActiveIndex() const noexcept {
 		return x_nActiveIndex;
 	}
-	void Clear() noexcept {
-		X_VisitPointer([&](auto, auto p){ Destruct<>(p); });
-		x_nActiveIndex = -1;
-	}
+
 	template<unsigned kIndexT>
 	const std::tuple_element_t<kIndexT, X_TypeTuple> *Get() const noexcept {
 		const auto uActiveIndex = static_cast<unsigned>(x_nActiveIndex);
@@ -148,18 +146,25 @@ public:
 		}
 		return pElement;
 	}
+
+	Variant &Reset() noexcept {
+		X_VisitPointer([&](auto, auto p){ Destruct<>(p); });
+		x_nActiveIndex = -1;
+		return *this;
+	}
 	template<unsigned kIndexT, typename ...ParamsT>
-	void Set(ParamsT &&...vParams){
-		Clear();
+	Variant &Reset(ParamsT &&...vParams){
+		Reset();
 
 		void *const pElementRaw = &x_vStorage;
 		const auto pElement = static_cast<std::tuple_element_t<kIndexT, X_TypeTuple> *>(pElementRaw);
 		Construct<>(pElement, std::forward<ParamsT>(vParams)...);
 		x_nActiveIndex = static_cast<int>(kIndexT);
+		return *this;
 	}
 	template<typename ElementT>
-	void Set(ElementT &&vElement){
-		Set<Impl_Variant::IndexByType<std::decay_t<ElementT>, ElementsT...>::value>(std::forward<ElementT>(vElement));
+	Variant &Reset(ElementT &&vElement){
+		return Reset<Impl_Variant::IndexByType<std::decay_t<ElementT>, ElementsT...>::value>(std::forward<ElementT>(vElement));
 	}
 
 	template<typename FunctionT>

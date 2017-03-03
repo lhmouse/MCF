@@ -6,6 +6,7 @@
 #define MCF_CORE_OPTIONAL_HPP_
 
 #include "Variant.hpp"
+#include "AddressOf.hpp"
 #include <exception>
 
 namespace MCF {
@@ -16,17 +17,14 @@ private:
 	Variant<ElementT, std::exception_ptr> x_vData;
 
 public:
-	Optional() noexcept
-		: x_vData()
-	{
+	Optional() noexcept {
 	}
-	template<typename ParamT,
+	template<typename vOtherT,
 		std::enable_if_t<
-			!std::is_base_of<Optional, std::decay_t<ParamT>>::value,
+			!std::is_base_of<Optional, std::decay_t<vOtherT>>::value,
 			int> = 0>
-	Optional(ParamT &&vOther)
-		: x_vData(std::move(vOther))
-	{
+	Optional(vOtherT &&vOther){
+		Reset(std::move(vOther))
 	}
 	Optional(std::exception_ptr pException) noexcept
 		: x_vData(std::move(pException))
@@ -81,15 +79,16 @@ public:
 	}
 
 	Optional &Reset() noexcept {
-		x_vData.Clear();
+		x_vData.Reset();
 		return *this;
 	}
-	Optional &Reset(ElementT vElement){
-		x_vData.template Set<0>(std::move(vElement));
+	template<typename ElementT>
+	Optional &Reset(ElementT &&vElement){
+		x_vData.template Reset<0>(std::forward<ElementT>(vElement));
 		return *this;
 	}
 	Optional &Reset(std::exception_ptr pException) noexcept {
-		x_vData.template Set<1>(std::move(pException));
+		x_vData.template Reset<1>(std::move(pException));
 		return *this;
 	}
 
@@ -97,6 +96,74 @@ public:
 	explicit operator bool() const noexcept {
 		return IsSet();
 	}
+};
+
+template<typename ElementT>
+class Optional<ElementT &> {
+private:
+	Variant<ElementT *, std::exception_ptr> x_vData;
+
+public:
+	Optional() noexcept {
+	}
+	Optional(ElementT &vElement) noexcept {
+		Reset(vElement);
+	}
+	Optional(std::exception_ptr pException) noexcept {
+		Reset(std::move(pException));
+	}
+
+public:
+	bool IsSet() const noexcept {
+		return x_vData.GetActiveIndex() >= 0;
+	}
+	bool IsElementSet() const noexcept {
+		return x_vData.GetActiveIndex() == 0;
+	}
+	bool IsExceptionSet() const noexcept {
+		return x_vData.GetActiveIndex() == 1;
+	}
+
+	ElementT &Get() const {
+		const auto pException = x_vData.template Get<1>();
+		if(pException){
+			std::rethrow_exception(*pException);
+		}
+		return *x_vData.template Get<0>();
+	}
+	ElementT &Require() const {
+		return Get();
+	}
+	std::exception_ptr GetException() const noexcept {
+		const auto pException = x_vData.template Get<1>();
+		if(!pException){
+			return { };
+		}
+		return *pException;
+	}
+
+	Optional &Reset() noexcept {
+		x_vData.Reset();
+		return *this;
+	}
+	Optional &Reset(ElementT &vElement) noexcept {
+		x_vData.template Reset<0>(AddressOf(vElement));
+		return *this;
+	}
+	Optional &Reset(std::exception_ptr pException) noexcept {
+		x_vData.template Reset<1>(std::move(pException));
+		return *this;
+	}
+
+public:
+	explicit operator bool() const noexcept {
+		return IsSet();
+	}
+};
+
+template<typename ElementT>
+class Optional<ElementT &&> {
+	static_assert((sizeof(ElementT *), false), "Class template ElementT instantiated with an rvalue reference type parameter.");
 };
 
 }

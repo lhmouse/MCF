@@ -21,6 +21,7 @@ public:
 		: x_pObject(AddressOf(vObject))
 	{
 	}
+	RefWrapper(ObjectT &&vObject) noexcept = delete;
 
 public:
 	constexpr ObjectT &Get() const noexcept {

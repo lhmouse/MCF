@@ -21,7 +21,7 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 // 7.26.1 Introduction
-#if !defined(__cplusplus) || (__cplusplus < 201103l)
+#if !defined(__cplusplus)
 #	define thread_local        _Thread_local
 #endif
 
@@ -34,10 +34,8 @@ typedef int (*thrd_start_t)(void *);
 
 // Condition variable
 typedef struct __MCFCRT_tagC11threadConditionVariable {
-	union {
-		_MCFCRT_STD uintptr_t __details[4]; // Placeholder for implementation-specific details.
-		_MCFCRT_ConditionVariable __cond;
-	};
+	_MCFCRT_ConditionVariable __cond;
+	_MCFCRT_STD uintptr_t __reserved[3];
 } cnd_t;
 
 // Mutex
@@ -45,10 +43,8 @@ typedef struct __MCFCRT_tagC11threadMutex {
 	int __mask;
 	volatile thrd_t __owner;
 	_MCFCRT_STD size_t __count;
-	union {
-		_MCFCRT_STD uintptr_t __details[4]; // Placeholder for implementation-specific details.
-		_MCFCRT_Mutex __mutex;
-	};
+	_MCFCRT_Mutex __mutex;
+	_MCFCRT_STD uintptr_t __reserved[3];
 } mtx_t;
 
 // Thread specific storage
@@ -58,8 +54,8 @@ typedef void (*tss_dtor_t)(void *);
 // Call once
 // Note: This union conforms to the Itanium ABI.
 typedef union __MCFCRT_tagC11threadOnceFlag {
-	_MCFCRT_STD uint64_t __details[1]; // Placeholder for implementation-specific details.
 	unsigned char __disposed;
+	_MCFCRT_STD uint64_t __iabi_placeholder;
 	_MCFCRT_OnceFlag __once;
 } once_flag;
 

@@ -57,9 +57,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTrans
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
-	if(!_MCFCRT_WaitForConditionVariable(&(__cond_c->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c,
-		_MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT, __mono_timeout_ms))
-	{
+	if(!_MCFCRT_WaitForConditionVariable(&(__cond_c->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 		return thrd_timedout;
 	}
 	return thrd_success;

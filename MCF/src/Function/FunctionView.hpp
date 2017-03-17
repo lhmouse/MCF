@@ -6,13 +6,13 @@
 #define MCF_FUNCTION_FUNCTION_VIEW_HPP_
 
 #include "Invoke.hpp"
-#include "rTupleManipulation.hpp"
+#include "TupleManipulation.hpp"
 #include <type_traits>
 #include <utility>
 #include <tuple>
 
 namespace MCF {
-
+/*
 template<typename PrototypeT>
 class FunctionView {
 	static_assert((sizeof(PrototypeT *), false), "Class template FunctionView instantiated with a non-function template type parameter.");
@@ -91,7 +91,7 @@ public:
 		vSelf.Swap(vOther);
 	}
 };
-
+*/
 }
 
 #endif

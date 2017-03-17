@@ -36,16 +36,15 @@ struct StreamBuffer::X_ChunkHeader {
 };
 
 StreamBuffer::StreamBuffer(const StreamBuffer &vOther){
-	const auto uSize = vOther.GetSize();
-	const auto pChunk = X_ChunkHeader::Create(uSize, nullptr, nullptr, false);
-	for(auto pSource = vOther.x_pFirst; pSource; pSource = pSource->pNext){
-		const auto uBytesAvail = pSource->uEnd - pSource->uBegin;
-		std::memcpy(pChunk->abyData + pChunk->uEnd, pSource->abyData + pSource->uBegin, uBytesAvail);
-		pChunk->uEnd += uBytesAvail;
+	const auto pNewChunk = X_ChunkHeader::Create(vOther.x_uSize, nullptr, nullptr, false);
+	for(auto pChunk = vOther.x_pFirst; pChunk; pChunk = pChunk->pNext){
+		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
+		std::memcpy(pNewChunk->abyData + pNewChunk->uEnd, pChunk->abyData + pChunk->uBegin, uBytesAvail);
+		pNewChunk->uEnd += uBytesAvail;
 	}
-	x_pLast  = pChunk;
-	x_pFirst = pChunk;
-	x_uSize  = uSize;
+	x_pLast  = pNewChunk;
+	x_pFirst = pNewChunk;
+	x_uSize  = vOther.x_uSize;
 }
 StreamBuffer::~StreamBuffer(){
 	Clear();
@@ -254,6 +253,28 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	std::memcpy(pChunk->abyData + pChunk->uEnd, pData, uSize);
 	pChunk->uEnd += uSize;
 	x_uSize += uSize;
+}
+
+void *StreamBuffer::Squash(){
+	auto pChunk = x_pFirst;
+	if(!pChunk){
+		return nullptr;
+	}
+	if(pChunk != x_pLast){
+		const auto pNewChunk = X_ChunkHeader::Create(x_uSize, nullptr, nullptr, false);
+		while(pChunk){
+			const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
+			std::memcpy(pNewChunk->abyData + pNewChunk->uEnd, pChunk->abyData + pChunk->uBegin, uBytesAvail);
+			pNewChunk->uEnd += uBytesAvail;
+			const auto pNext = pChunk->pNext;
+			X_ChunkHeader::Destroy(pChunk);
+			pChunk = pNext;
+		}
+		x_pLast  = pNewChunk;
+		x_pFirst = pNewChunk;
+		pChunk = pNewChunk;
+	}
+	return pChunk->abyData + pChunk->uBegin;
 }
 
 StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){

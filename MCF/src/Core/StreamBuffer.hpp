@@ -68,6 +68,8 @@ public:
 	void Put(unsigned char byData, std::size_t uSize);
 	void Put(const void *pData, std::size_t uSize);
 
+	void *Squash();
+
 	StreamBuffer CutOff(std::size_t uOffsetEnd);
 	void Splice(StreamBuffer &vOther) noexcept;
 	void Splice(StreamBuffer &&vOther) noexcept {

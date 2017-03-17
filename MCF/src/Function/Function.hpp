@@ -5,8 +5,10 @@
 #ifndef MCF_FUNCTION_FUNCTION_HPP_
 #define MCF_FUNCTION_FUNCTION_HPP_
 
+#include "../SmartPointers/UniquePtr.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
-#include "Invoke.hpp"
+#include "../Core/DeclVal.hpp"
+#include "../Core/AddressOf.hpp"
 #include "TupleManipulation.hpp"
 #include <type_traits>
 #include <utility>
@@ -19,35 +21,37 @@ class Function {
 	static_assert((sizeof(PrototypeT *), false), "Class template Function instantiated with a non-function template type parameter.");
 };
 
-template<typename RetT, typename ...ParamsT>
-class Function<RetT (ParamsT ...)> : public IntrusiveBase<Function<RetT (ParamsT ...)>> {
+template<typename ReturnT, typename ...ParamsT>
+class Function<ReturnT (ParamsT ...)> : public IntrusiveBase<Function<ReturnT (ParamsT ...)>> {
 protected:
-	using X_ReturnType      = RetT;
+	using X_ReturnType      = ReturnT;
 	using X_ForwardedParams = std::tuple<ParamsT &&...>;
 
-protected:
+public:
 	constexpr Function() noexcept {
 	}
-
-public:
 	virtual ~Function();
 
 protected:
-	virtual RetT X_Forward(X_ForwardedParams &&tupParams) const = 0;
+	virtual X_ReturnType X_Forward(X_ForwardedParams &&tupParams) const = 0;
 
 public:
-	X_ReturnType operator()(ParamsT ...vParams) const {
+	ReturnT operator()(ParamsT ...vParams) const {
 		return X_Forward(std::forward_as_tuple(std::forward<ParamsT>(vParams)...));
 	}
 };
 
-template<typename RetT, typename ...ParamsT>
-Function<RetT (ParamsT ...)>::~Function(){
+template<typename ReturnT, typename ...ParamsT>
+Function<ReturnT (ParamsT ...)>::~Function(){
 }
 
 namespace Impl_Function {
 	template<typename PrototypeT, typename FunctionT>
-	class ConcreteFunction : public Function<PrototypeT> {
+	class ConcreteFunction final : public Function<PrototypeT> {
+	protected:
+		using X_ReturnType      = typename Function<PrototypeT>::X_ReturnType;
+		using X_ForwardedParams = typename Function<PrototypeT>::X_ForwardedParams;
+
 	private:
 		std::decay_t<FunctionT> x_vFunction;
 
@@ -56,11 +60,11 @@ namespace Impl_Function {
 			: x_vFunction(std::forward<FunctionT>(vFunction))
 		{
 		}
-		~ConcreteFunction();
+		~ConcreteFunction() override;
 
 	protected:
-		typename Function<PrototypeT>::X_ReturnType X_Forward(typename Function<PrototypeT>::X_ForwardedParams &&tupParams) const override {
-			return Squeeze(x_vFunction, std::move(tupParams));
+		X_ReturnType X_Forward(X_ForwardedParams &&tupParams) const override {
+			return DesignatedSqueeze<X_ReturnType>(x_vFunction, std::move(tupParams));
 		}
 	};
 
@@ -70,7 +74,11 @@ namespace Impl_Function {
 }
 
 template<typename PrototypeT, typename FunctionT>
-IntrusivePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeFunction(FunctionT &&vFunction){
+UniquePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeUniqueFunction(FunctionT &&vFunction){
+	return MakeUnique<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>>(vFunction);
+}
+template<typename PrototypeT, typename FunctionT>
+IntrusivePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeIntrusiveFunction(FunctionT &&vFunction){
 	return MakeIntrusive<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>>(vFunction);
 }
 

@@ -89,7 +89,7 @@ public:
 
 namespace Impl_Thread {
 	template<typename FunctionT>
-	class ConcreteThread : public Thread {
+	class ConcreteThread final : public Thread {
 	private:
 		std::decay_t<FunctionT> x_vFunction;
 

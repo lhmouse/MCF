@@ -1,10 +1,13 @@
+#include <MCF/Function/Function.hpp>
+#include <MCF/Function/FunctionView.hpp>
 #include <cstdio>
-#include <cmath>
-#include <cfloat>
 
-volatile double a = __builtin_nan("0xaaaa"), b = __builtin_nan("0xbbbb");
+using namespace MCF;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	std::printf("r = %f\n", std::hypot(a, b));
+	auto fp = MakeUniqueFunction<long (int)>([](int a){ return std::printf("a = %d\n", a); });
+	auto fv = FunctionView<void (int)>(fp);
+	(*fp)(12345);
+	fv(67890);
 	return 0;
 }

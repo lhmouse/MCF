@@ -14,35 +14,35 @@ namespace MCF {
 namespace Impl_Defer {
 	template<typename CallbackT, typename PredictorT>
 	struct DeferredCallback {
-		std::decay_t<CallbackT> vCallback;
-		std::decay_t<PredictorT> vPredictor;
+		std::decay_t<CallbackT> fnCallback;
+		std::decay_t<PredictorT> fnPredictor;
 
 		~DeferredCallback() noexcept(false) {
-			if(std::forward<PredictorT>(vPredictor)()){
-				std::forward<CallbackT>(vCallback)();
+			if(std::forward<PredictorT>(fnPredictor)()){
+				std::forward<CallbackT>(fnCallback)();
 			}
 		}
 	};
 
 	template<typename CallbackT, typename PredictorT>
-	DeferredCallback<CallbackT, PredictorT> DeferCallback(CallbackT &&vCallback, PredictorT &&vPredictor){
-		return { std::forward<CallbackT>(vCallback), std::forward<PredictorT>(vPredictor) };
+	DeferredCallback<CallbackT, PredictorT> DeferCallback(CallbackT &&fnCallback, PredictorT &&fnPredictor){
+		return { std::forward<CallbackT>(fnCallback), std::forward<PredictorT>(fnPredictor) };
 	}
 }
 
 template<typename CallbackT>
-decltype(auto) Defer(CallbackT &&vCallback){
-	return Impl_Defer::DeferCallback(std::forward<CallbackT>(vCallback),
+decltype(auto) Defer(CallbackT &&fnCallback){
+	return Impl_Defer::DeferCallback(std::forward<CallbackT>(fnCallback),
 		[]{ return true; });
 }
 template<typename CallbackT>
-decltype(auto) DeferOnNormalExit(CallbackT &&vCallback){
-	return Impl_Defer::DeferCallback(std::forward<CallbackT>(vCallback),
+decltype(auto) DeferOnNormalExit(CallbackT &&fnCallback){
+	return Impl_Defer::DeferCallback(std::forward<CallbackT>(fnCallback),
 		[c = std::uncaught_exceptions()]{ return std::uncaught_exceptions() <= c; });
 }
 template<typename CallbackT>
-decltype(auto) DeferOnException(CallbackT &&vCallback){
-	return Impl_Defer::DeferCallback(std::forward<CallbackT>(vCallback),
+decltype(auto) DeferOnException(CallbackT &&fnCallback){
+	return Impl_Defer::DeferCallback(std::forward<CallbackT>(fnCallback),
 		[c = std::uncaught_exceptions()]{ return std::uncaught_exceptions() > c; });
 }
 

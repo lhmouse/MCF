@@ -26,18 +26,11 @@ void Thread::X_Spawn(bool bSuspended){
 			return 0;
 		}
 	};
-
-	Handle hTemp;
-	std::uintptr_t uThreadId;
-	if(!(hTemp = ::_MCFCRT_CreateNativeThread(&Helper::NativeThreadProc, this, true, &uThreadId))){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
-	}
-	x_hThread.Reset(hTemp);
-	x_uThreadId = uThreadId;
-
+	MCF_ASSERT(!x_hThread);
 	AddRef();
-	if(!bSuspended){
-		::_MCFCRT_ResumeThread(x_hThread.Get());
+	if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::NativeThreadProc, this, bSuspended, &x_uThreadId))){
+		DropRef();
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
 	}
 }
 

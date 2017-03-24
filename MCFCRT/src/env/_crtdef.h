@@ -41,7 +41,12 @@
 #	define _MCFCRT_STD                  //
 #endif
 
-#define __MCFCRT_C_CALLBACK_DECL        __attribute__((__nothrow__, __force_align_arg_pointer__, __aligned__(16)))
+#ifdef _WIN64
+#	define __MCFCRT_C_CALLBACK_DECL     __attribute__((__nothrow__, __aligned__(16)))
+#else
+#	define __MCFCRT_C_CALLBACK_DECL     __attribute__((__nothrow__, __force_align_arg_pointer__, __aligned__(8)))
+#endif
+
 #define __MCFCRT_C_CDECL                __attribute__((__cdecl__))    __MCFCRT_C_CALLBACK_DECL
 #define __MCFCRT_C_STDCALL              __attribute__((__stdcall__))  __MCFCRT_C_CALLBACK_DECL
 #define __MCFCRT_C_FASTCALL             __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL

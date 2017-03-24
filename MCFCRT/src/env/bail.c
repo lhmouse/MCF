@@ -94,7 +94,7 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 		eResponse = kHardErrorResponseCancel;
 	}
 	if(eResponse != kHardErrorResponseOk){
-		__debugbreak();
+		DebugBreak();
 	}
 	TerminateProcess(GetCurrentProcess(), 3);
 	__builtin_unreachable();

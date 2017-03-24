@@ -6,9 +6,10 @@
 #define MCF_CONTAINERS_FLAT_MULTI_MAP_HPP_
 
 #include "../Core/_Enumerator.hpp"
+#include "../Core/ArrayView.hpp"
 #include "../Core/DefaultAllocator.hpp"
-#include "../Core/Comparators.hpp"
 #include "../Core/DeclVal.hpp"
+#include "../Function/Comparators.hpp"
 #include "_FlatContainer.hpp"
 #include <utility>
 #include <tuple>

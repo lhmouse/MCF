@@ -12,25 +12,29 @@ Thread::~Thread(){
 }
 
 void Thread::X_Spawn(bool bSuspended){
-	struct Helper {
-		__MCFCRT_C_STDCALL
-		static unsigned long NativeThreadProc(void *pParam){
-			const auto pThis = IntrusivePtr<const Thread>(static_cast<const Thread *>(pParam));
-
-			__MCFCRT_SEH_TOP_BEGIN
-			{
-				pThis->X_ThreadProc();
-			}
-			__MCFCRT_SEH_TOP_END
-
-			return 0;
-		}
-	};
 	MCF_ASSERT(!x_hThread);
 	AddRef();
-	if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::NativeThreadProc, this, bSuspended, &x_uThreadId))){
+	try {
+		struct Helper {
+			__MCFCRT_C_STDCALL
+			static unsigned long NativeThreadProc(void *pParam){
+				const auto pThis = IntrusivePtr<const Thread>(static_cast<const Thread *>(pParam));
+
+				__MCFCRT_SEH_TOP_BEGIN
+				{
+					pThis->X_ThreadProc();
+				}
+				__MCFCRT_SEH_TOP_END
+
+				return 0;
+			}
+		};
+		if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::NativeThreadProc, this, bSuspended, &x_uThreadId))){
+			MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
+		}
+	} catch(...){
 		DropRef();
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
+		throw;
 	}
 }
 

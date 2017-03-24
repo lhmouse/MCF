@@ -24,7 +24,7 @@ public:
 			!std::is_base_of<Optional, std::decay_t<vOtherT>>::value,
 			int> = 0>
 	Optional(vOtherT &&vOther){
-		Reset(std::move(vOther))
+		Reset(std::move(vOther));
 	}
 	Optional(std::exception_ptr pException) noexcept
 		: x_vData(std::move(pException))
@@ -82,9 +82,9 @@ public:
 		x_vData.Reset();
 		return *this;
 	}
-	template<typename ElementT>
-	Optional &Reset(ElementT &&vElement){
-		x_vData.template Reset<0>(std::forward<ElementT>(vElement));
+	template<typename vOtherT>
+	Optional &Reset(vOtherT &&vOther){
+		x_vData.template Reset<0>(std::forward<vOtherT>(vOther));
 		return *this;
 	}
 	Optional &Reset(std::exception_ptr pException) noexcept {

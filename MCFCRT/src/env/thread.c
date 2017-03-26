@@ -14,6 +14,12 @@
 #include <winternl.h>
 #include <ntdef.h>
 
+#undef GetCurrentProcess
+#define GetCurrentProcess()  ((HANDLE)-1)
+
+#undef GetCurrentThread
+#define GetCurrentThread()   ((HANDLE)-2)
+
 __attribute__((__dllimport__, __stdcall__))
 NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended,
 	ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, void *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);

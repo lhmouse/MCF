@@ -9,6 +9,12 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
+#undef GetCurrentProcess
+#define GetCurrentProcess()  ((HANDLE)-1)
+
+#undef GetCurrentThread
+#define GetCurrentThread()   ((HANDLE)-2)
+
 typedef enum tagHardErrorResponseOption {
 	kHardErrorAbortRetryIgnore,
 	kHardErrorOk,

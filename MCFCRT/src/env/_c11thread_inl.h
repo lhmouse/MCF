@@ -14,7 +14,9 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+//-----------------------------------------------------------------------------
 // 7.26.2 Initialization functions
+//-----------------------------------------------------------------------------
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_call_once(once_flag *__once_c, void (*__func)(void)) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(&(__once_c->__once));
 	if(_MCFCRT_EXPECT(__result == _MCFCRT_kOnceResultFinished)){
@@ -25,7 +27,9 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_call_once(once_flag *__once_c,
 	_MCFCRT_SignalOnceFlagAsFinished(&(__once_c->__once));
 }
 
+//-----------------------------------------------------------------------------
 // 7.26.3 Condition variable functions
+//-----------------------------------------------------------------------------
 extern _MCFCRT_STD intptr_t __MCFCRT_C11threadUnlockCallback(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_C11threadRelockCallback(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT;
 
@@ -77,7 +81,9 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_broadcast(cnd_t *__cond_c) 
 	return thrd_success;
 }
 
+//-----------------------------------------------------------------------------
 // 7.26.4 Mutex functions
+//-----------------------------------------------------------------------------
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_init(mtx_t *__mutex_c, int __mask) _MCFCRT_NOEXCEPT {
 	__mutex_c->__mask  = __mask;
 	__mutex_c->__owner = 0;
@@ -158,7 +164,9 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _M
 	return thrd_success;
 }
 
+//-----------------------------------------------------------------------------
 // 7.26.5 Thread functions
+//-----------------------------------------------------------------------------
 typedef struct __MCFCRT_tagC11threadControlBlock {
 	int (*__proc)(void *);
 	void *__param;
@@ -249,7 +257,9 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_thrd_yield(void) _MCFCRT_NOEXC
 	_MCFCRT_YieldThread();
 }
 
+//-----------------------------------------------------------------------------
 // 7.26.6 Thread-specific storage functions
+//-----------------------------------------------------------------------------
 extern void __MCFCRT_C11threadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT {

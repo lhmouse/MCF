@@ -20,7 +20,9 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+//-----------------------------------------------------------------------------
 // 7.26.1 Introduction
+//-----------------------------------------------------------------------------
 #if !defined(__cplusplus)
 #	define thread_local        _Thread_local
 #endif
@@ -73,11 +75,15 @@ enum {
 	thrd_nomem    = ENOMEM,
 };
 
+//-----------------------------------------------------------------------------
 // 7.26.2 Initialization functions
+//-----------------------------------------------------------------------------
 extern void __MCFCRT_call_once(once_flag *__once_c, void (*__func)(void)) _MCFCRT_NOEXCEPT;
 #define call_once __MCFCRT_call_once
 
+//-----------------------------------------------------------------------------
 // 7.26.3 Condition variable functions
+//-----------------------------------------------------------------------------
 extern int __MCFCRT_cnd_init(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
 #define cnd_init __MCFCRT_cnd_init
 extern void __MCFCRT_cnd_destroy(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
@@ -92,7 +98,9 @@ extern int __MCFCRT_cnd_signal(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
 extern int __MCFCRT_cnd_broadcast(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
 #define cnd_broadcast __MCFCRT_cnd_broadcast
 
+//-----------------------------------------------------------------------------
 // 7.26.4 Mutex functions
+//-----------------------------------------------------------------------------
 extern int __MCFCRT_mtx_init(mtx_t *__mutex_c, int __mask) _MCFCRT_NOEXCEPT;
 #define mtx_init __MCFCRT_mtx_init
 extern void __MCFCRT_mtx_destroy(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
@@ -107,7 +115,9 @@ extern int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
 extern int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
 #define mtx_unlock __MCFCRT_mtx_unlock
 
+//-----------------------------------------------------------------------------
 // 7.26.5 Thread functions
+//-----------------------------------------------------------------------------
 extern int __MCFCRT_thrd_create(thrd_t *__tid_ret, thrd_start_t __proc, void *__param) _MCFCRT_NOEXCEPT;
 #define thrd_create __MCFCRT_thrd_create
 __attribute__((__noreturn__))
@@ -129,7 +139,9 @@ extern int __MCFCRT_thrd_sleep(const struct timespec *__duration, struct timespe
 extern void __MCFCRT_thrd_yield(void) _MCFCRT_NOEXCEPT;
 #define thrd_yield __MCFCRT_thrd_yield
 
+//-----------------------------------------------------------------------------
 // 7.26.6 Thread-specific storage functions
+//-----------------------------------------------------------------------------
 extern int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT;
 #define tss_create __MCFCRT_tss_create
 extern void __MCFCRT_tss_delete(tss_t __key) _MCFCRT_NOEXCEPT;

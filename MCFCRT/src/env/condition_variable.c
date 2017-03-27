@@ -15,7 +15,7 @@ extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-__attribute__((__dllimport__, __stdcall__))
+__attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
 #define MASK_WAITING            ((uintptr_t) 0x0001)

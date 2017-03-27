@@ -15,7 +15,7 @@ extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-__attribute__((__dllimport__, __stdcall__))
+__attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
 // 第一个字节保留给 Itanium ABI 用于标记是否已初始化。

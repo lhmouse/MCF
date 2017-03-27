@@ -15,6 +15,7 @@
 #include "clocks.h"
 
 #include <time.h> // struct timespec
+#include <errno.h>
 
 #ifdef __GTHREADS
 #	error __GTHREADS is already defined. (Thread model confliction detected?)
@@ -37,6 +38,7 @@ extern int __MCFCRT_gthread_key_create(__gthread_key_t *__key_ret, void (*__dest
 #define __gthread_key_create __MCFCRT_gthread_key_create
 extern int __MCFCRT_gthread_key_delete(__gthread_key_t __key) _MCFCRT_NOEXCEPT;
 #define __gthread_key_delete __MCFCRT_gthread_key_delete
+
 extern void *__MCFCRT_gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEPT;
 #define __gthread_getspecific __MCFCRT_gthread_getspecific
 extern int __MCFCRT_gthread_setspecific(__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT;

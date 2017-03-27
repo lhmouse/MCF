@@ -146,6 +146,7 @@ extern int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCR
 #define tss_create __MCFCRT_tss_create
 extern void __MCFCRT_tss_delete(tss_t __key) _MCFCRT_NOEXCEPT;
 #define tss_delete __MCFCRT_tss_delete
+
 extern void *__MCFCRT_tss_get(tss_t __key) _MCFCRT_NOEXCEPT;
 #define tss_get __MCFCRT_tss_get
 extern int __MCFCRT_tss_set(tss_t __key, void *__value) _MCFCRT_NOEXCEPT;

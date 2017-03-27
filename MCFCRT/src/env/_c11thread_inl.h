@@ -273,6 +273,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_tss_create(tss_t *__key_ret, ts
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_tss_delete(tss_t __key) _MCFCRT_NOEXCEPT {
 	_MCFCRT_TlsFreeKey(__key);
 }
+
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void *__MCFCRT_tss_get(tss_t __key) _MCFCRT_NOEXCEPT {
 	void *__storage;
 	const bool __success = _MCFCRT_TlsGet(__key, &__storage);

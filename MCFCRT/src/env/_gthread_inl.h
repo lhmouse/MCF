@@ -9,7 +9,6 @@
 #	error Do not use this header directly.
 #endif
 
-#include <errno.h>
 #include "../ext/assert.h"
 #include "../ext/expect.h"
 
@@ -32,6 +31,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_key_delete(__gthread_key_
 	_MCFCRT_TlsFreeKey(__key);
 	return 0;
 }
+
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN void *__MCFCRT_gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEPT {
 	void *__storage;
 	const bool __success = _MCFCRT_TlsGet(__key, &__storage);

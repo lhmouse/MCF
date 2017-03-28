@@ -19,35 +19,35 @@ void __MCFCRT_C11threadTlsDestructor(intptr_t context, void *storage){
 }
 
 intptr_t __MCFCRT_C11threadUnlockCallback(intptr_t context){
-	mtx_t *const mutex_c = (mtx_t *)context;
+	mtx_t *const mutex = (mtx_t *)context;
 
-	if(mutex_c->__mask & mtx_recursive){
-		_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(mutex_c->__owner), __ATOMIC_RELAXED));
+	if(mutex->__mask & mtx_recursive){
+		_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(mutex->__owner), __ATOMIC_RELAXED));
 
-		const size_t old_count = mutex_c->__count;
-		mutex_c->__count = 0;
-		__atomic_store_n(&(mutex_c->__owner), 0, __ATOMIC_RELAXED);
+		const size_t old_count = mutex->__count;
+		mutex->__count = 0;
+		__atomic_store_n(&(mutex->__owner), 0, __ATOMIC_RELAXED);
 
-		_MCFCRT_SignalMutex(&(mutex_c->__mutex));
+		_MCFCRT_SignalMutex(&(mutex->__mutex));
 		return (intptr_t)old_count;
 	} else {
-		_MCFCRT_SignalMutex(&(mutex_c->__mutex));
+		_MCFCRT_SignalMutex(&(mutex->__mutex));
 		return 1;
 	}
 }
 void __MCFCRT_C11threadRelockCallback(intptr_t context, intptr_t unlocked){
-	mtx_t *const mutex_c = (mtx_t *)context;
+	mtx_t *const mutex = (mtx_t *)context;
 
-	if(mutex_c->__mask & mtx_recursive){
+	if(mutex->__mask & mtx_recursive){
 		_MCFCRT_ASSERT((size_t)unlocked >= 1);
-		_MCFCRT_WaitForMutexForever(&(mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		_MCFCRT_WaitForMutexForever(&(mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 
 		const uintptr_t self = _MCFCRT_GetCurrentThreadId();
-		__atomic_store_n(&(mutex_c->__owner), self, __ATOMIC_RELAXED);
-		mutex_c->__count = (size_t)unlocked;
+		__atomic_store_n(&(mutex->__owner), self, __ATOMIC_RELAXED);
+		mutex->__count = (size_t)unlocked;
 	} else {
 		_MCFCRT_ASSERT((size_t)unlocked == 1);
-		_MCFCRT_WaitForMutexForever(&(mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		_MCFCRT_WaitForMutexForever(&(mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	}
 }
 

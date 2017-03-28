@@ -78,41 +78,41 @@ enum {
 //-----------------------------------------------------------------------------
 // 7.26.2 Initialization functions
 //-----------------------------------------------------------------------------
-extern void __MCFCRT_call_once(once_flag *__once_c, void (*__func)(void)) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_call_once(once_flag *__once, void (*__func)(void)) _MCFCRT_NOEXCEPT;
 #define call_once __MCFCRT_call_once
 
 //-----------------------------------------------------------------------------
 // 7.26.3 Condition variable functions
 //-----------------------------------------------------------------------------
-extern int __MCFCRT_cnd_init(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_init(cnd_t *__cond) _MCFCRT_NOEXCEPT;
 #define cnd_init __MCFCRT_cnd_init
-extern void __MCFCRT_cnd_destroy(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_cnd_destroy(cnd_t *__cond) _MCFCRT_NOEXCEPT;
 #define cnd_destroy __MCFCRT_cnd_destroy
 
-extern int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond, mtx_t *_MCFCRT_RESTRICT __mutex, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define cnd_timedwait __MCFCRT_cnd_timedwait
-extern int __MCFCRT_cnd_wait(cnd_t *_MCFCRT_RESTRICT __cond_c, mtx_t *_MCFCRT_RESTRICT __mutex_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_wait(cnd_t *_MCFCRT_RESTRICT __cond, mtx_t *_MCFCRT_RESTRICT __mutex) _MCFCRT_NOEXCEPT;
 #define cnd_wait __MCFCRT_cnd_wait
-extern int __MCFCRT_cnd_signal(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_signal(cnd_t *__cond) _MCFCRT_NOEXCEPT;
 #define cnd_signal __MCFCRT_cnd_signal
-extern int __MCFCRT_cnd_broadcast(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_cnd_broadcast(cnd_t *__cond) _MCFCRT_NOEXCEPT;
 #define cnd_broadcast __MCFCRT_cnd_broadcast
 
 //-----------------------------------------------------------------------------
 // 7.26.4 Mutex functions
 //-----------------------------------------------------------------------------
-extern int __MCFCRT_mtx_init(mtx_t *__mutex_c, int __mask) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_mtx_init(mtx_t *__mutex, int __mask) _MCFCRT_NOEXCEPT;
 #define mtx_init __MCFCRT_mtx_init
-extern void __MCFCRT_mtx_destroy(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_mtx_destroy(mtx_t *__mutex) _MCFCRT_NOEXCEPT;
 #define mtx_destroy __MCFCRT_mtx_destroy
 
-extern int __MCFCRT_mtx_lock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_mtx_lock(mtx_t *__mutex) _MCFCRT_NOEXCEPT;
 #define mtx_lock __MCFCRT_mtx_lock
-extern int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RESTRICT __mutex_c, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RESTRICT __mutex, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT;
 #define mtx_timedlock __MCFCRT_mtx_timedlock
-extern int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_mtx_trylock(mtx_t *__mutex) _MCFCRT_NOEXCEPT;
 #define mtx_trylock __MCFCRT_mtx_trylock
-extern int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+extern int __MCFCRT_mtx_unlock(mtx_t *__mutex) _MCFCRT_NOEXCEPT;
 #define mtx_unlock __MCFCRT_mtx_unlock
 
 //-----------------------------------------------------------------------------

@@ -193,14 +193,12 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_join(thrd_t __tid, int *__
 	}
 	if(__exit_code_ret){
 		__MCFCRT_C11threadControlBlock __control;
-		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, &__control);
-		if(__error != __MCFCRT_kMopthreadSuccess){
+		if(!__MCFCRT_MopthreadJoin(__tid, &__control)){
 			return thrd_error; // XXX: ESRCH
 		}
 		*__exit_code_ret = __control.__exit_code;
 	} else {
-		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, _MCFCRT_NULLPTR);
-		if(__error != __MCFCRT_kMopthreadSuccess){
+		if(!__MCFCRT_MopthreadJoin(__tid, _MCFCRT_NULLPTR)){
 			return thrd_error; // XXX: ESRCH
 		}
 	}
@@ -210,8 +208,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_detach(thrd_t __tid) _MCFC
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return thrd_error; // XXX: EDEADLK
 	}
-	const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadDetach(__tid);
-	if(__error != __MCFCRT_kMopthreadSuccess){
+	if(!__MCFCRT_MopthreadDetach(__tid)){
 		return thrd_error; // XXX: ESRCH
 	}
 	return thrd_success;

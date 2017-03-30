@@ -9,7 +9,7 @@
 #include "env/heap.h"
 #include "env/heap_dbg.h"
 #include "pre/module.h"
-#include "env/thread.h"
+#include "env/tls.h"
 #include "env/crt_module.h"
 
 __MCFCRT_C_STDCALL
@@ -45,7 +45,7 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 			if(!bRet){
 				goto jCleanup03;
 			}
-			bRet = __MCFCRT_ThreadEnvInit();
+			bRet = __MCFCRT_TlsInit();
 			if(!bRet){
 				goto jCleanup04;
 			}
@@ -64,7 +64,7 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 		if(s_bInitialized){
 			s_bInitialized = false;
 			__MCFCRT_TlsCleanup();
-			__MCFCRT_ThreadEnvUninit();
+			__MCFCRT_TlsUninit();
 	jCleanup04:
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_DiscardCrtModuleQuickExitCallbacks();

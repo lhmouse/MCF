@@ -54,6 +54,7 @@ pkginclude_env_HEADERS = \
 	src/env/_gthread_inl.h	\
 	src/env/_seh_top.h	\
 	src/env/_nt_timeout.h	\
+	src/env/_mopthread.h	\
 	src/env/argv.h	\
 	src/env/avl_tree.h	\
 	src/env/bail.h	\
@@ -70,7 +71,8 @@ pkginclude_env_HEADERS = \
 	src/env/once_flag.h	\
 	src/env/standard_streams.h	\
 	src/env/thread.h	\
-	src/env/crt_module.h
+	src/env/crt_module.h	\
+	src/env/tls.h
 
 pkginclude_extdir = ${pkgincludedir}/ext
 pkginclude_ext_HEADERS = \
@@ -122,6 +124,7 @@ mcfcrt_sources = \
 	src/env/_fpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\
+	src/env/_mopthread.c	\
 	src/env/argv.c	\
 	src/env/avl_tree.c	\
 	src/env/bail.c	\
@@ -138,6 +141,7 @@ mcfcrt_sources = \
 	src/env/standard_streams.c	\
 	src/env/thread.c	\
 	src/env/crt_module.c	\
+	src/env/tls.c	\
 	src/stdc/math/acos.c	\
 	src/stdc/math/asin.c	\
 	src/stdc/math/atan.c	\

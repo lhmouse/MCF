@@ -27,16 +27,6 @@ void __MCFCRT_TlsUninit(void){
 	_MCFCRT_ASSERT(bSucceeded);
 }
 
-#define CALLBACKS_PER_BLOCK   64u
-
-typedef struct tagAtExitCallbackBlock {
-	size_t uSize;
-	struct {
-		_MCFCRT_AtThreadExitCallback pfnProc;
-		intptr_t nContext;
-	} aCallbacks[CALLBACKS_PER_BLOCK];
-} AtExitCallbackBlock;
-
 typedef struct tagTlsObject TlsObject;
 typedef struct tagTlsThread TlsThread;
 typedef struct tagTlsKey    TlsKey;
@@ -301,6 +291,16 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	*ppStorage = pObject->abyStorage;
 	return true;
 }
+
+#define CALLBACKS_PER_BLOCK   64u
+
+typedef struct tagAtExitCallbackBlock {
+	size_t uSize;
+	struct {
+		_MCFCRT_AtThreadExitCallback pfnProc;
+		intptr_t nContext;
+	} aCallbacks[CALLBACKS_PER_BLOCK];
+} AtExitCallbackBlock;
 
 static unsigned long CrtAtThreadExitConstructor(intptr_t nUnused, void *pStorage){
 	(void)nUnused;

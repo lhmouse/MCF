@@ -10,7 +10,7 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
-static inline void *_MCFCRT_inline_mempcpyfwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void *_MCFCRT_inline_mempcpy_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	void *__p1 = __s1;
 	const void *__p2 = __s2;
 	_MCFCRT_STD size_t __unused;
@@ -37,7 +37,7 @@ static inline void *_MCFCRT_inline_mempcpyfwd(void *__s1, const void *__s2, _MCF
 }
 
 __attribute__((__always_inline__))
-static inline void *_MCFCRT_inline_mempset(void *__s, int __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void *_MCFCRT_inline_mempset_fwd(void *__s, int __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	void *__p = __s;
 	_MCFCRT_STD uintptr_t __word = __c & 0xFF;
 	__word += __word <<  8;

@@ -139,9 +139,9 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 	pControl->pfnProc       = pfnProc;
 	pControl->uSizeOfParams = uSizeOfParams;
 	if(pParams){
-		_MCFCRT_inline_mempcpyfwd(pControl->abyParams, pParams, uSizeOfParams);
+		_MCFCRT_inline_mempcpy_fwd(pControl->abyParams, pParams, uSizeOfParams);
 	} else {
-		_MCFCRT_inline_mempset(pControl->abyParams, 0, uSizeOfParams);
+		_MCFCRT_inline_mempset_fwd(pControl->abyParams, 0, uSizeOfParams);
 	}
 	if(bJoinable){
 		pControl->eState = kStateJoinable;
@@ -202,7 +202,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				} while(pControl->eState != kStateJoined);
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
-					_MCFCRT_inline_mempcpyfwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
+					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
 				DropControlRef(pControl);
 				bSuccess = true;
@@ -211,7 +211,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				pControl->eState = kStateJoined;
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
-					_MCFCRT_inline_mempcpyfwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
+					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
 				DropControlRef(pControl);
 				bSuccess = true;

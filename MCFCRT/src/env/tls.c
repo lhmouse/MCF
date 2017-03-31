@@ -140,9 +140,9 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 			return _MCFCRT_NULLPTR;
 		}
 #ifndef NDEBUG
-		_MCFCRT_inline_mempset(pObject, 0xAA, sizeof(TlsObject));
+		_MCFCRT_inline_mempset_fwd(pObject, 0xAA, sizeof(TlsObject));
 #endif
-		_MCFCRT_inline_mempset(pObject->abyStorage, 0, uSize);
+		_MCFCRT_inline_mempset_fwd(pObject->abyStorage, 0, uSize);
 
 		if(pfnConstructor){
 			const DWORD dwErrorCode = (*pfnConstructor)(nContext, pObject->abyStorage);

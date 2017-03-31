@@ -6,6 +6,7 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
+#include "inline_mem.h"
 
 static_assert(sizeof (wchar_t) == sizeof (char16_t), "What?");
 static_assert(alignof(wchar_t) == alignof(char16_t), "What?");
@@ -148,7 +149,7 @@ static inline DWORD ReserveMore(Stream *restrict pStream, size_t uSize){
 		}
 		const size_t uOldCapacity = (size_t)(pchStorageEnd - pchStorageBegin);
 		if(uMinNewCapacity <= uOldCapacity){
-			__builtin_memmove(pchStorageBegin, pchDataBegin, uOldSize);
+			_MCFCRT_inline_mempcpyfwd(pchStorageBegin, pchDataBegin, uOldSize);
 
 			pchDataBegin = pchStorageBegin;
 			pchDataEnd   = pchDataBegin + uOldSize;
@@ -167,7 +168,7 @@ static inline DWORD ReserveMore(Stream *restrict pStream, size_t uSize){
 				return ERROR_NOT_ENOUGH_MEMORY;
 			}
 			if(pchStorageBegin){
-				__builtin_memcpy(pchNewStorage, pchDataBegin, uOldSize);
+				_MCFCRT_inline_mempcpyfwd(pchNewStorage, pchDataBegin, uOldSize);
 				HeapFree(GetProcessHeap(), 0, pchStorageBegin);
 			}
 
@@ -503,7 +504,7 @@ size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
 				uBytesCopied = MinSize(uSize, GetSize(&g_vStdIn));
-				__builtin_memcpy(pData, pbyRead, uBytesCopied);
+				_MCFCRT_inline_mempcpyfwd(pData, pbyRead, uBytesCopied);
 				pbyRead += uBytesCopied;
 			}
 		}
@@ -572,7 +573,7 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
 				uBytesCopied = MinSize(uSize, GetSize(&g_vStdIn));
-				__builtin_memcpy(pData, pbyRead, uBytesCopied);
+				_MCFCRT_inline_mempcpyfwd(pData, pbyRead, uBytesCopied);
 				pbyRead += uBytesCopied;
 				Discard(&g_vStdIn, uBytesCopied);
 			}
@@ -1150,7 +1151,7 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *restrict pData, size_t uSize)
 				}
 				unsigned char *const pbyWriteBegin = GetReservedData(&g_vStdOut);
 				unsigned char *pbyWrite = pbyWriteBegin;
-				__builtin_memcpy(pbyWrite, pData, uSize);
+				_MCFCRT_inline_mempcpyfwd(pbyWrite, pData, uSize);
 				pbyWrite += uSize;
 				Adopt(&g_vStdOut, (size_t)(pbyWrite - pbyWriteBegin));
 				bSuccess = true;
@@ -1429,7 +1430,7 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
 				}
 				unsigned char *const pbyWriteBegin = GetReservedData(&g_vStdErr);
 				unsigned char *pbyWrite = pbyWriteBegin;
-				__builtin_memcpy(pbyWrite, pData, uSize);
+				_MCFCRT_inline_mempcpyfwd(pbyWrite, pData, uSize);
 				pbyWrite += uSize;
 				Adopt(&g_vStdErr, (size_t)(pbyWrite - pbyWriteBegin));
 				bSuccess = true;

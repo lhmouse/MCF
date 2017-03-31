@@ -1,6 +1,7 @@
 #include <MCFCRT/env/_mopthread.h>
 #include <MCFCRT/env/thread.h>
 #include <MCFCRT/env/clocks.h>
+#include <MCFCRT/env/heap.h>
 #include <cstdio>
 
 static void thread_proc(void *param) noexcept {

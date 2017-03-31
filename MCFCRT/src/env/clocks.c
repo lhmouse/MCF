@@ -9,36 +9,34 @@
 static uint64_t GetTimeZoneOffsetInMillisecondsOnce(void){
 	static uint64_t s_u64Value, *volatile s_pu64Inited;
 
-	uint64_t *pInited = __atomic_load_n(&s_pu64Inited, __ATOMIC_CONSUME);
-	if(!pInited){
-		pInited = &s_u64Value;
-
+	uint64_t *pu64Inited = __atomic_load_n(&s_pu64Inited, __ATOMIC_CONSUME);
+	if(!pu64Inited){
 		TIME_ZONE_INFORMATION vTzInfo;
 		if(GetTimeZoneInformation(&vTzInfo) == TIME_ZONE_ID_INVALID){
 			_MCFCRT_Bail(L"GetTimeZoneInformation() 失败。");
 		}
 		const uint64_t u64Value = (uint64_t)(vTzInfo.Bias * -60000ll);
-
-		pInited = __builtin_memcpy(&s_u64Value, &u64Value, sizeof(u64Value));
-		__atomic_store_n(&s_pu64Inited, pInited, __ATOMIC_RELEASE);
+		pu64Inited = &s_u64Value;
+		__atomic_store(pu64Inited, &u64Value, __ATOMIC_RELAXED);
+		__atomic_store_n(&s_pu64Inited, pu64Inited, __ATOMIC_RELEASE);
 	}
-	return *pInited;
+	return *pu64Inited;
 }
 static double QueryPerformanceFrequencyReciprocalOnce(void){
 	static double s_lfValue, *volatile s_plfInited;
 
-	double *pInited = __atomic_load_n(&s_plfInited, __ATOMIC_CONSUME);
-	if(!pInited){
+	double *plfInited = __atomic_load_n(&s_plfInited, __ATOMIC_CONSUME);
+	if(!plfInited){
 		LARGE_INTEGER liFreq;
 		if(!QueryPerformanceFrequency(&liFreq)){
 			_MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
 		}
 		const double lfValue = 1000.0 / (double)liFreq.QuadPart;
-
-		pInited = __builtin_memcpy(&s_lfValue, &lfValue, sizeof(lfValue));
-		__atomic_store_n(&s_plfInited, pInited, __ATOMIC_RELEASE);
+		plfInited = &s_lfValue;
+		__atomic_store(plfInited, &lfValue, __ATOMIC_RELAXED);
+		__atomic_store_n(&s_plfInited, plfInited, __ATOMIC_RELEASE);
 	}
-	return *pInited;
+	return *plfInited;
 }
 
 uint64_t _MCFCRT_GetUtcClock(void){

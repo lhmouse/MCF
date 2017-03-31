@@ -8,6 +8,7 @@
 #include "mutex.h"
 #include "mcfwin.h"
 #include "bail.h"
+#include "inline_mem.h"
 
 static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
@@ -59,7 +60,7 @@ void *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAd
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 				if(!bFillsWithZero){
-					__builtin_memset(pbyRet, 0xCD, uSize);
+					_MCFCRT_inline_mempset(pbyRet, 0xCD, uSize);
 				}
 #endif
 			}
@@ -140,7 +141,7 @@ void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, cons
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 				if(!bFillsWithZero && (uOriginalSize < uSize)){
-					__builtin_memset(pbyRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
+					_MCFCRT_inline_mempset(pbyRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
 				}
 #endif
 			}
@@ -179,7 +180,7 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pbyRetAddr){
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-		__builtin_memset(pbyRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pbyRaw));
+		_MCFCRT_inline_mempset(pbyRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pbyRaw));
 #endif
 		HeapFree(GetProcessHeap(), 0, pbyRaw);
 	}

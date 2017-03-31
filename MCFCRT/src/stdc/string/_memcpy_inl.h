@@ -13,14 +13,14 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_CopyBytewiseForward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void *__MCFCRT_mempcpy_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	register char *__wp = (char *)__s1;
 	char *const __wend = __wp + __n;
 	register const char *__rp = (const char *)__s2;
 	if((size_t)(__wend - __wp) >= 256){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wp == __wend){
-				return;
+				return __wend;
 			}
 			*(volatile char *)(__wp++) = *(__rp++);
 		}
@@ -68,16 +68,17 @@ static inline void __MCFCRT_CopyBytewiseForward(void *__s1, const void *__s2, _M
 		}
 	}
 	_MCFCRT_rep_movsb(__wp, __rp, (size_t)(__wend - __wp));
+	return __wend;
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_CopyBytewiseBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void *__MCFCRT_mempcpy_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	char *const __wbegin = (char *)__s1;
 	register char *__wp = __wbegin + __n;
 	register const char *__rp = (const char *)__s2 + __n;
 	if((size_t)(__wp - __wbegin) >= 256){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wbegin == __wp){
-				return;
+				return __wbegin;
 			}
 			*(volatile char *)(--__wp) = *(--__rp);
 		}
@@ -127,6 +128,7 @@ static inline void __MCFCRT_CopyBytewiseBackward(void *__s1, const void *__s2, _
 	while(__wbegin != __wp){
 		*(volatile char *)(--__wp) = *(--__rp);
 	}
+	return __wbegin;
 }
 
 _MCFCRT_EXTERN_C_END

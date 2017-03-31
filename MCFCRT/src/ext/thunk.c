@@ -8,6 +8,7 @@
 #include "../env/mutex.h"
 #include "../env/bail.h"
 #include "../env/heap.h"
+#include "../env/inline_mem.h"
 #include "assert.h"
 
 typedef struct tagThunkInfo {
@@ -156,8 +157,8 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 		DWORD dwOldProtect;
 		VirtualProtect(pbyRaw, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-		__builtin_memcpy(pbyRaw, pInit, uSize);
-		__builtin_memset(pbyRaw + uSize, 0xCC, uThunkSize - uSize);
+		_MCFCRT_inline_mempcpyfwd(pbyRaw, pInit, uSize);
+		_MCFCRT_inline_mempset(pbyRaw + uSize, 0xCC, uThunkSize - uSize);
 		VirtualProtect(pbyRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 	_MCFCRT_SignalMutex(&g_vThunkMutex);
@@ -184,7 +185,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 			DWORD dwOldProtect;
 			VirtualProtect(pbyRaw, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-			__builtin_memset(pbyRaw, 0xCC, pInfo->uThunkSize);
+			_MCFCRT_inline_mempset(pbyRaw, 0xCC, pInfo->uThunkSize);
 			VirtualProtect(pbyRaw, pInfo->uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 		}
 

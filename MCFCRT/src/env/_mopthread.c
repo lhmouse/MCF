@@ -9,6 +9,7 @@
 #include "heap.h"
 #include "_seh_top.h"
 #include "condition_variable.h"
+#include "inline_mem.h"
 
 #undef GetCurrentProcess
 #define GetCurrentProcess()  ((HANDLE)-1)
@@ -138,9 +139,9 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 	pControl->pfnProc       = pfnProc;
 	pControl->uSizeOfParams = uSizeOfParams;
 	if(pParams){
-		__builtin_memcpy(pControl->abyParams, pParams, uSizeOfParams);
+		_MCFCRT_inline_mempcpyfwd(pControl->abyParams, pParams, uSizeOfParams);
 	} else {
-		__builtin_memset(pControl->abyParams, 0, uSizeOfParams);
+		_MCFCRT_inline_mempset(pControl->abyParams, 0, uSizeOfParams);
 	}
 	if(bJoinable){
 		pControl->eState = kStateJoinable;
@@ -201,7 +202,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				} while(pControl->eState != kStateJoined);
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
-					__builtin_memcpy(pParams, pControl->abyParams, pControl->uSizeOfParams);
+					_MCFCRT_inline_mempcpyfwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
 				DropControlRef(pControl);
 				bSuccess = true;
@@ -210,7 +211,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				pControl->eState = kStateJoined;
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
-					__builtin_memcpy(pParams, pControl->abyParams, pControl->uSizeOfParams);
+					_MCFCRT_inline_mempcpyfwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
 				DropControlRef(pControl);
 				bSuccess = true;

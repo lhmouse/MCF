@@ -7,6 +7,7 @@
 #include "avl_tree.h"
 #include "mcfwin.h"
 #include "heap.h"
+#include "inline_mem.h"
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
@@ -139,9 +140,9 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 			return _MCFCRT_NULLPTR;
 		}
 #ifndef NDEBUG
-		__builtin_memset(pObject, 0xAA, sizeof(TlsObject));
+		_MCFCRT_inline_mempset(pObject, 0xAA, sizeof(TlsObject));
 #endif
-		__builtin_memset(pObject->abyStorage, 0, uSize);
+		_MCFCRT_inline_mempset(pObject->abyStorage, 0, uSize);
 
 		if(pfnConstructor){
 			const DWORD dwErrorCode = (*pfnConstructor)(nContext, pObject->abyStorage);

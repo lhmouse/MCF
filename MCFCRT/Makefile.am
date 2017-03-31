@@ -38,6 +38,10 @@ noinst_HEADERS = \
 	src/stdc/string/_memcpy_inl.h	\
 	src/pre/_libsupcxx_cleanup.h
 
+pkginclude_HEADERS = \
+	src/gthread.h	\
+	src/c11thread.h
+
 pkginclude_predir = ${pkgincludedir}/pre
 pkginclude_pre_HEADERS = \
 	src/pre/dll.h	\
@@ -55,6 +59,7 @@ pkginclude_env_HEADERS = \
 	src/env/_seh_top.h	\
 	src/env/_nt_timeout.h	\
 	src/env/_mopthread.h	\
+	src/env/inline_mem.h	\
 	src/env/argv.h	\
 	src/env/avl_tree.h	\
 	src/env/bail.h	\

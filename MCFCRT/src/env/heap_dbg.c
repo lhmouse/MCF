@@ -8,6 +8,7 @@
 #include "bail.h"
 #include "standard_streams.h"
 #include "mcfwin.h"
+#include "inline_mem.h"
 
 #define GUARD_BAND_SIZE     0x20u
 
@@ -119,10 +120,8 @@ unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInf
 	void **ppGuard2 = (void **)(pAddress + uSize);
 	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
-		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
-		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
-		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
+		*ppGuard1 = EncodeSystemPointer(ppGuard2);
+		*ppGuard2 = EncodeSystemPointer(ppGuard1);
 		++ppGuard2;
 	}
 
@@ -147,11 +146,7 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 	void **ppGuard2 = (void **)(pAddress + uSize);
 	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
-		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
-		if((__builtin_memcmp(ppGuard1, &pTemp1, sizeof(void *)) != 0) ||
-		   (__builtin_memcmp(ppGuard2, &pTemp2, sizeof(void *)) != 0))
-		{
+		if((DecodeSystemPointer(*ppGuard1) != ppGuard2) || (DecodeSystemPointer(*ppGuard2) != ppGuard1)){
 			wchar_t awchTemp[256];
 			wchar_t *pwcWrite = awchTemp;
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n返回地址：");
@@ -178,10 +173,8 @@ unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 	void **ppGuard2 = (void **)(pAddress + uSize);
 	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
-		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
-		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
-		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
+		*ppGuard1 = EncodeSystemPointer(ppGuard2);
+		*ppGuard2 = EncodeSystemPointer(ppGuard1);
 		++ppGuard2;
 	}
 
@@ -197,11 +190,7 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pA
 	void **ppGuard2 = (void **)(pAddress + uSize);
 	for(size_t i = sizeof(void *); i <= GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
-		void *const pTemp1 = EncodeSystemPointer(ppGuard2);
-		void *const pTemp2 = EncodeSystemPointer(ppGuard1);
-		if((__builtin_memcmp(ppGuard1, &pTemp1, sizeof(void *)) != 0) ||
-		   (__builtin_memcmp(ppGuard2, &pTemp2, sizeof(void *)) != 0))
-		{
+		if((DecodeSystemPointer(*ppGuard1) != ppGuard2) || (DecodeSystemPointer(*ppGuard2) != ppGuard1)){
 			wchar_t awchTemp[256];
 			wchar_t *pwcWrite = awchTemp;
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n返回地址：");

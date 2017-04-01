@@ -10,6 +10,7 @@
 #include "_seh_top.h"
 #include "condition_variable.h"
 #include "inline_mem.h"
+#include "bail.h"
 #include "../ext/expect.h"
 
 #undef GetCurrentProcess
@@ -186,7 +187,9 @@ void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nCon
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
-	_MCFCRT_ASSERT_MSG(pControl,L"Calling thread of __MCFCRT_MopthreadExit() was not created using __MCFCRT_MopthreadCreate().");
+	if(!pControl){
+		_MCFCRT_Bail(L"Calling thread of __MCFCRT_MopthreadExit() was not created using __MCFCRT_MopthreadCreate().");
+	}
 	SignalMutexAndExitThread(&g_mtxControl, pControl, pfnModifier, nContext);
 }
 bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){

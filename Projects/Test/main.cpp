@@ -8,6 +8,7 @@ static void thread_proc(void *param) noexcept {
 	long long n;
 	__builtin_memcpy(&n, param, sizeof(n));
 	std::printf("thread running: n = %lld\n", n);
+	::__MCFCRT_MopthreadExit(nullptr, 0);
 }
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {

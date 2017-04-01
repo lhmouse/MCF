@@ -99,9 +99,12 @@ pkginclude_ext_HEADERS = \
 	src/ext/pp.h	\
 	src/ext/rawmemchr.h	\
 	src/ext/rawwmemchr.h	\
-	src/ext/rep_scas.h	\
 	src/ext/rep_stos.h	\
-	src/ext/rep_movs.h
+	src/ext/repz_scas.h	\
+	src/ext/repnz_scas.h	\
+	src/ext/rep_movs.h	\
+	src/ext/repz_cmps.h	\
+	src/ext/repnz_cmps.h
 
 mcfcrt_pre_sources = \
 	src/pre/module.c	\
@@ -123,9 +126,12 @@ mcfcrt_sources = \
 	src/ext/wcpcpy.c	\
 	src/ext/rawmemchr.c	\
 	src/ext/rawwmemchr.c	\
-	src/ext/rep_scas.c	\
 	src/ext/rep_stos.c	\
+	src/ext/repz_scas.c	\
+	src/ext/repnz_scas.c	\
 	src/ext/rep_movs.c	\
+	src/ext/repz_cmps.c	\
+	src/ext/repnz_cmps.c	\
 	src/env/_fpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\

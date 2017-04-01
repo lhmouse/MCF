@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "atoi.h"
-#include "rep_scas.h"
+#include "repnz_scas.h"
 
 __attribute__((__always_inline__))
 static inline char *Really_atoi_u(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer, unsigned uMaxDigits, uintptr_t uBound, const char *pchDualTable, unsigned uRadix){
@@ -14,7 +14,7 @@ static inline char *Really_atoi_u(_MCFCRT_atoi_result *peResult, uintptr_t *puVa
 	while(uDigitsRead + 1 <= uMaxDigits){
 		const char chDigit = pchBuffer[uDigitsRead];
 		// Search for this digit in the table. Handle lower and upper cases universally.
-		const char *const pchDigitInTable = _MCFCRT_rep_scasb(pchDualTable, (uint8_t)chDigit, uRadix * 2);
+		const char *const pchDigitInTable = _MCFCRT_repnz_scasb(pchDualTable, (uint8_t)chDigit, uRadix * 2);
 		if(!pchDigitInTable){
 			break;
 		}

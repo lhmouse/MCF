@@ -1,22 +1,16 @@
-#include <MCFCRT/env/_mopthread.h>
-#include <MCFCRT/env/thread.h>
-#include <MCFCRT/env/clocks.h>
-#include <MCFCRT/env/heap.h>
+#include <MCFCRT/ext/repz_cmps.h>
+#include <MCFCRT/ext/repnz_cmps.h>
 #include <cstdio>
+#include <cstring>
 
-static void thread_proc(void *param) noexcept {
-	long long n;
-	__builtin_memcpy(&n, param, sizeof(n));
-	std::printf("thread running: n = %lld\n", n);
-	::__MCFCRT_MopthreadExit(nullptr, 0);
-}
+char s1[100], s2[100];
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	long long n = 0x0123456789abcdef;
-	const std::size_t tid = ::__MCFCRT_MopthreadCreateDetached(thread_proc, &n, sizeof(n));
-	std::printf("spawned thread: tid = %zu\n", tid);
-	const auto ph = ::__MCFCRT_MopthreadLockHandle(tid);
-	std::printf("ph = %p\n", (void *)ph);
-	::_MCFCRT_Sleep(::_MCFCRT_GetFastMonoClock() + 1000);
+	std::memset(s1, 2, sizeof(s1));
+	std::memset(s2, 1, sizeof(s2));
+	s2[60] = 2;
+	void *p;
+	int r = ::_MCFCRT_repnz_cmpsb(&p, s1, s2, sizeof(s1));
+	std::printf("p = %p, off = %td, r = %d\n", p, (char *)p - s1, r);
 	return 0;
 }

@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "wtoi.h"
-#include "rep_scas.h"
+#include "repnz_scas.h"
 
 __attribute__((__always_inline__))
 static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits, uintptr_t uBound, const wchar_t *pwcDualTable, unsigned uRadix){
@@ -14,7 +14,7 @@ static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *peResult, uintptr_t *p
 	while(uDigitsRead + 1 <= uMaxDigits){
 		const wchar_t wcDigit = pwcBuffer[uDigitsRead];
 		// Search for this digit in the table. Handle lower and upper cases universally.
-		const wchar_t *const pwcDigitInTable = _MCFCRT_rep_scasw(pwcDualTable, (uint16_t)wcDigit, uRadix * 2);
+		const wchar_t *const pwcDigitInTable = _MCFCRT_repnz_scasw(pwcDualTable, (uint16_t)wcDigit, uRadix * 2);
 		if(!pwcDigitInTable){
 			break;
 		}

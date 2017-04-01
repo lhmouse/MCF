@@ -23,7 +23,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsb(void **_MCFCRT_RESTRI
 		"mov ecx, %k3 \n"
 		"setz cl \n"
 		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){
@@ -41,7 +41,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsw(_MCFCRT_STD uint16_t 
 		"mov ecx, %k3 \n"
 		"setz cl \n"
 		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){
@@ -59,7 +59,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsd(_MCFCRT_STD uint32_t 
 		"mov ecx, %k3 \n"
 		"setz cl \n"
 		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){
@@ -78,7 +78,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsq(_MCFCRT_STD uint64_t 
 		"mov ecx, %k3 \n"
 		"setz cl \n"
 		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){

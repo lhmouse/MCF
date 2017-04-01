@@ -1,17 +1,12 @@
-#include <MCFCRT/ext/repz_scas.h>
-#include <MCFCRT/ext/repnz_scas.h>
-#include <cstdio>
-#include <cstring>
+#include <MCFCRT/env/inline_mem.h>
 
 char s1[100], s2[100];
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	std::memset(s1, 2, sizeof(s1));
-	s1[60] = 1;
-	std::memset(s2, 1, sizeof(s2));
-	//s2[60] = 2;
-	void *p;
-	int r = ::_MCFCRT_repnz_scasb(&p, s1, 1, sizeof(s1));
-	std::printf("p = %p, off = %td, r = %d\n", p, (char *)p - s1, r);
+	void *p = s2;
+	p = _MCFCRT_inline_mempset_fwd(p, 'a', 60);
+	p = _MCFCRT_inline_mempset_fwd(p, 'b', 40);
+	p = s1;
+	p = _MCFCRT_inline_mempcpy_fwd(p, s2, 100);
 	return 0;
 }

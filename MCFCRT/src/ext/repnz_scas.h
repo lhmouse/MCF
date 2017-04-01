@@ -22,7 +22,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasb(void **_MCFCRT_REST
 		"mov ecx, %k2 \n"
 		"setz cl \n"
 		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&r"(__b)
+		: "+D"(__p), "=c"(__z), "=&q"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){
@@ -39,7 +39,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasw(_MCFCRT_STD uint16_
 		"mov ecx, %k2 \n"
 		"setz cl \n"
 		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&r"(__b)
+		: "+D"(__p), "=c"(__z), "=&q"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){
@@ -56,7 +56,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasd(_MCFCRT_STD uint32_
 		"mov ecx, %k2 \n"
 		"setz cl \n"
 		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&r"(__b)
+		: "+D"(__p), "=c"(__z), "=&q"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){
@@ -74,7 +74,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasq(_MCFCRT_STD uint64_
 		"mov ecx, %k2 \n"
 		"setz cl \n"
 		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&r"(__b)
+		: "+D"(__p), "=c"(__z), "=&q"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){

@@ -264,7 +264,7 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 }
 
 const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(uintptr_t uTid){
-	if(uTid == 0){
+	if(_MCFCRT_EXPECT_NOT(uTid == 0)){
 		return _MCFCRT_NULLPTR;
 	}
 
@@ -313,6 +313,7 @@ void __MCFCRT_MopthreadUnlockHandle(const _MCFCRT_ThreadHandle *phThread){
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		MopthreadControl *const pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
+		_MCFCRT_ASSERT(pControl);
 		DropControlRefUnsafe(pControl);
 	}
 	_MCFCRT_SignalMutex(&g_mtxControl);

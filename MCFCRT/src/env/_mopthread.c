@@ -10,6 +10,7 @@
 #include "_seh_top.h"
 #include "condition_variable.h"
 #include "inline_mem.h"
+#include "../ext/expect.h"
 
 #undef GetCurrentProcess
 #define GetCurrentProcess()  ((HANDLE)-1)
@@ -47,7 +48,7 @@ typedef struct tagMopthreadControl {
 	_MCFCRT_AvlNodeHeader avlhTidIndex;
 
 	MopthreadState eState;
-	volatile size_t uRefCount;
+	size_t uRefCount;
 	_MCFCRT_ConditionVariable condTermination;
 
 	uintptr_t uTid;
@@ -72,7 +73,7 @@ static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *l
 
 // The caller must have the global mutex locked!
 static inline void DropControlRefUnsafe(MopthreadControl *pControl){
-	if(__atomic_sub_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED) == 0){
+	if(--(pControl->uRefCount) == 0){
 		_MCFCRT_ASSERT(pControl->eState == kStateJoined);
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 		_MCFCRT_CloseThread(pControl->hThread);
@@ -145,11 +146,11 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 		_MCFCRT_inline_mempset_fwd(pControl->abyParams, 0, uSizeOfParams);
 	}
 	if(bJoinable){
-		pControl->eState = kStateJoinable;
-		__atomic_store_n(&(pControl->uRefCount), 2, __ATOMIC_RELAXED);
+		pControl->eState    = kStateJoinable;
+		pControl->uRefCount = 2;
 	} else {
-		pControl->eState = kStateDetached;
-		__atomic_store_n(&(pControl->uRefCount), 1, __ATOMIC_RELAXED);
+		pControl->eState    = kStateDetached;
+		pControl->uRefCount = 1;
 	}
 	_MCFCRT_InitializeConditionVariable(&(pControl->condTermination));
 
@@ -263,48 +264,56 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 }
 
 const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(uintptr_t uTid){
+	if(uTid == 0){
+		return _MCFCRT_NULLPTR;
+	}
+
+	if(_MCFCRT_EXPECT(uTid == _MCFCRT_GetCurrentThreadId())){
+		// Return a pseudo handle.
+		return &g_hPseudoSelfHandle;
+	}
+
+	// Increment the reference count and return a real handle.
 	const _MCFCRT_ThreadHandle *phThread = _MCFCRT_NULLPTR;
-	if(uTid == _MCFCRT_GetCurrentThreadId()){
-		// This is a pseudo handle.
-		phThread = &g_hPseudoSelfHandle;
-	} else {
-		_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-		{
-			MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
-			if(pControl){
-				switch(pControl->eState){
-				case kStateJoinable:
-				case kStateZombie:
-				case kStateJoining:
-					__atomic_add_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED);
-					phThread = &(pControl->hThread);
-					break;
-				case kStateJoined:
-				case kStateDetached:
-					break;
-				default:
-					_MCFCRT_ASSERT(false);
-				}
+
+	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	{
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		if(pControl){
+			switch(pControl->eState){
+			case kStateJoinable:
+			case kStateZombie:
+			case kStateJoining:
+				_MCFCRT_ASSERT(pControl->uRefCount > 0);
+				++(pControl->uRefCount);
+				phThread = &(pControl->hThread);
+				break;
+			case kStateJoined:
+			case kStateDetached:
+				break;
+			default:
+				_MCFCRT_ASSERT(false);
 			}
 		}
-		_MCFCRT_SignalMutex(&g_mtxControl);
 	}
+	_MCFCRT_SignalMutex(&g_mtxControl);
+
 	return phThread;
 }
 void __MCFCRT_MopthreadUnlockHandle(const _MCFCRT_ThreadHandle *phThread){
-	if(phThread == &g_hPseudoSelfHandle){
-		// Pseudo handles need not be closed.
-	} else {
-		MopthreadControl *const pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
-		if(__atomic_sub_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED) == 0){
-			_MCFCRT_ASSERT(pControl->eState == kStateJoined);
-			_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-			{
-				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
-				_MCFCRT_CloseThread(pControl->hThread);
-				_MCFCRT_free(pControl);
-			}
-			_MCFCRT_SignalMutex(&g_mtxControl);
-		}
+	if(!phThread){
+		return;
 	}
+
+	if(_MCFCRT_EXPECT(phThread == &g_hPseudoSelfHandle)){
+		// Don't close the pseudo handle.
+		return;
+	}
+
+	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	{
+		MopthreadControl *const pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
+		DropControlRefUnsafe(pControl);
+	}
+	_MCFCRT_SignalMutex(&g_mtxControl);
 }

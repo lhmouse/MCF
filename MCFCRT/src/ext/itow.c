@@ -27,7 +27,7 @@ static inline wchar_t *Really_itow_u(wchar_t *restrict pwcBuffer, uintptr_t uVal
 		*(pwcTempEnd - uDigitsWritten) = wcDigit;
 	}
 	// Copy it to the correct location.
-	return _MCFCRT_rep_movsw(pwcBuffer, pwcTempEnd - uDigitsWritten, uDigitsWritten);
+	return (wchar_t *)_MCFCRT_rep_movsw((uint16_t *)pwcBuffer, (const uint16_t *)pwcTempEnd - uDigitsWritten, uDigitsWritten);
 }
 
 wchar_t *_MCFCRT_itow_d(wchar_t *pwcBuffer, intptr_t nValue){

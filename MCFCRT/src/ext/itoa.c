@@ -27,7 +27,7 @@ static inline char *Really_itoa_u(char *restrict pchBuffer, uintptr_t uValue, un
 		*(pchTempEnd - uDigitsWritten) = chDigit;
 	}
 	// Copy it to the correct location.
-	return _MCFCRT_rep_movsb(pchBuffer, pchTempEnd - uDigitsWritten, uDigitsWritten);
+	return (char *)_MCFCRT_rep_movsb((uint8_t *)pchBuffer, (const uint8_t *)pchTempEnd - uDigitsWritten, uDigitsWritten);
 }
 
 char *_MCFCRT_itoa_d(char *pchBuffer, intptr_t nValue){

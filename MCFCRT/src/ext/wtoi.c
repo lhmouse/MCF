@@ -15,7 +15,7 @@ static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *peResult, uintptr_t *p
 		const wchar_t wcDigit = pwcBuffer[uDigitsRead];
 		// Search for this digit in the table. Handle lower and upper cases universally.
 		uint16_t *pu16DigitInTable;
-		if(_MCFCRT_repnz_scasw(&pu16DigitInTable, pwcDualTable, wcDigit, uRadix * 2) == 0){
+		if(_MCFCRT_repnz_scasw(&pu16DigitInTable, pwcDualTable, wcDigit, uRadix * 2) != 0){
 			break;
 		}
 		const unsigned uDigitValue = (unsigned)((const wchar_t *)pu16DigitInTable - pwcDualTable) / 2;

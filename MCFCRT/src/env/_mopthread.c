@@ -70,7 +70,8 @@ static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *l
 	return MopthreadControlComparatorNodeKey(lhs, (intptr_t)(((const MopthreadControl *)rhs)->uTid));
 }
 
-static inline void DropControlRef(MopthreadControl *pControl){
+// The caller must have the global mutex locked!
+static inline void DropControlRefUnsafe(MopthreadControl *pControl){
 	if(__atomic_sub_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED) == 0){
 		_MCFCRT_ASSERT(pControl->eState == kStateJoined);
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
@@ -105,7 +106,7 @@ static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, Mopt
 	default:
 		_MCFCRT_ASSERT(false);
 	}
-	DropControlRef(pControl);
+	DropControlRefUnsafe(pControl);
 	_MCFCRT_SignalMutex(pMutex);
 
 	ExitThread(0);
@@ -204,7 +205,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				if(pParams){
 					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
-				DropControlRef(pControl);
+				DropControlRefUnsafe(pControl);
 				bSuccess = true;
 				break;
 			case kStateZombie:
@@ -213,7 +214,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				if(pParams){
 					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
 				}
-				DropControlRef(pControl);
+				DropControlRefUnsafe(pControl);
 				bSuccess = true;
 				break;
 			case kStateJoining:
@@ -239,12 +240,12 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 			switch(pControl->eState){
 			case kStateJoinable:
 				pControl->eState = kStateDetached;
-				DropControlRef(pControl);
+				DropControlRefUnsafe(pControl);
 				bSuccess = true;
 				break;
 			case kStateZombie:
 				pControl->eState = kStateJoined;
-				DropControlRef(pControl);
+				DropControlRefUnsafe(pControl);
 				bSuccess = true;
 				break;
 			case kStateJoining:
@@ -261,44 +262,32 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 	return bSuccess;
 }
 
-static const _MCFCRT_ThreadHandle *GetAttachedThreadAndLockRealHandle(uintptr_t uTid){
-	const _MCFCRT_ThreadHandle *phThread = _MCFCRT_NULLPTR;
-
-	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
-		if(pControl){
-			switch(pControl->eState){
-			case kStateJoinable:
-			case kStateZombie:
-			case kStateJoining:
-				__atomic_add_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED);
-				phThread = &(pControl->hThread);
-				break;
-			case kStateJoined:
-			case kStateDetached:
-				break;
-			default:
-				_MCFCRT_ASSERT(false);
-			}
-		}
-	}
-	_MCFCRT_SignalMutex(&g_mtxControl);
-
-	return phThread;
-}
-static void UnlockRealHandle(const _MCFCRT_ThreadHandle *phThread){
-	MopthreadControl *const pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
-	DropControlRef(pControl);
-}
-
 const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(uintptr_t uTid){
-	const _MCFCRT_ThreadHandle *phThread;
+	const _MCFCRT_ThreadHandle *phThread = _MCFCRT_NULLPTR;
 	if(uTid == _MCFCRT_GetCurrentThreadId()){
 		// This is a pseudo handle.
 		phThread = &g_hPseudoSelfHandle;
 	} else {
-		phThread = GetAttachedThreadAndLockRealHandle(uTid);
+		_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		{
+			MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+			if(pControl){
+				switch(pControl->eState){
+				case kStateJoinable:
+				case kStateZombie:
+				case kStateJoining:
+					__atomic_add_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED);
+					phThread = &(pControl->hThread);
+					break;
+				case kStateJoined:
+				case kStateDetached:
+					break;
+				default:
+					_MCFCRT_ASSERT(false);
+				}
+			}
+		}
+		_MCFCRT_SignalMutex(&g_mtxControl);
 	}
 	return phThread;
 }
@@ -306,6 +295,16 @@ void __MCFCRT_MopthreadUnlockHandle(const _MCFCRT_ThreadHandle *phThread){
 	if(phThread == &g_hPseudoSelfHandle){
 		// Pseudo handles need not be closed.
 	} else {
-		UnlockRealHandle(phThread);
+		MopthreadControl *const pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
+		if(__atomic_sub_fetch(&(pControl->uRefCount), 1, __ATOMIC_RELAXED) == 0){
+			_MCFCRT_ASSERT(pControl->eState == kStateJoined);
+			_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+			{
+				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
+				_MCFCRT_CloseThread(pControl->hThread);
+				_MCFCRT_free(pControl);
+			}
+			_MCFCRT_SignalMutex(&g_mtxControl);
+		}
 	}
 }

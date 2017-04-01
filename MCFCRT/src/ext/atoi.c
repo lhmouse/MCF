@@ -14,11 +14,11 @@ static inline char *Really_atoi_u(_MCFCRT_atoi_result *peResult, uintptr_t *puVa
 	while(uDigitsRead + 1 <= uMaxDigits){
 		const char chDigit = pchBuffer[uDigitsRead];
 		// Search for this digit in the table. Handle lower and upper cases universally.
-		const char *const pchDigitInTable = _MCFCRT_repnz_scasb(pchDualTable, (uint8_t)chDigit, uRadix * 2);
-		if(!pchDigitInTable){
+		void *pDigitInTable;
+		if(_MCFCRT_repnz_scasb(&pDigitInTable, pchDualTable, chDigit, uRadix * 2) != 0){
 			break;
 		}
-		const unsigned uDigitValue = (unsigned)(pchDigitInTable - pchDualTable) / 2;
+		const unsigned uDigitValue = (unsigned)((const char *)pDigitInTable - pchDualTable) / 2;
 		// Check for overflows.
 		const uintptr_t uThisBound = (uBound - uDigitValue) / uRadix;
 		if(uWord > uThisBound){

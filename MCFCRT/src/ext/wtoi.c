@@ -14,11 +14,11 @@ static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *peResult, uintptr_t *p
 	while(uDigitsRead + 1 <= uMaxDigits){
 		const wchar_t wcDigit = pwcBuffer[uDigitsRead];
 		// Search for this digit in the table. Handle lower and upper cases universally.
-		const wchar_t *const pwcDigitInTable = _MCFCRT_repnz_scasw(pwcDualTable, (uint16_t)wcDigit, uRadix * 2);
-		if(!pwcDigitInTable){
+		uint16_t *pu16DigitInTable;
+		if(_MCFCRT_repnz_scasw(&pu16DigitInTable, pwcDualTable, wcDigit, uRadix * 2) == 0){
 			break;
 		}
-		const unsigned uDigitValue = (unsigned)(pwcDigitInTable - pwcDualTable) / 2;
+		const unsigned uDigitValue = (unsigned)((const wchar_t *)pu16DigitInTable - pwcDualTable) / 2;
 		// Check for overflows.
 		const uintptr_t uThisBound = (uBound - uDigitValue) / uRadix;
 		if(uWord > uThisBound){

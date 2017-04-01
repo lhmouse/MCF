@@ -13,98 +13,78 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsb(void **_MCFCRT_RESTRICT __eptr, const void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	int __r;
+__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsb(void **_MCFCRT_RESTRICT __es1, const void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	int __z, __b;
 	const _MCFCRT_STD uint8_t *__p1 = (const _MCFCRT_STD uint8_t *)__s1;
 	const _MCFCRT_STD uint8_t *__p2 = (const _MCFCRT_STD uint8_t *)__s2;
-	_MCFCRT_STD size_t __unused;
 	__asm__ (
 		"xor %3, %3 \n"
 		"repnz cmpsb \n"
 		"mov ecx, %k3 \n"
-		"setnz %b3 \n"
-		"setb cl \n"
-		"dec ecx \n"
-		"or ecx, 1 \n"
-		"neg %k3 \n"
-		"and %k3, ecx \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__unused), "=&q"(__r)
+		"setz cl \n"
+		"setb %b3 \n"
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
-	if(__eptr){
-		*__eptr = (_MCFCRT_STD uint8_t *)(__p1 - (__r == 0));
+	if(__es1){
+		*__es1 = (_MCFCRT_STD uint8_t *)(__p1 - __z);
 	}
-	return __r;
+	return (__z - 1) & ((__b - 1) | 1);
 }
-__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsw(_MCFCRT_STD uint16_t **_MCFCRT_RESTRICT __eptr, const _MCFCRT_STD uint16_t *__s1, const _MCFCRT_STD uint16_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	int __r;
+__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsw(_MCFCRT_STD uint16_t **_MCFCRT_RESTRICT __es1, const _MCFCRT_STD uint16_t *__s1, const _MCFCRT_STD uint16_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	int __z, __b;
 	const _MCFCRT_STD uint16_t *__p1 = __s1;
 	const _MCFCRT_STD uint16_t *__p2 = __s2;
-	_MCFCRT_STD size_t __unused;
 	__asm__ (
 		"xor %3, %3 \n"
 		"repnz cmpsw \n"
 		"mov ecx, %k3 \n"
-		"setnz %b3 \n"
-		"setb cl \n"
-		"dec ecx \n"
-		"or ecx, 1 \n"
-		"neg %k3 \n"
-		"and %k3, ecx \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__unused), "=&q"(__r)
+		"setz cl \n"
+		"setb %b3 \n"
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
-	if(__eptr){
-		*__eptr = (_MCFCRT_STD uint16_t *)(__p1 - (__r == 0));
+	if(__es1){
+		*__es1 = (_MCFCRT_STD uint16_t *)(__p1 - __z);
 	}
-	return __r;
+	return (__z - 1) & ((__b - 1) | 1);
 }
-__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsd(_MCFCRT_STD uint32_t **_MCFCRT_RESTRICT __eptr, const _MCFCRT_STD uint32_t *__s1, const _MCFCRT_STD uint32_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	int __r;
+__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsd(_MCFCRT_STD uint32_t **_MCFCRT_RESTRICT __es1, const _MCFCRT_STD uint32_t *__s1, const _MCFCRT_STD uint32_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	int __z, __b;
 	const _MCFCRT_STD uint32_t *__p1 = __s1;
 	const _MCFCRT_STD uint32_t *__p2 = __s2;
-	_MCFCRT_STD size_t __unused;
 	__asm__ (
 		"xor %3, %3 \n"
 		"repnz cmpsd \n"
 		"mov ecx, %k3 \n"
-		"setnz %b3 \n"
-		"setb cl \n"
-		"dec ecx \n"
-		"or ecx, 1 \n"
-		"neg %k3 \n"
-		"and %k3, ecx \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__unused), "=&q"(__r)
+		"setz cl \n"
+		"setb %b3 \n"
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
-	if(__eptr){
-		*__eptr = (_MCFCRT_STD uint32_t *)(__p1 - (__r == 0));
+	if(__es1){
+		*__es1 = (_MCFCRT_STD uint32_t *)(__p1 - __z);
 	}
-	return __r;
+	return (__z - 1) & ((__b - 1) | 1);
 }
 #ifdef _WIN64
-__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsq(_MCFCRT_STD uint64_t **_MCFCRT_RESTRICT __eptr, const _MCFCRT_STD uint64_t *__s1, const _MCFCRT_STD uint64_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	int __r;
+__MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsq(_MCFCRT_STD uint64_t **_MCFCRT_RESTRICT __es1, const _MCFCRT_STD uint64_t *__s1, const _MCFCRT_STD uint64_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	int __z, __b;
 	const _MCFCRT_STD uint64_t *__p1 = __s1;
 	const _MCFCRT_STD uint64_t *__p2 = __s2;
-	_MCFCRT_STD size_t __unused;
 	__asm__ (
 		"xor %3, %3 \n"
 		"repnz cmpsq \n"
 		"mov ecx, %k3 \n"
-		"setnz %b3 \n"
-		"setb cl \n"
-		"dec ecx \n"
-		"or ecx, 1 \n"
-		"neg %k3 \n"
-		"and %k3, ecx \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__unused), "=&q"(__r)
+		"setz cl \n"
+		"setb %b3 \n"
+		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&r"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
-	if(__eptr){
-		*__eptr = (_MCFCRT_STD uint64_t *)(__p1 - (__r == 0));
+	if(__es1){
+		*__es1 = (_MCFCRT_STD uint64_t *)(__p1 - __z);
 	}
-	return __r;
+	return (__z - 1) & ((__b - 1) | 1);
 }
 #endif
 

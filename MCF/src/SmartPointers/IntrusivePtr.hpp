@@ -11,7 +11,6 @@
 #include "../Core/Atomic.hpp"
 #include "../Thread/Mutex.hpp"
 #include "DefaultDeleter.hpp"
-#include "UniquePtr.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -19,13 +18,16 @@
 
 namespace MCF {
 
-template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
+template<typename ObjectT, class DeleterT = DefaultDeleter<std::decay_t<ObjectT>>>
 class IntrusiveBase;
 
-template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
+template<typename ObjectT, class DeleterT = DefaultDeleter<std::decay_t<ObjectT>>>
 class IntrusivePtr;
-template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
+template<typename ObjectT, class DeleterT = DefaultDeleter<std::decay_t<ObjectT>>>
 class IntrusiveWeakPtr;
+
+template<typename ObjectT, class DeleterT>
+class UniquePtr;
 
 namespace Impl_IntrusivePtr {
 	class RefCountBase {
@@ -160,6 +162,10 @@ namespace Impl_IntrusivePtr {
 		virtual ~DeletableBase();
 
 	public: // XXX: private:
+		X_WeakView *X_GetView() const volatile {
+			auto pView = x_pView.Load(kAtomicConsume);
+			return pView;
+		}
 		X_WeakView *X_RequireView() const volatile {
 			auto pView = x_pView.Load(kAtomicConsume);
 			if(!pView){
@@ -273,7 +279,7 @@ private:
 	Element *X_Fork() const noexcept {
 		const auto pElement = x_pElement;
 		if(pElement){
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->AddRef();
+			static_cast<const volatile Impl_IntrusivePtr::DeletableBase<Deleter> *>(pElement)->AddRef();
 		}
 		return pElement;
 	}
@@ -334,7 +340,7 @@ public:
 		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
 #endif
 		if(pElement){
-			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->DropRef()){
+			if(static_cast<const volatile Impl_IntrusivePtr::DeletableBase<Deleter> *>(pElement)->DropRef()){
 				Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
 			}
 		}
@@ -349,21 +355,21 @@ public:
 		if(!pElement){
 			return false;
 		}
-		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->IsUnique();
+		return static_cast<const volatile Impl_IntrusivePtr::DeletableBase<Deleter> *>(pElement)->IsUnique();
 	}
 	std::size_t GetRef() const noexcept {
 		const auto pElement = x_pElement;
 		if(!pElement){
 			return 0;
 		}
-		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->GetRef();
+		return static_cast<const volatile Impl_IntrusivePtr::DeletableBase<Deleter> *>(pElement)->GetRef();
 	}
 	std::size_t GetWeakRef() const noexcept {
 		const auto pElement = x_pElement;
 		if(!pElement){
 			return 0;
 		}
-		const auto pView = pElement->x_pView.Load(kAtomicConsume);
+		const auto pView = static_cast<const volatile Impl_IntrusivePtr::DeletableBase<Deleter> *>(pElement)->X_GetView();
 		if(!pView){
 			return 0;
 		}

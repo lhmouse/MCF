@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "PolyIntrusivePtr.hpp"
+#include "UniquePtr.hpp"
 
 namespace MCF {
 
@@ -13,5 +14,8 @@ namespace Impl_PolyIntrusivePtr {
 	Unknown::~Unknown(){
 	}
 }
+
+template class IntrusivePtr     <Impl_PolyIntrusivePtr::Unknown, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+template class IntrusiveWeakPtr <Impl_PolyIntrusivePtr::Unknown, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
 
 }

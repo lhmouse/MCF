@@ -60,6 +60,9 @@ public:
 	}
 };
 
+extern template class IntrusivePtr     <Impl_PolyIntrusivePtr::Unknown, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+extern template class IntrusiveWeakPtr <Impl_PolyIntrusivePtr::Unknown, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+
 template<typename ObjectT>
 using PolyIntrusivePtr             = IntrusivePtr     <ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
 template<typename ObjectT>

@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
+template<typename ObjectT, class DeleterT = DefaultDeleter<std::decay_t<ObjectT>>>
 class UniquePtr;
 
 template<typename ObjectT, class DeleterT>

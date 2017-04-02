@@ -11,6 +11,8 @@ namespace MCF {
 Thread::~Thread(){
 }
 
+template class IntrusivePtr<Thread>;
+
 void Thread::X_Spawn(bool bSuspended){
 	MCF_ASSERT(!x_hThread);
 	AddRef();

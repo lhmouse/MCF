@@ -87,6 +87,8 @@ public:
 	}
 };
 
+extern template class IntrusivePtr<Thread>;
+
 namespace Impl_Thread {
 	template<typename FunctionT>
 	class ConcreteThread final : public Thread {

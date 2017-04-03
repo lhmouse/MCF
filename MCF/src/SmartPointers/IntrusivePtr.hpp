@@ -154,6 +154,9 @@ public:
 	using Element = std::remove_extent_t<ObjectT>;
 	using Deleter = DeleterT;
 
+private:
+	using X_View = Impl_IntrusivePtr::WeakViewTemplate<std::remove_cv_t<ObjectT>>;
+
 protected:
 	template<typename CvOtherT, typename CvThisT>
 	static IntrusivePtr<CvOtherT> Y_ForkStrong(CvThisT *pThis) noexcept {
@@ -174,7 +177,7 @@ protected:
 	}
 
 private:
-	mutable Atomic<Impl_IntrusivePtr::WeakViewTemplate<ObjectT> *> x_pView;
+	mutable Atomic<X_View *> x_pView;
 
 public:
 	constexpr IntrusiveBase() noexcept
@@ -182,7 +185,7 @@ public:
 		, x_pView(nullptr)
 	{
 	}
-	IntrusiveBase(const IntrusiveBase & /* pOther */) noexcept
+	constexpr IntrusiveBase(const IntrusiveBase & /* pOther */) noexcept
 		: IntrusiveBase()
 	{
 	}
@@ -192,7 +195,7 @@ public:
 	~IntrusiveBase(){
 		const auto pView = x_pView.Load(kAtomicConsume);
 		if(pView){
-			if(pView->RefCountBase::DropRef()){
+			if(pView->Impl_IntrusivePtr::RefCountBase::DropRef()){
 				delete pView;
 			} else {
 				pView->ClearParent();
@@ -201,18 +204,18 @@ public:
 	}
 
 private:
-	Impl_IntrusivePtr::WeakViewTemplate<ObjectT> *X_GetView() const volatile {
+	X_View *X_GetView() const volatile noexcept {
 		auto pView = x_pView.Load(kAtomicConsume);
 		return pView;
 	}
-	Impl_IntrusivePtr::WeakViewTemplate<ObjectT> *X_RequireView() const volatile {
+	X_View *X_RequireView() const volatile {
 		auto pView = x_pView.Load(kAtomicConsume);
 		if(!pView){
 			const auto pObject = Impl_IntrusivePtr::Do_static_cast_or_dynamic_cast<const volatile ObjectT *>(this);
 			if(!pObject){
 				throw std::bad_cast();
 			}
-			const auto pNewView = new Impl_IntrusivePtr::WeakViewTemplate<ObjectT>(const_cast<ObjectT *>(pObject));
+			const auto pNewView = new X_View(const_cast<ObjectT *>(pObject));
 			if(x_pView.CompareExchange(pView, pNewView, kAtomicRelease, kAtomicConsume)){
 				pView = pNewView;
 			} else {
@@ -299,7 +302,7 @@ public:
 		: x_pElement(nullptr)
 	{
 	}
-	explicit IntrusivePtr(Element *pElement) noexcept
+	explicit constexpr IntrusivePtr(Element *pElement) noexcept
 		: x_pElement(pElement)
 	{
 	}
@@ -571,10 +574,10 @@ public:
 	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
 private:
-	Impl_IntrusivePtr::WeakViewTemplate<std::remove_cv_t<Element>> *x_pView;
+	using X_View = typename std::remove_pointer_t<decltype(Impl_IntrusivePtr::LocateIntrusiveBase(std::declval<Element *>()))>::X_View;
 
 private:
-	static Impl_IntrusivePtr::WeakViewTemplate<std::remove_cv_t<Element>> *X_CreateViewFromElement(const volatile Element *pElement){
+	static X_View *X_CreateViewFromElement(const volatile Element *pElement){
 		if(!pElement){
 			return nullptr;
 		}
@@ -582,6 +585,9 @@ private:
 		pView->Impl_IntrusivePtr::RefCountBase::AddRef();
 		return pView;
 	}
+
+private:
+	X_View *x_pView;
 
 public:
 	constexpr IntrusiveWeakPtr(std::nullptr_t = nullptr) noexcept

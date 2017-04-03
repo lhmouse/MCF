@@ -16,9 +16,6 @@ namespace MCF {
 
 template<typename CharT>
 class Rcnts {
-private:
-	struct X_AdoptionTag { };
-
 public:
 	using Char = CharT;
 
@@ -63,10 +60,10 @@ public:
 		Construct(puRef, 1u);
 		const auto pszStr = static_cast<Char *>(std::memcpy(puRef + 1, pchBegin, uSizeToCopy));
 		pszStr[uLength] = Char();
-		return Rcnts(X_AdoptionTag(), puRef, pszStr);
+		return Rcnts(1, puRef, pszStr);
 	}
 	static Rcnts View(const Char *pszBegin) noexcept {
-		return Rcnts(X_AdoptionTag(), nullptr, pszBegin);
+		return Rcnts(1, nullptr, pszBegin);
 	}
 
 private:
@@ -83,22 +80,22 @@ private:
 	}
 
 private:
-	constexpr Rcnts(const X_AdoptionTag &, Atomic<std::size_t> *puRef, const Char *pszStr) noexcept
+	constexpr Rcnts(int, Atomic<std::size_t> *puRef, const Char *pszStr) noexcept
 		: x_puRef(puRef), x_pszStr(pszStr)
 	{
 	}
 
 public:
 	constexpr Rcnts() noexcept
-		: Rcnts(X_AdoptionTag(), nullptr, X_GetNullTerminator())
+		: Rcnts(1, nullptr, X_GetNullTerminator())
 	{
 	}
 	Rcnts(const Rcnts &vOther) noexcept
-		: Rcnts(X_AdoptionTag(), vOther.X_Fork(), vOther.x_pszStr)
+		: Rcnts(1, vOther.X_Fork(), vOther.x_pszStr)
 	{
 	}
 	Rcnts(Rcnts &&vOther) noexcept
-		: Rcnts(X_AdoptionTag(), std::exchange(vOther.x_puRef, nullptr), std::exchange(vOther.x_pszStr, X_GetNullTerminator()))
+		: Rcnts(1, std::exchange(vOther.x_puRef, nullptr), std::exchange(vOther.x_pszStr, X_GetNullTerminator()))
 	{
 	}
 	Rcnts &operator=(const Rcnts &vOther) noexcept {

@@ -46,7 +46,6 @@ pkginclude_Core_HEADERS = \
 	src/Core/CountLeadingTrailingZeroes.hpp	\
 	src/Core/CopyMoveFill.hpp	\
 	src/Core/CountOf.hpp	\
-	src/Core/DeclVal.hpp	\
 	src/Core/DefaultAllocator.hpp	\
 	src/Core/Defer.hpp	\
 	src/Core/DynamicLinkLibrary.hpp	\

@@ -9,7 +9,6 @@
 #include "../Core/_Enumerator.hpp"
 #include "../Core/DefaultAllocator.hpp"
 #include "../Core/Assert.hpp"
-#include "../Core/DeclVal.hpp"
 #include "../Core/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/ArrayView.hpp"
@@ -722,7 +721,7 @@ public:
 
 		return x_pStorage + uOffsetBegin;
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<Vector &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
 		MCF_DEBUG_CHECK(pPos);
 
 		return Erase(pPos, pPos + 1);

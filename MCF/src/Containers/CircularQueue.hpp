@@ -9,7 +9,6 @@
 #include "../Core/DefaultAllocator.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/ConstructDestruct.hpp"
-#include "../Core/DeclVal.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/_CheckedSizeArithmetic.hpp"
 #include <utility>
@@ -1005,7 +1004,7 @@ public:
 
 		return x_pStorage + uOffsetBegin;
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<CircularQueue &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<CircularQueue &>().Erase(pPos, pPos))) {
 		MCF_DEBUG_CHECK(pPos);
 
 		return Erase(pPos, GetNext(pPos));

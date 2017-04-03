@@ -7,7 +7,6 @@
 
 #include "ArrayView.hpp"
 #include "Assert.hpp"
-#include "DeclVal.hpp"
 #include "Exception.hpp"
 #include <utility>
 #include <initializer_list>
@@ -21,7 +20,7 @@ namespace Impl_Array {
 	struct NoexceptSwappableChecker {
 		constexpr bool operator()() const noexcept {
 			using std::swap;
-			return noexcept(swap(DeclVal<ElementT (&)[kSizeT]>(), DeclVal<ElementT (&)[kSizeT]>()));
+			return noexcept(swap(std::declval<ElementT (&)[kSizeT]>(), std::declval<ElementT (&)[kSizeT]>()));
 		}
 	};
 }

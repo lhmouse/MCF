@@ -5,9 +5,6 @@
 #ifndef MCF_FUNCTION_FUNCTION_VIEW_HPP_
 #define MCF_FUNCTION_FUNCTION_VIEW_HPP_
 
-#include "../SmartPointers/UniquePtr.hpp"
-#include "../SmartPointers/IntrusivePtr.hpp"
-#include "../Core/DeclVal.hpp"
 #include "../Core/AddressOf.hpp"
 #include "TupleManipulation.hpp"
 #include <type_traits>
@@ -15,6 +12,12 @@
 #include <tuple>
 
 namespace MCF {
+
+template<typename ObjectT, class DeleterT>
+class UniquePtr;
+
+template<typename ObjectT, class DeleterT>
+class IntrusivePtr;
 
 template<typename PrototypeT>
 class FunctionView {
@@ -54,7 +57,7 @@ public:
 	template<typename FunctionT,
 		std::enable_if_t<
 			!std::is_base_of<FunctionView, std::decay_t<FunctionT>>::value &&
-				(std::is_convertible<decltype(DeclVal<FunctionT>()(DeclVal<ParamsT>()...)), ReturnT>::value || std::is_void<ReturnT>::value),
+				(std::is_convertible<decltype(std::declval<FunctionT>()(std::declval<ParamsT>()...)), ReturnT>::value || std::is_void<ReturnT>::value),
 			int> = 0>
 	FunctionView(FunctionT &vFunction) noexcept
 		: FunctionView(AddressOf(vFunction))

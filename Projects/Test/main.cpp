@@ -2,8 +2,8 @@
 #include <MCF/Streams/StandardOutputStream.hpp>
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	const auto is = MCF::MakeUnique<MCF::StandardInputStream>();
-	const auto os = MCF::MakeUnique<MCF::StandardOutputStream>();
+	const auto is = MCF::MakeIntrusive<MCF::StandardInputStream>();
+	const auto os = MCF::MakeIntrusive<MCF::StandardOutputStream>();
 	char s[100];
 	std::size_t n;
 	while((n = is->Get(s, sizeof(s))) > 0){

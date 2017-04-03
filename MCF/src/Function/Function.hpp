@@ -7,7 +7,6 @@
 
 #include "../SmartPointers/UniquePtr.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
-#include "../Core/DeclVal.hpp"
 #include "../Core/AddressOf.hpp"
 #include "TupleManipulation.hpp"
 #include <type_traits>

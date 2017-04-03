@@ -6,7 +6,6 @@
 #define MCF_CORE_EXCEPTION_HPP_
 
 #include "Rcnts.hpp"
-#include "DeclVal.hpp"
 #include <MCFCRT/env/last_error.h>
 #include <exception>
 #include <utility>
@@ -54,7 +53,7 @@ private:
 
 public:
 	template<typename CodeT, std::enable_if_t<
-		sizeof(static_cast<unsigned long>(DeclVal<const CodeT &>())),
+		sizeof(static_cast<unsigned long>(std::declval<const CodeT &>())),
 		int> = 0>
 	Exception(const CodeT &vCode, Rcntws rcwsErrorMessage) noexcept
 		: x_ulErrorCode(static_cast<unsigned long>(vCode)), x_rcwsErrorMessage(std::move(rcwsErrorMessage))

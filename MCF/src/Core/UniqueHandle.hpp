@@ -6,7 +6,6 @@
 #define MCF_CORE_UNIQUE_HANDLE_HPP_
 
 #include "Assert.hpp"
-#include "DeclVal.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -20,7 +19,7 @@ public:
 	using Closer = CloserT;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-	static_assert(noexcept(Closer()(DeclVal<Handle>())), "Handle closer must not throw exceptions.");
+	static_assert(noexcept(Closer()(std::declval<Handle>())), "Handle closer must not throw exceptions.");
 
 private:
 	Handle x_hObject;

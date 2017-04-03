@@ -8,14 +8,11 @@
 namespace MCF {
 
 namespace Impl_PolyIntrusivePtr {
-	Deletable::~Deletable(){
-	}
-
-	Unknown::~Unknown(){
+	UnknownBase::~UnknownBase(){
 	}
 }
 
-template class IntrusivePtr     <Impl_PolyIntrusivePtr::Unknown, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
-template class IntrusiveWeakPtr <Impl_PolyIntrusivePtr::Unknown, DefaultDeleter<Impl_PolyIntrusivePtr::Deletable>>;
+template class IntrusivePtr     <Impl_PolyIntrusivePtr::UnknownBase>;
+template class IntrusiveWeakPtr <Impl_PolyIntrusivePtr::UnknownBase>;
 
 }

@@ -46,11 +46,11 @@ public:
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&pOther) noexcept
-		: UniquePtr(pOther.Release())
+		: x_pElement(pOther.Release())
 	{
 	}
 	UniquePtr(UniquePtr &&pOther) noexcept
-		: UniquePtr(pOther.Release())
+		: x_pElement(pOther.Release())
 	{
 	}
 	UniquePtr &operator=(UniquePtr &&pOther) noexcept {
@@ -109,28 +109,19 @@ public:
 	}
 
 	template<typename T = ObjectT>
-	constexpr std::enable_if_t<
-		!std::is_void<T>::value && !std::is_array<T>::value,
-		Element> & operator*() const noexcept
-	{
+	constexpr std::enable_if_t<!std::is_void<T>::value && !std::is_array<T>::value, Element> &operator*() const noexcept {
 		MCF_DEBUG_CHECK(!IsNull());
 
 		return *Get();
 	}
 	template<typename T = ObjectT>
-	constexpr std::enable_if_t<
-		!std::is_void<T>::value && !std::is_array<T>::value,
-		Element> * operator->() const noexcept
-	{
+	constexpr std::enable_if_t<!std::is_void<T>::value && !std::is_array<T>::value, Element> *operator->() const noexcept {
 		MCF_DEBUG_CHECK(!IsNull());
 
 		return Get();
 	}
 	template<typename T = ObjectT>
-	constexpr std::enable_if_t<
-		std::is_array<T>::value,
-		Element> & operator[](std::size_t uIndex) const noexcept
-	{
+	constexpr std::enable_if_t<std::is_array<T>::value, Element> &operator[](std::size_t uIndex) const noexcept {
 		MCF_DEBUG_CHECK(!IsNull());
 
 		return Get()[uIndex];

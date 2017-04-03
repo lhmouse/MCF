@@ -8,7 +8,6 @@
 #include "../Core/_Enumerator.hpp"
 #include "../Core/ArrayView.hpp"
 #include "../Core/DefaultAllocator.hpp"
-#include "../Core/DeclVal.hpp"
 #include "../Function/Comparators.hpp"
 #include "_FlatContainer.hpp"
 #include <utility>
@@ -356,10 +355,10 @@ public:
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand, RemainingT &&...vRemaining){
 		return AddWithHint(pPos, Element(std::forward<ComparandT>(vComparand), std::forward<RemainingT>(vRemaining)...)).first;
 	}
-	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<decltype((x_vStorage))>().Erase(pBegin, pEnd))) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<decltype((x_vStorage))>().Erase(pBegin, pEnd))) {
 		return x_vStorage.Erase(pBegin, pEnd);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<decltype((x_vStorage))>().Erase(pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<decltype((x_vStorage))>().Erase(pPos))) {
 		return x_vStorage.Erase(pPos);
 	}
 

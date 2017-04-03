@@ -112,6 +112,9 @@ namespace Impl_IntrusivePtr {
 		{
 		}
 
+		WeakViewTemplate(const WeakViewTemplate &) = delete;
+		WeakViewTemplate &operator=(const WeakViewTemplate &) = delete;
+
 	public:
 		bool IsParentExpired() const noexcept {
 			const auto vLock = x_mtxGuard.GetLock();

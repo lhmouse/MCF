@@ -51,7 +51,7 @@ static inline void *_MCFCRT_inline_mempcpy_fwd(void *__s1, const void *__s2, _MC
 __attribute__((__always_inline__))
 static inline void *_MCFCRT_inline_mempset_fwd(void *__s, int __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint8_t *__p = (_MCFCRT_STD uint8_t *)__s;
-	_MCFCRT_STD uintptr_t __word = (unsigned)__c;
+	_MCFCRT_STD uintptr_t __word = (_MCFCRT_STD uint8_t)__c;
 	_MCFCRT_STD size_t __unused;
 #ifdef _WIN64
 	if(__builtin_constant_p(__n) ? (__n / 8) : true){

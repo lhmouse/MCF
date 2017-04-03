@@ -616,7 +616,7 @@ public:
 	}
 	template<typename OtherObjectT,
 		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusivePtr<OtherObjectT>::Deleter, Deleter>::value,
+			std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(IntrusiveWeakPtr<OtherObjectT> &&pOther) noexcept
 		: x_pView(pOther.X_Release())

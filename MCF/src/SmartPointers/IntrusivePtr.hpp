@@ -649,7 +649,7 @@ public:
 	}
 
 private:
-	Impl_IntrusivePtr::WeakViewTemplate<std::remove_cv_t<Element>> *X_Fork() const noexcept {
+	X_View *X_Fork() const noexcept {
 		const auto pView = x_pView;
 		if(!pView){
 			return nullptr;
@@ -657,7 +657,7 @@ private:
 		pView->Impl_IntrusivePtr::RefCountBase::AddRef();
 		return pView;
 	}
-	Impl_IntrusivePtr::WeakViewTemplate<std::remove_cv_t<Element>> *X_Release() noexcept {
+	X_View *X_Release() noexcept {
 		return std::exchange(x_pView, nullptr);
 	}
 

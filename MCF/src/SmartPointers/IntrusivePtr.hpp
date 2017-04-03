@@ -727,27 +727,27 @@ public:
 
 public:
 	template<typename OtherObjectT>
-	bool operator==(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
+	constexpr bool operator==(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
 		return x_pView == pOther.x_pView;
 	}
 	template<typename OtherObjectT>
-	bool operator!=(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
+	constexpr bool operator!=(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
 		return x_pView != pOther.x_pView;
 	}
 	template<typename OtherObjectT>
-	bool operator<(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
+	constexpr bool operator<(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
 		return x_pView < pOther.x_pView;
 	}
 	template<typename OtherObjectT>
-	bool operator>(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
+	constexpr bool operator>(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
 		return x_pView > pOther.x_pView;
 	}
 	template<typename OtherObjectT>
-	bool operator<=(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
+	constexpr bool operator<=(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
 		return x_pView <= pOther.x_pView;
 	}
 	template<typename OtherObjectT>
-	bool operator>=(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
+	constexpr bool operator>=(const IntrusiveWeakPtr<OtherObjectT> &pOther) const noexcept {
 		return x_pView >= pOther.x_pView;
 	}
 

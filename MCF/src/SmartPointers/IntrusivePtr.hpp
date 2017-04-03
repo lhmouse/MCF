@@ -665,7 +665,7 @@ public:
 	constexpr bool IsEmpty() const noexcept {
 		return !x_pView;
 	}
-	constexpr bool IsExpired() const noexcept {
+	bool IsExpired() const noexcept {
 		const auto pView = x_pView;
 		if(!pView){
 			return true;

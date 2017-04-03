@@ -226,6 +226,12 @@ private:
 	}
 
 public:
+	bool IsUnique() const volatile noexcept {
+		return Impl_IntrusivePtr::RefCountBase::IsUnique();
+	}
+	std::size_t GetRef() const volatile noexcept {
+		return Impl_IntrusivePtr::RefCountBase::GetRef();
+	}
 	void ReserveWeak() const volatile {
 		X_RequireView();
 	}

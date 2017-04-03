@@ -17,7 +17,7 @@ static inline void __MCFCRT_mempcpy_impl_fwd(void *__s1, const void *__s2, _MCFC
 	register char *__wp = (char *)__s1;
 	char *const __wend = __wp + __n;
 	register const char *__rp = (const char *)__s2;
-	if((size_t)(__wend - __wp) >= 256){
+	if(_MCFCRT_EXPECT_NOT((size_t)(__wend - __wp) >= 256)){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wp == __wend){
 				return;
@@ -74,7 +74,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 	char *const __wbegin = (char *)__s1;
 	register char *__wp = __wbegin + __n;
 	register const char *__rp = (const char *)__s2 + __n;
-	if((size_t)(__wp - __wbegin) >= 256){
+	if(_MCFCRT_EXPECT_NOT((size_t)(__wp - __wbegin) >= 256)){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wbegin == __wp){
 				return;

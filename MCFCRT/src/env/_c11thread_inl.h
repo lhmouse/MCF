@@ -42,9 +42,9 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_cnd_destroy(cnd_t *__cond) _MC
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTranslateTimeout(const struct timespec *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
-	const long double __utc_timeout_ms = (long double)__utc_timeout->tv_sec * 1.0e3l + (long double)__utc_timeout->tv_nsec / 1.0e6l;
-	const long double __utc_now_ms = (long double)_MCFCRT_GetUtcClock();
-	const long double __delta_ms = __utc_timeout_ms - __utc_now_ms;
+	const double __utc_timeout_ms = (double)__utc_timeout->tv_sec * 1.0e3 + (double)__utc_timeout->tv_nsec / 1.0e6;
+	const double __utc_now_ms = (double)_MCFCRT_GetUtcClock();
+	const double __delta_ms = __utc_timeout_ms - __utc_now_ms;
 	if(__delta_ms <= 0){
 		return 0;
 	}
@@ -53,10 +53,10 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTrans
 	//      All current implementations, especially clock_gettime() on Linux, are specified as that. This isn't guaranteed behavior nevertheless.
 	const _MCFCRT_STD uint64_t __complement_ms = (1ull << 48) - 1 - __mono_now_ms;
 	// Cast the uint64_t to int64_t for performance reasons. The compiler would otherwise produce more code since unsigned types can't be processed by x87 directly.
-	if(__delta_ms >= (long double)(_MCFCRT_STD int64_t)__complement_ms){
+	if(__delta_ms >= (double)(_MCFCRT_STD int64_t)__complement_ms){
 		return (_MCFCRT_STD uint64_t)-1;
 	}
-	return __mono_now_ms + (_MCFCRT_STD uint64_t)(_MCFCRT_STD int64_t)(__delta_ms + 0.999999l);
+	return __mono_now_ms + (_MCFCRT_STD uint64_t)(_MCFCRT_STD int64_t)(__delta_ms + 0.999999);
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond, mtx_t *_MCFCRT_RESTRICT __mutex, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
@@ -222,11 +222,11 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_equal(thrd_t __tid1, thrd_
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_sleep(const struct timespec *__duration, struct timespec *__remaining) _MCFCRT_NOEXCEPT {
-	const long double __delta_ms = (long double)__duration->tv_sec * 1.0e3l + (long double)__duration->tv_nsec / 1.0e6l;
+	const double __delta_ms = (double)__duration->tv_sec * 1.0e3 + (double)__duration->tv_nsec / 1.0e6;
 	const _MCFCRT_STD uint64_t __mono_begin_ms = _MCFCRT_GetFastMonoClock();
 	const _MCFCRT_STD uint64_t __complement_ms = (1ull << 48) - 1 - __mono_begin_ms;
 	_MCFCRT_STD uint64_t __mono_timeout_ms;
-	if(__delta_ms >= (long double)__complement_ms){
+	if(__delta_ms >= (double)__complement_ms){
 		__mono_timeout_ms = (_MCFCRT_STD uint64_t)-1;
 	} else {
 		__mono_timeout_ms = __mono_begin_ms + (_MCFCRT_STD uint64_t)__delta_ms;
@@ -235,14 +235,14 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_sleep(const struct timespe
 
 	if(__remaining){
 		const _MCFCRT_STD uint64_t __mono_end_ms = _MCFCRT_GetFastMonoClock();
-		const long double __slept_ms = (long double)__mono_end_ms - (long double)__mono_begin_ms;
-		const long double __remaining_s = (__delta_ms - __slept_ms) / 1.0e3l;
+		const double __slept_ms = (double)__mono_end_ms - (double)__mono_begin_ms;
+		const double __remaining_s = (__delta_ms - __slept_ms) / 1.0e3;
 
 		long long __sec = 0;
 		long __nsec = 0;
 		if(__remaining_s > 0){
 			__sec = (long long)__remaining_s;
-			__nsec = (long)((__remaining_s - __sec) * 1.0e9l);
+			__nsec = (long)((__remaining_s - (double)__sec) * 1.0e9);
 		}
 		__remaining->tv_sec  = (time_t)__sec;
 		__remaining->tv_nsec = __nsec;

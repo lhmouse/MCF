@@ -287,7 +287,7 @@ class IntrusivePtr {
 
 public:
 	using Element = std::remove_extent_t<ObjectT>;
-	using Deleter = typename std::decay_t<decltype(*(Impl_IntrusivePtr::LocateIntrusiveBase(std::declval<ObjectT *>())))>::Deleter;
+	using Deleter = typename std::remove_pointer_t<decltype((Impl_IntrusivePtr::LocateIntrusiveBase(std::declval<ObjectT *>())))>::Deleter;
 
 	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 

@@ -73,12 +73,8 @@ namespace Impl_Function {
 }
 
 template<typename PrototypeT, typename FunctionT>
-UniquePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeUniqueFunction(FunctionT &&vFunction){
+UniquePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeFunction(FunctionT &&vFunction){
 	return MakeUnique<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>>(vFunction);
-}
-template<typename PrototypeT, typename FunctionT>
-IntrusivePtr<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>> MakeIntrusiveFunction(FunctionT &&vFunction){
-	return MakeIntrusive<Impl_Function::ConcreteFunction<PrototypeT, FunctionT>>(vFunction);
 }
 
 }

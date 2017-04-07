@@ -22,7 +22,7 @@ CLEANFILES = \
 	__pch.hpp.gch
 
 __pch.h: ${srcdir}/src/env/_crtdef.h
-	echo "#include \"$<\"" > $@
+	echo "#include \"$$(cygpath -m "$<")\"" > $@
 
 __pch.h.gch: __pch.h
 	${CC} -x c-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CFLAGS}" | sed "s/-include __pch\\.h//") ${CFLAGS} $< -o $@

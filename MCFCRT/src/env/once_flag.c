@@ -18,13 +18,16 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
-// 第一个字节保留给 Itanium ABI 用于标记是否已初始化。
+#ifndef __BYTE_ORDER__
+#	error Byte order is unknown.
+#endif
+// The first byte is reserved by Itanium ABI to indicate whether the initialization has succeeded.
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#   define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_) << CHAR_BIT))
-#   define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_)            ))
+#	define BSUSR(v_)            ((uintptr_t)(v_) << CHAR_BIT)
+#	define BSFB(v_)             ((uintptr_t)(v_)            )
 #else
-#   define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_)                                        ))
-#   define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)))
+#	define BSUSR(v_)            ((uintptr_t)(v_)                                        )
+#	define BSFB(v_)             ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
 #endif
 
 #define MASK_LOCKED             ((uintptr_t)( BSUSR(0x01)              ))
@@ -35,24 +38,7 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 #define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
 
 __attribute__((__always_inline__))
-static inline _MCFCRT_OnceResult ReallyTryOnceFlag(volatile uintptr_t *puControl){
-	{
-		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
-		if(_MCFCRT_EXPECT(uOld & MASK_FINISHED)){
-			return _MCFCRT_kOnceResultFinished;
-		}
-		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
-			uNew = uOld | MASK_LOCKED;
-			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
-				return _MCFCRT_kOnceResultInitial;
-			}
-		}
-	}
-	return _MCFCRT_kOnceResultTimedOut;
-}
-__attribute__((__always_inline__))
-static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
+static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
 		bool bFinished, bTaken = false;
 		{
@@ -67,7 +53,7 @@ static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puContr
 				if(!bTaken){
 					uNew = uOld + THREADS_TRAPPED_ONE;
 				} else {
-					uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
+					uNew = uOld | MASK_LOCKED;
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 		}
@@ -111,7 +97,7 @@ static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puContr
 	}
 }
 __attribute__((__always_inline__))
-static inline void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinished, size_t uMaxCountToSignal){
+static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFinished){
 	uintptr_t uCountToSignal;
 	{
 		uintptr_t uOld, uNew;
@@ -121,8 +107,9 @@ static inline void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool 
 			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已被使用。");
 
 			uNew = uOld & ~MASK_LOCKED;
-			uNew |= bFinished * MASK_FINISHED;
+			uNew |= (uintptr_t)-bFinished & MASK_FINISHED;
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
+			const uintptr_t uMaxCountToSignal = (uintptr_t)(1 - bFinished * 2);
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew -= uCountToSignal * THREADS_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
@@ -139,23 +126,17 @@ static inline void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool 
 }
 
 _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, uint64_t u64UntilFastMonoClock){
-	_MCFCRT_OnceResult eResult = ReallyTryOnceFlag(&(pOnceFlag->__u));
-	if(_MCFCRT_EXPECT_NOT(eResult == _MCFCRT_kOnceResultTimedOut) && _MCFCRT_EXPECT_NOT(u64UntilFastMonoClock != 0)){
-		eResult = RealWaitForOnceFlag(&(pOnceFlag->__u), true, u64UntilFastMonoClock);
-	}
+	const _MCFCRT_OnceResult eResult = ReallyWaitForOnceFlag(&(pOnceFlag->__u), true, u64UntilFastMonoClock);
 	return eResult;
 }
 _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){
-	_MCFCRT_OnceResult eResult = ReallyTryOnceFlag(&(pOnceFlag->__u));
-	if(_MCFCRT_EXPECT_NOT(eResult == _MCFCRT_kOnceResultTimedOut)){
-		eResult = RealWaitForOnceFlag(&(pOnceFlag->__u), false, UINT64_MAX);
-	}
+	const _MCFCRT_OnceResult eResult = ReallyWaitForOnceFlag(&(pOnceFlag->__u), false, UINT64_MAX);
 	_MCFCRT_ASSERT(eResult != _MCFCRT_kOnceResultTimedOut);
 	return eResult;
 }
 void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
-	RealSetAndSignalOnceFlag(&(pOnceFlag->__u), true, SIZE_MAX);
+	ReallySignalOnceFlag(&(pOnceFlag->__u), true);
 }
 void _MCFCRT_SignalOnceFlagAsAborted(_MCFCRT_OnceFlag *pOnceFlag){
-	RealSetAndSignalOnceFlag(&(pOnceFlag->__u), false, 1);
+	ReallySignalOnceFlag(&(pOnceFlag->__u), false);
 }

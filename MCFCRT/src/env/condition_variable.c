@@ -54,6 +54,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
 	const intptr_t nUnlocked = (*pfnUnlockCallback)(nContext);
+
 	if(bSpinnable){
 		for(size_t i = 0; i < uMaxSpinCount; ++i){
 			{

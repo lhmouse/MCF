@@ -54,6 +54,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 		if(_MCFCRT_EXPECT(bTaken)){
 			return true;
 		}
+
 		if(bSpinnable){
 			for(size_t i = 0; i < uMaxSpinCount; ++i){
 				{

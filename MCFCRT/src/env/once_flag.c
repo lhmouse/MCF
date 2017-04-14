@@ -53,7 +53,7 @@ static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puCon
 				if(!bTaken){
 					uNew = uOld + THREADS_TRAPPED_ONE;
 				} else {
-					uNew = uOld | MASK_LOCKED;
+					uNew = uOld + MASK_LOCKED;
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 		}
@@ -63,7 +63,6 @@ static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puCon
 		if(_MCFCRT_EXPECT(bTaken)){
 			return _MCFCRT_kOnceResultInitial;
 		}
-
 		if(bMayTimeOut){
 			LARGE_INTEGER liTimeout;
 			__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
@@ -76,7 +75,7 @@ static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puCon
 					uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 					do {
 						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
-						bDecremented = (uThreadsTrapped > 0);
+						bDecremented = uThreadsTrapped != 0;
 						if(!bDecremented){
 							break;
 						}
@@ -104,10 +103,9 @@ static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFin
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED,      L"一次性初始化标志没有被任何线程锁定。");
-			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已被使用。");
-
-			uNew = uOld & ~MASK_LOCKED;
+			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"一次性初始化标志没有被任何线程锁定。");
+			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已经被标记为丢弃。");
+			uNew = uOld - MASK_LOCKED;
 			uNew |= (uintptr_t)-bFinished & MASK_FINISHED;
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 			const uintptr_t uMaxCountToSignal = (uintptr_t)(1 - bFinished * 2);
@@ -117,7 +115,7 @@ static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFin
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.
-	if((uCountToSignal > 0) && !RtlDllShutdownInProgress()){
+	if(_MCFCRT_EXPECT_NOT((uCountToSignal > 0) && !RtlDllShutdownInProgress())){
 		for(size_t i = 0; i < uCountToSignal; ++i){
 			NTSTATUS lStatus = NtReleaseKeyedEvent(_MCFCRT_NULLPTR, (void *)puControl, false, _MCFCRT_NULLPTR);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");

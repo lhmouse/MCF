@@ -18,9 +18,14 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
-#define MASK_WAITING            ((uintptr_t) 0x0001)
+#define MASK_THREADS_RELEASED   ((uintptr_t) 0x0003)
 #define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
+#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x00FF)
+
+static_assert(__builtin_popcountll(MASK_THREADS_RELEASED) == __builtin_popcountll(MASK_THREADS_SPINNING), "MASK_THREADS_RELEASED must have the same number of bits set as MASK_THREADS_SPINNING.");
+
+#define THREADS_RELEASED_ONE    ((uintptr_t)(MASK_THREADS_RELEASED & -MASK_THREADS_RELEASED))
+#define THREADS_RELEASED_MAX    ((uintptr_t)(MASK_THREADS_RELEASED / THREADS_RELEASED_ONE))
 
 #define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
 #define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE))
@@ -38,34 +43,37 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			if(uMaxSpinCount != 0){
-				const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
-				bSpinnable = (uThreadsSpinning < THREADS_SPINNING_MAX);
-			}
-			if(!bSpinnable){
-				const bool bNewWaiter = !(uOld & MASK_WAITING);
-				if(!bNewWaiter){
+			bSignaled = (uOld & MASK_THREADS_RELEASED) != 0;
+			if(!bSignaled){
+				if(uMaxSpinCount != 0){
+					const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
+					bSpinnable = uThreadsSpinning < THREADS_SPINNING_MAX;
+				}
+				if(!bSpinnable){
 					break;
 				}
-				uNew = uOld | MASK_WAITING;
+				uNew = uOld + THREADS_SPINNING_ONE;
 			} else {
-				uNew = (uOld | MASK_WAITING) + THREADS_SPINNING_ONE;
+				uNew = uOld - THREADS_RELEASED_ONE;
 			}
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
+	if(_MCFCRT_EXPECT(bSignaled)){
+		// This is effectively a spurious wakeup.
+		return true;
+	}
 	const intptr_t nUnlocked = (*pfnUnlockCallback)(nContext);
-
-	if(bSpinnable){
+	if(_MCFCRT_EXPECT(bSpinnable)){
 		for(size_t i = 0; i < uMaxSpinCount; ++i){
 			{
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 				do {
-					bSignaled = !(uOld & MASK_WAITING);
+					bSignaled = (uOld & MASK_THREADS_RELEASED) != 0;
 					if(!bSignaled){
 						break;
 					}
-					uNew = uOld & ~MASK_THREADS_SPINNING;
+					uNew = uOld - THREADS_SPINNING_ONE - THREADS_RELEASED_ONE;
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
 			if(_MCFCRT_EXPECT_NOT(bSignaled)){
@@ -74,21 +82,33 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 			}
 			__builtin_ia32_pause();
 		}
+		{
+			uintptr_t uOld, uNew;
+			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+			do {
+				bSignaled = (uOld & MASK_THREADS_RELEASED) != 0;
+				if(!bSignaled){
+					uNew = uOld - THREADS_SPINNING_ONE + THREADS_TRAPPED_ONE;
+				} else {
+					uNew = uOld - THREADS_SPINNING_ONE - THREADS_RELEASED_ONE;
+				}
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+		}
+	} else {
+		{
+			uintptr_t uOld, uNew;
+			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+			do {
+				bSignaled = (uOld & MASK_THREADS_RELEASED) != 0;
+				if(!bSignaled){
+					uNew = uOld + THREADS_TRAPPED_ONE;
+				} else {
+					uNew = uOld - THREADS_RELEASED_ONE;
+				}
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+		}
 	}
-
-	{
-		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
-		do {
-			bSignaled = !(uOld & MASK_WAITING);
-			if(!bSignaled){
-				uNew = uOld + THREADS_TRAPPED_ONE;
-			} else {
-				uNew = uOld & ~MASK_THREADS_SPINNING;
-			}
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
-	}
-	if(_MCFCRT_EXPECT_NOT(bSignaled)){
+	if(_MCFCRT_EXPECT(bSignaled)){
 		(*pfnRelockCallback)(nContext, nUnlocked);
 		return true;
 	}
@@ -104,7 +124,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 				do {
 					const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
-					bDecremented = (uThreadsTrapped > 0);
+					bDecremented = uThreadsTrapped != 0;
 					if(!bDecremented){
 						break;
 					}
@@ -136,15 +156,19 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			uNew = uOld & ~(MASK_WAITING | MASK_THREADS_SPINNING);
+			const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
+			uNew = (uOld & ~MASK_THREADS_RELEASED)| (uThreadsSpinning * THREADS_RELEASED_ONE);
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew -= uCountToSignal * THREADS_TRAPPED_ONE;
+			if(uNew == uOld){
+				break;
+			}
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.
-	if((uCountToSignal > 0) && !RtlDllShutdownInProgress()){
+	if(_MCFCRT_EXPECT_NOT((uCountToSignal > 0) && !RtlDllShutdownInProgress())){
 		for(size_t i = 0; i < uCountToSignal; ++i){
 			NTSTATUS lStatus = NtReleaseKeyedEvent(_MCFCRT_NULLPTR, (void *)puControl, false, _MCFCRT_NULLPTR);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");

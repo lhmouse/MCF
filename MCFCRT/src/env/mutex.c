@@ -20,7 +20,7 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 
 #define MASK_LOCKED             ((uintptr_t) 0x0001)
 #define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
+#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x00FF)
 
 #define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
 #define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE))
@@ -40,22 +40,21 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				if(!bTaken){
 					if(uMaxSpinCount != 0){
 						const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
-						bSpinnable = (uThreadsSpinning < THREADS_SPINNING_MAX);
+						bSpinnable = uThreadsSpinning < THREADS_SPINNING_MAX;
 					}
 					if(!bSpinnable){
 						break;
 					}
 					uNew = uOld + THREADS_SPINNING_ONE;
 				} else {
-					uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
+					uNew = uOld + MASK_LOCKED;
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 		}
 		if(_MCFCRT_EXPECT(bTaken)){
 			return true;
 		}
-
-		if(bSpinnable){
+		if(_MCFCRT_EXPECT(bSpinnable)){
 			for(size_t i = 0; i < uMaxSpinCount; ++i){
 				{
 					uintptr_t uOld, uNew;
@@ -65,7 +64,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 						if(!bTaken){
 							break;
 						}
-						uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
+						uNew = uOld - THREADS_SPINNING_ONE + MASK_LOCKED;
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 				}
 				if(_MCFCRT_EXPECT_NOT(bTaken)){
@@ -73,9 +72,19 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				}
 				__builtin_ia32_pause();
 			}
-		}
-
-		{
+			{
+				uintptr_t uOld, uNew;
+				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+				do {
+					bTaken = !(uOld & MASK_LOCKED);
+					if(!bTaken){
+						uNew = uOld - THREADS_SPINNING_ONE + THREADS_TRAPPED_ONE;
+					} else {
+						uNew = uOld - THREADS_SPINNING_ONE + MASK_LOCKED;
+					}
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+			}
+		} else {
 			uintptr_t uOld, uNew;
 			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 			do {
@@ -83,7 +92,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				if(!bTaken){
 					uNew = uOld + THREADS_TRAPPED_ONE;
 				} else {
-					uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
+					uNew = uOld + MASK_LOCKED;
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 		}
@@ -102,7 +111,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 					do {
 						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
-						bDecremented = (uThreadsTrapped > 0);
+						bDecremented = uThreadsTrapped != 0;
 						if(!bDecremented){
 							break;
 						}
@@ -131,15 +140,14 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
-
-			uNew = uOld & ~(MASK_LOCKED | MASK_THREADS_SPINNING);
-			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
+			uNew = uOld - MASK_LOCKED;
+			bSignalOne = (uOld & MASK_THREADS_TRAPPED) != 0;
 			uNew -= bSignalOne * THREADS_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.
-	if(bSignalOne && !RtlDllShutdownInProgress()){
+	if(_MCFCRT_EXPECT_NOT(bSignalOne && !RtlDllShutdownInProgress())){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(_MCFCRT_NULLPTR, (void *)puControl, false, _MCFCRT_NULLPTR);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);

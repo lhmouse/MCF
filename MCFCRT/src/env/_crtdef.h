@@ -6,19 +6,15 @@
 #define __MCFCRT_ENV_CRTDEF_H_
 
 #if !defined(__amd64__) && !defined(__i386__)
-#   error This processor architecture is not supported.
-#endif
-
-#if defined(__cplusplus) && (__cplusplus < 201402l)
-#   error This compiler does not support C++14.
+#	error This processor architecture is not supported.
 #endif
 
 #if defined(__cplusplus) && __cplusplus >= 201402l
-#   define _MCFCRT_CXX14                1
+#	define _MCFCRT_CXX14                1
 #endif
 
 #if defined(__cplusplus) && __cplusplus >= 201103l
-#   define _MCFCRT_CXX11                1
+#	define _MCFCRT_CXX11                1
 #endif
 
 #include <stddef.h>

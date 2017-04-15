@@ -62,8 +62,9 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		// This is effectively a spurious wakeup.
 		return true;
 	}
-	const intptr_t nUnlocked = (*pfnUnlockCallback)(nContext);
+	intptr_t nUnlocked;
 	if(_MCFCRT_EXPECT(bSpinnable)){
+		nUnlocked = (*pfnUnlockCallback)(nContext);
 		for(size_t i = 0; i < uMaxSpinCount; ++i){
 			{
 				uintptr_t uOld, uNew;
@@ -94,6 +95,10 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 		}
+		if(_MCFCRT_EXPECT(bSignaled)){
+			(*pfnRelockCallback)(nContext, nUnlocked);
+			return true;
+		}
 	} else {
 		{
 			uintptr_t uOld, uNew;
@@ -107,10 +112,10 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 		}
-	}
-	if(_MCFCRT_EXPECT(bSignaled)){
-		(*pfnRelockCallback)(nContext, nUnlocked);
-		return true;
+		if(_MCFCRT_EXPECT(bSignaled)){
+			return true;
+		}
+		nUnlocked = (*pfnUnlockCallback)(nContext);
 	}
 	if(bMayTimeOut){
 		LARGE_INTEGER liTimeout;

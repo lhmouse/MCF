@@ -84,20 +84,25 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					}
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 			}
+			if(_MCFCRT_EXPECT(bTaken)){
+				return true;
+			}
 		} else {
-			uintptr_t uOld, uNew;
-			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
-			do {
-				bTaken = !(uOld & MASK_LOCKED);
-				if(!bTaken){
-					uNew = uOld + THREADS_TRAPPED_ONE;
-				} else {
-					uNew = uOld + MASK_LOCKED;
-				}
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
-		}
-		if(_MCFCRT_EXPECT(bTaken)){
-			return true;
+			{
+				uintptr_t uOld, uNew;
+				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+				do {
+					bTaken = !(uOld & MASK_LOCKED);
+					if(!bTaken){
+						uNew = uOld + THREADS_TRAPPED_ONE;
+					} else {
+						uNew = uOld + MASK_LOCKED;
+					}
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+			}
+			if(_MCFCRT_EXPECT(bTaken)){
+				return true;
+			}
 		}
 		if(bMayTimeOut){
 			LARGE_INTEGER liTimeout;

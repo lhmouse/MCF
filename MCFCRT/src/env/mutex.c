@@ -31,12 +31,13 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 __attribute__((__always_inline__))
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
-		bool bTaken, bSpinnable = false;
+		bool bTaken, bSpinnable;
 		{
 			uintptr_t uOld, uNew;
 			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 			do {
 				bTaken = !(uOld & MASK_LOCKED);
+				bSpinnable = false;
 				if(!bTaken){
 					if(uMaxSpinCount != 0){
 						const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;

@@ -38,12 +38,13 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
 	size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut)
 {
-	bool bSignaled, bSpinnable = false;
+	bool bSignaled, bSpinnable;
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
 			bSignaled = (uOld & MASK_THREADS_RELEASED) != 0;
+			bSpinnable = false;
 			if(!bSignaled){
 				if(uMaxSpinCount != 0){
 					const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;

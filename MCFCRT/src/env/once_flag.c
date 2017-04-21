@@ -124,15 +124,16 @@ static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFin
 	}
 }
 
-_MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, uint64_t u64UntilFastMonoClock){
+_MCFCRT_OnceResult __MCFCRT_ReallyWaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, uint64_t u64UntilFastMonoClock){
 	const _MCFCRT_OnceResult eResult = ReallyWaitForOnceFlag(&(pOnceFlag->__u), true, u64UntilFastMonoClock);
 	return eResult;
 }
-_MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){
+_MCFCRT_OnceResult __MCFCRT_ReallyWaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){
 	const _MCFCRT_OnceResult eResult = ReallyWaitForOnceFlag(&(pOnceFlag->__u), false, UINT64_MAX);
 	_MCFCRT_ASSERT(eResult != _MCFCRT_kOnceResultTimedOut);
 	return eResult;
 }
+
 void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
 	ReallySignalOnceFlag(&(pOnceFlag->__u), true);
 }

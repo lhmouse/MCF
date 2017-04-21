@@ -28,8 +28,25 @@ __MCFCRT_ONCE_FLAG_INLINE_OR_EXTERN void _MCFCRT_InitializeOnceFlag(_MCFCRT_Once
 	__atomic_store_n(&(__pOnceFlag->__u), 0, __ATOMIC_RELEASE);
 }
 
-extern _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_OnceResult __MCFCRT_ReallyWaitForOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_OnceResult __MCFCRT_ReallyWaitForOnceFlagForever(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT;
+
+// See Itanium ABI: <https://itanium-cxx-abi.github.io/cxx-abi/abi.html#guards>
+// Bytes other than the first byte are used as the counter of trapped threads, in native byte order.
+__MCFCRT_ONCE_FLAG_INLINE_OR_EXTERN _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
+	unsigned char *const __pbyGuard = (unsigned char *)(void *)__pOnceFlag;
+	if(__builtin_expect(__pbyGuard[0] != 0, true)){
+		return _MCFCRT_kOnceResultFinished;
+	}
+	return __MCFCRT_ReallyWaitForOnceFlag(__pOnceFlag, __u64UntilFastMonoClock);
+}
+__MCFCRT_ONCE_FLAG_INLINE_OR_EXTERN _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT {
+	unsigned char *const __pbyGuard = (unsigned char *)(void *)__pOnceFlag;
+	if(__builtin_expect(__pbyGuard[0] != 0, true)){
+		return _MCFCRT_kOnceResultFinished;
+	}
+	return __MCFCRT_ReallyWaitForOnceFlagForever(__pOnceFlag);
+}
 extern void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_SignalOnceFlagAsAborted(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT;
 

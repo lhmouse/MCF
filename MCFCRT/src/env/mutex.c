@@ -146,7 +146,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
-			uNew = uOld - MASK_LOCKED;
+			uNew = uOld & ~MASK_LOCKED; // uNew = uOld - MASK_LOCKED;
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) != 0;
 			uNew -= bSignalOne * THREADS_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));

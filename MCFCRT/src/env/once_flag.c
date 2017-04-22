@@ -133,10 +133,9 @@ _MCFCRT_OnceResult __MCFCRT_ReallyWaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnce
 	_MCFCRT_ASSERT(eResult != _MCFCRT_kOnceResultTimedOut);
 	return eResult;
 }
-
-void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
+void __MCFCRT_ReallySignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
 	ReallySignalOnceFlag(&(pOnceFlag->__u), true);
 }
-void _MCFCRT_SignalOnceFlagAsAborted(_MCFCRT_OnceFlag *pOnceFlag){
+void __MCFCRT_ReallySignalOnceFlagAsAborted(_MCFCRT_OnceFlag *pOnceFlag){
 	ReallySignalOnceFlag(&(pOnceFlag->__u), false);
 }

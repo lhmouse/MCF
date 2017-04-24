@@ -12,13 +12,8 @@
 static inline long long fpu_llround(long double x){
 	bool sign;
 	__MCFCRT_fxam(&sign, x);
-	long long ret;
-	if(sign){
-		__MCFCRT_fisttpll(&ret, x - 0.5l);
-	} else {
-		__MCFCRT_fisttpll(&ret, x + 0.5l);
-	}
-	return ret;
+	return sign ? (long long)__MCFCRT_ftrunc(x - 0.5l)
+	            : (long long)__MCFCRT_ftrunc(x + 0.5l);
 }
 
 long long llroundf(float x){

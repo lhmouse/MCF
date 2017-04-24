@@ -163,10 +163,9 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
 			const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
-			uNew = (uOld & ~MASK_THREADS_RELEASED)| (uThreadsSpinning * THREADS_RELEASED_ONE);
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
-			uNew -= uCountToSignal * THREADS_TRAPPED_ONE;
+			uNew = (uOld & ~MASK_THREADS_RELEASED) + uThreadsSpinning * THREADS_RELEASED_ONE - uCountToSignal * THREADS_TRAPPED_ONE;
 			if(uNew == uOld){
 				break;
 			}

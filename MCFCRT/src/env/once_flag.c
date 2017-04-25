@@ -109,7 +109,7 @@ static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFin
 			const uintptr_t uMaxCountToSignal = (uintptr_t)(1 - bFinished * 2);
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew = (uOld & ~(MASK_LOCKED | MASK_FINISHED)) + bFinished * MASK_FINISHED - uCountToSignal * THREADS_TRAPPED_ONE;
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_ACQUIRE)));
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.

@@ -72,9 +72,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 		if(_MCFCRT_EXPECT(bSpinnable)){
 			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
 				__builtin_ia32_pause();
-#ifdef __SSE2__
-				__builtin_ia32_mfence();
-#endif
+				__atomic_thread_fence(__ATOMIC_SEQ_CST);
 				{
 					uintptr_t uOld, uNew;
 					uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
@@ -170,7 +168,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) != 0;
 			uNew = (uOld & ~MASK_LOCKED) - bSignalOne * THREADS_TRAPPED_ONE;
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_ACQUIRE)));
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.

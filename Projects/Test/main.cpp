@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include <math.h>
 
-volatile auto ptr = ::tanl;
+volatile long double f = __builtin_nansl("");
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	__mingw_printf("tan(2) = %Lg\n", ptr(2));
+	__mingw_printf("f = %Lg\n", f + 1);
 	return 0;
 }

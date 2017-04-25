@@ -1,7 +1,9 @@
-#include <windows.h>
+#include <stdio.h>
+#include <math.h>
+
+volatile auto ptr = ::tanl;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	auto h = ::LoadLibraryW(L"msvcr100.dll");
-	::FreeLibrary(h);
+	__mingw_printf("tan(2) = %Lg\n", ptr(2));
 	return 0;
 }

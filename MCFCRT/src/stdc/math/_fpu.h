@@ -284,11 +284,10 @@ static inline void __MCFCRT_fsincos_unsafe(long double *__sinx, long double *__c
 	);
 }
 static inline long double __MCFCRT_ftan_unsafe(long double __x) _MCFCRT_NOEXCEPT {
-	long double __ret;
+	long double __one, __ret;
 	__asm__ (
 		"fptan \n"
-		"fstp st \n"
-		: "=&t"(__ret)
+		: "=&t"(__one), "=&u"(__ret)
 		: "0"(__x)
 	);
 	return __ret;

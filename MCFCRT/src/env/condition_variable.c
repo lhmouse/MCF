@@ -52,7 +52,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		do {
 			const size_t uSpinFailureCount = (uOld & MASK_SPIN_FAILURE_COUNT) / SPIN_FAILURE_COUNT_ONE;
 			if(uMaxSpinCountInitial > MIN_SPIN_COUNT){
-				uMaxSpinCount = (uMaxSpinCountInitial >> uSpinFailureCount * (sizeof(uMaxSpinCountInitial) * CHAR_BIT / (SPIN_FAILURE_COUNT_MAX + 1))) | MIN_SPIN_COUNT;
+				uMaxSpinCount = (uMaxSpinCountInitial >> uSpinFailureCount) | MIN_SPIN_COUNT;
 			} else {
 				uMaxSpinCount = uMaxSpinCountInitial;
 			}

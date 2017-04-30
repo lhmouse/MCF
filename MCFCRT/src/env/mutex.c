@@ -179,14 +179,14 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 	}
 }
 
-bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
+bool __MCFCRT_ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
 	const bool bLocked = ReallyWaitForMutex(&(pMutex->__u), uMaxSpinCount, true, u64UntilFastMonoClock);
 	return bLocked;
 }
-void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
+void __MCFCRT_ReallyWaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
 	const bool bLocked = ReallyWaitForMutex(&(pMutex->__u), uMaxSpinCount, false, UINT64_MAX);
 	_MCFCRT_ASSERT(bLocked);
 }
-void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){
+void __MCFCRT_ReallySignalMutex(_MCFCRT_Mutex *pMutex){
 	ReallySignalMutex(&(pMutex->__u));
 }

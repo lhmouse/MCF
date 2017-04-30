@@ -31,7 +31,7 @@ extern void __MCFCRT_ReallySignalMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT
 __MCFCRT_MUTEX_INLINE_OR_EXTERN bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
 	volatile unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pMutex->__u);
 	unsigned char __byZero = 0;
-	if(__builtin_expect((__pbyGuard[0] != 0) && __atomic_compare_exchange_n(__pbyGuard, &__byZero, 1, true, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE), true)){
+	if(__builtin_expect((__pbyGuard[0] == 0) && __atomic_compare_exchange_n(__pbyGuard, &__byZero, 1, true, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE), true)){
 		return true;
 	}
 	return __MCFCRT_ReallyWaitForMutex(__pMutex, __uMaxSpinCount, __u64UntilFastMonoClock);
@@ -39,7 +39,7 @@ __MCFCRT_MUTEX_INLINE_OR_EXTERN bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *__pMute
 __MCFCRT_MUTEX_INLINE_OR_EXTERN void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount) _MCFCRT_NOEXCEPT {
 	volatile unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pMutex->__u);
 	unsigned char __byZero = 0;
-	if(__builtin_expect((__pbyGuard[0] != 0) && __atomic_compare_exchange_n(__pbyGuard, &__byZero, 1, true, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE), true)){
+	if(__builtin_expect((__pbyGuard[0] == 0) && __atomic_compare_exchange_n(__pbyGuard, &__byZero, 1, true, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE), true)){
 		return;
 	}
 	__MCFCRT_ReallyWaitForMutexForever(__pMutex, __uMaxSpinCount);

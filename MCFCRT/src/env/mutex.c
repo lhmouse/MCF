@@ -18,10 +18,22 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
-#define MASK_LOCKED             ((uintptr_t) 0x0001)
-#define MASK_THREADS_SPINNING   ((uintptr_t) 0x000E)
-#define MASK_SPIN_FAILURE_COUNT ((uintptr_t) 0x00F0)
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x00FF)
+#ifndef __BYTE_ORDER__
+#	error Byte order is unknown.
+#endif
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#	define BSUSR(v_)            ((uintptr_t)(v_) << CHAR_BIT)
+#	define BSFB(v_)             ((uintptr_t)(v_)            )
+#else
+#	define BSUSR(v_)            ((uintptr_t)(v_)                                        )
+#	define BSFB(v_)             ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
+#endif
+
+#define MASK_LOCKED             ((uintptr_t)( BSFB(0x01)))
+#define MASK_THREADS_SPINNING   ((uintptr_t)( BSFB(0x0E)))
+#define MASK_SPIN_FAILURE_COUNT ((uintptr_t)( BSFB(0xF0)))
+#define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSFB(0xFF)))
 
 #define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
 #define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE))

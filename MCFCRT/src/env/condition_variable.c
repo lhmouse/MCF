@@ -18,10 +18,22 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
-#define MASK_THREADS_RELEASED   ((uintptr_t) 0x0003)
-#define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
-#define MASK_SPIN_FAILURE_COUNT ((uintptr_t) 0x00F0)
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x00FF)
+#ifndef __BYTE_ORDER__
+#	error Byte order is unknown.
+#endif
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#	define BSUSR(v_)            ((uintptr_t)(v_) << CHAR_BIT)
+#	define BSFB(v_)             ((uintptr_t)(v_)            )
+#else
+#	define BSUSR(v_)            ((uintptr_t)(v_)                                        )
+#	define BSFB(v_)             ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
+#endif
+
+#define MASK_THREADS_RELEASED   ((uintptr_t)( BSFB(0x03)))
+#define MASK_THREADS_SPINNING   ((uintptr_t)( BSFB(0x0C)))
+#define MASK_SPIN_FAILURE_COUNT ((uintptr_t)( BSFB(0xF0)))
+#define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSFB(0xFF)))
 
 #define THREADS_RELEASED_ONE    ((uintptr_t)(MASK_THREADS_RELEASED & -MASK_THREADS_RELEASED))
 #define THREADS_RELEASED_MAX    ((uintptr_t)(MASK_THREADS_RELEASED / THREADS_RELEASED_ONE))
@@ -81,8 +93,10 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	if(_MCFCRT_EXPECT(bSpinnable)){
 		nUnlocked = (*pfnUnlockCallback)(nContext);
 		for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
-			__atomic_thread_fence(__ATOMIC_SEQ_CST);
-			__builtin_ia32_pause();
+			for(unsigned j = 8; j != 0; --j){
+				__atomic_thread_fence(__ATOMIC_SEQ_CST);
+				__builtin_ia32_pause();
+			}
 			__atomic_thread_fence(__ATOMIC_SEQ_CST);
 			{
 				uintptr_t uOld, uNew;

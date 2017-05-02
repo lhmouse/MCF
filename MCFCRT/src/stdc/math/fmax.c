@@ -4,6 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
+#include "_sse2.h"
 
 #undef fmaxf
 #undef fmax
@@ -24,10 +25,18 @@ static inline long double fpu_fmax(long double x, long double y){
 }
 
 float fmaxf(float x, float y){
+#ifdef _WIN64
+	return __MCFCRT_maxss(x, y);
+#else
 	return (float)fpu_fmax(x, y);
+#endif
 }
 double fmax(double x, double y){
+#ifdef _WIN64
+	return __MCFCRT_maxsd(x, y);
+#else
 	return (double)fpu_fmax(x, y);
+#endif
 }
 long double fmaxl(long double x, long double y){
 	return fpu_fmax(x, y);

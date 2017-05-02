@@ -35,6 +35,7 @@ __pch.hpp.gch: __pch.hpp
 
 noinst_HEADERS = \
 	src/stdc/math/_fpu.h	\
+	src/stdc/math/_sse2.h	\
 	src/stdc/string/_memcpy_inl.h	\
 	src/pre/_libsupcxx_cleanup.h
 

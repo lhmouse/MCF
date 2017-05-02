@@ -4,6 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
+#include "_sse2.h"
 
 #undef fminf
 #undef fmin
@@ -24,10 +25,18 @@ static inline long double fpu_fmin(long double x, long double y){
 }
 
 float fminf(float x, float y){
+#ifdef _WIN64
+	return __MCFCRT_minss(x, y);
+#else
 	return (float)fpu_fmin(x, y);
+#endif
 }
 double fmin(double x, double y){
+#ifdef _WIN64
+	return __MCFCRT_minsd(x, y);
+#else
 	return (double)fpu_fmin(x, y);
+#endif
 }
 long double fminl(long double x, long double y){
 	return fpu_fmin(x, y);

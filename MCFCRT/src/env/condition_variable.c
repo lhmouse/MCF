@@ -57,6 +57,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut)
 {
 	size_t uMaxSpinCount;
+	int nSpinMultiplier;
 	bool bSignaled, bSpinnable;
 	{
 		uintptr_t uOld, uNew;
@@ -65,8 +66,10 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 			const size_t uSpinFailureCount = (uOld & MASK_SPIN_FAILURE_COUNT) / SPIN_FAILURE_COUNT_ONE;
 			if(uMaxSpinCountInitial > MIN_SPIN_COUNT){
 				uMaxSpinCount = (uMaxSpinCountInitial >> uSpinFailureCount) | MIN_SPIN_COUNT;
+				nSpinMultiplier = 16 >> uSpinFailureCount;
 			} else {
 				uMaxSpinCount = uMaxSpinCountInitial;
+				nSpinMultiplier = 0;
 			}
 			bSignaled = (uOld & MASK_THREADS_RELEASED) != 0;
 			bSpinnable = false;
@@ -93,11 +96,12 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	if(_MCFCRT_EXPECT(bSpinnable)){
 		nUnlocked = (*pfnUnlockCallback)(nContext);
 		for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
-			for(unsigned j = 8; j != 0; --j){
-				__atomic_thread_fence(__ATOMIC_SEQ_CST);
-				__builtin_ia32_pause();
-			}
 			__atomic_thread_fence(__ATOMIC_SEQ_CST);
+			int j = nSpinMultiplier;
+			do {
+				__builtin_ia32_pause();
+				__atomic_thread_fence(__ATOMIC_SEQ_CST);
+			} while(--j >= 0);
 			{
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);

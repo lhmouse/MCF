@@ -7,24 +7,25 @@
 
 #include <type_traits>
 #include <cstdint>
+#include <cstddef>
 
 namespace MCF {
 
 namespace Impl_Endian {
 	template<typename ValueT>
-	inline ValueT SwapBytes(const std::integral_constant<unsigned, 1> &, ValueT v) noexcept {
+	inline ValueT SwapBytes(const std::integral_constant<std::size_t, 1> &, ValueT v) noexcept {
 		return static_cast<ValueT>(                 (static_cast<std::uint8_t >(v)));
 	}
 	template<typename ValueT>
-	inline ValueT SwapBytes(const std::integral_constant<unsigned, 2> &, ValueT v) noexcept {
+	inline ValueT SwapBytes(const std::integral_constant<std::size_t, 2> &, ValueT v) noexcept {
 		return static_cast<ValueT>(__builtin_bswap16(static_cast<std::uint16_t>(v)));
 	}
 	template<typename ValueT>
-	inline ValueT SwapBytes(const std::integral_constant<unsigned, 4> &, ValueT v) noexcept {
+	inline ValueT SwapBytes(const std::integral_constant<std::size_t, 4> &, ValueT v) noexcept {
 		return static_cast<ValueT>(__builtin_bswap32(static_cast<std::uint32_t>(v)));
 	}
 	template<typename ValueT>
-	inline ValueT SwapBytes(const std::integral_constant<unsigned, 8> &, ValueT v) noexcept {
+	inline ValueT SwapBytes(const std::integral_constant<std::size_t, 8> &, ValueT v) noexcept {
 		return static_cast<ValueT>(__builtin_bswap64(static_cast<std::uint64_t>(v)));
 	}
 }
@@ -36,7 +37,7 @@ inline ValueT LoadLe(const ValueT &m) noexcept {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return m;
 #else
-	return Impl_Endian::SwapBytes(std::integral_constant<unsigned, sizeof(ValueT)>(), m);
+	return Impl_Endian::SwapBytes(std::integral_constant<std::size_t, sizeof(ValueT)>(), m);
 #endif
 }
 template<typename ValueT>
@@ -44,7 +45,7 @@ inline ValueT LoadBe(const ValueT &m) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return Impl_Endian::SwapBytes(std::integral_constant<unsigned, sizeof(ValueT)>(), m);
+	return Impl_Endian::SwapBytes(std::integral_constant<std::size_t, sizeof(ValueT)>(), m);
 #else
 	return m;
 #endif
@@ -57,7 +58,7 @@ inline void StoreLe(ValueT &m, std::common_type_t<ValueT> v) noexcept {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	m = v;
 #else
-	m = Impl_Endian::SwapBytes<>(std::integral_constant<unsigned, sizeof(ValueT)>(), v);
+	m = Impl_Endian::SwapBytes<>(std::integral_constant<std::size_t, sizeof(ValueT)>(), v);
 #endif
 }
 template<typename ValueT>
@@ -65,7 +66,7 @@ inline void StoreBe(ValueT &m, std::common_type_t<ValueT> v) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	m = Impl_Endian::SwapBytes<>(std::integral_constant<unsigned, sizeof(ValueT)>(), v);
+	m = Impl_Endian::SwapBytes<>(std::integral_constant<std::size_t, sizeof(ValueT)>(), v);
 #else
 	m = v;
 #endif

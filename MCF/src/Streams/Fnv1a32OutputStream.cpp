@@ -17,7 +17,7 @@ void Fnv1a32OutputStream::X_Initialize() noexcept {
 	x_u32Reg = 2166136261u;
 }
 void Fnv1a32OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
-	register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
+	auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
 	for(unsigned i = 0; i < sizeof(u64Word); ++i){
 		const unsigned uLow = static_cast<unsigned char>(u64Word);
 		u64Word >>= 8;

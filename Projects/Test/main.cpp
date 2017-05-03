@@ -1,8 +1,13 @@
-#include <stdio.h>
+#include <MCF/Function/Function.hpp>
+#include <MCF/Function/FunctionView.hpp>
+#include <cstdio>
 
-volatile auto f = __builtin_fmin;
+using namespace MCF;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	__mingw_printf("%g\n", f(1.0, -2.0));
+	auto fp = MakeFunction<long (int)>([](int a){ return std::printf("a = %d\n", a); });
+	auto fv = FunctionView<void (int)>(fp);
+	(*fp)(12345);
+	fv(67890);
 	return 0;
 }

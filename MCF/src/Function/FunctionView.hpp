@@ -13,10 +13,10 @@
 
 namespace MCF {
 
-template<typename ObjectT, class DeleterT>
+template<typename ObjectT>
 class UniquePtr;
 
-template<typename ObjectT, class DeleterT>
+template<typename ObjectT>
 class IntrusivePtr;
 
 template<typename PrototypeT>

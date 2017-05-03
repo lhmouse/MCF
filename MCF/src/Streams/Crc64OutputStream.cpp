@@ -26,12 +26,12 @@ namespace {
 	{
 	};
 
-	template<std::size_t ...kIndices>
-	constexpr Array<std::uint64_t, sizeof...(kIndices)> GenerateTable(const std::index_sequence<kIndices...> &) noexcept {
+	template<std::uint64_t ...kIndices>
+	constexpr Array<std::uint64_t, sizeof...(kIndices)> GenerateTable(const std::integer_sequence<std::uint64_t, kIndices...> &) noexcept {
 		return { Generator<0, kIndices>::value... };
 	}
 
-	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
+	constexpr auto kCrcTable = GenerateTable(std::make_integer_sequence<std::uint64_t, 256>());
 }
 
 Crc64OutputStream::~Crc64OutputStream(){

@@ -15,8 +15,8 @@ _MCFCRT_EXTERN_C_BEGIN
 
 // 初始化为 { 0 } 即可。
 typedef struct __MCFCRT_tagConditionVariable {
-	volatile _MCFCRT_STD uintptr_t __u;
-} _MCFCRT_ConditionVariable;
+	_MCFCRT_STD uintptr_t __u;
+} volatile _MCFCRT_ConditionVariable;
 
 #define _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT   200u
 

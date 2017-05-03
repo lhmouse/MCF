@@ -31,7 +31,7 @@ public:
 	static_assert(alignof(Element) <= 2 * alignof(void *), "The alignment of this object type is too strict.");
 
 private:
-	volatile Element x_vElement;
+	Element x_vElement;
 
 public:
 	constexpr Atomic() noexcept

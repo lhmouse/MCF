@@ -50,7 +50,7 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 static_assert(__builtin_popcountll(MASK_THREADS_RELEASED) == __builtin_popcountll(MASK_THREADS_SPINNING), "MASK_THREADS_RELEASED must have the same number of bits set as MASK_THREADS_SPINNING.");
 
 #define MIN_SPIN_COUNT          ((uintptr_t)64)
-#define MAX_SPIN_MULTIPLIER     ((uintptr_t)16)
+#define MAX_SPIN_MULTIPLIER     ((uintptr_t)32)
 
 __attribute__((__always_inline__))
 static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
@@ -100,8 +100,8 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 			size_t j = uSpinMultiplier;
 			do {
 				__builtin_ia32_pause();
-				__atomic_thread_fence(__ATOMIC_SEQ_CST);
 			} while(j-- != 0);
+			__atomic_thread_fence(__ATOMIC_SEQ_CST);
 			{
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);

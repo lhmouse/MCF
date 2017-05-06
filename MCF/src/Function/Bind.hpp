@@ -31,7 +31,7 @@ namespace Impl_Bind {
 		return vRef.Get();
 	}
 	template<typename LazyParamTupleT, std::size_t kPlaceholderIndexT>
-	decltype(auto) SelectParam(LazyParamTupleT &&tupLazyParams, const Placeholder<kPlaceholderIndexT> &){
+	decltype(auto) SelectParam(LazyParamTupleT &&tupLazyParams, Placeholder<kPlaceholderIndexT>){
 		return std::get<kPlaceholderIndexT - 1>(std::forward<LazyParamTupleT>(tupLazyParams));
 	}
 	template<typename LazyParamTupleT, typename FunctionT, typename ...ParamsT>

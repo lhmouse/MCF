@@ -12,7 +12,7 @@ namespace MCF {
 struct StreamBuffer::X_ChunkHeader {
 	static X_ChunkHeader *Create(std::size_t uMinCapacity, X_ChunkHeader *pPrev, X_ChunkHeader *pNext, bool bBackward){
 		const auto uCapacity = Max(uMinCapacity, 1024u);
-		const auto uOrigin = bBackward ? uCapacity : 0u;
+		const auto uOrigin = bBackward ? uCapacity : 0;
 		const auto pChunk = static_cast<X_ChunkHeader *>(::operator new(Impl_CheckedSizeArithmetic::Add(sizeof(X_ChunkHeader), uCapacity)));
 		pChunk->uCapacity = uCapacity;
 		pChunk->pPrev     = pPrev;
@@ -59,7 +59,7 @@ void StreamBuffer::Clear() noexcept {
 	}
 	x_pLast  = nullptr;
 	x_pFirst = nullptr;
-	x_uSize  = 0u;
+	x_uSize  = 0;
 }
 
 int StreamBuffer::PeekFront() const noexcept {
@@ -75,7 +75,7 @@ int StreamBuffer::PeekBack() const noexcept {
 	if(!pChunk){
 		return -1;
 	}
-	const auto byData = pChunk->abyData[pChunk->uEnd - 1u];
+	const auto byData = pChunk->abyData[pChunk->uEnd - 1];
 	return byData;
 }
 
@@ -120,9 +120,9 @@ bool StreamBuffer::Discard() noexcept {
 }
 void StreamBuffer::Put(unsigned char byData){
 	auto pChunk = x_pLast;
-	if(!pChunk || (pChunk->uCapacity - pChunk->uEnd < 1u)){
+	if(!pChunk || (pChunk->uCapacity - pChunk->uEnd < 1)){
 		const auto pPrev = pChunk;
-		pChunk = X_ChunkHeader::Create(1u, pPrev, nullptr, false);
+		pChunk = X_ChunkHeader::Create(1, pPrev, nullptr, false);
 		x_pLast = pChunk;
 		*(pPrev ? &(pPrev->pNext) : &x_pFirst) = pChunk;
 	}
@@ -135,7 +135,7 @@ int StreamBuffer::Unput() noexcept {
 	if(!pChunk){
 		return -1;
 	}
-	const auto byData = pChunk->abyData[pChunk->uEnd - 1u];
+	const auto byData = pChunk->abyData[pChunk->uEnd - 1];
 	if(--pChunk->uEnd == pChunk->uBegin){
 		const auto pPrev = pChunk->pPrev;
 		x_pLast = pPrev;
@@ -148,23 +148,23 @@ int StreamBuffer::Unput() noexcept {
 }
 void StreamBuffer::Unget(unsigned char byData){
 	auto pChunk = x_pFirst;
-	if(!pChunk || (pChunk->uBegin < 1u)){
+	if(!pChunk || (pChunk->uBegin < 1)){
 		const auto pNext = pChunk;
-		pChunk = X_ChunkHeader::Create(1u, nullptr, pNext, true);
+		pChunk = X_ChunkHeader::Create(1, nullptr, pNext, true);
 		*(pNext ? &(pNext->pPrev) : &x_pLast) = pChunk;
 		x_pFirst = pChunk;
 	}
-	pChunk->abyData[pChunk->uBegin - 1u] = byData;
+	pChunk->abyData[pChunk->uBegin - 1] = byData;
 	--pChunk->uBegin;
 	++x_uSize;
 }
 
 std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
-	std::size_t uBytesTotal = 0u;
+	std::size_t uBytesTotal = 0;
 	auto pChunk = x_pFirst;
 	while(pChunk){
 		const auto uBytesRemaining = uSize - uBytesTotal;
-		if(uBytesRemaining == 0u){
+		if(uBytesRemaining == 0){
 			break;
 		}
 		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
@@ -181,11 +181,11 @@ std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
 	return uBytesTotal;
 }
 std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
-	std::size_t uBytesTotal = 0u;
+	std::size_t uBytesTotal = 0;
 	auto pChunk = x_pFirst;
 	while(pChunk){
 		const auto uBytesRemaining = uSize - uBytesTotal;
-		if(uBytesRemaining == 0u){
+		if(uBytesRemaining == 0){
 			break;
 		}
 		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
@@ -207,11 +207,11 @@ std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
 	return uBytesTotal;
 }
 std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
-	std::size_t uBytesTotal = 0u;
+	std::size_t uBytesTotal = 0;
 	auto pChunk = x_pFirst;
 	while(pChunk){
 		const auto uBytesRemaining = uSize - uBytesTotal;
-		if(uBytesRemaining == 0u){
+		if(uBytesRemaining == 0){
 			break;
 		}
 		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
@@ -278,11 +278,11 @@ void *StreamBuffer::Squash(){
 }
 
 StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
-	std::size_t uBytesTotal = 0u;
+	std::size_t uBytesTotal = 0;
 	auto pChunk = x_pFirst;
 	while(pChunk){
 		const auto uBytesRemaining = uOffsetEnd - uBytesTotal;
-		if(uBytesRemaining == 0u){
+		if(uBytesRemaining == 0){
 			break;
 		}
 		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
@@ -324,7 +324,7 @@ void StreamBuffer::Splice(StreamBuffer &vOther) noexcept {
 		return;
 	}
 	const auto pLastAdd  = std::exchange(vOther.x_pLast, nullptr);
-	const auto uSizeAdd  = std::exchange(vOther.x_uSize, 0u);
+	const auto uSizeAdd  = std::exchange(vOther.x_uSize, 0);
 
 	const auto pLast = x_pLast;
 	x_pLast = pLastAdd;

@@ -45,11 +45,12 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 #define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
 
 #define MIN_SPIN_COUNT          ((uintptr_t)16)
+#define MAX_SPIN_MULTIPLIER     ((uintptr_t)32)
 
 __attribute__((__always_inline__))
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
-		size_t uMaxSpinCount;
+		size_t uMaxSpinCount, uSpinMultiplier;
 		bool bTaken, bSpinnable;
 		{
 			uintptr_t uOld, uNew;
@@ -58,8 +59,10 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				const size_t uSpinFailureCount = (uOld & MASK_SPIN_FAILURE_COUNT) / SPIN_FAILURE_COUNT_ONE;
 				if(uMaxSpinCountInitial > MIN_SPIN_COUNT){
 					uMaxSpinCount = (uMaxSpinCountInitial >> uSpinFailureCount) | MIN_SPIN_COUNT;
+					uSpinMultiplier = MAX_SPIN_MULTIPLIER >> uSpinFailureCount;
 				} else {
 					uMaxSpinCount = uMaxSpinCountInitial;
+					uSpinMultiplier = 0;
 				}
 				bTaken = !(uOld & MASK_LOCKED);
 				bSpinnable = false;
@@ -83,8 +86,11 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 		}
 		if(_MCFCRT_EXPECT(bSpinnable)){
 			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
+				register size_t j = uSpinMultiplier + 1;
 				__atomic_thread_fence(__ATOMIC_SEQ_CST);
-				__builtin_ia32_pause();
+				do {
+					__builtin_ia32_pause();
+				} while(--j != 0);
 				__atomic_thread_fence(__ATOMIC_SEQ_CST);
 				{
 					uintptr_t uOld, uNew;

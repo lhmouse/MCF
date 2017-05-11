@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_STDC_STRING_MEMCPY_INL_H_
-#define __MCFCRT_STDC_STRING_MEMCPY_INL_H_
+#ifndef __MCFCRT_STDC_STRING_MEMCPY_IMPL_H_
+#define __MCFCRT_STDC_STRING_MEMCPY_IMPL_H_
 
 #include "../../env/_crtdef.h"
 #include "../../env/inline_mem.h"
@@ -13,7 +13,7 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_mempcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	register char *__wp = (char *)__s1;
 	char *const __wend = __wp + __n;
 	register const char *__rp = (const char *)__s2;

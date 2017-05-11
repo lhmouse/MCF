@@ -36,7 +36,7 @@ __pch.hpp.gch: __pch.hpp
 noinst_HEADERS = \
 	src/stdc/math/_fpu.h	\
 	src/stdc/math/_sse2.h	\
-	src/stdc/string/_memcpy_inl.h	\
+	src/stdc/string/_memcpy_impl.h	\
 	src/pre/_libsupcxx_cleanup.h
 
 pkginclude_HEADERS = \
@@ -51,12 +51,9 @@ pkginclude_pre_HEADERS = \
 
 pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS = \
-	src/env/_avl_tree_inl.h	\
-	src/env/_c11thread_inl.h	\
 	src/env/_crtdef.h	\
 	src/env/_crtdef.hpp	\
 	src/env/_fpu.h	\
-	src/env/_gthread_inl.h	\
 	src/env/_seh_top.h	\
 	src/env/_nt_timeout.h	\
 	src/env/_mopthread.h	\

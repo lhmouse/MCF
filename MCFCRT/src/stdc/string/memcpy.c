@@ -2,11 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2032, LH_Mouse. All wrongs reserved.
 
-#include "_memcpy_inl.h"
+#include "_memcpy_impl.h"
 
 #undef memcpy
 
 void *memcpy(void *s1, const void *s2, size_t n){
-	__MCFCRT_mempcpy_impl_fwd(s1, s2, n);
+	__MCFCRT_memcpy_impl_fwd(s1, s2, n);
 	return s1;
 }

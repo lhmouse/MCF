@@ -222,7 +222,7 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 	return uCountToSignal;
 }
 
-bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
+bool __MCFCRT_ReallyWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
 	size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock)
 {
@@ -230,7 +230,7 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 		uMaxSpinCount, true, u64UntilFastMonoClock, true);
 	return bSignaled;
 }
-bool _MCFCRT_WaitForConditionVariableOrAbandon(_MCFCRT_ConditionVariable *pConditionVariable,
+bool __MCFCRT_ReallyWaitForConditionVariableOrAbandon(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
 	size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock)
 {
@@ -238,7 +238,7 @@ bool _MCFCRT_WaitForConditionVariableOrAbandon(_MCFCRT_ConditionVariable *pCondi
 		uMaxSpinCount, true, u64UntilFastMonoClock, false);
 	return bSignaled;
 }
-void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
+void __MCFCRT_ReallyWaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
 	size_t uMaxSpinCount)
 {
@@ -246,9 +246,9 @@ void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditi
 		uMaxSpinCount, false, UINT64_MAX, true);
 	_MCFCRT_ASSERT(bSignaled);
 }
-size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
+size_t __MCFCRT_ReallySignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
 	return ReallySignalConditionVariable(&(pConditionVariable->__u), uMaxCountToSignal);
 }
-size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
+size_t __MCFCRT_ReallyBroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
 	return ReallySignalConditionVariable(&(pConditionVariable->__u), SIZE_MAX);
 }

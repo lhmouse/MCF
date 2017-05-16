@@ -11,7 +11,7 @@
 #include "condition_variable.h"
 #include "inline_mem.h"
 #include "bail.h"
-#include "../ext/expect.h"
+#include "expect.h"
 
 #undef GetCurrentProcess
 #define GetCurrentProcess()  ((HANDLE)-1)

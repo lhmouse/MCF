@@ -6,6 +6,7 @@
 #define __MCFCRT_ENV_INLINE_MEM_H_
 
 #include "_crtdef.h"
+#include "assert.h"
 
 _MCFCRT_EXTERN_C_BEGIN
 
@@ -45,6 +46,8 @@ static inline void *_MCFCRT_inline_mempcpy_fwd(void *__s1, const void *__s2, _MC
 		);
 	}
 #endif
+	_MCFCRT_ASSERT(__p1 == (_MCFCRT_STD uint8_t *)__s1 + __n);
+	_MCFCRT_ASSERT(__p2 == (_MCFCRT_STD uint8_t *)__s2 + __n);
 	return __p1;
 }
 
@@ -89,6 +92,7 @@ static inline void *_MCFCRT_inline_mempset_fwd(void *__s, int __c, _MCFCRT_STD s
 		);
 	}
 #endif
+	_MCFCRT_ASSERT(__p == (_MCFCRT_STD uint8_t *)__s + __n);
 	return __p;
 }
 

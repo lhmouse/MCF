@@ -7,7 +7,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/inline_mem.h"
-#include "../../ext/expect.h"
+#include "../../env/expect.h"
 #include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN

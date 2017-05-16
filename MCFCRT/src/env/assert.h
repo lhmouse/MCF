@@ -2,10 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_EXT_ASSERT_H_
-#define __MCFCRT_EXT_ASSERT_H_
+#ifndef __MCFCRT_ENV_ASSERT_H_
+#define __MCFCRT_ENV_ASSERT_H_
 
-#include "../env/_crtdef.h"
+#include "_crtdef.h"
 #include "pp.h"
 
 _MCFCRT_EXTERN_C_BEGIN

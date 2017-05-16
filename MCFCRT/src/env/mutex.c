@@ -5,8 +5,8 @@
 #define __MCFCRT_MUTEX_INLINE_OR_EXTERN     extern inline
 #include "mutex.h"
 #include "_nt_timeout.h"
-#include "../ext/assert.h"
-#include "../ext/expect.h"
+#include "assert.h"
+#include "expect.h"
 #include <winternl.h>
 #include <ntstatus.h>
 

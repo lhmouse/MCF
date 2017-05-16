@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../ext/expect.h"
+#include "../../env/expect.h"
 #include <emmintrin.h>
 
 #undef strncmp

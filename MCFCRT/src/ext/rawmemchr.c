@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "rawmemchr.h"
-#include "expect.h"
+#include "../env/expect.h"
 #include <emmintrin.h>
 
 void *_MCFCRT_rawmemchr(const void *s, int c){

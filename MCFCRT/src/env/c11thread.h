@@ -14,8 +14,8 @@
 #include "mutex.h"
 #include "condition_variable.h"
 #include "clocks.h"
-#include "../ext/assert.h"
-#include "../ext/expect.h"
+#include "assert.h"
+#include "expect.h"
 #include <time.h> // Inclusion of <time.h> is mandatory according to ISO C.
 #include <errno.h>
 

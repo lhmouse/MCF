@@ -53,10 +53,15 @@ pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS = \
 	src/env/_crtdef.h	\
 	src/env/_crtdef.hpp	\
+	src/env/assert.h	\
+	src/env/expect.h	\
+	src/env/offset_of.h	\
+	src/env/pp.h	\
 	src/env/_fpu.h	\
 	src/env/_seh_top.h	\
 	src/env/_nt_timeout.h	\
 	src/env/_mopthread.h	\
+	src/env/_make_constant.h	\
 	src/env/inline_mem.h	\
 	src/env/argv.h	\
 	src/env/avl_tree.h	\
@@ -80,21 +85,17 @@ pkginclude_env_HEADERS = \
 pkginclude_extdir = ${pkgincludedir}/ext
 pkginclude_ext_HEADERS = \
 	src/ext/alloca.h	\
-	src/ext/assert.h	\
 	src/ext/div64.h	\
-	src/ext/expect.h	\
 	src/ext/itoa.h	\
 	src/ext/itow.h	\
 	src/ext/atoi.h	\
 	src/ext/wtoi.h	\
 	src/ext/mul64.h	\
-	src/ext/offset_of.h	\
 	src/ext/random.h	\
 	src/ext/stpcpy.h	\
 	src/ext/thunk.h	\
 	src/ext/utf.h	\
 	src/ext/wcpcpy.h	\
-	src/ext/pp.h	\
 	src/ext/rawmemchr.h	\
 	src/ext/rawwmemchr.h	\
 	src/ext/rep_stos.h	\
@@ -112,28 +113,11 @@ mcfcrt_pre_sources = \
 	src/pre/_pei386_runtime_relocator.c
 
 mcfcrt_sources = \
-	src/ext/assert.c	\
-	src/ext/itoa.c	\
-	src/ext/itow.c	\
-	src/ext/atoi.c	\
-	src/ext/wtoi.c	\
-	src/ext/random.c	\
-	src/ext/stpcpy.c	\
-	src/ext/thunk.c	\
-	src/ext/utf.c	\
-	src/ext/wcpcpy.c	\
-	src/ext/rawmemchr.c	\
-	src/ext/rawwmemchr.c	\
-	src/ext/rep_stos.c	\
-	src/ext/repz_scas.c	\
-	src/ext/repnz_scas.c	\
-	src/ext/rep_movs.c	\
-	src/ext/repz_cmps.c	\
-	src/ext/repnz_cmps.c	\
 	src/env/_fpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\
 	src/env/_mopthread.c	\
+	src/env/assert.c	\
 	src/env/argv.c	\
 	src/env/avl_tree.c	\
 	src/env/bail.c	\
@@ -151,6 +135,23 @@ mcfcrt_sources = \
 	src/env/thread.c	\
 	src/env/crt_module.c	\
 	src/env/tls.c	\
+	src/ext/itoa.c	\
+	src/ext/itow.c	\
+	src/ext/atoi.c	\
+	src/ext/wtoi.c	\
+	src/ext/random.c	\
+	src/ext/stpcpy.c	\
+	src/ext/thunk.c	\
+	src/ext/utf.c	\
+	src/ext/wcpcpy.c	\
+	src/ext/rawmemchr.c	\
+	src/ext/rawwmemchr.c	\
+	src/ext/rep_stos.c	\
+	src/ext/repz_scas.c	\
+	src/ext/repnz_scas.c	\
+	src/ext/rep_movs.c	\
+	src/ext/repz_cmps.c	\
+	src/ext/repnz_cmps.c	\
 	src/stdc/math/acos.c	\
 	src/stdc/math/asin.c	\
 	src/stdc/math/atan.c	\

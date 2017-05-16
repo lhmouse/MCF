@@ -3,8 +3,8 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "thread.h"
-#include "../ext/assert.h"
 #include "_nt_timeout.h"
+#include "assert.h"
 #include "mcfwin.h"
 #include <winternl.h>
 #include <ntdef.h>

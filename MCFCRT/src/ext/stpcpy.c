@@ -3,8 +3,8 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "stpcpy.h"
-#include "expect.h"
-#include "assert.h"
+#include "../env/expect.h"
+#include "../env/assert.h"
 #include "rep_movs.h"
 #include <emmintrin.h>
 

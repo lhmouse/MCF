@@ -9,7 +9,7 @@
 #include "../env/bail.h"
 #include "../env/heap.h"
 #include "../env/inline_mem.h"
-#include "../env/crt_assert.h"
+#include "../env/xassert.h"
 
 typedef struct tagThunkInfo {
 	// 内存是以 64KiB 的粒度分配的，每一块称为一个 chunk。

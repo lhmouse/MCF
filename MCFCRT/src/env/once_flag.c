@@ -5,7 +5,7 @@
 #define __MCFCRT_ONCE_FLAG_INLINE_OR_EXTERN     extern inline
 #include "once_flag.h"
 #include "_nt_timeout.h"
-#include "crt_assert.h"
+#include "xassert.h"
 #include "expect.h"
 #include <winternl.h>
 #include <ntstatus.h>

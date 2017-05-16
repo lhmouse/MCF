@@ -4,7 +4,7 @@
 
 #include "wcpcpy.h"
 #include "../env/expect.h"
-#include "../env/crt_assert.h"
+#include "../env/xassert.h"
 #include "rep_movs.h"
 #include <emmintrin.h>
 

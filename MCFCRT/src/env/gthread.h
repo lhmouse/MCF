@@ -14,7 +14,7 @@
 #include "mutex.h"
 #include "condition_variable.h"
 #include "clocks.h"
-#include "crt_assert.h"
+#include "xassert.h"
 #include "expect.h"
 #include <time.h> // struct timespec
 #include <errno.h>

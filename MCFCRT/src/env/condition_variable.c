@@ -5,7 +5,7 @@
 #define __MCFCRT_CONDITION_VARIABLE_INLINE_OR_EXTERN     extern inline
 #include "condition_variable.h"
 #include "_nt_timeout.h"
-#include "crt_assert.h"
+#include "xassert.h"
 #include "expect.h"
 #include <winternl.h>
 #include <ntstatus.h>

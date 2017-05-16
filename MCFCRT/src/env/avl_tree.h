@@ -6,7 +6,7 @@
 #define __MCFCRT_ENV_AVL_TREE_H_
 
 #include "_crtdef.h"
-#include "crt_assert.h"
+#include "xassert.h"
 
 #ifndef __MCFCRT_AVL_TREE_INLINE_OR_EXTERN
 #	define __MCFCRT_AVL_TREE_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline

@@ -4,7 +4,7 @@
 
 #define __MCFCRT_AVL_TREE_INLINE_OR_EXTERN     extern inline
 #include "avl_tree.h"
-#include "crt_assert.h"
+#include "xassert.h"
 
 static inline size_t GetHeight(const _MCFCRT_AvlNodeHeader *pWhere){
 	return pWhere ? pWhere->__uHeight : 0;

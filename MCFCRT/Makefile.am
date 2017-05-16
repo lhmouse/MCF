@@ -54,7 +54,7 @@ pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS = \
 	src/env/_crtdef.h	\
 	src/env/_crtdef.hpp	\
-	src/env/crt_assert.h	\
+	src/env/xassert.h	\
 	src/env/expect.h	\
 	src/env/offset_of.h	\
 	src/env/pp.h	\
@@ -118,7 +118,7 @@ mcfcrt_sources = \
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\
 	src/env/_mopthread.c	\
-	src/env/crt_assert.c	\
+	src/env/xassert.c	\
 	src/env/argv.c	\
 	src/env/avl_tree.c	\
 	src/env/bail.c	\

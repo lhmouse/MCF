@@ -6,7 +6,7 @@
 #define __MCFCRT_ENV_INLINE_MEM_H_
 
 #include "_crtdef.h"
-#include "crtassert.h"
+#include "crt_assert.h"
 
 _MCFCRT_EXTERN_C_BEGIN
 

@@ -4,7 +4,7 @@
 
 #include "thread.h"
 #include "_nt_timeout.h"
-#include "crtassert.h"
+#include "crt_assert.h"
 #include "mcfwin.h"
 #include <winternl.h>
 #include <ntdef.h>

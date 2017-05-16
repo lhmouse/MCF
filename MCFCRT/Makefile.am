@@ -40,6 +40,7 @@ noinst_HEADERS = \
 	src/pre/_libsupcxx_cleanup.h
 
 pkginclude_HEADERS = \
+	src/mcfcrt.h	\
 	src/gthread.h	\
 	src/c11thread.h
 

@@ -6,7 +6,7 @@
 #define __MCFCRT_EXT_UTF_H_
 
 #include "../env/_crtdef.h"
-#include "../env/assert.h"
+#include "../env/crtassert.h"
 #include "../env/pp.h"
 
 #ifndef __MCFCRT_UTF_INLINE_OR_EXTERN

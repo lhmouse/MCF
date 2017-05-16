@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "itow.h"
-#include "rep_movs.h"
+#include "../env/inline_mem.h"
 
 __attribute__((__always_inline__))
 static inline wchar_t *Really_itow_u(wchar_t *restrict pwcBuffer, uintptr_t uValue, unsigned uMinDigits, const wchar_t *restrict pwcTable, unsigned uRadix){
@@ -27,7 +27,7 @@ static inline wchar_t *Really_itow_u(wchar_t *restrict pwcBuffer, uintptr_t uVal
 		*(pwcTempEnd - uDigitsWritten) = wcDigit;
 	}
 	// Copy it to the correct location.
-	return (wchar_t *)_MCFCRT_rep_movsw((uint16_t *)pwcBuffer, (const uint16_t *)pwcTempEnd - uDigitsWritten, uDigitsWritten);
+	return _MCFCRT_inline_mempcpy_fwd(pwcBuffer, pwcTempEnd - uDigitsWritten, uDigitsWritten * sizeof(wchar_t));
 }
 
 wchar_t *_MCFCRT_itow_d(wchar_t *pwcBuffer, intptr_t nValue){

@@ -13,10 +13,10 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-// 初始化为 { 0 } 即可。
+// In the case of static initialization, please initialize it with { 0 }.
 typedef struct __MCFCRT_tagMutex {
 	_MCFCRT_STD uintptr_t __u;
-} volatile _MCFCRT_Mutex;
+} _MCFCRT_Mutex;
 
 #define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100u
 
@@ -29,17 +29,17 @@ extern void __MCFCRT_ReallyWaitForMutexForever(_MCFCRT_Mutex *__pMutex, _MCFCRT_
 extern void __MCFCRT_ReallySignalMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_MUTEX_INLINE_OR_EXTERN bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
-	volatile unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pMutex->__u);
-	unsigned char __byLockFlag;
-	if(__builtin_expect(((__byLockFlag = __pbyGuard[0]) == 0) && __atomic_compare_exchange_n(__pbyGuard, &__byLockFlag, 1, true, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE), true)){
+	unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pMutex->__u);
+	unsigned char __byLockFlag = __atomic_load_n(__pbyGuard, __ATOMIC_RELAXED);
+	if(__builtin_expect((__byLockFlag == 0) && __atomic_compare_exchange_n(__pbyGuard, &__byLockFlag, 1, true, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE), true)){
 		return true;
 	}
 	return __MCFCRT_ReallyWaitForMutex(__pMutex, __uMaxSpinCount, __u64UntilFastMonoClock);
 }
 __MCFCRT_MUTEX_INLINE_OR_EXTERN void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount) _MCFCRT_NOEXCEPT {
-	volatile unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pMutex->__u);
-	unsigned char __byLockFlag;
-	if(__builtin_expect(((__byLockFlag = __pbyGuard[0]) == 0) && __atomic_compare_exchange_n(__pbyGuard, &__byLockFlag, 1, true, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE), true)){
+	unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pMutex->__u);
+	unsigned char __byLockFlag = __atomic_load_n(__pbyGuard, __ATOMIC_RELAXED);
+	if(__builtin_expect((__byLockFlag == 0) && __atomic_compare_exchange_n(__pbyGuard, &__byLockFlag, 1, true, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE), true)){
 		return;
 	}
 	__MCFCRT_ReallyWaitForMutexForever(__pMutex, __uMaxSpinCount);

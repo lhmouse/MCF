@@ -13,10 +13,10 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-// 初始化为 { 0 } 即可。
+// In the case of static initialization, please initialize it with { 0 }.
 typedef struct __MCFCRT_tagOnceFlag {
 	_MCFCRT_STD uintptr_t __u;
-} volatile _MCFCRT_OnceFlag;
+} _MCFCRT_OnceFlag;
 
 typedef enum __MCFCRT_tagOnceResult {
 	_MCFCRT_kOnceResultTimedOut = 1,
@@ -36,15 +36,17 @@ extern void __MCFCRT_ReallySignalOnceFlagAsAborted(_MCFCRT_OnceFlag *__pOnceFlag
 // See Itanium ABI: <https://itanium-cxx-abi.github.io/cxx-abi/abi.html#guards>
 // Bytes other than the first byte are used as the counter of trapped threads, in native byte order.
 __MCFCRT_ONCE_FLAG_INLINE_OR_EXTERN _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
-	volatile unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pOnceFlag->__u);
-	if(__builtin_expect(__pbyGuard[0] != 0, true)){
+	unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pOnceFlag->__u);
+	unsigned char __byLockFlag = __atomic_load_n(__pbyGuard, __ATOMIC_RELAXED);
+	if(__builtin_expect((__byLockFlag != 0), true)){
 		return _MCFCRT_kOnceResultFinished;
 	}
 	return __MCFCRT_ReallyWaitForOnceFlag(__pOnceFlag, __u64UntilFastMonoClock);
 }
 __MCFCRT_ONCE_FLAG_INLINE_OR_EXTERN _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT {
-	volatile unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pOnceFlag->__u);
-	if(__builtin_expect(__pbyGuard[0] != 0, true)){
+	unsigned char *const __pbyGuard = (unsigned char *)(void *)&(__pOnceFlag->__u);
+	unsigned char __byLockFlag = __atomic_load_n(__pbyGuard, __ATOMIC_RELAXED);
+	if(__builtin_expect((__byLockFlag != 0), true)){
 		return _MCFCRT_kOnceResultFinished;
 	}
 	return __MCFCRT_ReallyWaitForOnceFlagForever(__pOnceFlag);

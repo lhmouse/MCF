@@ -79,7 +79,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					const bool bSpinFailureCountDecremented = uSpinFailureCount != 0;
 					uNew = uOld + MASK_LOCKED - bSpinFailureCountDecremented * SPIN_FAILURE_COUNT_ONE;
 				}
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 		}
 		if(_MCFCRT_EXPECT(bTaken)){
 			return true;
@@ -103,7 +103,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 						const size_t uSpinFailureCount = (uOld & MASK_SPIN_FAILURE_COUNT) / SPIN_FAILURE_COUNT_ONE;
 						const bool bSpinFailureCountDecremented = uSpinFailureCount != 0;
 						uNew = uOld - THREADS_SPINNING_ONE + MASK_LOCKED - bSpinFailureCountDecremented * SPIN_FAILURE_COUNT_ONE;
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 				}
 				if(_MCFCRT_EXPECT_NOT(bTaken)){
 					return true;
@@ -122,7 +122,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 						const bool bSpinFailureCountDecremented = uSpinFailureCount != 0;
 						uNew = uOld - THREADS_SPINNING_ONE + MASK_LOCKED - bSpinFailureCountDecremented * SPIN_FAILURE_COUNT_ONE;
 					}
-				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 			}
 			if(_MCFCRT_EXPECT(bTaken)){
 				return true;
@@ -138,7 +138,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					} else {
 						uNew = uOld + MASK_LOCKED;
 					}
-				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 			}
 			if(_MCFCRT_EXPECT(bTaken)){
 				return true;
@@ -161,7 +161,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 							break;
 						}
 						uNew = uOld - THREADS_TRAPPED_ONE;
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 				}
 				if(bDecremented){
 					return false;
@@ -184,10 +184,10 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
+			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥锁没有被任何线程锁定。");
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) != 0;
 			uNew = (uOld & ~MASK_LOCKED) - bSignalOne * THREADS_TRAPPED_ONE;
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_ACQUIRE)));
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED)));
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.

@@ -20,7 +20,7 @@ typedef void (*_MCFCRT_AtModuleExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
 extern bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
-// ld 自动添加此符号。
+// This symbol should be added implicitly by GNU LD.
 extern const char __MCFCRT_ImageBase[]
 	__asm__("__image_base__");
 

@@ -59,10 +59,8 @@ typedef _MCFCRT_TlsKeyHandle tss_t; // typedef void *tss_t;
 typedef void (*tss_dtor_t)(void *);
 
 // Call once
-// Note: This union conforms to the Itanium ABI.
-typedef union __MCFCRT_tagC11threadOnceFlag {
-	unsigned char __disposed;
-	_MCFCRT_STD uint64_t __iabi_placeholder;
+// Note: This struct conforms to the Itanium ABI.
+typedef struct __MCFCRT_tagC11threadOnceFlag {
 	_MCFCRT_OnceFlag __once;
 } once_flag;
 

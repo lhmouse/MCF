@@ -55,7 +55,7 @@ static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puCon
 				} else {
 					uNew = uOld + MASK_LOCKED;
 				}
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 		}
 		if(_MCFCRT_EXPECT(bFinished)){
 			return _MCFCRT_kOnceResultFinished;
@@ -80,7 +80,7 @@ static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puCon
 							break;
 						}
 						uNew = uOld - THREADS_TRAPPED_ONE;
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)));
 				}
 				if(bDecremented){
 					return _MCFCRT_kOnceResultTimedOut;
@@ -103,13 +103,13 @@ static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFin
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"一次性初始化标志没有被任何线程锁定。");
-			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已经被标记为丢弃。");
+			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"一次性初始化标记未被任何线程锁定。");
+			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标记已被使用并丢弃。");
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 			const uintptr_t uMaxCountToSignal = (uintptr_t)(1 - bFinished * 2);
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew = (uOld & ~(MASK_LOCKED | MASK_FINISHED)) + bFinished * MASK_FINISHED - uCountToSignal * THREADS_TRAPPED_ONE;
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_ACQUIRE)));
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELEASE, __ATOMIC_ACQUIRE)));
 	}
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.

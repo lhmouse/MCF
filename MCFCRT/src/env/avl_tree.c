@@ -61,8 +61,8 @@ static void UpdateRecur(_MCFCRT_AvlNodeHeader *pWhere){
 					pNode->__pParent = pLeft;
 					pNode->__ppRefl  = &(pLeft->__pRight);
 					pNode->__pLeft   = pLR;
-					// H(lr) >= H(l) - 2   // 平衡二叉树的要求。
-					//        = H(r)       // 前置条件。
+					// H(lr) >= H(l) - 2   // The invariant of an AVL tree.
+					//        = H(r)       // Precondition of this `if` branch.
 					pNode->__uHeight = uLRHeight + 1;
 
 					pLeft->__pParent = pParent;

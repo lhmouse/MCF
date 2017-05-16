@@ -31,23 +31,23 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 		if(!s_bInitialized){
 			bRet = __MCFCRT_StandardStreamsInit();
 			if(!bRet){
-				goto jCleanup00;
+				goto jCleanup_00;
 			}
 			bRet = __MCFCRT_HeapInit();
 			if(!bRet){
-				goto jCleanup01;
+				goto jCleanup_01;
 			}
 			bRet = __MCFCRT_HeapDbgInit();
 			if(!bRet){
-				goto jCleanup02;
+				goto jCleanup_02;
 			}
 			bRet = __MCFCRT_ModuleInit();
 			if(!bRet){
-				goto jCleanup03;
+				goto jCleanup_03;
 			}
 			bRet = __MCFCRT_TlsInit();
 			if(!bRet){
-				goto jCleanup04;
+				goto jCleanup_04;
 			}
 			s_bInitialized = true;
 		}
@@ -65,16 +65,16 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 			s_bInitialized = false;
 			__MCFCRT_TlsCleanup();
 			__MCFCRT_TlsUninit();
-	jCleanup04:
+	jCleanup_04:
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_DiscardCrtModuleQuickExitCallbacks();
-	jCleanup03:
+	jCleanup_03:
 			__MCFCRT_HeapDbgUninit();
-	jCleanup02:
+	jCleanup_02:
 			__MCFCRT_HeapUninit();
-	jCleanup01:
+	jCleanup_01:
 			__MCFCRT_StandardStreamsUninit();
-	jCleanup00:
+	jCleanup_00:
 			;
 		}
 		break;

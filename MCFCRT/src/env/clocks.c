@@ -45,7 +45,7 @@ uint64_t _MCFCRT_GetUtcClock(void){
 		LARGE_INTEGER li;
 	} unUtc;
 	GetSystemTimeAsFileTime(&unUtc.ft);
-	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
+	// 0x019DB1DED53E8000 = duration since 1601-01-01 until 1970-01-01 in nanoseconds.
 	return (uint64_t)(((double)unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000.0);
 }
 uint64_t _MCFCRT_GetLocalClock(void){
@@ -71,7 +71,7 @@ uint64_t _MCFCRT_GetFastMonoClock(void){
 double _MCFCRT_GetHiResMonoClock(void){
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
-		_MCFCRT_Bail(L"QueryPerformanceCounter() failed.");
+		_MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
 	return ((double)liCounter.QuadPart + (double)(DEBUG_MONO_CLOCK_OFFSET * 2)) * QueryPerformanceFrequencyReciprocalOnce();
 }

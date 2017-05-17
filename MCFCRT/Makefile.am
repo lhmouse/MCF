@@ -114,6 +114,7 @@ mcfcrt_pre_sources = \
 	src/pre/_pei386_runtime_relocator.c
 
 mcfcrt_sources = \
+	src/mcfcrt.c	\
 	src/env/_fpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\

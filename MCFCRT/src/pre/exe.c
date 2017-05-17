@@ -14,14 +14,12 @@
 #include "../env/bail.h"
 
 // -Wl,-e@__MCFCRT_ExeStartup
-__MCFCRT_C_STDCALL
+_Noreturn __MCFCRT_C_STDCALL
 extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("@__MCFCRT_ExeStartup");
 
-static void AtCrtModuleExitProc(intptr_t nContext);
-
 __MCFCRT_C_STDCALL
-static BOOL CrtCtrlHandler(DWORD dwCtrlType){
+static BOOL CtrlHandler(DWORD dwCtrlType){
 	if(_MCFCRT_OnCtrlEvent){
 		const bool bIsSigInt = ((dwCtrlType == CTRL_C_EVENT) || (dwCtrlType == CTRL_BREAK_EVENT));
 		_MCFCRT_OnCtrlEvent(bIsSigInt);
@@ -33,72 +31,32 @@ static BOOL CrtCtrlHandler(DWORD dwCtrlType){
 	_MCFCRT_ExitProcess(1, _MCFCRT_kExitTypeQuick);
 }
 
-static bool RealStartup(unsigned uReason){
-	static bool s_bInitialized = false;
+static void ExeCleanup(intptr_t nUnused){
+	(void)nUnused;
 
-	bool bRet = true;
-
-	__MCFCRT_FpuInitialize();
-
-	switch(uReason){
-	case DLL_PROCESS_ATTACH:
-		if(!s_bInitialized){
-			bRet = __MCFCRT_ModuleInit();
-			if(!bRet){
-				goto jCleanup03;
-			}
-			bRet = SetConsoleCtrlHandler(&CrtCtrlHandler, true);
-			if(!bRet){
-				goto jCleanup98;
-			}
-			bRet = _MCFCRT_AtCrtModuleExit(&AtCrtModuleExitProc, 0);
-			if(!bRet){
-				goto jCleanup99;
-			}
-			s_bInitialized = true;
-		}
-		break;
-
-	case DLL_THREAD_ATTACH:
-		break;
-
-	case DLL_THREAD_DETACH:
-		break;
-
-	case DLL_PROCESS_DETACH:
-		if(s_bInitialized){
-			s_bInitialized = false;
-	jCleanup99:
-			SetConsoleCtrlHandler(&CrtCtrlHandler, false);
-	jCleanup98:
-			__MCFCRT_ModuleUninit();
-	jCleanup03:
-			;
-		}
-		break;
-	}
-
-	return bRet;
+	SetConsoleCtrlHandler(&CtrlHandler, false);
+	__MCFCRT_ModuleUninit();
 }
 
-static void AtCrtModuleExitProc(intptr_t nContext){
-	(void)nContext;
-
-	RealStartup(DLL_PROCESS_DETACH);
-}
-
-__MCFCRT_C_STDCALL __attribute__((__noreturn__))
+_Noreturn __MCFCRT_C_STDCALL
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 
-	unsigned uExitCode;
+	__MCFCRT_FpuInitialize();
+
+	unsigned uExitCode = 3;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		if(!RealStartup(DLL_PROCESS_ATTACH)){
+		if(!__MCFCRT_ModuleInit()){
 			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
 		}
-
+		if(!_MCFCRT_AtModuleExit(&ExeCleanup, 0)){
+			_MCFCRT_Bail(L"注册 MCFCRT 清理回调函数失败。");
+		}
+		if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
+			_MCFCRT_Bail(L"注册 Ctrl-C 响应回调函数失败。");
+		}
 		uExitCode = _MCFCRT_Main();
 	}
 	__MCFCRT_SEH_TOP_END

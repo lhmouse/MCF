@@ -9,69 +9,48 @@
 
 // -Wl,-e@__MCFCRT_DllStartup
 __MCFCRT_C_STDCALL
-extern BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+extern BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved)
 	__asm__("@__MCFCRT_DllStartup");
 
-static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
-	static bool s_bInitialized = false;
+__MCFCRT_C_STDCALL
+BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
+	__MCFCRT_FpuInitialize();
 
 	bool bRet = true;
 
-	__MCFCRT_FpuInitialize();
-
-	switch(uReason){
-	case DLL_PROCESS_ATTACH:
-		if(!s_bInitialized){
-			bRet = __MCFCRT_ModuleInit();
-			if(!bRet){
-				goto jCleanup03;
-			}
-			if(_MCFCRT_OnDllProcessAttach){
-				bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
-				if(!bRet){
-					goto jCleanup99;
-				}
-			}
-			s_bInitialized = true;
-		}
-		break;
-
-	case DLL_THREAD_ATTACH:
-		if(_MCFCRT_OnDllThreadAttach){
-			_MCFCRT_OnDllThreadAttach(pInstance);
-		}
-		break;
-
-	case DLL_THREAD_DETACH:
-		if(_MCFCRT_OnDllThreadDetach){
-			_MCFCRT_OnDllThreadDetach(pInstance);
-		}
-		break;
-
-	case DLL_PROCESS_DETACH:
-		if(s_bInitialized){
-			s_bInitialized = false;
-			if(_MCFCRT_OnDllProcessDetach){
-				_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
-			}
-	jCleanup99:
-			__MCFCRT_ModuleUninit();
-	jCleanup03:
-			;
-		}
-		break;
-	}
-
-	return bRet;
-}
-
-__MCFCRT_C_STDCALL
-BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	bool bRet;
-
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		bRet = RealStartup((void *)hDll, (unsigned)dwReason, !pReserved);
+		switch(dwReason){
+		case DLL_PROCESS_ATTACH:
+			if(!__MCFCRT_ModuleInit()){
+				bRet = false;
+				break;
+			}
+			if(_MCFCRT_OnDllProcessAttach){
+				if(!_MCFCRT_OnDllProcessAttach(hInstance, !pReserved)){
+					__MCFCRT_ModuleUninit();
+					bRet = false;
+					break;
+				}
+			}
+			break;
+		case DLL_THREAD_ATTACH:
+			if(_MCFCRT_OnDllThreadAttach){
+				_MCFCRT_OnDllThreadAttach(hInstance);
+			}
+			break;
+		case DLL_THREAD_DETACH:
+			if(_MCFCRT_OnDllThreadDetach){
+				_MCFCRT_OnDllThreadDetach(hInstance);
+			}
+			break;
+		case DLL_PROCESS_DETACH:
+			if(_MCFCRT_OnDllProcessDetach){
+				_MCFCRT_OnDllProcessDetach(hInstance, !pReserved);
+			}
+			__MCFCRT_ModuleUninit();
+			break;
+		}
 	}
 	__MCFCRT_SEH_TOP_END
 

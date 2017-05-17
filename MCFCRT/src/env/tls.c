@@ -9,47 +9,26 @@
 #include "heap.h"
 #include "inline_mem.h"
 
-static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
-
-bool __MCFCRT_TlsInit(void){
-	const DWORD dwTlsIndex = TlsAlloc();
-	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
-		return false;
-	}
-
-	g_dwTlsIndex = dwTlsIndex;
-	return true;
-}
-void __MCFCRT_TlsUninit(void){
-	const DWORD dwTlsIndex = g_dwTlsIndex;
-	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
-
-	const bool bSucceeded = TlsFree(dwTlsIndex);
-	_MCFCRT_ASSERT(bSucceeded);
-}
-
-typedef struct tagTlsObject TlsObject;
-typedef struct tagTlsThread TlsThread;
-typedef struct tagTlsKey    TlsKey;
+static DWORD g_dwFlsIndex = FLS_OUT_OF_INDEXES;
 
 typedef struct tagTlsObjectKey {
-	TlsKey *pKey;
+	struct tagTlsKey *pKey;
 	uintptr_t uCounter;
 } TlsObjectKey;
 
-struct tagTlsObject {
+typedef struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader avlhNodeByKey;
-	TlsObjectKey vObjectKey;
+	struct tagTlsObjectKey vObjectKey;
 
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
 
-	TlsThread *pThread;
-	TlsObject *pPrevByThread;
-	TlsObject *pNextByThread;
+	struct tagTlsThread *pThread;
+	struct tagTlsObject *pPrevByThread;
+	struct tagTlsObject *pNextByThread;
 
 	alignas(max_align_t) unsigned char abyStorage[];
-};
+} TlsObject;
 
 static inline int TlsObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const TlsObjectKey *const pIndex1 = &((const TlsObject *)pObj1)->vObjectKey;
@@ -66,27 +45,71 @@ static inline int TlsObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, c
 	return TlsObjectComparatorNodeKey(pObj1, (intptr_t)&((const TlsObject *)pObj2)->vObjectKey);
 }
 
-struct tagTlsThread {
+typedef struct tagTlsThread {
 	_MCFCRT_AvlRoot avlObjects;
-	TlsObject *pFirstByThread;
-	TlsObject *pLastByThread;
-};
+	struct tagTlsObject *pFirstByThread;
+	struct tagTlsObject *pLastByThread;
+} TlsThread;
+
+static void __attribute__((__stdcall__)) FlsDestructor(void *pParam){
+	TlsThread *const pThread = pParam;
+	if(!pThread){
+		return;
+	}
+
+	for(;;){
+		TlsObject *const pObject = pThread->pLastByThread;
+		if(!pObject){
+			break;
+		}
+
+		TlsObject *const pPrev = pObject->pPrevByThread;
+		if(pPrev){
+			pPrev->pNextByThread = _MCFCRT_NULLPTR;
+		}
+		pThread->pLastByThread = pPrev;
+
+		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
+		if(pfnDestructor){
+			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
+		}
+		_MCFCRT_free(pObject);
+	}
+	_MCFCRT_free(pThread);
+}
+
+bool __MCFCRT_TlsInit(void){
+	const DWORD dwFlsIndex = FlsAlloc(&FlsDestructor);
+	if(dwFlsIndex == FLS_OUT_OF_INDEXES){
+		return false;
+	}
+
+	g_dwFlsIndex = dwFlsIndex;
+	return true;
+}
+void __MCFCRT_TlsUninit(void){
+	const DWORD dwFlsIndex = g_dwFlsIndex;
+	g_dwFlsIndex = FLS_OUT_OF_INDEXES;
+
+	const bool bSucceeded = FlsFree(dwFlsIndex);
+	_MCFCRT_ASSERT(bSucceeded);
+}
 
 static TlsThread *GetTlsForCurrentThread(void){
-	const DWORD dwTlsIndex = g_dwTlsIndex;
-	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+	const DWORD dwFlsIndex = g_dwFlsIndex;
+	if(dwFlsIndex == TLS_OUT_OF_INDEXES){
 		return _MCFCRT_NULLPTR;
 	}
-	TlsThread *const pThread = TlsGetValue(dwTlsIndex);
+	TlsThread *const pThread = FlsGetValue(dwFlsIndex);
 	return pThread;
 }
 static TlsThread *RequireTlsForCurrentThread(void){
-	const DWORD dwTlsIndex = g_dwTlsIndex;
-	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+	const DWORD dwFlsIndex = g_dwFlsIndex;
+	if(dwFlsIndex == TLS_OUT_OF_INDEXES){
 		SetLastError(ERROR_ACCESS_DENIED); // XXX: Pick a better error code?
 		return _MCFCRT_NULLPTR;
 	}
-	TlsThread *pThread = TlsGetValue(dwTlsIndex);
+	TlsThread *pThread = FlsGetValue(dwFlsIndex);
 	if(!pThread){
 		pThread = _MCFCRT_malloc(sizeof(TlsThread));
 		if(!pThread){
@@ -96,7 +119,7 @@ static TlsThread *RequireTlsForCurrentThread(void){
 		pThread->pFirstByThread = _MCFCRT_NULLPTR;
 		pThread->pLastByThread  = _MCFCRT_NULLPTR;
 
-		if(!TlsSetValue(dwTlsIndex, pThread)){
+		if(!FlsSetValue(dwFlsIndex, pThread)){
 			const DWORD dwErrorCode = GetLastError();
 			_MCFCRT_free(pThread);
 			SetLastError(dwErrorCode);
@@ -106,14 +129,14 @@ static TlsThread *RequireTlsForCurrentThread(void){
 	return pThread;
 }
 
-struct tagTlsKey {
+typedef struct tagTlsKey {
 	uintptr_t uCounter;
 
 	size_t uSize;
 	_MCFCRT_TlsConstructor pfnConstructor;
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
-};
+} TlsKey;
 
 static TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
 	_MCFCRT_ASSERT(pThread);
@@ -179,36 +202,6 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 		}
 	}
 	return pObject;
-}
-
-void __MCFCRT_TlsCleanup(void){
-	TlsThread *const pThread = GetTlsForCurrentThread();
-	if(!pThread){
-		return;
-	}
-
-	for(;;){
-		TlsObject *const pObject = pThread->pLastByThread;
-		if(!pObject){
-			break;
-		}
-
-		TlsObject *const pPrev = pObject->pPrevByThread;
-		if(pPrev){
-			pPrev->pNextByThread = _MCFCRT_NULLPTR;
-		}
-		pThread->pLastByThread = pPrev;
-
-		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
-		if(pfnDestructor){
-			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
-		}
-		_MCFCRT_free(pObject);
-	}
-
-	const bool bSucceeded = TlsSetValue(g_dwTlsIndex, _MCFCRT_NULLPTR);
-	_MCFCRT_ASSERT(bSucceeded);
-	_MCFCRT_free(pThread);
 }
 
 _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){

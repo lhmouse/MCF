@@ -12,8 +12,6 @@ _MCFCRT_EXTERN_C_BEGIN
 extern bool __MCFCRT_TlsInit(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_TlsUninit(void) _MCFCRT_NOEXCEPT;
 
-extern void __MCFCRT_TlsCleanup(void) _MCFCRT_NOEXCEPT;
-
 typedef unsigned long (*_MCFCRT_TlsConstructor)(_MCFCRT_STD intptr_t __nContext, void *__pStorage);
 typedef void (*_MCFCRT_TlsDestructor)(_MCFCRT_STD intptr_t __nContext, void *__pStorage);
 

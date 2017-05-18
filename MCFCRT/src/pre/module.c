@@ -3,13 +3,51 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #define __MCFCRT_MODULE_INLINE_OR_EXTERN     extern inline
-#include "_libsupcxx_cleanup.h"
 #include "module.h"
 #include "../env/mcfwin.h"
 #include "../env/mutex.h"
 #include "../env/heap.h"
 
 extern void _pei386_runtime_relocator(void);
+extern void __MCFCRT_libsupcxx_Cleanup(void);
+
+static void PumpAtModuleExit(void);
+
+typedef void (*Pvfv)(void);
+
+extern const Pvfv __CTOR_LIST__[], __DTOR_LIST__[];
+
+static void RunGlobalCtors(void){
+	const Pvfv *ppfnBegin, *ppfnEnd;
+	ppfnEnd = ppfnBegin = __CTOR_LIST__ + 1;
+	while(*ppfnEnd){
+		++ppfnEnd;
+	}
+	while(ppfnBegin != ppfnEnd){
+		(*(--ppfnEnd))();
+	}
+}
+static void RunGlobalDtors(void){
+	const Pvfv *ppfnBegin, *ppfnEnd;
+	ppfnEnd = ppfnBegin = __DTOR_LIST__ + 1;
+	while(*ppfnEnd){
+		++ppfnEnd;
+	}
+	while(ppfnBegin != ppfnEnd){
+		(*(ppfnBegin++))();
+	}
+}
+
+bool __MCFCRT_ModuleInit(void){
+	_pei386_runtime_relocator();
+	RunGlobalCtors();
+	return true;
+}
+void __MCFCRT_ModuleUninit(void){
+	PumpAtModuleExit();
+	RunGlobalDtors();
+	__MCFCRT_libsupcxx_Cleanup();
+}
 
 #define CALLBACKS_PER_BLOCK   64u
 
@@ -29,7 +67,6 @@ static AtExitCallbackBlock * g_pAtExitLast       = _MCFCRT_NULLPTR;
 static volatile bool         g_bAtExitSpareInUse = false;
 static AtExitCallbackBlock   g_vAtExitSpare;
 
-__attribute__((__noinline__))
 static void PumpAtModuleExit(void){
 	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	for(;;){
@@ -55,44 +92,6 @@ static void PumpAtModuleExit(void){
 		_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);
-}
-
-typedef void (*StaticConstructorDestructorProc)(void);
-
-extern const StaticConstructorDestructorProc __CTOR_LIST__[];
-extern const StaticConstructorDestructorProc __DTOR_LIST__[];
-
-static void CallStaticConstructors(void){
-	const StaticConstructorDestructorProc *const ppfnBegin = __CTOR_LIST__ + 1;
-
-	const StaticConstructorDestructorProc *ppfnCurrent = ppfnBegin;
-	while(*ppfnCurrent){
-		++ppfnCurrent;
-	}
-	while(ppfnCurrent != ppfnBegin){
-		--ppfnCurrent;
-		(**ppfnCurrent)();
-	}
-}
-static void CallStaticDestructors(void){
-	const StaticConstructorDestructorProc *const ppfnBegin = __DTOR_LIST__ + 1;
-
-	const StaticConstructorDestructorProc *ppfnCurrent = ppfnBegin;
-	while(*ppfnCurrent){
-		(**ppfnCurrent)();
-		++ppfnCurrent;
-	}
-}
-
-bool __MCFCRT_ModuleInit(void){
-	_pei386_runtime_relocator();
-	CallStaticConstructors();
-	return true;
-}
-void __MCFCRT_ModuleUninit(void){
-	PumpAtModuleExit();
-	CallStaticDestructors();
-	__MCFCRT_libsupcxx_Cleanup();
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){

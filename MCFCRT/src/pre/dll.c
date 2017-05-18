@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "dll.h"
+#include "../mcfcrt.h"
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
 #include "module.h"
@@ -22,13 +23,19 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 	{
 		switch(dwReason){
 		case DLL_PROCESS_ATTACH:
+			if(!__MCFCRT_InitRecursive()){
+				bRet = false;
+				break;
+			}
 			if(!__MCFCRT_ModuleInit()){
+				__MCFCRT_UninitRecursive();
 				bRet = false;
 				break;
 			}
 			if(_MCFCRT_OnDllProcessAttach){
 				if(!_MCFCRT_OnDllProcessAttach(hInstance, !pReserved)){
 					__MCFCRT_ModuleUninit();
+					__MCFCRT_UninitRecursive();
 					bRet = false;
 					break;
 				}
@@ -49,6 +56,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 				_MCFCRT_OnDllProcessDetach(hInstance, !pReserved);
 			}
 			__MCFCRT_ModuleUninit();
+			__MCFCRT_UninitRecursive();
 			break;
 		}
 	}

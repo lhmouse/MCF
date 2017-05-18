@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "exe.h"
+#include "../mcfcrt.h"
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
 #include "module.h"
@@ -36,6 +37,7 @@ static void ExeCleanup(intptr_t nUnused){
 
 	SetConsoleCtrlHandler(&CtrlHandler, false);
 	__MCFCRT_ModuleUninit();
+	__MCFCRT_UninitRecursive();
 }
 
 _Noreturn __MCFCRT_C_STDCALL
@@ -48,14 +50,17 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		if(!__MCFCRT_ModuleInit()){
+		if(!__MCFCRT_InitRecursive()){
 			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
 		}
-		if(!_MCFCRT_AtModuleExit(&ExeCleanup, 0)){
-			_MCFCRT_Bail(L"注册 MCFCRT 清理回调函数失败。");
+		if(!__MCFCRT_ModuleInit()){
+			_MCFCRT_Bail(L"MCFCRT 可执行模块初始化失败。");
 		}
 		if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
-			_MCFCRT_Bail(L"注册 Ctrl-C 响应回调函数失败。");
+			_MCFCRT_Bail(L"MCFCRT 可执行模块 Ctrl-C 响应回调函数注册失败。");
+		}
+		if(!_MCFCRT_AtCrtModuleExit(&ExeCleanup, 0)){
+			_MCFCRT_Bail(L"MCFCRT 清理回调函数注册失败。");
 		}
 		uExitCode = _MCFCRT_Main();
 	}

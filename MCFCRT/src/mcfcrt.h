@@ -5,6 +5,8 @@
 #ifndef __MCFCRT_MCFCRT_H_
 #define __MCFCRT_MCFCRT_H_
 
+#include "env/_crtdef.h"
+
 #include "env/argv.h"
 #include "env/avl_tree.h"
 #include "env/bail.h"
@@ -53,8 +55,8 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCFCRT_Init(void) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_Uninit(void) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InitRecursive(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_UninitRecursive(void) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

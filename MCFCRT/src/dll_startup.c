@@ -21,10 +21,22 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		if(dwReason == DLL_PROCESS_ATTACH){
-			bRet = __MCFCRT_Init();
-		} else if(dwReason == DLL_PROCESS_DETACH){
-			__MCFCRT_Uninit();
+		switch(dwReason){
+		case DLL_PROCESS_ATTACH:
+			if(!__MCFCRT_InitRecursive()){
+				bRet = false;
+				break;
+			}
+			if(!__MCFCRT_ModuleInit()){
+				__MCFCRT_UninitRecursive();
+				bRet = false;
+				break;
+			}
+			break;
+		case DLL_PROCESS_DETACH:
+			__MCFCRT_ModuleUninit();
+			__MCFCRT_UninitRecursive();
+			break;
 		}
 	}
 	__MCFCRT_SEH_TOP_END

@@ -257,5 +257,9 @@ libMCFCRT_pre_dll_a_SOURCES = \
 libMCFCRT_dll_a_SOURCES =
 libMCFCRT.dll.a: MCFCRT-10.dll
 
-libMCFCRT_a_SOURCES = \
-	${mcfcrt_sources}
+libMCFCRT_a_SOURCES =
+## Due to Windows limitation we can't link this library statically.
+##libMCFCRT_a_SOURCES = \
+##	${mcfcrt_sources}
+libMCFCRT.a: MCFCRT-10.dll
+	cp --no-preserve=timestamps libMCFCRT.dll.a $@

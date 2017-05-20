@@ -11,7 +11,7 @@ void tls_destructor(void *p){
 }
 
 void *test_thread_proc(void *param){
-	const auto p = new unsigned((unsigned)(uintptr_t)param);
+	const auto p = new auto((unsigned)(intptr_t)param);
 	int err = ::__gthread_setspecific(key, p);
 	_MCFCRT_ASSERT(err == 0);
 	std::printf("constructed tls data %u\n", *(unsigned *)p);
@@ -30,15 +30,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	err = std::atexit([]{ ::__gthread_key_delete(key); });
 	_MCFCRT_ASSERT(err == 0);
 
-	static constexpr unsigned n = 10;
-	__gthread_t threads[n];
-	for(unsigned i = 0; i < n; ++i){
-		err = ::__gthread_create(&threads[i], &test_thread_proc, (void *)(intptr_t)i);
+	::__gthread_t threads[10];
+	for(auto &t : threads){
+		err = ::__gthread_create(&t, &test_thread_proc, (void *)(&t - threads));
 		_MCFCRT_ASSERT(err == 0);
 	}
-	for(unsigned i = 0; i < n; ++i){
-		std::printf("waiting for thread %u\n", i);
-		err = ::__gthread_join(threads[i], nullptr);
+	for(auto &t : threads){
+		std::printf("waiting for thread %td\n", &t - threads);
+		err = ::__gthread_join(t, nullptr);
 		_MCFCRT_ASSERT(err == 0);
 	}
 

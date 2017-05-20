@@ -8,7 +8,6 @@
 #include "../env/_fpu.h"
 #include "module.h"
 #include "../env/mcfwin.h"
-#include "../env/crt_module.h"
 #include "../env/standard_streams.h"
 #include "../ext/wcpcpy.h"
 #include "../ext/itow.h"
@@ -32,9 +31,7 @@ static BOOL CtrlHandler(DWORD dwCtrlType){
 	_MCFCRT_ExitProcess(1, _MCFCRT_kExitTypeQuick);
 }
 
-static void ExeCleanup(intptr_t nUnused){
-	(void)nUnused;
-
+static void ExeCleanup(void){
 	SetConsoleCtrlHandler(&CtrlHandler, false);
 	__MCFCRT_ModuleUninit();
 	__MCFCRT_UninitRecursive();
@@ -42,11 +39,9 @@ static void ExeCleanup(intptr_t nUnused){
 
 _Noreturn __MCFCRT_C_STDCALL
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
-	(void)pUnknown;
-
 	__MCFCRT_FpuInitialize();
 
-	unsigned uExitCode = 3;
+	unsigned uExitCode = (unsigned)(uintptr_t)pUnknown;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
@@ -59,7 +54,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 		if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
 			_MCFCRT_Bail(L"MCFCRT 可执行模块 Ctrl-C 响应回调函数注册失败。");
 		}
-		if(!_MCFCRT_AtCrtModuleExit(&ExeCleanup, 0)){
+		if(!_MCFCRT_AtModuleExit((void (__attribute__((__cdecl__)) *)(intptr_t))&ExeCleanup, 0)){
 			_MCFCRT_Bail(L"MCFCRT 清理回调函数注册失败。");
 		}
 		uExitCode = _MCFCRT_Main();

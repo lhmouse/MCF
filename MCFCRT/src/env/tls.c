@@ -9,7 +9,7 @@
 #include "heap.h"
 #include "inline_mem.h"
 
-static DWORD g_dwFlsIndex = FLS_OUT_OF_INDEXES;
+static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 typedef struct tagTlsObjectKey {
 	struct tagTlsKey *pKey;
@@ -51,8 +51,59 @@ typedef struct tagTlsThread {
 	struct tagTlsObject *pLastByThread;
 } TlsThread;
 
-static void __attribute__((__stdcall__)) FlsDestructor(void *pParam){
-	TlsThread *const pThread = pParam;
+bool __MCFCRT_TlsInit(void){
+	const DWORD dwTlsIndex = TlsAlloc();
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+		return false;
+	}
+
+	g_dwTlsIndex = dwTlsIndex;
+	return true;
+}
+void __MCFCRT_TlsUninit(void){
+	const DWORD dwTlsIndex = g_dwTlsIndex;
+	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+
+	const bool bSucceeded = TlsFree(dwTlsIndex);
+	_MCFCRT_ASSERT(bSucceeded);
+}
+
+static TlsThread *GetTlsForCurrentThread(void){
+	const DWORD dwTlsIndex = g_dwTlsIndex;
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+		return _MCFCRT_NULLPTR;
+	}
+	TlsThread *const pThread = TlsGetValue(dwTlsIndex);
+	return pThread;
+}
+static TlsThread *RequireTlsForCurrentThread(void){
+	const DWORD dwTlsIndex = g_dwTlsIndex;
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+		SetLastError(ERROR_ACCESS_DENIED); // XXX: Pick a better error code?
+		return _MCFCRT_NULLPTR;
+	}
+	TlsThread *pThread = TlsGetValue(dwTlsIndex);
+	if(!pThread){
+		pThread = _MCFCRT_malloc(sizeof(TlsThread));
+		if(!pThread){
+			return _MCFCRT_NULLPTR;
+		}
+		pThread->avlObjects     = _MCFCRT_NULLPTR;
+		pThread->pFirstByThread = _MCFCRT_NULLPTR;
+		pThread->pLastByThread  = _MCFCRT_NULLPTR;
+
+		if(!TlsSetValue(dwTlsIndex, pThread)){
+			const DWORD dwErrorCode = GetLastError();
+			_MCFCRT_free(pThread);
+			SetLastError(dwErrorCode);
+			return _MCFCRT_NULLPTR;
+		}
+	}
+	return pThread;
+}
+
+void __MCFCRT_TlsCleanup(void){
+	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
 		return;
 	}
@@ -76,57 +127,6 @@ static void __attribute__((__stdcall__)) FlsDestructor(void *pParam){
 		_MCFCRT_free(pObject);
 	}
 	_MCFCRT_free(pThread);
-}
-
-bool __MCFCRT_TlsInit(void){
-	const DWORD dwFlsIndex = FlsAlloc(&FlsDestructor);
-	if(dwFlsIndex == FLS_OUT_OF_INDEXES){
-		return false;
-	}
-
-	g_dwFlsIndex = dwFlsIndex;
-	return true;
-}
-void __MCFCRT_TlsUninit(void){
-	const DWORD dwFlsIndex = g_dwFlsIndex;
-	g_dwFlsIndex = FLS_OUT_OF_INDEXES;
-
-	const bool bSucceeded = FlsFree(dwFlsIndex);
-	_MCFCRT_ASSERT(bSucceeded);
-}
-
-static TlsThread *GetTlsForCurrentThread(void){
-	const DWORD dwFlsIndex = g_dwFlsIndex;
-	if(dwFlsIndex == TLS_OUT_OF_INDEXES){
-		return _MCFCRT_NULLPTR;
-	}
-	TlsThread *const pThread = FlsGetValue(dwFlsIndex);
-	return pThread;
-}
-static TlsThread *RequireTlsForCurrentThread(void){
-	const DWORD dwFlsIndex = g_dwFlsIndex;
-	if(dwFlsIndex == TLS_OUT_OF_INDEXES){
-		SetLastError(ERROR_ACCESS_DENIED); // XXX: Pick a better error code?
-		return _MCFCRT_NULLPTR;
-	}
-	TlsThread *pThread = FlsGetValue(dwFlsIndex);
-	if(!pThread){
-		pThread = _MCFCRT_malloc(sizeof(TlsThread));
-		if(!pThread){
-			return _MCFCRT_NULLPTR;
-		}
-		pThread->avlObjects     = _MCFCRT_NULLPTR;
-		pThread->pFirstByThread = _MCFCRT_NULLPTR;
-		pThread->pLastByThread  = _MCFCRT_NULLPTR;
-
-		if(!FlsSetValue(dwFlsIndex, pThread)){
-			const DWORD dwErrorCode = GetLastError();
-			_MCFCRT_free(pThread);
-			SetLastError(dwErrorCode);
-			return _MCFCRT_NULLPTR;
-		}
-	}
-	return pThread;
 }
 
 typedef struct tagTlsKey {

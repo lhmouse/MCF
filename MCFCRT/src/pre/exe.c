@@ -34,7 +34,8 @@ static BOOL CtrlHandler(DWORD dwCtrlType){
 static void ExeCleanup(void){
 	SetConsoleCtrlHandler(&CtrlHandler, false);
 	__MCFCRT_ModuleUninit();
-	__MCFCRT_UninitRecursive();
+// FIXME: static linking
+//	__MCFCRT_UninitRecursive();
 }
 
 _Noreturn __MCFCRT_C_STDCALL
@@ -45,9 +46,10 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		if(!__MCFCRT_InitRecursive()){
-			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
-		}
+// FIXME: static linking
+//		if(!__MCFCRT_InitRecursive()){
+//			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
+//		}
 		if(!__MCFCRT_ModuleInit()){
 			_MCFCRT_Bail(L"MCFCRT 可执行模块初始化失败。");
 		}

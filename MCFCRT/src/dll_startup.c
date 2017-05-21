@@ -5,7 +5,6 @@
 #include "mcfcrt.h"
 #include "env/_seh_top.h"
 #include "env/_fpu.h"
-#include "env/tls.h"
 
 __MCFCRT_C_STDCALL
 extern BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved)
@@ -13,8 +12,7 @@ extern BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pRes
 
 __MCFCRT_C_STDCALL
 BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
-	(void)hInstance;
-	(void)pReserved;
+	(void)hInstance, (void)pReserved;
 
 	__MCFCRT_FpuInitialize();
 
@@ -38,6 +36,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 			__MCFCRT_TlsCleanup();
 			break;
 		case DLL_PROCESS_DETACH:
+			__MCFCRT_TlsCleanup();
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_UninitRecursive();
 			break;

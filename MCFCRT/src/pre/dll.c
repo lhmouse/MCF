@@ -3,10 +3,11 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "dll.h"
+#include "module.h"
 #include "../mcfcrt.h"
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
-#include "module.h"
+#include "../env/tls.h"
 
 // -Wl,-e@__MCFCRT_DllStartup
 __MCFCRT_C_STDCALL
@@ -50,11 +51,13 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 			if(_MCFCRT_OnDllThreadDetach){
 				_MCFCRT_OnDllThreadDetach(hInstance);
 			}
+			__MCFCRT_TlsCleanup();
 			break;
 		case DLL_PROCESS_DETACH:
 			if(_MCFCRT_OnDllProcessDetach){
 				_MCFCRT_OnDllProcessDetach(hInstance, !pReserved);
 			}
+			__MCFCRT_TlsCleanup();
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_UninitRecursive();
 			break;

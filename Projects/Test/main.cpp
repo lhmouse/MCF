@@ -26,8 +26,8 @@ void *test_thread_proc(void *param){
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	int err = ::__gthread_key_create(&key, &tls_destructor);
 	_MCFCRT_ASSERT(err == 0);
-	std::printf("key = %p\n", (void *)key);
-	err = std::atexit([]{ ::__gthread_key_delete(key); });
+	std::printf("new TLS key %p\n", (void *)key);
+	err = std::atexit([]{ std::printf("deleting TLS key %p\n", (void *)key); ::__gthread_key_delete(key); });
 	_MCFCRT_ASSERT(err == 0);
 
 	::__gthread_t threads[10];

@@ -24,7 +24,8 @@ static void RunGlobalCtors(void){
 		++ppfnEnd;
 	}
 	while(ppfnBegin != ppfnEnd){
-		(*(--ppfnEnd))();
+		--ppfnEnd;
+		(*ppfnEnd)();
 	}
 }
 static void RunGlobalDtors(void){
@@ -34,7 +35,8 @@ static void RunGlobalDtors(void){
 		++ppfnEnd;
 	}
 	while(ppfnBegin != ppfnEnd){
-		(*(ppfnBegin++))();
+		(*ppfnBegin)();
+		++ppfnBegin;
 	}
 }
 

@@ -7,7 +7,6 @@
 #include "env/heap.h"
 #include "env/heap_dbg.h"
 #include "env/tls.h"
-#include "pre/module.h"
 
 static ptrdiff_t g_nCounter = 0;
 
@@ -32,13 +31,7 @@ bool __MCFCRT_InitRecursive(void){
 			__MCFCRT_StandardStreamsUninit();
 			return false;
 		}
-		if(!__MCFCRT_ModuleInit()){
-			__MCFCRT_TlsUninit();
-			__MCFCRT_HeapDbgUninit();
-			__MCFCRT_HeapUninit();
-			__MCFCRT_StandardStreamsUninit();
-			return false;
-		}
+		// Add more initialization...
 	}
 	++nCounter;
 	g_nCounter = nCounter;
@@ -50,8 +43,8 @@ void __MCFCRT_UninitRecursive(void){
 	--nCounter;
 	g_nCounter = nCounter;
 	if(nCounter == 0){
-		__MCFCRT_TlsUninit(); // Objects with thread local storage duration are destroyed before those with static storage duration.
-		__MCFCRT_ModuleUninit();
+		// Add more uninitialization...
+		__MCFCRT_TlsUninit();
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		__MCFCRT_StandardStreamsUninit();

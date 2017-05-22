@@ -3,11 +3,9 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "dll.h"
-#include "module.h"
 #include "../mcfcrt.h"
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
-#include "../env/tls.h"
 
 // -Wl,-e@__MCFCRT_DllStartup
 __MCFCRT_C_STDCALL

@@ -3,16 +3,9 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "exe.h"
-#include "module.h"
 #include "../mcfcrt.h"
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
-#include "../env/tls.h"
-#include "../env/mcfwin.h"
-#include "../env/standard_streams.h"
-#include "../ext/wcpcpy.h"
-#include "../ext/itow.h"
-#include "../env/bail.h"
 #include <winnt.h>
 
 // -Wl,-e@__MCFCRT_ExeStartup

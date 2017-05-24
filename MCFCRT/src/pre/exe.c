@@ -26,29 +26,7 @@ static BOOL CtrlHandler(DWORD dwCtrlType){
 	_MCFCRT_ExitProcess(1, _MCFCRT_kExitTypeQuick);
 }
 
-_Noreturn __MCFCRT_C_STDCALL
-DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
-	__MCFCRT_FpuInitialize();
-
-	unsigned uExitCode = (unsigned)(uintptr_t)pUnknown;
-
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		if(!__MCFCRT_InitRecursive()){
-			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
-		}
-		if(!__MCFCRT_ModuleInit()){
-			_MCFCRT_Bail(L"MCFCRT 可执行模块初始化失败。");
-		}
-		if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
-			_MCFCRT_Bail(L"MCFCRT 可执行模块 Ctrl-C 响应回调函数注册失败。");
-		}
-		uExitCode = _MCFCRT_Main();
-	}
-	__MCFCRT_SEH_TOP_END
-
-	_MCFCRT_ExitProcess(uExitCode, _MCFCRT_kExitTypeNormal);
-}
+static bool s_bProcessAttachNotified = false;
 
 __MCFCRT_C_STDCALL
 void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
@@ -60,6 +38,16 @@ void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	{
 		switch(dwReason){
 		case DLL_PROCESS_ATTACH:
+			if(!__MCFCRT_InitRecursive()){
+				_MCFCRT_Bail(L"MCFCRT 初始化失败。");
+			}
+			if(!__MCFCRT_ModuleInit()){
+				_MCFCRT_Bail(L"MCFCRT 可执行模块初始化失败。");
+			}
+			if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
+				_MCFCRT_Bail(L"MCFCRT 可执行模块 Ctrl-C 响应回调函数注册失败。");
+			}
+			s_bProcessAttachNotified = true;
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
@@ -91,3 +79,23 @@ __attribute__((__section__(".tls"), __used__)) const IMAGE_TLS_DIRECTORY _tls_us
 	.SizeOfZeroFill        = 0,
 	.Characteristics       = 0,
 };
+
+_Noreturn __MCFCRT_C_STDCALL
+DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
+	if(!s_bProcessAttachNotified){
+		__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, _MCFCRT_NULLPTR);
+	}
+	_MCFCRT_ASSERT(s_bProcessAttachNotified);
+
+	__MCFCRT_FpuInitialize();
+
+	unsigned uExitCode = (unsigned)(uintptr_t)pUnknown;
+
+	__MCFCRT_SEH_TOP_BEGIN
+	{
+		uExitCode = _MCFCRT_Main();
+	}
+	__MCFCRT_SEH_TOP_END
+
+	_MCFCRT_ExitProcess(uExitCode, _MCFCRT_kExitTypeNormal);
+}

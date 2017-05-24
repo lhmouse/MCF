@@ -51,6 +51,32 @@ typedef struct tagTlsThread {
 	struct tagTlsObject *pLastByThread;
 } TlsThread;
 
+static void DestroyTls(TlsThread *pThread){
+	if(!pThread){
+		return;
+	}
+
+	for(;;){
+		TlsObject *const pObject = pThread->pLastByThread;
+		if(!pObject){
+			break;
+		}
+
+		TlsObject *const pPrev = pObject->pPrevByThread;
+		if(pPrev){
+			pPrev->pNextByThread = _MCFCRT_NULLPTR;
+		}
+		pThread->pLastByThread = pPrev;
+
+		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
+		if(pfnDestructor){
+			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
+		}
+		_MCFCRT_free(pObject);
+	}
+	_MCFCRT_free(pThread);
+}
+
 bool __MCFCRT_TlsInit(void){
 	const DWORD dwTlsIndex = TlsAlloc();
 	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
@@ -63,6 +89,9 @@ bool __MCFCRT_TlsInit(void){
 void __MCFCRT_TlsUninit(void){
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+
+	TlsThread *const pThread = TlsGetValue(dwTlsIndex);
+	DestroyTls(pThread);
 
 	const bool bSucceeded = TlsFree(dwTlsIndex);
 	_MCFCRT_ASSERT(bSucceeded);
@@ -113,25 +142,7 @@ void __MCFCRT_TlsCleanup(void){
 	}
 	TlsSetValue(dwTlsIndex, _MCFCRT_NULLPTR);
 
-	for(;;){
-		TlsObject *const pObject = pThread->pLastByThread;
-		if(!pObject){
-			break;
-		}
-
-		TlsObject *const pPrev = pObject->pPrevByThread;
-		if(pPrev){
-			pPrev->pNextByThread = _MCFCRT_NULLPTR;
-		}
-		pThread->pLastByThread = pPrev;
-
-		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
-		if(pfnDestructor){
-			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
-		}
-		_MCFCRT_free(pObject);
-	}
-	_MCFCRT_free(pThread);
+	DestroyTls(pThread);
 }
 
 typedef struct tagTlsKey {

@@ -103,10 +103,15 @@ static TlsThread *RequireTlsForCurrentThread(void){
 }
 
 void __MCFCRT_TlsCleanup(void){
-	TlsThread *const pThread = GetTlsForCurrentThread();
+	const DWORD dwTlsIndex = g_dwTlsIndex;
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
+		return;
+	}
+	TlsThread *const pThread = TlsGetValue(dwTlsIndex);
 	if(!pThread){
 		return;
 	}
+	TlsSetValue(dwTlsIndex, _MCFCRT_NULLPTR);
 
 	for(;;){
 		TlsObject *const pObject = pThread->pLastByThread;

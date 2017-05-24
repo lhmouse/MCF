@@ -55,7 +55,9 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 			if(_MCFCRT_OnDllProcessDetach){
 				_MCFCRT_OnDllProcessDetach(hInstance, !pReserved);
 			}
-			__MCFCRT_TlsCleanup();
+			if(pReserved){
+				__MCFCRT_TlsCleanup();
+			}
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_UninitRecursive();
 			break;

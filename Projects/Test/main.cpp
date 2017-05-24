@@ -1,45 +1,27 @@
-#include <mcfgthread/gthread.h>
-#include <cstdio>
-#include <cstdlib>
+struct probe {
+	const char *s;
 
-::__gthread_key_t key;
+	explicit probe(const char *m){
+		s = m;
+		__builtin_printf("probe()  : %s\n", s);
+	}
+	~probe(){
+		__builtin_printf("~probe() : %s\n", s);
+		s = (const char *)-1;
+	}
+	probe(const probe &) = delete;
+};
 
-void tls_destructor(void *p){
-	_MCFCRT_ASSERT(::__gthread_getspecific(key) == nullptr);
-	std::printf("destructing tls data %u\n", *(unsigned *)p);
-	delete (unsigned *)p;
-}
-
-void *test_thread_proc(void *param){
-	const auto p = new auto((unsigned)(intptr_t)param);
-	int err = ::__gthread_setspecific(key, p);
-	_MCFCRT_ASSERT(err == 0);
-	std::printf("constructed tls data %u\n", *(unsigned *)p);
-
-	err = ::__gthread_setspecific(key, p);
-	_MCFCRT_ASSERT(err == 0);
-	std::printf("set new tls data %u\n", *(unsigned *)p);
-
-	return nullptr;
-}
+probe p_gs("global static");
+thread_local probe p_gt("global thread_local");
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	int err = ::__gthread_key_create(&key, &tls_destructor);
-	_MCFCRT_ASSERT(err == 0);
-	std::printf("new TLS key %p\n", (void *)key);
-	err = std::atexit([]{ std::printf("deleting TLS key %p\n", (void *)key); ::__gthread_key_delete(key); });
-	_MCFCRT_ASSERT(err == 0);
-
-	::__gthread_t threads[10];
-	for(auto &t : threads){
-		err = ::__gthread_create(&t, &test_thread_proc, (void *)(&t - threads));
-		_MCFCRT_ASSERT(err == 0);
+	__builtin_printf("-- entering main()\n");
+	{
+		probe p_la("local automatic");
+		thread_local probe p_lt("local thread_local");
+		static probe p_ls("local static");
 	}
-	for(auto &t : threads){
-		std::printf("waiting for thread %td\n", &t - threads);
-		err = ::__gthread_join(t, nullptr);
-		_MCFCRT_ASSERT(err == 0);
-	}
-
+	__builtin_printf("-- leaving main()\n");
 	return 0;
 }

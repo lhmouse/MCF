@@ -82,6 +82,8 @@ __attribute__((__section__(".tls"), __used__)) const IMAGE_TLS_DIRECTORY _tls_us
 
 _Noreturn __MCFCRT_C_STDCALL
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
+	(void)pUnknown;
+
 	if(!s_bProcessAttachNotified){
 		__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, _MCFCRT_NULLPTR);
 	}
@@ -89,7 +91,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 
 	__MCFCRT_FpuInitialize();
 
-	unsigned uExitCode = (unsigned)(uintptr_t)pUnknown;
+	unsigned uExitCode = 3;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{

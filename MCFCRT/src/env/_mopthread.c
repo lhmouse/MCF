@@ -60,16 +60,16 @@ typedef struct tagMopthreadControl {
 	unsigned char abyParams[];
 } MopthreadControl;
 
-static inline int MopthreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *lhs, intptr_t rhs){
-	const uintptr_t u1 = (uintptr_t)(((const MopthreadControl *)lhs)->uTid);
-	const uintptr_t u2 = (uintptr_t)rhs;
-	if(u1 != u2){
-		return (u1 < u2) ? -1 : 1;
+static inline int MopthreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pNodeSelf, intptr_t nTidOther){
+	const uintptr_t uTidSelf = (uintptr_t)(((const MopthreadControl *)pNodeSelf)->uTid);
+	const uintptr_t uTidOther = (uintptr_t)nTidOther;
+	if(uTidSelf != uTidOther){
+		return (uTidSelf < uTidOther) ? -1 : 1;
 	}
 	return 0;
 }
-static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *lhs, const _MCFCRT_AvlNodeHeader *rhs){
-	return MopthreadControlComparatorNodeKey(lhs, (intptr_t)(((const MopthreadControl *)rhs)->uTid));
+static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *pNodeSelf, const _MCFCRT_AvlNodeHeader *pNodeOther){
+	return MopthreadControlComparatorNodeKey(pNodeSelf, (intptr_t)(((const MopthreadControl *)pNodeOther)->uTid));
 }
 
 // The caller must have the global mutex locked!

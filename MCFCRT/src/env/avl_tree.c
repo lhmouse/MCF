@@ -9,8 +9,8 @@
 static inline size_t GetHeight(const _MCFCRT_AvlNodeHeader *pWhere){
 	return pWhere ? pWhere->__uHeight : 0;
 }
-static inline size_t Max(size_t lhs, size_t rhs){
-	return (lhs > rhs) ? lhs : rhs;
+static inline size_t Max(size_t uSelf, size_t uOther){
+	return (uSelf > uOther) ? uSelf : uOther;
 }
 static void UpdateRecur(_MCFCRT_AvlNodeHeader *pWhere){
 	_MCFCRT_ASSERT(pWhere);

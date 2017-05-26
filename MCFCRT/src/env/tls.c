@@ -30,19 +30,19 @@ typedef struct tagTlsObject {
 	alignas(max_align_t) unsigned char abyStorage[];
 } TlsObject;
 
-static inline int TlsObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
-	const TlsObjectKey *const pIndex1 = &((const TlsObject *)pObj1)->vObjectKey;
-	const TlsObjectKey *const pIndex2 = (const TlsObjectKey *)nKey2;
-	if(pIndex1->pKey != pIndex2->pKey){
-		return (pIndex1->pKey < pIndex2->pKey) ? -1 : 1;
+static inline int TlsObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObjSelf, intptr_t nKeyOther){
+	const TlsObjectKey *const pIndexSelf = &((const TlsObject *)pObjSelf)->vObjectKey;
+	const TlsObjectKey *const pIndexOther = (const TlsObjectKey *)nKeyOther;
+	if(pIndexSelf->pKey != pIndexOther->pKey){
+		return (pIndexSelf->pKey < pIndexOther->pKey) ? -1 : 1;
 	}
-	if(pIndex1->uCounter != pIndex2->uCounter){
-		return (pIndex1->uCounter < pIndex2->uCounter) ? -1 : 1;
+	if(pIndexSelf->uCounter != pIndexOther->uCounter){
+		return (pIndexSelf->uCounter < pIndexOther->uCounter) ? -1 : 1;
 	}
 	return 0;
 }
-static inline int TlsObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
-	return TlsObjectComparatorNodeKey(pObj1, (intptr_t)&((const TlsObject *)pObj2)->vObjectKey);
+static inline int TlsObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObjSelf, const _MCFCRT_AvlNodeHeader *pObjOther){
+	return TlsObjectComparatorNodeKey(pObjSelf, (intptr_t)&((const TlsObject *)pObjOther)->vObjectKey);
 }
 
 typedef struct tagTlsThread {

@@ -4,7 +4,6 @@
 
 #include "mcfcrt.h"
 #include "env/standard_streams.h"
-#include "env/heap.h"
 #include "env/heap_dbg.h"
 #include "env/crt_module.h"
 
@@ -16,12 +15,7 @@ bool __MCFCRT_InitRecursive(void){
 		if(!__MCFCRT_StandardStreamsInit()){
 			return false;
 		}
-		if(!__MCFCRT_HeapInit()){
-			__MCFCRT_StandardStreamsUninit();
-			return false;
-		}
 		if(!__MCFCRT_HeapDbgInit()){
-			__MCFCRT_HeapUninit();
 			__MCFCRT_StandardStreamsUninit();
 			return false;
 		}
@@ -40,7 +34,6 @@ void __MCFCRT_UninitRecursive(void){
 		// Add more uninitialization...
 		__MCFCRT_DiscardCrtModuleQuickExitCallbacks();
 		__MCFCRT_HeapDbgUninit();
-		__MCFCRT_HeapUninit();
 		__MCFCRT_StandardStreamsUninit();
 	}
 }

@@ -14,16 +14,6 @@ static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
 #define HEAP_MUTEX_SPIN_COUNT     4000u
 
-bool __MCFCRT_HeapInit(void){
-	// 启用 FLH，但是忽略任何错误。
-	ULONG ulMagic = 2;
-	HeapSetInformation(GetProcessHeap(), HeapCompatibilityInformation, &ulMagic, sizeof(ulMagic));
-
-	return true;
-}
-void __MCFCRT_HeapUninit(void){
-}
-
 void *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);

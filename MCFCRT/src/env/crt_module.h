@@ -11,7 +11,6 @@ _MCFCRT_EXTERN_C_BEGIN
 
 typedef void (*_MCFCRT_AtCrtModuleExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
-extern bool _MCFCRT_AtCrtModuleExit(_MCFCRT_AtCrtModuleExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_AtCrtModuleQuickExit(_MCFCRT_AtCrtModuleExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
 extern void __MCFCRT_DiscardCrtModuleQuickExitCallbacks(void) _MCFCRT_NOEXCEPT;

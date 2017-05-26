@@ -228,7 +228,6 @@ bin_PROGRAMS = \
 
 MCFCRT_10_dll_SOURCES = \
 	src/dll_startup.c	\
-	${mcfcrt_pre_sources}	\
 	${mcfcrt_sources}
 
 MCFCRT_10_dll_LDFLAGS = \

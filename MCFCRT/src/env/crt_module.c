@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "crt_module.h"
-#include "../pre/module.h"
 #include "mcfwin.h"
 #include "mutex.h"
 #include "heap.h"
@@ -14,10 +13,6 @@
 #undef GetCurrentThread
 #define GetCurrentThread()   ((HANDLE)-2)
 
-bool _MCFCRT_AtCrtModuleExit(_MCFCRT_AtCrtModuleExitCallback pfnProc, intptr_t nContext){
-	return _MCFCRT_AtModuleExit(pfnProc, nContext);
-}
-
 #define CALLBACKS_PER_BLOCK   64u
 
 typedef struct tagAtQuickExitCallbackBlock {
@@ -25,7 +20,7 @@ typedef struct tagAtQuickExitCallbackBlock {
 
 	size_t uSize;
 	struct {
-		_MCFCRT_AtModuleExitCallback pfnProc;
+		_MCFCRT_AtCrtModuleExitCallback pfnProc;
 		intptr_t nContext;
 	} aCallbacks[CALLBACKS_PER_BLOCK];
 } AtQuickExitCallbackBlock;
@@ -64,7 +59,7 @@ static void PumpAtModuleQuickExit(void){
 	_MCFCRT_SignalMutex(&g_vAtQuickExitMutex);
 }
 
-bool _MCFCRT_AtCrtModuleQuickExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){
+bool _MCFCRT_AtCrtModuleQuickExit(_MCFCRT_AtCrtModuleExitCallback pfnProc, intptr_t nContext){
 	_MCFCRT_WaitForMutexForever(&g_vAtQuickExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		AtQuickExitCallbackBlock *pBlock = g_pAtQuickExitLast;

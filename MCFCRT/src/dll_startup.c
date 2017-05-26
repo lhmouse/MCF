@@ -26,18 +26,12 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
 				bRet = false;
 				break;
 			}
-			if(!__MCFCRT_ModuleInit()){
-				__MCFCRT_UninitRecursive();
-				bRet = false;
-				break;
-			}
 			break;
 		case DLL_THREAD_DETACH:
 			__MCFCRT_TlsCleanup();
 			break;
 		case DLL_PROCESS_DETACH:
 			__MCFCRT_TlsCleanup();
-			__MCFCRT_ModuleUninit();
 			__MCFCRT_UninitRecursive();
 			break;
 		}

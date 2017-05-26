@@ -6,7 +6,7 @@
 #include "module.h"
 
 int atexit(void (*func)(void)){
-	if(!_MCFCRT_AtModuleExit((void (*__attribute__((__cdecl__)))(intptr_t))func, 0)){
+	if(!_MCFCRT_AtModuleExit((_MCFCRT_AtModuleExitCallback)func, 0)){
 		return -1;
 	}
 	return 0;

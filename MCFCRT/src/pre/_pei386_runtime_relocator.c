@@ -6,6 +6,7 @@
 #include "module.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
+#include "../ext/alloca.h"
 
 static size_t GetAllSections(const void **ppSectionTable){
 	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
@@ -26,10 +27,10 @@ typedef struct tagUnprotectedSection {
 	DWORD dwOldProtect;
 } UnprotectedSection;
 
-static void UnprotectAllSections(UnprotectedSection *restrict pProtectedSections, const void *restrict pSectionTable, size_t uSectionCount){
+static void UnprotectAllSections(UnprotectedSection *restrict pUnprotectedSections, const void *restrict pSectionTable, size_t uSectionCount){
 	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
 	for(size_t i = 0; i < uSectionCount; ++i){
-		UnprotectedSection *const pUnprotected = pProtectedSections + i;
+		UnprotectedSection *const pUnprotected = pUnprotectedSections + i;
 		const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pSectionTable + i;
 		void *const pBase = (char *)pImageBase + pHeader->VirtualAddress;
 		const size_t uSize = pHeader->Misc.VirtualSize;
@@ -50,9 +51,9 @@ static void UnprotectAllSections(UnprotectedSection *restrict pProtectedSections
 		}
 	}
 }
-static void ReprotectAllSections(const UnprotectedSection *restrict pProtectedSections, size_t uSectionCount){
+static void ReprotectAllSections(const UnprotectedSection *restrict pUnprotectedSections, size_t uSectionCount){
 	for(size_t i = 0; i < uSectionCount; ++i){
-		const UnprotectedSection *const pUnprotected = pProtectedSections + i;
+		const UnprotectedSection *const pUnprotected = pUnprotectedSections + i;
 		void *const pBase = pUnprotected->pBase;
 		const size_t uSize = pUnprotected->uSize;
 
@@ -130,9 +131,9 @@ void _pei386_runtime_relocator(void){
 	}
 
 	const void *pSectionTable = _MCFCRT_NULLPTR;
-	const size_t uSections = GetAllSections(&pSectionTable);
-	UnprotectedSection aUnprotected[uSections];
-	UnprotectAllSections(aUnprotected, pSectionTable, uSections);
+	const size_t uSectionCount = GetAllSections(&pSectionTable);
+	UnprotectedSection *const pUnprotectedSections = _MCFCRT_ALLOCA(uSectionCount * sizeof(UnprotectedSection));
+	UnprotectAllSections(pUnprotectedSections, pSectionTable, uSectionCount);
 	{
 		if(uVersion == 0){
 			RealRelocateV1(pdwTable, pdwEnd);
@@ -142,5 +143,5 @@ void _pei386_runtime_relocator(void){
 			_MCFCRT_Bail(L"_pei386_runtime_relocator() 失败：无法识别的重定位表。");
 		}
 	}
-	ReprotectAllSections(aUnprotected, uSections);
+	ReprotectAllSections(pUnprotectedSections, uSectionCount);
 }

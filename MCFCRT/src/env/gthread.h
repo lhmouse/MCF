@@ -9,7 +9,6 @@
 
 #include "_crtdef.h"
 #include "_mopthread.h"
-#include "tls.h"
 #include "once_flag.h"
 #include "mutex.h"
 #include "condition_variable.h"
@@ -34,54 +33,6 @@ _MCFCRT_EXTERN_C_BEGIN
 _MCFCRT_CONSTEXPR int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
 	return 1;
 }
-
-//-----------------------------------------------------------------------------
-// Thread local storage
-//-----------------------------------------------------------------------------
-typedef _MCFCRT_TlsKeyHandle __gthread_key_t;
-
-extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
-
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT {
-	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_GthreadTlsDestructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
-	if(!__key){
-		return ENOMEM;
-	}
-	*__key_ret = __key;
-	return 0;
-}
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_key_delete(__gthread_key_t __key) _MCFCRT_NOEXCEPT {
-	_MCFCRT_TlsFreeKey(__key);
-	return 0;
-}
-
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN void *__MCFCRT_gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEPT {
-	void *__storage;
-	const bool __success = _MCFCRT_TlsGet(__key, &__storage);
-	if(!__success){
-		return _MCFCRT_NULLPTR;
-	}
-	if(!__storage){
-		return _MCFCRT_NULLPTR;
-	}
-	return *(void **)__storage;
-}
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_setspecific(__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT {
-	void *__storage;
-	const bool __success = _MCFCRT_TlsRequire(__key, &__storage);
-	if(!__success){
-		return ENOMEM;
-	}
-	_MCFCRT_ASSERT(__storage);
-	*(void **)__storage = (void *)__value;
-	return 0;
-}
-
-#define __gthread_key_create   __MCFCRT_gthread_key_create
-#define __gthread_key_delete   __MCFCRT_gthread_key_delete
-
-#define __gthread_getspecific  __MCFCRT_gthread_getspecific
-#define __gthread_setspecific  __MCFCRT_gthread_setspecific
 
 //-----------------------------------------------------------------------------
 // Once

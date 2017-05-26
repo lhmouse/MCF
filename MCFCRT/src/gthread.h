@@ -6,5 +6,6 @@
 #define __MCFCRT_GTHREAD_H_
 
 #include "env/gthread.h"
+#include "pre/gthread_tls.h"
 
 #endif

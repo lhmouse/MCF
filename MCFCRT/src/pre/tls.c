@@ -3,11 +3,11 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "tls.h"
-#include "mutex.h"
-#include "avl_tree.h"
-#include "mcfwin.h"
-#include "heap.h"
-#include "inline_mem.h"
+#include "../env/mutex.h"
+#include "../env/avl_tree.h"
+#include "../env/mcfwin.h"
+#include "../env/heap.h"
+#include "../env/inline_mem.h"
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 

@@ -6,18 +6,6 @@
 #include "c11thread.h"
 #include "_seh_top.h"
 
-void __MCFCRT_C11threadTlsDestructor(intptr_t context, void *storage){
-	void (*const destructor)(void *) = (void (*)(void *))context;
-
-	void *const value = *(void **)storage;
-	if(!value){
-		return;
-	}
-	*(void **)storage = _MCFCRT_NULLPTR;
-
-	(*destructor)(value);
-}
-
 intptr_t __MCFCRT_C11threadUnlockCallback(intptr_t context){
 	mtx_t *const mutex = (mtx_t *)context;
 

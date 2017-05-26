@@ -6,18 +6,6 @@
 #include "gthread.h"
 #include "_seh_top.h"
 
-void __MCFCRT_GthreadTlsDestructor(intptr_t context, void *storage){
-	void (*const destructor)(void *) = (void (*)(void *))context;
-
-	void *const value = *(void **)storage;
-	if(!value){
-		return;
-	}
-	*(void **)storage = _MCFCRT_NULLPTR;
-
-	(*destructor)(value);
-}
-
 intptr_t __MCFCRT_GthreadUnlockCallbackMutex(intptr_t context){
 	__gthread_mutex_t *const mutex = (__gthread_mutex_t *)context;
 

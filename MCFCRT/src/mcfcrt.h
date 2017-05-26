@@ -26,7 +26,6 @@
 #include "env/pp.h"
 #include "env/standard_streams.h"
 #include "env/thread.h"
-#include "env/tls.h"
 
 #include "ext/alloca.h"
 #include "ext/atoi.h"
@@ -52,6 +51,7 @@
 #include "pre/module.h"
 #include "pre/exe.h"
 #include "pre/dll.h"
+#include "pre/tls.h"
 
 _MCFCRT_EXTERN_C_BEGIN
 

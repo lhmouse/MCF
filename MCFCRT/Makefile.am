@@ -47,7 +47,10 @@ pkginclude_predir = ${pkgincludedir}/pre
 pkginclude_pre_HEADERS = \
 	src/pre/dll.h	\
 	src/pre/exe.h	\
-	src/pre/module.h
+	src/pre/module.h	\
+	src/pre/tls.h	\
+	src/pre/c11thread_tls.c	\
+	src/pre/gthread_tls.c
 
 pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS = \
@@ -79,8 +82,7 @@ pkginclude_env_HEADERS = \
 	src/env/once_flag.h	\
 	src/env/standard_streams.h	\
 	src/env/thread.h	\
-	src/env/crt_module.h	\
-	src/env/tls.h
+	src/env/crt_module.h
 
 pkginclude_extdir = ${pkgincludedir}/ext
 pkginclude_ext_HEADERS = \
@@ -110,7 +112,12 @@ mcfcrt_pre_sources = \
 	src/pre/atexit.c	\
 	src/pre/at_quick_exit.c	\
 	src/pre/_libsupcxx_cleanup.cpp	\
-	src/pre/_pei386_runtime_relocator.c
+	src/pre/_pei386_runtime_relocator.c	\
+	src/pre/tls.c	\
+	src/pre/__cxa_atexit.c	\
+	src/pre/__cxa_thread_atexit.c	\
+	src/pre/c11thread_tls.c	\
+	src/pre/gthread_tls.c
 
 mcfcrt_sources = \
 	src/mcfcrt.c	\
@@ -135,7 +142,6 @@ mcfcrt_sources = \
 	src/env/standard_streams.c	\
 	src/env/thread.c	\
 	src/env/crt_module.c	\
-	src/env/tls.c	\
 	src/ext/itoa.c	\
 	src/ext/itow.c	\
 	src/ext/atoi.c	\

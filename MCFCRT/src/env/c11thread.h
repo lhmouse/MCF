@@ -9,7 +9,6 @@
 
 #include "_crtdef.h"
 #include "_mopthread.h"
-#include "tls.h"
 #include "once_flag.h"
 #include "mutex.h"
 #include "condition_variable.h"
@@ -28,12 +27,7 @@ _MCFCRT_EXTERN_C_BEGIN
 //-----------------------------------------------------------------------------
 // 7.26.1 Introduction
 //-----------------------------------------------------------------------------
-#if !defined(__cplusplus)
-#	define thread_local        _Thread_local
-#endif
-
 #define ONCE_FLAG_INIT         { 0 }
-#define TSS_DTOR_ITERATIONS    1      // XXX: Do we really need to support this crap?
 
 // Thread
 typedef _MCFCRT_STD uintptr_t thrd_t;
@@ -53,10 +47,6 @@ typedef struct __MCFCRT_tagC11threadMutex {
 	_MCFCRT_Mutex __mutex;
 	_MCFCRT_STD uintptr_t __reserved[3];
 } mtx_t;
-
-// Thread specific storage
-typedef _MCFCRT_TlsKeyHandle tss_t; // typedef void *tss_t;
-typedef void (*tss_dtor_t)(void *);
 
 // Call once
 // Note: This struct conforms to the Itanium ABI.
@@ -347,51 +337,6 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_thrd_yield(void) _MCFCRT_NOEXC
 
 #define thrd_sleep    __MCFCRT_thrd_sleep
 #define thrd_yield    __MCFCRT_thrd_yield
-
-//-----------------------------------------------------------------------------
-// 7.26.6 Thread-specific storage functions
-//-----------------------------------------------------------------------------
-extern void __MCFCRT_C11threadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
-
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT {
-	const tss_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_C11threadTlsDestructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
-	if(!__key){
-		return thrd_nomem;
-	}
-	*__key_ret = __key;
-	return thrd_success;
-}
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_tss_delete(tss_t __key) _MCFCRT_NOEXCEPT {
-	_MCFCRT_TlsFreeKey(__key);
-}
-
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN void *__MCFCRT_tss_get(tss_t __key) _MCFCRT_NOEXCEPT {
-	void *__storage;
-	const bool __success = _MCFCRT_TlsGet(__key, &__storage);
-	if(!__success){
-		return _MCFCRT_NULLPTR;
-	}
-	if(!__storage){
-		return _MCFCRT_NULLPTR;
-	}
-	return *(void **)__storage;
-}
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_tss_set(tss_t __key, void *__value) _MCFCRT_NOEXCEPT {
-	void *__storage;
-	const bool __success = _MCFCRT_TlsRequire(__key, &__storage);
-	if(!__success){
-		return thrd_error; // XXX: ISO C does not seem to allow `thrd_nomem` here.
-	}
-	_MCFCRT_ASSERT(__storage);
-	*(void **)__storage = (void *)__value;
-	return thrd_success;
-}
-
-#define tss_create  __MCFCRT_tss_create
-#define tss_delete  __MCFCRT_tss_delete
-
-#define tss_get     __MCFCRT_tss_get
-#define tss_set     __MCFCRT_tss_set
 
 _MCFCRT_EXTERN_C_END
 

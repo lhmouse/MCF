@@ -4,6 +4,7 @@
 
 #define __MCFCRT_MODULE_INLINE_OR_EXTERN     extern inline
 #include "module.h"
+#include "tls.h"
 #include "../env/mcfwin.h"
 #include "../env/mutex.h"
 #include "../env/heap.h"
@@ -42,11 +43,13 @@ static void RunGlobalDtors(void){
 
 bool __MCFCRT_ModuleInit(void){
 	_pei386_runtime_relocator();
+	__MCFCRT_TlsInit();
 	RunGlobalCtors();
 	return true;
 }
 void __MCFCRT_ModuleUninit(void){
 	PumpAtModuleExit();
+	__MCFCRT_TlsUninit();
 	RunGlobalDtors();
 	__MCFCRT_libsupcxx_Cleanup();
 }

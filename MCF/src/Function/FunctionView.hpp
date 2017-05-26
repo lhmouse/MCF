@@ -43,8 +43,8 @@ public:
 		, x_pSource(pFunction)
 	{
 	}
-	template<typename FunctionT>
-	FunctionView(const UniquePtr<FunctionT> &pFunction) noexcept
+	template<typename FunctionT, class DeleterT>
+	FunctionView(const UniquePtr<FunctionT, DeleterT> &pFunction) noexcept
 		: FunctionView(pFunction.Get())
 	{
 	}

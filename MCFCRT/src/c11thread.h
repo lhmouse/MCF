@@ -6,5 +6,6 @@
 #define __MCFCRT_C11THREAD_H_
 
 #include "env/c11thread.h"
+#include "pre/c11thread_tls.h"
 
 #endif

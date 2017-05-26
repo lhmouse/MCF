@@ -6,8 +6,5 @@
 #include "module.h"
 
 int atexit(void (*func)(void)){
-	if(!_MCFCRT_AtModuleExit((_MCFCRT_AtModuleExitCallback)func, 0)){
-		return -1;
-	}
-	return 0;
+	return _MCFCRT_AtModuleExit((_MCFCRT_AtModuleExitCallback)func, 0) ? 0 : -1;
 }

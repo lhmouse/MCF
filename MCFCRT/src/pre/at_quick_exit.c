@@ -6,8 +6,5 @@
 #include "../env/crt_module.h"
 
 int at_quick_exit(void (*func)(void)){
-	if(!_MCFCRT_AtCrtModuleQuickExit((_MCFCRT_AtCrtModuleExitCallback)func, 0)){
-		return -1;
-	}
-	return 0;
+	return _MCFCRT_AtCrtModuleQuickExit((_MCFCRT_AtCrtModuleExitCallback)func, 0) ? 0 : -1;
 }

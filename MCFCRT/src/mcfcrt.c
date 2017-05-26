@@ -6,6 +6,7 @@
 #include "env/standard_streams.h"
 #include "env/heap.h"
 #include "env/heap_dbg.h"
+#include "env/crt_module.h"
 
 static ptrdiff_t g_nCounter = 0;
 
@@ -37,6 +38,7 @@ void __MCFCRT_UninitRecursive(void){
 	g_nCounter = nCounter;
 	if(nCounter == 0){
 		// Add more uninitialization...
+		__MCFCRT_DiscardCrtModuleQuickExitCallbacks();
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		__MCFCRT_StandardStreamsUninit();

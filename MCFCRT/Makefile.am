@@ -111,13 +111,13 @@ mcfcrt_pre_sources = \
 	src/pre/module.c	\
 	src/pre/atexit.c	\
 	src/pre/at_quick_exit.c	\
-	src/pre/_libsupcxx_cleanup.cpp	\
-	src/pre/_pei386_runtime_relocator.c	\
 	src/pre/tls.c	\
+	src/pre/c11thread_tls.c	\
+	src/pre/gthread_tls.c	\
 	src/pre/__cxa_atexit.c	\
 	src/pre/__cxa_thread_atexit.c	\
-	src/pre/c11thread_tls.c	\
-	src/pre/gthread_tls.c
+	src/pre/_libsupcxx_cleanup.cpp	\
+	src/pre/_pei386_runtime_relocator.c
 
 mcfcrt_sources = \
 	src/mcfcrt.c	\

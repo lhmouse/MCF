@@ -6,6 +6,7 @@
 #include "mcfwin.h"
 #include "mutex.h"
 #include "heap.h"
+#include "bail.h"
 
 #undef GetCurrentProcess
 #define GetCurrentProcess()  ((HANDLE)-1)
@@ -109,23 +110,34 @@ void __MCFCRT_DiscardCrtModuleQuickExitCallbacks(void){
 	_MCFCRT_SignalMutex(&g_vAtQuickExitMutex);
 }
 
-__attribute__((__noreturn__))
-void _MCFCRT_ExitProcess(unsigned uExitCode, _MCFCRT_ExitType eExitType){
-	static volatile bool s_bExiting = false;
+static volatile DWORD s_dwExitingThreadId = 0;
 
-	const bool bBailing = __atomic_exchange_n(&s_bExiting, true, __ATOMIC_RELAXED);
-	if(bBailing){
-		TerminateThread(GetCurrentThread(), uExitCode);
-		__builtin_unreachable();
+static void CheckExitingThread(unsigned uExitCode){
+	const DWORD dwCurrentThreadId = GetCurrentThreadId();
+	DWORD dwOldExitingThreadId = 0;
+	__atomic_compare_exchange_n(&s_dwExitingThreadId, &dwOldExitingThreadId, dwCurrentThreadId, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+	if(dwOldExitingThreadId != 0){
+		if(dwOldExitingThreadId == dwCurrentThreadId){
+			_MCFCRT_Bail(L"_MCFCRT_QuickExit() 或 _MCFCRT_Exit() 被递归调用。\n"
+				"这可能是在被 static 或 thread_local 修饰的对象的析构函数中调用了 exit() 或 quick_exit() 导致的。");
+		}
+		ExitThread(uExitCode);
+		__builtin_trap();
 	}
+}
 
-	if(eExitType == _MCFCRT_kExitTypeQuick){
-		PumpAtModuleQuickExit();
-	}
-	if(eExitType != _MCFCRT_kExitTypeNormal){
-		TerminateProcess(GetCurrentProcess(), uExitCode);
-	} else {
-		ExitProcess(uExitCode);
-	}
-	__builtin_unreachable();
+_Noreturn void _MCFCRT_ImmediateExit(unsigned uExitCode){
+	TerminateProcess(GetCurrentProcess(), uExitCode);
+	__builtin_trap();
+}
+_Noreturn void _MCFCRT_QuickExit(unsigned uExitCode){
+	CheckExitingThread(uExitCode);
+	PumpAtModuleQuickExit();
+	_MCFCRT_ImmediateExit(uExitCode);
+	__builtin_trap();
+}
+_Noreturn void _MCFCRT_Exit(unsigned uExitCode){
+	CheckExitingThread(uExitCode);
+	ExitProcess(uExitCode);
+	__builtin_trap();
 }

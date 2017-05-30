@@ -8,5 +8,5 @@
 #undef quick_exit
 
 _Noreturn void quick_exit(int status){
-	_MCFCRT_ExitProcess((unsigned)status, _MCFCRT_kExitTypeQuick);
+	_MCFCRT_QuickExit((unsigned)status);
 }

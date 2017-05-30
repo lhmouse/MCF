@@ -23,7 +23,7 @@ static BOOL CtrlHandler(DWORD dwCtrlType){
 
 	static const wchar_t kKilledMessage[] = L"进程被 Ctrl-C 终止，因为没有找到自定义的 _MCFCRT_OnCtrlEvent() 响应函数。";
 	_MCFCRT_WriteStandardErrorText(kKilledMessage, sizeof(kKilledMessage) / sizeof(wchar_t) - 1, true);
-	_MCFCRT_ExitProcess(1, _MCFCRT_kExitTypeQuick);
+	_MCFCRT_QuickExit(3);
 }
 
 static bool s_bProcessAttachNotified = false;
@@ -99,5 +99,5 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	}
 	__MCFCRT_SEH_TOP_END
 
-	_MCFCRT_ExitProcess(uExitCode, _MCFCRT_kExitTypeNormal);
+	_MCFCRT_Exit(uExitCode);
 }

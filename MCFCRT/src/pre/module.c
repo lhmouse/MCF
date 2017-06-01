@@ -42,7 +42,7 @@ static __MCFCRT_AtExitQueue g_atexit_queue = { 0 };
 static void Dispose_atexit_queue(void){
 	__MCFCRT_AtExitElement elem;
 	while(__MCFCRT_AtExitQueuePop(&elem, &g_atexit_queue)){
-		(*elem.__proc)(elem.__context);
+		(*(elem.__proc))(elem.__context);
 	}
 }
 

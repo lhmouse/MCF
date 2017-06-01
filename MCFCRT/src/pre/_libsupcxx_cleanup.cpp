@@ -7,7 +7,7 @@ namespace __gnu_cxx {
 	void __freeres();
 }
 
-extern "C" void __MCFCRT_libsupcxx_Cleanup(){
+extern "C" void __MCFCRT_libsupcxx_cleanup(){
 	if(__gnu_cxx::__freeres){
 		__gnu_cxx::__freeres();
 	}

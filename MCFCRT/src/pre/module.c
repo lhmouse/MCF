@@ -8,13 +8,13 @@
 #include "../env/_atexit_queue.h"
 
 extern void _pei386_runtime_relocator(void);
-extern void __MCFCRT_libsupcxx_Cleanup(void);
+extern void __MCFCRT_libsupcxx_cleanup(void);
 
 typedef void (*Pvfv)(void);
 
 extern const Pvfv __CTOR_LIST__[], __DTOR_LIST__[];
 
-static void RunGlobalCtors(void){
+static void Run_global_ctors(void){
 	const Pvfv *begin, *end;
 	end = begin = __CTOR_LIST__ + 1;
 	while(*end){
@@ -25,7 +25,7 @@ static void RunGlobalCtors(void){
 		(*end)();
 	}
 }
-static void RunGlobalDtors(void){
+static void Run_global_dtors(void){
 	const Pvfv *begin, *end;
 	end = begin = __DTOR_LIST__ + 1;
 	while(*end){
@@ -49,14 +49,14 @@ static void Dispose_atexit_queue(void){
 bool __MCFCRT_ModuleInit(void){
 	_pei386_runtime_relocator();
 	__MCFCRT_TlsInit();
-	RunGlobalCtors();
+	Run_global_ctors();
 	return true;
 }
 void __MCFCRT_ModuleUninit(void){
 	Dispose_atexit_queue();
 	__MCFCRT_TlsUninit();
-	RunGlobalDtors();
-	__MCFCRT_libsupcxx_Cleanup();
+	Run_global_dtors();
+	__MCFCRT_libsupcxx_cleanup();
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){

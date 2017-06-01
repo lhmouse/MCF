@@ -41,7 +41,7 @@ static inline bool __MCFCRT_AtExitQueuePush(__MCFCRT_AtExitQueue *_MCFCRT_RESTRI
 			__node = &(__queue->__spare);
 		}
 		if(__node->__size >= sizeof(__node->__data) / sizeof(__node->__data[0])){
-			__next = _MCFCRT_malloc(sizeof(*__next));
+			__next = (__MCFCRT_AtExitQueueNode *)_MCFCRT_malloc(sizeof(*__next));
 			if(!__next){
 				_MCFCRT_SignalMutex(&(__queue->__mutex));
 				return false;

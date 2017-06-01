@@ -19,11 +19,11 @@
 #include <errno.h>
 
 #ifndef __MCFCRT_GTHREAD_INLINE_OR_EXTERN
-#	define __MCFCRT_GTHREAD_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#  define __MCFCRT_GTHREAD_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
 #endif
 
 #ifdef __GTHREADS
-#	error __GTHREADS is already defined. (Thread model confliction detected?)
+#  error __GTHREADS is already defined. (Thread model confliction detected?)
 #endif
 
 #define __GTHREADS 1

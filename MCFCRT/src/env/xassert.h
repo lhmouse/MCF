@@ -27,19 +27,13 @@ _MCFCRT_EXTERN_C_END
 #undef _MCFCRT_DEBUG_CHECK_MSG
 
 #ifdef NDEBUG
-
-#	define _MCFCRT_ASSERT(__expr_)                    ((void)(((__expr_) ? true : false) || __MCFCRT_DECLARE_UNREACHABLE()))
-#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)        ((void)(((__expr_) ? true : false) || __MCFCRT_DECLARE_UNREACHABLE()))
-
-#	define _MCFCRT_DEBUG_CHECK(__expr_)               ((void)0)
-#	define _MCFCRT_DEBUG_CHECK_MSG(__expr_, __msg_)   ((void)0)
-
+#  define _MCFCRT_ASSERT(__expr_)                     ((void)(((__expr_) ? true : false) || __MCFCRT_DECLARE_UNREACHABLE()))
+#  define _MCFCRT_ASSERT_MSG(__expr_, __msg_)         ((void)(((__expr_) ? true : false) || __MCFCRT_DECLARE_UNREACHABLE()))
+#  define _MCFCRT_DEBUG_CHECK(__expr_)                ((void)0)
+#  define _MCFCRT_DEBUG_CHECK_MSG(__expr_, __msg_)    ((void)0)
 #else
-
-#	define _MCFCRT_ASSERT(__expr_)                    ((void)(((__expr_) ? true : false) || __MCFCRT_FAIL_ASSERTION(_MCFCRT_PP_WIDEN(#__expr_), (L""   ))))
-#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)        ((void)(((__expr_) ? true : false) || __MCFCRT_FAIL_ASSERTION(_MCFCRT_PP_WIDEN(#__expr_), (__msg_))))
-
-#	define _MCFCRT_DEBUG_CHECK(__expr_)               _MCFCRT_ASSERT(__expr_)
-#	define _MCFCRT_DEBUG_CHECK_MSG(__expr_, __msg_)   _MCFCRT_ASSERT_MSG(__expr_, __msg_)
-
+#  define _MCFCRT_ASSERT(__expr_)                     ((void)(((__expr_) ? true : false) || __MCFCRT_FAIL_ASSERTION(_MCFCRT_PP_WIDEN(#__expr_), (L""   ))))
+#  define _MCFCRT_ASSERT_MSG(__expr_, __msg_)         ((void)(((__expr_) ? true : false) || __MCFCRT_FAIL_ASSERTION(_MCFCRT_PP_WIDEN(#__expr_), (__msg_))))
+#  define _MCFCRT_DEBUG_CHECK(__expr_)                _MCFCRT_ASSERT(__expr_)
+#  define _MCFCRT_DEBUG_CHECK_MSG(__expr_, __msg_)    _MCFCRT_ASSERT_MSG(__expr_, __msg_)
 #endif

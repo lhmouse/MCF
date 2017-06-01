@@ -19,15 +19,15 @@ __attribute__((__dllimport__, __stdcall__, __const__))
 extern BOOLEAN RtlDllShutdownInProgress(void);
 
 #ifndef __BYTE_ORDER__
-#	error Byte order is unknown.
+#  error Byte order is unknown.
 #endif
 // The first byte is reserved by Itanium ABI to indicate whether the initialization has succeeded.
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#	define BSUSR(v_)            ((uintptr_t)(v_) << CHAR_BIT)
-#	define BSFB(v_)             ((uintptr_t)(v_)            )
+#  define BSUSR(v_)             ((uintptr_t)(v_) << CHAR_BIT)
+#  define BSFB(v_)              ((uintptr_t)(v_)            )
 #else
-#	define BSUSR(v_)            ((uintptr_t)(v_)                                        )
-#	define BSFB(v_)             ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
+#  define BSUSR(v_)             ((uintptr_t)(v_)                                        )
+#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
 #endif
 
 #define MASK_LOCKED             ((uintptr_t)( BSUSR(0x01)              ))

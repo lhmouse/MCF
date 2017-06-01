@@ -98,7 +98,7 @@ size_t __MCFCRT_HeapDbgGetRawSize(size_t uContentSize){
 	return uContentSize + GUARD_BAND_SIZE * 2;
 }
 
-#	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
+#  if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo(void){
 	return HeapAlloc(g_hMapAllocator, 0, sizeof(__MCFCRT_HeapDbgBlockInfo));
@@ -163,7 +163,7 @@ void __MCFCRT_HeapDbgUnregisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInfo){
 	_MCFCRT_AvlDetach((const _MCFCRT_AvlNodeHeader *)pInfo);
 }
 
-#	else
+#  else
 
 unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 	unsigned char *const pAddress = pRaw + GUARD_BAND_SIZE;
@@ -202,6 +202,6 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pA
 	}
 }
 
-#	endif
+#  endif
 
 #endif

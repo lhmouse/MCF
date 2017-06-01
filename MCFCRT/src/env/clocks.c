@@ -60,9 +60,9 @@ uint64_t _MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
 }
 
 #ifdef NDEBUG
-#	define DEBUG_MONO_CLOCK_OFFSET   0ull
+#  define DEBUG_MONO_CLOCK_OFFSET   0ull
 #else
-#	define DEBUG_MONO_CLOCK_OFFSET   0x100000000ull
+#  define DEBUG_MONO_CLOCK_OFFSET   0x100000000ull
 #endif
 
 uint64_t _MCFCRT_GetFastMonoClock(void){

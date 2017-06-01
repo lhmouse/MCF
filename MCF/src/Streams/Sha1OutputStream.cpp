@@ -155,12 +155,12 @@ void Sha1OutputStream::X_Update(const std::uint8_t (&abyChunk)[64]) noexcept {
 		"rol " rb_ ", 30 \n"
 
 #ifdef _WIN64
-#	define EDI_OREQ_RC_AND_RD(rc_, rd_)	\
+#  define EDI_OREQ_RC_AND_RD(rc_, rd_)	\
 		"mov r8d, " rc_ " \n"	\
 		"and r8d, " rd_ " \n"	\
 		"or edi, r8d \n"
 #else
-#	define EDI_OREQ_RC_AND_RD(rc_, rd_)	\
+#  define EDI_OREQ_RC_AND_RD(rc_, rd_)	\
 		"push " rc_ " \n"	\
 		"and " rc_ ", " rd_ " \n"	\
 		"or edi, " rc_ " \n"	\

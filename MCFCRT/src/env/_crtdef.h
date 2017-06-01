@@ -6,15 +6,34 @@
 #define __MCFCRT_ENV_CRTDEF_H_
 
 #if !defined(__amd64__) && !defined(__i386__)
-#	error This processor architecture is not supported.
+#  error This processor architecture is not supported.
 #endif
 
-#if defined(__cplusplus) && __cplusplus >= 201402l
-#	define _MCFCRT_CXX14                1
+#ifdef __STDC_VERSION__
+#  if __STDC_VERSION__ >= 199409l
+#    define  _MCFCRT_C95                1
+#  endif
+#  if __STDC_VERSION__ >= 199901l
+#    define  _MCFCRT_C99                1
+#  endif
+#  if __STDC_VERSION__ >= 201112l
+#    define  _MCFCRT_C11                1
+#  endif
 #endif
 
-#if defined(__cplusplus) && __cplusplus >= 201103l
-#	define _MCFCRT_CXX11                1
+#ifdef __cplusplus
+#  if __cplusplus >= 199711l
+#    define  _MCFCRT_CXX98              1
+#  endif
+#  if __cplusplus >= 201103l
+#    define  _MCFCRT_CXX11              1
+#  endif
+#  if __cplusplus >= 201402l
+#    define  _MCFCRT_CXX14              1
+#  endif
+#  if __cplusplus >= 201703l
+#    define  _MCFCRT_CXX17              1
+#  endif
 #endif
 
 #include <stddef.h>
@@ -28,19 +47,19 @@
 #include <assert.h>
 
 #ifdef __cplusplus
-#	define _MCFCRT_EXTERN_C_BEGIN       extern "C" {
-#	define _MCFCRT_EXTERN_C_END         }
-#	define _MCFCRT_STD                  ::
+#  define  _MCFCRT_EXTERN_C_BEGIN       extern "C" {
+#  define  _MCFCRT_EXTERN_C_END         }
+#  define  _MCFCRT_STD                  ::
 #else
-#	define _MCFCRT_EXTERN_C_BEGIN       //
-#	define _MCFCRT_EXTERN_C_END         //
-#	define _MCFCRT_STD                  //
+#  define  _MCFCRT_EXTERN_C_BEGIN       //
+#  define  _MCFCRT_EXTERN_C_END         //
+#  define  _MCFCRT_STD                  //
 #endif
 
 #ifdef _WIN64
-#	define __MCFCRT_C_CALLBACK_DECL     __attribute__((__nothrow__, __aligned__(16)))
+#  define  __MCFCRT_C_CALLBACK_DECL     __attribute__((__nothrow__, __aligned__(16)))
 #else
-#	define __MCFCRT_C_CALLBACK_DECL     __attribute__((__nothrow__, __force_align_arg_pointer__, __aligned__(8)))
+#  define  __MCFCRT_C_CALLBACK_DECL     __attribute__((__nothrow__, __force_align_arg_pointer__, __aligned__(8)))
 #endif
 
 #define __MCFCRT_C_CDECL                __attribute__((__cdecl__))    __MCFCRT_C_CALLBACK_DECL
@@ -48,20 +67,20 @@
 #define __MCFCRT_C_FASTCALL             __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL
 
 #if defined(_MCFCRT_CXX11)
-#	define _MCFCRT_NOEXCEPT             noexcept
-#	define _MCFCRT_CONSTEXPR            constexpr
-#	define _MCFCRT_RESTRICT             __restrict__
-#	define _MCFCRT_NULLPTR              nullptr
+#  define  _MCFCRT_NOEXCEPT             noexcept
+#  define  _MCFCRT_CONSTEXPR            constexpr
+#  define  _MCFCRT_RESTRICT             __restrict__
+#  define  _MCFCRT_NULLPTR              nullptr
 #elif defined(__cplusplus)
-#	define _MCFCRT_NOEXCEPT             throw()
-#	define _MCFCRT_CONSTEXPR            static inline
-#	define _MCFCRT_RESTRICT             __restrict__
-#	define _MCFCRT_NULLPTR              ((__INTPTR_TYPE__)0)
+#  define  _MCFCRT_NOEXCEPT             throw()
+#  define  _MCFCRT_CONSTEXPR            static inline
+#  define  _MCFCRT_RESTRICT             __restrict__
+#  define  _MCFCRT_NULLPTR              ((__INTPTR_TYPE__)0)
 #else
-#	define _MCFCRT_NOEXCEPT             //
-#	define _MCFCRT_CONSTEXPR            static inline
-#	define _MCFCRT_RESTRICT             restrict
-#	define _MCFCRT_NULLPTR              ((void *)0)
+#  define  _MCFCRT_NOEXCEPT             //
+#  define  _MCFCRT_CONSTEXPR            static inline
+#  define  _MCFCRT_RESTRICT             restrict
+#  define  _MCFCRT_NULLPTR              ((void *)0)
 #endif
 
 #endif

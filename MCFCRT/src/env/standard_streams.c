@@ -16,9 +16,9 @@ static_assert(alignof(wchar_t) == alignof(char16_t), "What?");
 
 // _MCFCRT_ASSERT() 会操作标准输入输出流，所以可能会死锁。
 #ifdef NDEBUG
-#	define SS_ASSERT(expr_)   ((void)((expr_) || (__builtin_unreachable(), 1)))
+#  define SS_ASSERT(expr_)   ((void)((expr_) || (__builtin_unreachable(), 1)))
 #else
-#	define SS_ASSERT(expr_)   ((void)((expr_) || (__builtin_trap(), 1)))
+#  define SS_ASSERT(expr_)   ((void)((expr_) || (__builtin_trap(), 1)))
 #endif
 
 typedef struct tagStream {

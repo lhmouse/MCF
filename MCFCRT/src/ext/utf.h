@@ -10,7 +10,7 @@
 #include "../env/pp.h"
 
 #ifndef __MCFCRT_UTF_INLINE_OR_EXTERN
-#	define __MCFCRT_UTF_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#  define __MCFCRT_UTF_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
 #endif
 
 _MCFCRT_EXTERN_C_BEGIN

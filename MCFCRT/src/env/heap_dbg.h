@@ -18,11 +18,11 @@
 */
 
 #ifndef __MCFCRT_HEAPDBG_LEVEL
-#	ifdef NDEBUG
-#		define __MCFCRT_HEAPDBG_LEVEL  2
-#	else
-#		define __MCFCRT_HEAPDBG_LEVEL  4
-#	endif
+#  ifdef NDEBUG
+#    define __MCFCRT_HEAPDBG_LEVEL  2
+#  else
+#    define __MCFCRT_HEAPDBG_LEVEL  4
+#  endif
 #endif
 
 #define __MCFCRT_REQUIRE_HEAPDBG_LEVEL(lv_)    ((__MCFCRT_HEAPDBG_LEVEL + 0) >= (lv_))
@@ -38,7 +38,7 @@ extern void __MCFCRT_HeapDbgUninit(void) _MCFCRT_NOEXCEPT;
 
 extern _MCFCRT_STD size_t __MCFCRT_HeapDbgGetRawSize(_MCFCRT_STD size_t __uContentSize) _MCFCRT_NOEXCEPT;
 
-#	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
+#  if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 typedef struct __MCFCRT_tagHeapDbgBlockInfo {
 	_MCFCRT_AvlNodeHeader __avlhNodeByAddress;
@@ -57,12 +57,12 @@ extern unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInf
 extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **__ppRaw, unsigned char *__pAddress, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_HeapDbgUnregisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo) _MCFCRT_NOEXCEPT;
 
-#	else
+#  else
 
 extern unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *__pRaw) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **__ppRaw, unsigned char *__pAddress, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
 
-#	endif
+#  endif
 
 #endif
 

@@ -87,26 +87,26 @@ void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, cons
 
 	unsigned char *pbyRawOriginal;
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
-#	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
+#  if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 	__MCFCRT_HeapDbgBlockInfo *pBlockInfo;
-#		if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
+#    if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 	size_t uOriginalSize;
-#		endif
-#	endif
+#    endif
+#  endif
 	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 	{
-#	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
+#  if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 		pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pbyRawOriginal, pBlock, pbyRetAddr);
-#		if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
+#    if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 		if(pBlockInfo){
 			uOriginalSize = pBlockInfo->__uSize;
 		} else {
 			uOriginalSize = HeapSize(GetProcessHeap(), 0, pbyRawOriginal);
 		}
-#		endif
-#	else
+#    endif
+#  else
 		__MCFCRT_HeapDbgValidateBlockBasic(&pbyRawOriginal, pBlock, pbyRetAddr);
-#	endif
+#  endif
 	}
 	_MCFCRT_SignalMutex(&g_vHeapMutex);
 #else

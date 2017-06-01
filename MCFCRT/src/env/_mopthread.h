@@ -5,6 +5,7 @@
 #ifndef __MCFCRT_ENV_MOPTHREAD_H_
 #define __MCFCRT_ENV_MOPTHREAD_H_
 
+#include "_crtdef.h"
 #include "thread.h"
 
 _MCFCRT_EXTERN_C_BEGIN

@@ -13,22 +13,22 @@
 #undef GetCurrentThread
 #define GetCurrentThread()   ((HANDLE)-2)
 
-static __MCFCRT_AtExitQueue g_at_quick_exit_queue = { 0 };
+static __MCFCRT_AtExitQueue g_vAtQuickExitQueue = { 0 };
 
 static void Dispose_at_quick_exit_queue(void){
-	__MCFCRT_AtExitElement elem;
-	while(__MCFCRT_AtExitQueuePop(&elem, &g_at_quick_exit_queue)){
-		(*(elem.__proc))(elem.__context);
+	__MCFCRT_AtExitElement vElement;
+	while(__MCFCRT_AtExitQueuePop(&vElement, &g_vAtQuickExitQueue)){
+		__MCFCRT_AtExitQueueInvoke(&vElement);
 	}
 }
 
 bool _MCFCRT_AtCrtModuleQuickExit(_MCFCRT_AtCrtModuleExitCallback pfnProc, intptr_t nContext){
-	__MCFCRT_AtExitElement elem = { pfnProc, nContext };
-	return __MCFCRT_AtExitQueuePush(&g_at_quick_exit_queue, &elem);
+	__MCFCRT_AtExitElement vElement = { pfnProc, nContext };
+	return __MCFCRT_AtExitQueuePush(&g_vAtQuickExitQueue, &vElement);
 }
 
 void __MCFCRT_DiscardCrtModuleQuickExitCallbacks(void){
-	__MCFCRT_AtExitQueueClear(&g_at_quick_exit_queue);
+	__MCFCRT_AtExitQueueClear(&g_vAtQuickExitQueue);
 }
 
 static volatile DWORD s_dwExitingThreadId = 0;

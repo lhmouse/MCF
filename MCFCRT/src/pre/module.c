@@ -14,52 +14,52 @@ typedef void (*Pvfv)(void);
 
 extern const Pvfv __CTOR_LIST__[], __DTOR_LIST__[];
 
-static void Run_global_ctors(void){
-	const Pvfv *begin, *end;
-	end = begin = __CTOR_LIST__ + 1;
-	while(*end){
-		++end;
+static void RunGlobalConstructors(void){
+	const Pvfv *ppfnBegin, *ppfnEnd;
+	ppfnEnd = ppfnBegin = __CTOR_LIST__ + 1;
+	while(*ppfnEnd){
+		++ppfnEnd;
 	}
-	while(begin != end){
-		--end;
-		(*end)();
+	while(ppfnBegin != ppfnEnd){
+		--ppfnEnd;
+		(**ppfnEnd)();
 	}
 }
-static void Run_global_dtors(void){
-	const Pvfv *begin, *end;
-	end = begin = __DTOR_LIST__ + 1;
-	while(*end){
-		++end;
+static void RunGlobalDestructors(void){
+	const Pvfv *ppfnBegin, *ppfnEnd;
+	ppfnEnd = ppfnBegin = __DTOR_LIST__ + 1;
+	while(*ppfnEnd){
+		++ppfnEnd;
 	}
-	while(begin != end){
-		(*begin)();
-		++begin;
+	while(ppfnBegin != ppfnEnd){
+		(**ppfnBegin)();
+		++ppfnBegin;
 	}
 }
 
-static __MCFCRT_AtExitQueue g_atexit_queue = { 0 };
+static __MCFCRT_AtExitQueue g_vAtExitQueue = { 0 };
 
 static void Dispose_atexit_queue(void){
-	__MCFCRT_AtExitElement elem;
-	while(__MCFCRT_AtExitQueuePop(&elem, &g_atexit_queue)){
-		(*(elem.__proc))(elem.__context);
+	__MCFCRT_AtExitElement vElement;
+	while(__MCFCRT_AtExitQueuePop(&vElement, &g_vAtExitQueue)){
+		__MCFCRT_AtExitQueueInvoke(&vElement);
 	}
 }
 
 bool __MCFCRT_ModuleInit(void){
 	_pei386_runtime_relocator();
 	__MCFCRT_TlsInit();
-	Run_global_ctors();
+	RunGlobalConstructors();
 	return true;
 }
 void __MCFCRT_ModuleUninit(void){
 	Dispose_atexit_queue();
 	__MCFCRT_TlsUninit();
-	Run_global_dtors();
+	RunGlobalDestructors();
 	__MCFCRT_libsupcxx_cleanup();
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){
-	__MCFCRT_AtExitElement elem = { pfnProc, nContext };
-	return __MCFCRT_AtExitQueuePush(&g_atexit_queue, &elem);
+	__MCFCRT_AtExitElement vElement = { pfnProc, nContext };
+	return __MCFCRT_AtExitQueuePush(&g_vAtExitQueue, &vElement);
 }

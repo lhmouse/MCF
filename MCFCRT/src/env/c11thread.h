@@ -318,7 +318,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_sleep(const struct timespe
 			__sec = (long long)__remaining_s;
 			__nsec = (long)((__remaining_s - (double)__sec) * 1.0e9);
 		}
-		__remaining->tv_sec  = (time_t)__sec;
+		__remaining->tv_sec  = (_MCFCRT_STD time_t)__sec;
 		__remaining->tv_nsec = __nsec;
 	}
 	return 0; // On Windows we don't support interruptable sleep.

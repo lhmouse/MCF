@@ -39,14 +39,14 @@ _MCFCRT_EXTERN_C_END
 #ifdef _WIN64
 #  define __MCFCRT_SEH_TOP_BEGIN        { __asm__ volatile (	\
                                             ".seh_handler __MCFCRT_SehTopDispatcher, @except \n");	\
-                                            {
+                                          {
 #  define __MCFCRT_SEH_TOP_END            }	\
                                         }
 #else
 #  define __MCFCRT_SEH_TOP_BEGIN        { void *__aSehNode[2]	\
                                             __attribute__((__cleanup__(__MCFCRT_SehTopUninstaller_x86)));	\
-                                            __MCFCRT_SehTopInstaller_x86(&__aSehNode);	\
-                                            {
+                                          __MCFCRT_SehTopInstaller_x86(&__aSehNode);	\
+                                          {
 #  define __MCFCRT_SEH_TOP_END            }	\
                                         }
 #endif

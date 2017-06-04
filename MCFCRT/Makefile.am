@@ -75,8 +75,7 @@ pkginclude_env_HEADERS = \
 	src/env/condition_variable.h	\
 	src/env/gthread.h	\
 	src/env/heap.h	\
-	src/env/heap_dbg.h	\
-	src/env/hooks.h	\
+	src/env/heap_debug.h	\
 	src/env/last_error.h	\
 	src/env/mcfwin.h	\
 	src/env/mutex.h	\
@@ -135,8 +134,7 @@ mcfcrt_sources = \
 	src/env/condition_variable.c	\
 	src/env/gthread.c	\
 	src/env/heap.c	\
-	src/env/heap_dbg.c	\
-	src/env/hooks.c	\
+	src/env/heap_debug.c	\
 	src/env/last_error.c	\
 	src/env/mutex.c	\
 	src/env/once_flag.c	\

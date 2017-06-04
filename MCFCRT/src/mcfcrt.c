@@ -3,9 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "mcfcrt.h"
-#include "env/standard_streams.h"
-#include "env/heap_dbg.h"
-#include "env/crt_module.h"
 
 static ptrdiff_t g_nCounter = 0;
 
@@ -15,7 +12,7 @@ bool __MCFCRT_InitRecursive(void){
 		if(!__MCFCRT_StandardStreamsInit()){
 			return false;
 		}
-		if(!__MCFCRT_HeapDbgInit()){
+		if(!__MCFCRT_HeapDebugInit()){
 			__MCFCRT_StandardStreamsUninit();
 			return false;
 		}
@@ -33,7 +30,7 @@ void __MCFCRT_UninitRecursive(void){
 	if(nCounter == 0){
 		// Add more uninitialization...
 		__MCFCRT_DiscardCrtModuleQuickExitCallbacks();
-		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapDebugUninit();
 		__MCFCRT_StandardStreamsUninit();
 	}
 }

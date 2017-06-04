@@ -12,9 +12,7 @@ uint32_t _MCFCRT_GetRandomUint32(void){
 
 	u64OldSeed = __atomic_load_n(&g_u64RandSeed, __ATOMIC_RELAXED);
 	do {
-		u64Seed = u64OldSeed ^ _MCFCRT_ReadTimeStampCounter32();
-		u64Seed *= 6364136223846793005ull;
-		u64Seed += 1442695040888963407ull;
+		u64Seed = (u64OldSeed ^ _MCFCRT_ReadTimeStampCounter32()) * 6364136223846793005u + 1442695040888963407u;
 	} while(!__atomic_compare_exchange_n(&g_u64RandSeed, &u64OldSeed, u64Seed, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 
 	return (uint32_t)(u64Seed >> 32);

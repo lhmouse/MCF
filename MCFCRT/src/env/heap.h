@@ -10,44 +10,49 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__malloc__))
-extern void *__MCFCRT_HeapAlloc(_MCFCRT_STD size_t __uSize, bool __bFillsWithZero, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern void *__MCFCRT_HeapAlloc(_MCFCRT_STD size_t __uNewSize, bool __bFillsWithZero, const void *__pRetAddrOuter) _MCFCRT_NOEXCEPT;
 __attribute__((__nonnull__(1)))
-extern void *__MCFCRT_HeapRealloc(void *__pBlock, _MCFCRT_STD size_t __uSize, bool __bFillsWithZero, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern void *__MCFCRT_HeapRealloc(void *__pOldBlock, _MCFCRT_STD size_t __uNewSize, bool __bFillsWithZero, const void *__pRetAddrOuter) _MCFCRT_NOEXCEPT;
 __attribute__((__nonnull__(1)))
-extern void __MCFCRT_HeapFree(void *__pBlock, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapFree(void *__pOldBlock, const void *__pRetAddrOuter) _MCFCRT_NOEXCEPT;
+
+typedef void (*_MCFCRT_HeapAllocCallback)(void *__pNewBlock, _MCFCRT_STD size_t __uNewSize, void *__pOldBlock, const void *__pRetAddrOuter, const void *__pRetAddrInner);
+
+extern _MCFCRT_HeapAllocCallback _MCFCRT_GetHeapAllocCallback(void) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_HeapAllocCallback _MCFCRT_SetHeapAllocCallback(_MCFCRT_HeapAllocCallback __pfnNewCallback) _MCFCRT_NOEXCEPT;
 
 __attribute__((__always_inline__, __malloc__))
-static inline void *_MCFCRT_malloc(_MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT {
-	return __MCFCRT_HeapAlloc(__uSize, false,
+static inline void *_MCFCRT_malloc(_MCFCRT_STD size_t  __size) _MCFCRT_NOEXCEPT {
+	return __MCFCRT_HeapAlloc(__size, false,
 		__builtin_return_address(0));
 }
 __attribute__((__always_inline__))
-static inline void *_MCFCRT_realloc(void *__pBlock, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT {
-	if(!__pBlock){
-		return __MCFCRT_HeapAlloc(__uSize,
-			false, __builtin_return_address(0));
+static inline void *_MCFCRT_realloc(void *__ptr, _MCFCRT_STD size_t __size) _MCFCRT_NOEXCEPT {
+	if(!__ptr){
+		return __MCFCRT_HeapAlloc(__size, false,
+			__builtin_return_address(0));
 	}
-	return __MCFCRT_HeapRealloc(__pBlock, __uSize, false,
+	return __MCFCRT_HeapRealloc(__ptr, __size, false,
 		__builtin_return_address(0));
 }
 __attribute__((__always_inline__, __malloc__))
-static inline void *_MCFCRT_calloc(_MCFCRT_STD size_t __uCount, _MCFCRT_STD size_t __uBlockSize) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD size_t __uSize = 0;
-	if((__uCount != 0) && (__uBlockSize != 0)){
-		if(__uCount > SIZE_MAX / __uBlockSize){
+static inline void *_MCFCRT_calloc(_MCFCRT_STD size_t __nmemb, _MCFCRT_STD size_t __size) _MCFCRT_NOEXCEPT {
+	_MCFCRT_STD size_t __size_total = 0;
+	if((__nmemb != 0) && (__size != 0)){
+		if(__nmemb > SIZE_MAX / __size){
 			return _MCFCRT_NULLPTR;
 		}
-		__uSize = __uCount * __uBlockSize;
+		__size_total = __nmemb * __size;
 	}
-	return __MCFCRT_HeapAlloc(__uSize, true,
+	return __MCFCRT_HeapAlloc(__size_total, true,
 		__builtin_return_address(0));
 }
 __attribute__((__always_inline__))
-static inline void _MCFCRT_free(void *__pBlock) _MCFCRT_NOEXCEPT {
-	if(!__pBlock){
+static inline void _MCFCRT_free(void *__ptr) _MCFCRT_NOEXCEPT {
+	if(!__ptr){
 		return;
 	}
-	__MCFCRT_HeapFree(__pBlock,
+	__MCFCRT_HeapFree(__ptr,
 		__builtin_return_address(0));
 }
 

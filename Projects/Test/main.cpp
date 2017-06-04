@@ -1,19 +1,16 @@
-#include <MCFCRT/pre/module.h>
-#include <cstdio>
+#include <MCFCRT/env/heap.h>
 
-int count;
-
-void second(_MCFCRT_STD intptr_t param){
-	std::printf("second (%d)\n", (int)param);
-}
-void first(_MCFCRT_STD intptr_t param){
-	std::printf("first  (%d)\n", (int)param);
-	_MCFCRT_AtModuleExit(&second, ++count);
+static void heap_callback(void *ptr_new, std::size_t size_new, void *ptr_old, const void *ret_outer, const void *ret_inner){
+	__builtin_printf("heap_callback(%p, %2u, %p, %p, %p)\n", ptr_new, (unsigned)size_new, ptr_old, ret_outer, ret_inner);
 }
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	for(int i = 0; i < 100; ++i){
-		_MCFCRT_AtModuleExit(&first, ++count);
-	}
+	::_MCFCRT_SetHeapAllocCallback(&heap_callback);
+	auto p1 = ::__MCFCRT_HeapAlloc(30, true, nullptr);
+	p1 = ::__MCFCRT_HeapRealloc(p1, 20, true, nullptr);
+	auto p2 = ::__MCFCRT_HeapAlloc(15, true, nullptr);
+	p1 = ::__MCFCRT_HeapRealloc(p1, 40, true, nullptr);
+	::__MCFCRT_HeapFree(p1, nullptr);
+	::__MCFCRT_HeapFree(p2, nullptr);
 	return 0;
 }

@@ -60,18 +60,18 @@ uint64_t _MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
 }
 
 #ifdef NDEBUG
-#  define DEBUG_MONO_CLOCK_OFFSET   0ull
+#  define MONO_CLOCK_OFFSET   0
 #else
-#  define DEBUG_MONO_CLOCK_OFFSET   0x100000000ull
+#  define MONO_CLOCK_OFFSET   0x100000000
 #endif
 
 uint64_t _MCFCRT_GetFastMonoClock(void){
-	return GetTickCount64() + DEBUG_MONO_CLOCK_OFFSET;
+	return GetTickCount64() + MONO_CLOCK_OFFSET * 3;
 }
 double _MCFCRT_GetHiResMonoClock(void){
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
 		_MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
-	return ((double)liCounter.QuadPart + (double)(DEBUG_MONO_CLOCK_OFFSET * 2)) * QueryPerformanceFrequencyReciprocalOnce();
+	return ((double)liCounter.QuadPart + MONO_CLOCK_OFFSET * 5) * QueryPerformanceFrequencyReciprocalOnce();
 }

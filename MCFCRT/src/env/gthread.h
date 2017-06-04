@@ -96,7 +96,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_mutex_unlock(__gthread_mu
 // Recursive mutex
 //-----------------------------------------------------------------------------
 typedef struct __MCFCRT_tagGthreadRecursiveMutex {
-	volatile _MCFCRT_STD uintptr_t __owner;
+	_MCFCRT_STD uintptr_t __owner;
 	_MCFCRT_STD size_t __count;
 	__gthread_mutex_t __mutex;
 } __gthread_recursive_mutex_t;

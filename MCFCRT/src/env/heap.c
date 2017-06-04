@@ -47,7 +47,7 @@ void *__MCFCRT_HeapAlloc(size_t uNewSize, bool bFillsWithZero, const void *pRetA
 		_MCFCRT_inline_mempset_fwd(pNewBlock, 0xCA, uNewSize);
 	}
 #endif
-	const _MCFCRT_HeapAllocCallback pfnCallback = _MCFCRT_GetHeapAllocCallback();
+	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
 	if(pfnCallback){
 		(*pfnCallback)(pNewBlock, uNewSize, _MCFCRT_NULLPTR, pRetAddrOuter, __builtin_return_address(0));
 	}
@@ -82,7 +82,7 @@ void *__MCFCRT_HeapRealloc(void *pOldBlock, size_t uNewSize, bool bFillsWithZero
 		_MCFCRT_inline_mempset_fwd((char *)pNewBlock + uOldSize, 0xCC, uNewSize - uOldSize);
 	}
 #endif
-	const _MCFCRT_HeapAllocCallback pfnCallback = _MCFCRT_GetHeapAllocCallback();
+	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
 	if(pfnCallback){
 		(*pfnCallback)(pNewBlock, uNewSize, pOldBlock, pRetAddrOuter, __builtin_return_address(0));
 	}
@@ -103,18 +103,18 @@ void __MCFCRT_HeapFree(void *pOldBlock, const void *pRetAddrOuter){
 #endif
 	DWORD dwFlags = 0;
 	HeapFree(GetProcessHeap(), dwFlags, pOldStorage);
-	const _MCFCRT_HeapAllocCallback pfnCallback = _MCFCRT_GetHeapAllocCallback();
+	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
 	if(pfnCallback){
 		(*pfnCallback)(_MCFCRT_NULLPTR, 0, pOldBlock, pRetAddrOuter, __builtin_return_address(0));
 	}
 	_MCFCRT_SignalMutex(&g_vMutex);
 }
 
-static volatile _MCFCRT_HeapAllocCallback g_pfnHeapAllocCallback = _MCFCRT_NULLPTR;
+static volatile _MCFCRT_HeapCallback g_pfnHeapCallback = _MCFCRT_NULLPTR;
 
-_MCFCRT_HeapAllocCallback _MCFCRT_GetHeapAllocCallback(void){
-	return __atomic_load_n(&g_pfnHeapAllocCallback, __ATOMIC_CONSUME);
+_MCFCRT_HeapCallback _MCFCRT_GetHeapCallback(void){
+	return __atomic_load_n(&g_pfnHeapCallback, __ATOMIC_CONSUME);
 }
-_MCFCRT_HeapAllocCallback _MCFCRT_SetHeapAllocCallback(_MCFCRT_HeapAllocCallback pfnNewCallback){
-	return __atomic_exchange_n(&g_pfnHeapAllocCallback, pfnNewCallback, __ATOMIC_RELEASE);
+_MCFCRT_HeapCallback _MCFCRT_SetHeapCallback(_MCFCRT_HeapCallback pfnNewCallback){
+	return __atomic_exchange_n(&g_pfnHeapCallback, pfnNewCallback, __ATOMIC_RELEASE);
 }

@@ -5,7 +5,7 @@ static void heap_callback(void *ptr_new, std::size_t size_new, void *ptr_old, co
 }
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	::_MCFCRT_SetHeapAllocCallback(&heap_callback);
+	::_MCFCRT_SetHeapCallback(&heap_callback);
 	auto p1 = ::__MCFCRT_HeapAlloc(30, true, nullptr);
 	p1 = ::__MCFCRT_HeapRealloc(p1, 20, true, nullptr);
 	auto p2 = ::__MCFCRT_HeapAlloc(15, true, nullptr);

@@ -16,10 +16,10 @@ extern void *__MCFCRT_HeapRealloc(void *__pOldBlock, _MCFCRT_STD size_t __uNewSi
 __attribute__((__nonnull__(1)))
 extern void __MCFCRT_HeapFree(void *__pOldBlock, const void *__pRetAddrOuter) _MCFCRT_NOEXCEPT;
 
-typedef void (*_MCFCRT_HeapAllocCallback)(void *__pNewBlock, _MCFCRT_STD size_t __uNewSize, void *__pOldBlock, const void *__pRetAddrOuter, const void *__pRetAddrInner);
+typedef void (*_MCFCRT_HeapCallback)(void *__pNewBlock, _MCFCRT_STD size_t __uNewSize, void *__pOldBlock, const void *__pRetAddrOuter, const void *__pRetAddrInner);
 
-extern _MCFCRT_HeapAllocCallback _MCFCRT_GetHeapAllocCallback(void) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_HeapAllocCallback _MCFCRT_SetHeapAllocCallback(_MCFCRT_HeapAllocCallback __pfnNewCallback) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_HeapCallback _MCFCRT_GetHeapCallback(void) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_HeapCallback _MCFCRT_SetHeapCallback(_MCFCRT_HeapCallback __pfnNewCallback) _MCFCRT_NOEXCEPT;
 
 __attribute__((__always_inline__, __malloc__))
 static inline void *_MCFCRT_malloc(_MCFCRT_STD size_t  __size) _MCFCRT_NOEXCEPT {

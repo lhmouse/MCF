@@ -19,21 +19,22 @@
 */
 
 const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszCommandLine){
-	void *pStorage = _MCFCRT_NULLPTR;
-
 	const size_t uCommandLineSize = (wcslen(pwszCommandLine) + 1) * sizeof(wchar_t);
 	const size_t uPrefixSize = ((uCommandLineSize - 1) / alignof(_MCFCRT_ArgItem) + 1) * alignof(_MCFCRT_ArgItem);
 	if(uPrefixSize < uCommandLineSize){
-		goto jBadAlloc;
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return _MCFCRT_NULLPTR;
 	}
 	size_t uCapacity = 4;
 	const size_t uSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(_MCFCRT_ArgItem);
-	if((uSizeToAlloc < uPrefixSize) || (uSizeToAlloc >= (SIZE_MAX >> 2))){
-		goto jBadAlloc;
+	if(uSizeToAlloc < uPrefixSize){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return _MCFCRT_NULLPTR;
 	}
-	pStorage = _MCFCRT_malloc(uSizeToAlloc);
+	void *pStorage = _MCFCRT_malloc(uSizeToAlloc);
 	if(!pStorage){
-		goto jBadAlloc;
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return _MCFCRT_NULLPTR;
 	}
 	_MCFCRT_ArgItem *pArgv = (void *)((char *)pStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
 	pArgv[-1].__pwszStr = pStorage;
@@ -65,19 +66,22 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 				if(uArgc == uCapacity){
 					uCapacity = uCapacity * 3 / 2;
 					const size_t uNewSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(_MCFCRT_ArgItem);
-					if((uNewSizeToAlloc <= uSizeToAlloc) || (uNewSizeToAlloc >= (SIZE_MAX >> 2))){
-						goto jBadAlloc;
+					if(uNewSizeToAlloc <= uSizeToAlloc){
+						_MCFCRT_free(pStorage);
+						SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+						return _MCFCRT_NULLPTR;
 					}
 					void *pNewStorage = _MCFCRT_realloc(pStorage, uNewSizeToAlloc);
 					if(!pNewStorage){
-						goto jBadAlloc;
+						_MCFCRT_free(pStorage);
+						SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+						return _MCFCRT_NULLPTR;
 					}
 					pArgv = (void *)((char *)pNewStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
 					pArgv[-1].__pwszStr = pNewStorage;
 					pArgv[-1].__uLen = uCapacity;
 
 					pwcWrite = (wchar_t *)pNewStorage + (pwcWrite - (wchar_t *)pStorage);
-
 					pStorage = pNewStorage;
 				}
 				++uArgc;
@@ -156,11 +160,6 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 
 	*puArgc = uArgc;
 	return pArgv;
-
-jBadAlloc:
-	_MCFCRT_free(pStorage);
-	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	return _MCFCRT_NULLPTR;
 }
 
 const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *puArgc){

@@ -41,9 +41,6 @@ typedef struct tagBlockTrailer {
 
 static_assert(sizeof(BlockTrailer) % alignof(max_align_t) == 0, "??");
 
-static inline unsigned long LcgInitialize(const void *pIdent, uintptr_t uCookie){
-	return (unsigned long)(((uintptr_t)pIdent >> 8) + uCookie);
-}
 static inline unsigned char LcgGetByte(unsigned long *pulSeed){
 	unsigned long ulSeed = *pulSeed;
 	ulSeed = ulSeed * 1664525u + 1013904223u;
@@ -53,14 +50,14 @@ static inline unsigned char LcgGetByte(unsigned long *pulSeed){
 
 __attribute__((__noinline__))
 static void MakeSentry(unsigned char *pbyData, size_t uSize, uintptr_t uCookie){
-	unsigned long ulSeed = LcgInitialize(pbyData, uCookie);
+	unsigned long ulSeed = (unsigned long)uCookie;
 	for(size_t i = 0; i < uSize; ++i){
 		pbyData[i] = LcgGetByte(&ulSeed);
 	}
 }
 __attribute__((__noinline__))
 static bool CheckSentry(uintptr_t uCookie, const unsigned char *pbyData, size_t uSize){
-	unsigned long ulSeed = LcgInitialize(pbyData, uCookie);
+	unsigned long ulSeed = (unsigned long)uCookie;
 	for(size_t i = 0; i < uSize; ++i){
 		if(pbyData[i] != LcgGetByte(&ulSeed)){
 			return false;
@@ -69,7 +66,6 @@ static bool CheckSentry(uintptr_t uCookie, const unsigned char *pbyData, size_t 
 	return true;
 }
 
-static uintptr_t       s_uSerial   = 0;
 static _MCFCRT_AvlRoot s_avlBlocks = _MCFCRT_NULLPTR;
 
 static void CheckForMemoryLeaks(void){
@@ -96,7 +92,6 @@ static void CheckForMemoryLeaks(void){
 }
 
 bool __MCFCRT_HeapDebugInit(void){
-	s_uSerial = (uintptr_t)_MCFCRT_GetFastMonoClock();
 	return true;
 }
 void __MCFCRT_HeapDebugUninit(void){
@@ -119,7 +114,7 @@ void __MCFCRT_HeapDebugRegister(void **restrict ppBlock, size_t uSize, void *pSt
 	pHeader->uSize = uSize;
 	pHeader->pRetAddrOuter = pRetAddrOuter;
 	pHeader->pRetAddrInner = pRetAddrInner;
-	pHeader->uCookie = ++s_uSerial;
+	pHeader->uCookie = (uintptr_t)_MCFCRT_GetFastMonoClock();
 	pHeader->uReserved = 0;
 	MakeSentry(pHeader->abySentry, sizeof(pHeader->abySentry), pHeader->uCookie);
 	// Initialize the trailer.
@@ -163,7 +158,7 @@ void __MCFCRT_HeapDebugUndoUnregister(void *pStorage){
 	const size_t uSize = pHeader->uSize;
 
 	// Generate a new cookie and update the header sentry.
-	pHeader->uCookie = ++s_uSerial;
+	pHeader->uCookie = (uintptr_t)_MCFCRT_GetFastMonoClock();
 	pHeader->uReserved = 0;
 	MakeSentry(pHeader->abySentry, sizeof(pHeader->abySentry), pHeader->uCookie);
 	// Reinitialize the trailer.

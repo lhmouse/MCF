@@ -25,7 +25,6 @@ _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_HANDLE_INVALID_INPUT_(__permissive_, __code_point_, __goto_label_)	\
 	{	\
-	_MCFCRT_PP_LAZY(_MCFCRT_PP_CAT2, __MCFCRT_jCold, __LINE__): __attribute__((__cold__, __unused__));	\
 		if(!(__permissive_)){	\
 			return _MCFCRT_UTF_INVALID_INPUT;	\
 		}	\

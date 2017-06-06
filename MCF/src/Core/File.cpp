@@ -9,7 +9,6 @@
 #include "Defer.hpp"
 #include "MinMax.hpp"
 #include <MCFCRT/env/mcfwin.h>
-#include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>
 

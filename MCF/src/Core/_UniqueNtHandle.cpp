@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "_UniqueNtHandle.hpp"
-#include <winternl.h>
 
 namespace MCF {
 

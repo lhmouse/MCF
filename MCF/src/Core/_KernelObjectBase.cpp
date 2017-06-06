@@ -7,7 +7,6 @@
 #include <MCFCRT/env/mcfwin.h>
 #include <MCFCRT/ext/wcpcpy.h>
 #include <MCFCRT/ext/itow.h>
-#include <winternl.h>
 #include <ntdef.h>
 
 extern "C" {

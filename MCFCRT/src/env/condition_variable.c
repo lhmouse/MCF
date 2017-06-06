@@ -7,7 +7,7 @@
 #include "_nt_timeout.h"
 #include "xassert.h"
 #include "expect.h"
-#include <winternl.h>
+#include <ntdef.h>
 #include <ntstatus.h>
 
 __attribute__((__dllimport__, __stdcall__))

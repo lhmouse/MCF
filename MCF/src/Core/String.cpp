@@ -4,7 +4,6 @@
 
 #include "String.hpp"
 #include "Exception.hpp"
-#include <winternl.h>
 #include <ntstatus.h>
 #include <MCFCRT/ext/utf.h>
 

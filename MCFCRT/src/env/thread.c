@@ -6,7 +6,6 @@
 #include "_nt_timeout.h"
 #include "xassert.h"
 #include "mcfwin.h"
-#include <winternl.h>
 #include <ntdef.h>
 
 #undef GetCurrentProcess
@@ -15,9 +14,21 @@
 #undef GetCurrentThread
 #define GetCurrentThread()   ((HANDLE)-2)
 
+// https://msdn.microsoft.com/en-us/library/gg750647.aspx
+typedef struct _CLIENT_ID {
+	HANDLE UniqueProcess;
+	HANDLE UniqueThread;
+} CLIENT_ID;
+
 __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended,
-	ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, void *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);
+NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended, ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, void *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);
+__attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtClose(HANDLE hObject);
+
+__attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtWaitForSingleObject(HANDLE hObject, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__))
+ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus);
 
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);

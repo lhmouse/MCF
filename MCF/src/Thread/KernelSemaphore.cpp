@@ -5,7 +5,6 @@
 #include "KernelSemaphore.hpp"
 #include "../Core/Exception.hpp"
 #include <MCFCRT/env/_nt_timeout.h>
-#include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>
 

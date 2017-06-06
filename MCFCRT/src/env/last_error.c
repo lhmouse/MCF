@@ -4,7 +4,6 @@
 
 #include "last_error.h"
 #include "mcfwin.h"
-#include <winternl.h>
 #include <ntdef.h>
 #include <winnt.h>
 

@@ -16,49 +16,51 @@ typedef struct tagThunkInfo {
 	void *pChunk;
 	size_t uChunkSize;
 
-	_MCFCRT_AvlNodeHeader vThunkIndex;
+	_MCFCRT_AvlNodeHeader avlThunkIndex;
 	void *pThunk;
 	size_t uThunkSize;
 
-	_MCFCRT_AvlNodeHeader vFreeSizeIndex;
+	_MCFCRT_AvlNodeHeader avlFreeSizeIndex;
 	size_t uFreeSize;
 } ThunkInfo;
 
-static inline ThunkInfo *GetInfoFromThunkIndex(const _MCFCRT_AvlNodeHeader *pThunkIndex){
-	_MCFCRT_ASSERT(pThunkIndex);
-
-	return (ThunkInfo *)((char *)pThunkIndex - offsetof(ThunkInfo, vThunkIndex));
+static inline ThunkInfo *GetInfoFromThunkIndex(const _MCFCRT_AvlNodeHeader *pavlIndex){
+	_MCFCRT_ASSERT(pavlIndex);
+	ThunkInfo *const pInfo = (ThunkInfo *)((char *)pavlIndex - offsetof(ThunkInfo, avlThunkIndex));
+	_MCFCRT_ASSERT(pInfo);
+	return pInfo;
 }
-static inline ThunkInfo *GetInfoFromFreeSizeIndex(const _MCFCRT_AvlNodeHeader *pFreeSizeIndex){
-	_MCFCRT_ASSERT(pFreeSizeIndex);
-
-	return (ThunkInfo *)((char *)pFreeSizeIndex - offsetof(ThunkInfo, vFreeSizeIndex));
+static inline ThunkInfo *GetInfoFromFreeSizeIndex(const _MCFCRT_AvlNodeHeader *pavlIndex){
+	_MCFCRT_ASSERT(pavlIndex);
+	ThunkInfo *const pInfo = (ThunkInfo *)((char *)pavlIndex - offsetof(ThunkInfo, avlFreeSizeIndex));
+	_MCFCRT_ASSERT(pInfo);
+	return pInfo;
 }
 
-static int ThunkComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pIndex1, intptr_t nKey2){
-	const uintptr_t u1 = (uintptr_t)(GetInfoFromThunkIndex(pIndex1)->pThunk);
-	const uintptr_t u2 = (uintptr_t)(void *)nKey2;
-	if(u1 != u2){
-		return (u1 < u2) ? -1 : 1;
+static int ThunkComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pavlSelf, intptr_t nOther){
+	const uintptr_t uSelf = (uintptr_t)(GetInfoFromThunkIndex(pavlSelf)->pThunk);
+	const uintptr_t uOther = (uintptr_t)(void *)nOther;
+	if(uSelf != uOther){
+		return (uSelf < uOther) ? -1 : 1;
 	}
 	return 0;
 }
-static int ThunkComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _MCFCRT_AvlNodeHeader *pIndex2){
-	return ThunkComparatorNodeKey(pIndex1, (intptr_t)(GetInfoFromThunkIndex(pIndex2)->pThunk));
+static int ThunkComparatorNodes(const _MCFCRT_AvlNodeHeader *pavlSelf, const _MCFCRT_AvlNodeHeader *pavlOther){
+	return ThunkComparatorNodeKey(pavlSelf, (intptr_t)(GetInfoFromThunkIndex(pavlOther)->pThunk));
 }
 
 static_assert(sizeof(size_t) <= sizeof(uintptr_t), "This platform is not supported.");
 
-static int FreeSizeComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pIndex1, intptr_t nKey2){
-	const uintptr_t u1 = GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize;
-	const uintptr_t u2 = (uintptr_t)nKey2;
-	if(u1 != u2){
-		return (u1 < u2) ? -1 : 1;
+static int FreeSizeComparatorNodeOther(const _MCFCRT_AvlNodeHeader *pavlSelf, intptr_t nOther){
+	const uintptr_t uSelf = GetInfoFromFreeSizeIndex(pavlSelf)->uFreeSize;
+	const uintptr_t uOther = (uintptr_t)nOther;
+	if(uSelf != uOther){
+		return (uSelf < uOther) ? -1 : 1;
 	}
 	return 0;
 }
-static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _MCFCRT_AvlNodeHeader *pIndex2){
-	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
+static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pavlSelf, const _MCFCRT_AvlNodeHeader *pavlOther){
+	return FreeSizeComparatorNodeOther(pavlSelf, (intptr_t)GetInfoFromFreeSizeIndex(pavlOther)->uFreeSize);
 }
 
 static _MCFCRT_Mutex    g_vThunkMutex         = { 0 };
@@ -79,7 +81,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		_MCFCRT_AvlNodeHeader *pFreeSizeIndex = _MCFCRT_AvlGetLowerBound(&g_avlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
+		_MCFCRT_AvlNodeHeader *pFreeSizeIndex = _MCFCRT_AvlGetLowerBound(&g_avlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeOther);
 		ThunkInfo *pInfo;
 		bool bInfoAllocated;
 		if(pFreeSizeIndex){
@@ -111,10 +113,10 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			pInfo->uThunkSize = uChunkSize;
 			pInfo->uFreeSize  = uChunkSize;
 
-			_MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pInfo->vThunkIndex), &ThunkComparatorNodes);
-			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+			_MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pInfo->avlThunkIndex), &ThunkComparatorNodes);
+			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->avlFreeSizeIndex), &FreeSizeComparatorNodes);
 
-			pFreeSizeIndex = &(pInfo->vFreeSizeIndex);
+			pFreeSizeIndex = &(pInfo->avlFreeSizeIndex);
 			bInfoAllocated = true;
 		}
 		_MCFCRT_ASSERT(pInfo->uFreeSize >= uThunkSize);
@@ -125,8 +127,8 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			ThunkInfo *const pSpare = _MCFCRT_malloc(sizeof(ThunkInfo));
 			if(!pSpare){
 				if(bInfoAllocated){
-					_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
-					_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
+					_MCFCRT_AvlDetach(&(pInfo->avlThunkIndex));
+					_MCFCRT_AvlDetach(&(pInfo->avlFreeSizeIndex));
 					VirtualFree(pInfo->pChunk, 0, MEM_RELEASE);
 					_MCFCRT_free(pInfo);
 				}
@@ -140,17 +142,17 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			pSpare->uThunkSize = uRemaining;
 			pSpare->uFreeSize  = uRemaining;
 
-			_MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pSpare->vThunkIndex), &ThunkComparatorNodes);
-			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);
+			_MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pSpare->avlThunkIndex), &ThunkComparatorNodes);
+			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pSpare->avlFreeSizeIndex), &FreeSizeComparatorNodes);
 
 			pInfo->uThunkSize = uThunkSize;
 		} else {
 			uThunkSize = pInfo->uThunkSize;
 		}
 
-		_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
+		_MCFCRT_AvlDetach(&(pInfo->avlFreeSizeIndex));
 		pInfo->uFreeSize = 0;
-		_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+		_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->avlFreeSizeIndex), &FreeSizeComparatorNodes);
 
 		pbyRaw = pInfo->pThunk;
 
@@ -196,8 +198,8 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			if((pNextInfo->pChunk == pInfo->pChunk) && (pNextInfo->uFreeSize != 0)){
 				pInfo->uThunkSize += pNextInfo->uThunkSize;
 
-				_MCFCRT_AvlDetach(&(pNextInfo->vThunkIndex));
-				_MCFCRT_AvlDetach(&(pNextInfo->vFreeSizeIndex));
+				_MCFCRT_AvlDetach(&(pNextInfo->avlThunkIndex));
+				_MCFCRT_AvlDetach(&(pNextInfo->avlFreeSizeIndex));
 				_MCFCRT_free(pNextInfo);
 			}
 		}
@@ -209,8 +211,8 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			if((pPrevInfo->pChunk == pInfo->pChunk) && (pPrevInfo->uFreeSize != 0)){
 				pPrevInfo->uThunkSize += pInfo->uThunkSize;
 
-				_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
-				_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
+				_MCFCRT_AvlDetach(&(pInfo->avlThunkIndex));
+				_MCFCRT_AvlDetach(&(pInfo->avlFreeSizeIndex));
 				_MCFCRT_free(pInfo);
 
 				pThunkIndex = pPrevThunkIndex;
@@ -222,15 +224,15 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			pPageToRelease = pInfo->pChunk;
 			pInfoToFree = pInfo;
 
-			_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
-			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
+			_MCFCRT_AvlDetach(&(pInfo->avlThunkIndex));
+			_MCFCRT_AvlDetach(&(pInfo->avlFreeSizeIndex));
 		} else {
 			pPageToRelease = _MCFCRT_NULLPTR;
 			pInfoToFree = _MCFCRT_NULLPTR;
 
-			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
+			_MCFCRT_AvlDetach(&(pInfo->avlFreeSizeIndex));
 			pInfo->uFreeSize = pInfo->uThunkSize;
-			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->avlFreeSizeIndex), &FreeSizeComparatorNodes);
 		}
 	}
 	_MCFCRT_SignalMutex(&g_vThunkMutex);

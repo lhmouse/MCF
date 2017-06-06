@@ -60,7 +60,7 @@ typedef struct tagMopthreadControl {
 	unsigned char abyParams[];
 } MopthreadControl;
 
-static inline int MopthreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pNodeSelf, intptr_t nTidOther){
+static inline int MopthreadControlComparatorNodeOther(const _MCFCRT_AvlNodeHeader *pNodeSelf, intptr_t nTidOther){
 	const uintptr_t uTidSelf = (uintptr_t)(((const MopthreadControl *)pNodeSelf)->uTid);
 	const uintptr_t uTidOther = (uintptr_t)nTidOther;
 	if(uTidSelf != uTidOther){
@@ -69,7 +69,7 @@ static inline int MopthreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader 
 	return 0;
 }
 static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *pNodeSelf, const _MCFCRT_AvlNodeHeader *pNodeOther){
-	return MopthreadControlComparatorNodeKey(pNodeSelf, (intptr_t)(((const MopthreadControl *)pNodeOther)->uTid));
+	return MopthreadControlComparatorNodeOther(pNodeSelf, (intptr_t)(((const MopthreadControl *)pNodeOther)->uTid));
 }
 
 // The caller must have the global mutex locked!
@@ -186,7 +186,7 @@ void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nCon
 	const uintptr_t uTid = _MCFCRT_GetCurrentThreadId();
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 	if(!pControl){
 		_MCFCRT_Bail(L"Calling thread of __MCFCRT_MopthreadExit() was not created using __MCFCRT_MopthreadCreate().");
 	}
@@ -197,7 +197,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 		if(pControl){
 			switch(pControl->eState){
 			case kStateJoinable:
@@ -239,7 +239,7 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 		if(pControl){
 			switch(pControl->eState){
 			case kStateJoinable:
@@ -281,7 +281,7 @@ const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(uintptr_t uTid){
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 		if(pControl){
 			switch(pControl->eState){
 			case kStateJoinable:

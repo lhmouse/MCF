@@ -37,7 +37,7 @@ static inline ThunkInfo *GetInfoFromFreeSizeIndex(const _MCFCRT_AvlNodeHeader *p
 	return pInfo;
 }
 
-static int ThunkComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pavlSelf, intptr_t nOther){
+static int ThunkComparatorNodeOther(const _MCFCRT_AvlNodeHeader *pavlSelf, intptr_t nOther){
 	const uintptr_t uSelf = (uintptr_t)(GetInfoFromThunkIndex(pavlSelf)->pThunk);
 	const uintptr_t uOther = (uintptr_t)(void *)nOther;
 	if(uSelf != uOther){
@@ -46,7 +46,7 @@ static int ThunkComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pavlSelf, intptr_
 	return 0;
 }
 static int ThunkComparatorNodes(const _MCFCRT_AvlNodeHeader *pavlSelf, const _MCFCRT_AvlNodeHeader *pavlOther){
-	return ThunkComparatorNodeKey(pavlSelf, (intptr_t)(GetInfoFromThunkIndex(pavlOther)->pThunk));
+	return ThunkComparatorNodeOther(pavlSelf, (intptr_t)(GetInfoFromThunkIndex(pavlOther)->pThunk));
 }
 
 static_assert(sizeof(size_t) <= sizeof(uintptr_t), "This platform is not supported.");
@@ -174,7 +174,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		_MCFCRT_AvlNodeHeader *pThunkIndex = _MCFCRT_AvlFind(&g_avlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
+		_MCFCRT_AvlNodeHeader *pThunkIndex = _MCFCRT_AvlFind(&g_avlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeOther);
 		ThunkInfo *pInfo;
 		if(!pThunkIndex || ((pInfo = GetInfoFromThunkIndex(pThunkIndex))->uFreeSize != 0)){
 			_MCFCRT_Bail(L"_MCFCRT_DeallocateThunk() 失败：传入的指针无效。");

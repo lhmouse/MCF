@@ -234,7 +234,8 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_join(__gthread_t __tid, v
 		return EDEADLK;
 	}
 	if(__exit_code_ret){
-		__MCFCRT_gthread_control_t __control = { 0 };
+		__MCFCRT_gthread_control_t __control;
+		__builtin_memset(&__control, 0, sizeof(__control));
 		_MCFCRT_STD size_t __size_copied = sizeof(__control);
 		if(!__MCFCRT_MopthreadJoin(__tid, &__control, &__size_copied)){
 			return ESRCH;

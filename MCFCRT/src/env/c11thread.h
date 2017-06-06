@@ -265,7 +265,8 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_join(thrd_t __tid, int *__
 		return thrd_error; // XXX: EDEADLK
 	}
 	if(__exit_code_ret){
-		__MCFCRT_c11thread_control_t __control = { 0 };
+		__MCFCRT_c11thread_control_t __control;
+		__builtin_memset(&__control, 0, sizeof(__control));
 		_MCFCRT_STD size_t __bytes_copied = sizeof(__control);
 		if(!__MCFCRT_MopthreadJoin(__tid, &__control, &__bytes_copied)){
 			return thrd_error; // XXX: ESRCH

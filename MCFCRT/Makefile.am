@@ -229,19 +229,19 @@ mcfcrt_sources = \
 	src/stdc/stdlib/quick_exit.c
 
 bin_PROGRAMS = \
-	MCFCRT-10.dll
+	MCFCRT-2.dll
 
-MCFCRT_10_dll_SOURCES = \
+MCFCRT_2_dll_SOURCES = \
 	src/dll_startup.c	\
 	${mcfcrt_sources}
 
-MCFCRT_10_dll_LDFLAGS = \
+MCFCRT_2_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 
-MCFCRT_10_dll_LDADD = \
+MCFCRT_2_dll_LDADD = \
 	-lkernel32 -lntdll
 
 lib_LIBRARIES = \
@@ -259,7 +259,7 @@ libMCFCRT_pre_dll_a_SOURCES = \
 	${mcfcrt_pre_sources}
 
 libMCFCRT_dll_a_SOURCES =
-libMCFCRT.dll.a: MCFCRT-10.dll
+libMCFCRT.dll.a: MCFCRT-2.dll
 
 libMCFCRT_a_SOURCES = \
 	${mcfcrt_sources}

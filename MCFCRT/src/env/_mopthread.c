@@ -73,7 +73,7 @@ static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *p
 }
 
 // The caller must have the global mutex locked!
-static inline void DropControlRefUnsafe(MopthreadControl *pControl){
+static inline void DropControlRefUnsafe(MopthreadControl *restrict pControl){
 	if(--(pControl->uRefCount) == 0){
 		_MCFCRT_ASSERT(pControl->eState == kStateJoined);
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
@@ -83,11 +83,11 @@ static inline void DropControlRefUnsafe(MopthreadControl *pControl){
 }
 
 __attribute__((__noreturn__))
-static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, MopthreadControl *restrict pControl, void (*pfnModifier)(void *, intptr_t), intptr_t nContext){
+static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, MopthreadControl *restrict pControl, void (*pfnModifier)(void *, size_t, intptr_t), intptr_t nContext){
 	switch(pControl->eState){
 	case kStateJoinable:
 		if(pfnModifier){
-			(*pfnModifier)(pControl->abyParams, nContext);
+			(*pfnModifier)(pControl->abyParams, pControl->uSizeOfParams, nContext);
 		}
 		pControl->eState = kStateZombie;
 		break;
@@ -95,7 +95,7 @@ static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, Mopt
 		_MCFCRT_ASSERT(false);
 	case kStateJoining:
 		if(pfnModifier){
-			(*pfnModifier)(pControl->abyParams, nContext);
+			(*pfnModifier)(pControl->abyParams, pControl->uSizeOfParams, nContext);
 		}
 		pControl->eState = kStateJoined;
 		_MCFCRT_BroadcastConditionVariable(&(pControl->condTermination));
@@ -117,7 +117,7 @@ static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, Mopt
 
 __MCFCRT_C_STDCALL __attribute__((__noreturn__))
 static unsigned long MopthreadProcNative(void *pParam){
-	MopthreadControl *const pControl = pParam;
+	MopthreadControl *const restrict pControl = pParam;
 	_MCFCRT_ASSERT(pControl);
 
 	__MCFCRT_SEH_TOP_BEGIN
@@ -135,7 +135,7 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 	if(uSizeToAlloc < sizeof(MopthreadControl)){
 		return 0;
 	}
-	MopthreadControl *const pControl = _MCFCRT_malloc(uSizeToAlloc);
+	MopthreadControl *const restrict pControl = _MCFCRT_malloc(uSizeToAlloc);
 	if(!pControl){
 		return 0;
 	}
@@ -182,22 +182,22 @@ uintptr_t __MCFCRT_MopthreadCreateDetached(void (*pfnProc)(void *), const void *
 	return ReallyCreateMopthread(pfnProc, pParams, uSizeOfParams, false);
 }
 __attribute__((__noreturn__))
-void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nContext){
+void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, size_t, intptr_t), intptr_t nContext){
 	const uintptr_t uTid = _MCFCRT_GetCurrentThreadId();
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
+	MopthreadControl *const restrict pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 	if(!pControl){
 		_MCFCRT_Bail(L"Calling thread of __MCFCRT_MopthreadExit() was not created using __MCFCRT_MopthreadCreate().");
 	}
 	SignalMutexAndExitThread(&g_mtxControl, pControl, pfnModifier, nContext);
 }
-bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
+bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams, size_t *restrict puSizeOfParams){
 	bool bSuccess = false;
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
+		MopthreadControl *const restrict pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 		if(pControl){
 			switch(pControl->eState){
 			case kStateJoinable:
@@ -205,28 +205,26 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				do {
 					_MCFCRT_WaitForConditionVariableForever(&(pControl->condTermination), &TerminationUnlockCallback, &TerminationRelockCallback, (intptr_t)&g_mtxControl, 0);
 				} while(pControl->eState != kStateJoined);
-				_MCFCRT_WaitForThreadForever(pControl->hThread);
-				if(pParams){
-					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
-				}
-				DropControlRefUnsafe(pControl);
-				bSuccess = true;
-				break;
+				goto jJoinSuccess;
 			case kStateZombie:
 				pControl->eState = kStateJoined;
-				_MCFCRT_WaitForThreadForever(pControl->hThread);
-				if(pParams){
-					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, pControl->uSizeOfParams);
-				}
-				DropControlRefUnsafe(pControl);
-				bSuccess = true;
-				break;
+				goto jJoinSuccess;
 			case kStateJoining:
 			case kStateJoined:
 			case kStateDetached:
 				break;
 			default:
 				_MCFCRT_ASSERT(false);
+			jJoinSuccess:
+				_MCFCRT_WaitForThreadForever(pControl->hThread);
+				if(pParams){
+					const size_t uSizeCopied = (pControl->uSizeOfParams < *puSizeOfParams) ? pControl->uSizeOfParams : *puSizeOfParams;
+					_MCFCRT_inline_mempcpy_fwd(pParams, pControl->abyParams, uSizeCopied);
+					*puSizeOfParams = uSizeCopied;
+				}
+				DropControlRefUnsafe(pControl);
+				bSuccess = true;
+				break;
 			}
 		}
 	}
@@ -239,25 +237,25 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
+		MopthreadControl *const restrict pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 		if(pControl){
 			switch(pControl->eState){
 			case kStateJoinable:
 				pControl->eState = kStateDetached;
-				DropControlRefUnsafe(pControl);
-				bSuccess = true;
-				break;
+				goto jJoinSuccess;
 			case kStateZombie:
 				pControl->eState = kStateJoined;
-				DropControlRefUnsafe(pControl);
-				bSuccess = true;
-				break;
+				goto jJoinSuccess;
 			case kStateJoining:
 			case kStateJoined:
 			case kStateDetached:
 				break;
 			default:
 				_MCFCRT_ASSERT(false);
+			jJoinSuccess:
+				DropControlRefUnsafe(pControl);
+				bSuccess = true;
+				break;
 			}
 		}
 	}
@@ -281,7 +279,7 @@ const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(uintptr_t uTid){
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
+		MopthreadControl *const restrict pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControlMap, (intptr_t)uTid, &MopthreadControlComparatorNodeOther);
 		if(pControl){
 			switch(pControl->eState){
 			case kStateJoinable:
@@ -315,7 +313,7 @@ void __MCFCRT_MopthreadUnlockHandle(const _MCFCRT_ThreadHandle *phThread){
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
+		MopthreadControl *const restrict pControl = (void *)((char *)phThread - __builtin_offsetof(MopthreadControl, hThread));
 		_MCFCRT_ASSERT(pControl);
 		DropControlRefUnsafe(pControl);
 	}

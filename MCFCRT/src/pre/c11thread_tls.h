@@ -32,10 +32,10 @@ typedef void (*tss_dtor_t)(void *);
 //-----------------------------------------------------------------------------
 // 7.26.6 Thread-specific storage functions
 //-----------------------------------------------------------------------------
-extern void __MCFCRT_C11threadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_c11thread_tls_destructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_TLS_INLINE_OR_EXTERN int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT {
-	const tss_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_C11threadTlsDestructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
+	const tss_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_c11thread_tls_destructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return thrd_nomem;
 	}

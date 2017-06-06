@@ -5,7 +5,7 @@
 #define __MCFCRT_C11THREAD_TLS_INLINE_OR_EXTERN     extern inline
 #include "c11thread_tls.h"
 
-void __MCFCRT_C11threadTlsDestructor(intptr_t context, void *storage){
+void __MCFCRT_c11thread_tls_destructor(intptr_t context, void *storage){
 	void (*const destructor)(void *) = (void (*)(void *))context;
 
 	void *const value = *(void **)storage;

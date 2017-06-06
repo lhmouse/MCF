@@ -21,10 +21,10 @@ _MCFCRT_EXTERN_C_BEGIN
 //-----------------------------------------------------------------------------
 typedef _MCFCRT_TlsKeyHandle __gthread_key_t;
 
-extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_gthread_tls_destructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_GTHREAD_TLS_INLINE_OR_EXTERN int __MCFCRT_gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT {
-	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_GthreadTlsDestructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
+	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), _MCFCRT_NULLPTR, __destructor ? &__MCFCRT_gthread_tls_destructor : _MCFCRT_NULLPTR, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return ENOMEM;
 	}

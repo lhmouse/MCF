@@ -34,13 +34,13 @@ typedef _MCFCRT_STD uintptr_t thrd_t;
 typedef int (*thrd_start_t)(void *);
 
 // Condition variable
-typedef struct __MCFCRT_tagC11threadConditionVariable {
+typedef struct __MCFCRT_c11thread_cnd {
 	_MCFCRT_ConditionVariable __cond;
 	_MCFCRT_STD uintptr_t __reserved[3];
 } cnd_t;
 
 // Mutex
-typedef struct __MCFCRT_tagC11threadMutex {
+typedef struct __MCFCRT_c11thread_mtx {
 	int __mask;
 	thrd_t __owner;
 	_MCFCRT_STD size_t __count;
@@ -50,7 +50,7 @@ typedef struct __MCFCRT_tagC11threadMutex {
 
 // Call once
 // Note: This struct conforms to the Itanium ABI.
-typedef struct __MCFCRT_tagC11threadOnceFlag {
+typedef struct __MCFCRT_c11thread_once_flag {
 	_MCFCRT_OnceFlag __once;
 } once_flag;
 
@@ -86,8 +86,8 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_call_once(once_flag *__once, v
 //-----------------------------------------------------------------------------
 // 7.26.3 Condition variable functions
 //-----------------------------------------------------------------------------
-extern _MCFCRT_STD intptr_t __MCFCRT_C11threadUnlockCallback(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_C11threadRelockCallback(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD intptr_t __MCFCRT_c11thread_unlock_callback_mutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_c11thread_relock_callback_mutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_init(cnd_t *__cond) _MCFCRT_NOEXCEPT {
 	_MCFCRT_InitializeConditionVariable(&(__cond->__cond));
@@ -97,7 +97,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_cnd_destroy(cnd_t *__cond) _MC
 	(void)__cond;
 }
 
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTranslateTimeout(const struct timespec *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_c11thread_translate_timeout(const struct timespec *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
 	const double __utc_timeout_ms = (double)__utc_timeout->tv_sec * 1.0e3 + (double)__utc_timeout->tv_nsec / 1.0e6;
 	const double __utc_now_ms = (double)_MCFCRT_GetUtcClock();
 	const double __delta_ms = __utc_timeout_ms - __utc_now_ms;
@@ -116,15 +116,15 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTrans
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *_MCFCRT_RESTRICT __cond, mtx_t *_MCFCRT_RESTRICT __mutex, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT {
-	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
-	if(!_MCFCRT_WaitForConditionVariable(&(__cond->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
+	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_c11thread_translate_timeout(__timeout);
+	if(!_MCFCRT_WaitForConditionVariable(&(__cond->__cond), &__MCFCRT_c11thread_unlock_callback_mutex, &__MCFCRT_c11thread_relock_callback_mutex, (_MCFCRT_STD intptr_t)__mutex, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 		return thrd_timedout;
 	}
 	return thrd_success;
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_wait(cnd_t *_MCFCRT_RESTRICT __cond, mtx_t *_MCFCRT_RESTRICT __mutex) _MCFCRT_NOEXCEPT {
-	_MCFCRT_WaitForConditionVariableForever(&(__cond->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT);
+	_MCFCRT_WaitForConditionVariableForever(&(__cond->__cond), &__MCFCRT_c11thread_unlock_callback_mutex, &__MCFCRT_c11thread_relock_callback_mutex, (_MCFCRT_STD intptr_t)__mutex, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT);
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_signal(cnd_t *__cond) _MCFCRT_NOEXCEPT {
@@ -178,7 +178,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RE
 		const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 		const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__mutex->__owner), __ATOMIC_RELAXED);
 		if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
-			const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
+			const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_c11thread_translate_timeout(__timeout);
 			if(!_MCFCRT_WaitForMutex(&(__mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 				return thrd_timedout;
 			}
@@ -187,7 +187,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RE
 		const _MCFCRT_STD size_t __new_count = ++__mutex->__count;
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
-		const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
+		const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_c11thread_translate_timeout(__timeout);
 		if(!_MCFCRT_WaitForMutex(&(__mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 			return thrd_timedout;
 		}
@@ -238,18 +238,18 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_unlock(mtx_t *__mutex) _MCF
 //-----------------------------------------------------------------------------
 // 7.26.5 Thread functions
 //-----------------------------------------------------------------------------
-typedef struct __MCFCRT_tagC11threadControlBlock {
+typedef struct __MCFCRT_c11thread_control {
 	int (*__proc)(void *);
 	void *__param;
 	int __exit_code;
-} __MCFCRT_C11threadControlBlock;
+} __MCFCRT_c11thread_control_t;
 
-extern void __MCFCRT_C11threadMopWrapper(void *__params) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_C11threadMopExitModifier(void *__params, _MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_c11thread_mopthread_wrapper(void *__params) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_c11thread_mopthread_exit_modifier(void *__params, _MCFCRT_STD size_t __size_of_params, _MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_create(thrd_t *__tid_ret, thrd_start_t __proc, void *__param) _MCFCRT_NOEXCEPT {
-	__MCFCRT_C11threadControlBlock __control = { __proc, __param, (int)0xDEADBEEF };
-	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_MopthreadCreate(&__MCFCRT_C11threadMopWrapper, &__control, sizeof(__control));
+	__MCFCRT_c11thread_control_t __control = { __proc, __param, (int)0xDEADBEEF };
+	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_MopthreadCreate(&__MCFCRT_c11thread_mopthread_wrapper, &__control, sizeof(__control));
 	if(__tid == 0){
 		return thrd_nomem; // XXX: We should have returned `EAGAIN` as what POSIX has specified but there isn't `thrd_again` in ISO C.
 	}
@@ -258,20 +258,21 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_create(thrd_t *__tid_ret, 
 }
 __attribute__((__noreturn__))
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_thrd_exit(int __exit_code) _MCFCRT_NOEXCEPT {
-	__MCFCRT_MopthreadExit(&__MCFCRT_C11threadMopExitModifier, __exit_code);
+	__MCFCRT_MopthreadExit(&__MCFCRT_c11thread_mopthread_exit_modifier, __exit_code);
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_join(thrd_t __tid, int *__exit_code_ret) _MCFCRT_NOEXCEPT {
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return thrd_error; // XXX: EDEADLK
 	}
 	if(__exit_code_ret){
-		__MCFCRT_C11threadControlBlock __control;
-		if(!__MCFCRT_MopthreadJoin(__tid, &__control)){
+		__MCFCRT_c11thread_control_t __control = { 0 };
+		_MCFCRT_STD size_t __bytes_copied = sizeof(__control);
+		if(!__MCFCRT_MopthreadJoin(__tid, &__control, &__bytes_copied)){
 			return thrd_error; // XXX: ESRCH
 		}
 		*__exit_code_ret = __control.__exit_code;
 	} else {
-		if(!__MCFCRT_MopthreadJoin(__tid, _MCFCRT_NULLPTR)){
+		if(!__MCFCRT_MopthreadJoin(__tid, _MCFCRT_NULLPTR, _MCFCRT_NULLPTR)){
 			return thrd_error; // XXX: ESRCH
 		}
 	}

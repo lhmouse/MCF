@@ -13,10 +13,7 @@
 namespace MCF {
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	Copy(OutputIteratorT itOutputBegin,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
-{
+OutputIteratorT Copy(OutputIteratorT itOutputBegin, InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd){
 	while(itInputBegin != itInputEnd){
 		*itOutputBegin = *itInputBegin;
 		++itOutputBegin;
@@ -25,10 +22,7 @@ OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	CopyInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
-		InputIteratorT itInputBegin)
-{
+InputIteratorT CopyInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd, InputIteratorT itInputBegin){
 	while(itOutputBegin != itOutputEnd){
 		*itOutputBegin = *itInputBegin;
 		++itOutputBegin;
@@ -37,10 +31,7 @@ InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	CopyN(OutputIteratorT itOutputBegin,
-		InputIteratorT itInputBegin, std::size_t uCount)
-{
+std::pair<OutputIteratorT, InputIteratorT> CopyN(OutputIteratorT itOutputBegin, InputIteratorT itInputBegin, std::size_t uCount){
 	for(auto i = uCount; i; --i){
 		*itOutputBegin = *itInputBegin;
 		++itOutputBegin;
@@ -50,10 +41,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	CopyBackward(OutputIteratorT itOutputEnd,
-		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
-{
+OutputIteratorT CopyBackward(OutputIteratorT itOutputEnd, std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd){
 	while(itInputBegin != itInputEnd){
 		--itOutputEnd;
 		--itInputEnd;
@@ -62,10 +50,7 @@ OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	CopyIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
-		InputIteratorT itInputEnd)
-{
+InputIteratorT CopyIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd, InputIteratorT itInputEnd){
 	while(itOutputBegin != itOutputEnd){
 		--itOutputEnd;
 		--itInputEnd;
@@ -74,10 +59,7 @@ InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	CopyNBackward(OutputIteratorT itOutputEnd,
-		std::size_t uCount, InputIteratorT itInputEnd)
-{
+std::pair<OutputIteratorT, InputIteratorT> CopyNBackward(OutputIteratorT itOutputEnd, std::size_t uCount, InputIteratorT itInputEnd){
 	for(auto i = uCount; i; --i){
 		--itOutputEnd;
 		--itInputEnd;
@@ -87,10 +69,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	Move(OutputIteratorT itOutputBegin,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
-{
+OutputIteratorT Move(OutputIteratorT itOutputBegin, InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd){
 	while(itInputBegin != itInputEnd){
 		*itOutputBegin = std::move(*itInputBegin);
 		++itOutputBegin;
@@ -99,10 +78,7 @@ OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	MoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
-		InputIteratorT itInputBegin)
-{
+InputIteratorT MoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd, InputIteratorT itInputBegin){
 	while(itOutputBegin != itOutputEnd){
 		*itOutputBegin = std::move(*itInputBegin);
 		++itOutputBegin;
@@ -111,10 +87,7 @@ InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	MoveN(OutputIteratorT itOutputBegin,
-		InputIteratorT itInputBegin, std::size_t uCount)
-{
+std::pair<OutputIteratorT, InputIteratorT> MoveN(OutputIteratorT itOutputBegin, InputIteratorT itInputBegin, std::size_t uCount){
 	for(auto i = uCount; i; --i){
 		*itOutputBegin = std::move(*itInputBegin);
 		++itOutputBegin;
@@ -124,10 +97,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	MoveBackward(OutputIteratorT itOutputEnd,
-		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
-{
+OutputIteratorT MoveBackward(OutputIteratorT itOutputEnd, std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd){
 	while(itInputBegin != itInputEnd){
 		--itOutputEnd;
 		--itInputEnd;
@@ -136,10 +106,7 @@ OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	MoveIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
-		InputIteratorT itInputEnd)
-{
+InputIteratorT MoveIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd, InputIteratorT itInputEnd){
 	while(itOutputBegin != itOutputEnd){
 		--itOutputEnd;
 		--itInputEnd;
@@ -148,10 +115,7 @@ InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	MoveNBackward(OutputIteratorT itOutputEnd,
-		std::size_t uCount, InputIteratorT itInputEnd)
-{
+std::pair<OutputIteratorT, InputIteratorT> MoveNBackward(OutputIteratorT itOutputEnd, std::size_t uCount, InputIteratorT itInputEnd){
 	for(auto i = uCount; i; --i){
 		--itOutputEnd;
 		--itInputEnd;
@@ -161,10 +125,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	ReverseCopy(OutputIteratorT itOutputBegin,
-		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
-{
+OutputIteratorT ReverseCopy(OutputIteratorT itOutputBegin, std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd){
 	while(itInputBegin != itInputEnd){
 		--itInputEnd;
 		*itOutputBegin = *itInputEnd;
@@ -173,10 +134,7 @@ OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	ReverseCopyInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
-		InputIteratorT itInputEnd)
-{
+InputIteratorT ReverseCopyInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd, InputIteratorT itInputEnd){
 	while(itOutputBegin != itOutputEnd){
 		--itInputEnd;
 		*itOutputBegin = *itInputEnd;
@@ -185,10 +143,7 @@ InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	ReverseCopyN(OutputIteratorT itOutputBegin,
-		std::size_t uCount, InputIteratorT itInputEnd)
-{
+std::pair<OutputIteratorT, InputIteratorT> ReverseCopyN(OutputIteratorT itOutputBegin, std::size_t uCount, InputIteratorT itInputEnd){
 	for(auto i = uCount; i; --i){
 		--itInputEnd;
 		*itOutputBegin = *itInputEnd;
@@ -198,10 +153,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	ReverseCopyBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
-{
+OutputIteratorT ReverseCopyBackward(OutputIteratorT itOutputEnd, InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd){
 	while(itInputBegin != itInputEnd){
 		--itOutputEnd;
 		*itOutputEnd = *itInputBegin;
@@ -210,10 +162,7 @@ OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	ReverseCopyIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin)
-{
+InputIteratorT ReverseCopyIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd, InputIteratorT itInputBegin){
 	while(itOutputBegin != itOutputEnd){
 		--itOutputEnd;
 		*itOutputEnd = *itInputBegin;
@@ -222,10 +171,7 @@ InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	ReverseCopyNBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::size_t uCount)
-{
+std::pair<OutputIteratorT, InputIteratorT> ReverseCopyNBackward(OutputIteratorT itOutputEnd, InputIteratorT itInputBegin, std::size_t uCount){
 	for(auto i = uCount; i; --i){
 		--itOutputEnd;
 		*itOutputEnd = *itInputBegin;
@@ -235,10 +181,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	ReverseMove(OutputIteratorT itOutputBegin,
-		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
-{
+OutputIteratorT ReverseMove(OutputIteratorT itOutputBegin, std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd){
 	while(itInputBegin != itInputEnd){
 		--itInputEnd;
 		*itOutputBegin = std::move(*itInputEnd);
@@ -247,10 +190,7 @@ OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	ReverseMoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
-		InputIteratorT itInputEnd)
-{
+InputIteratorT ReverseMoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd, InputIteratorT itInputEnd){
 	while(itOutputBegin != itOutputEnd){
 		--itInputEnd;
 		*itOutputBegin = std::move(*itInputEnd);
@@ -259,10 +199,7 @@ InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	ReverseMoveN(OutputIteratorT itOutputBegin,
-		std::size_t uCount, InputIteratorT itInputEnd)
-{
+std::pair<OutputIteratorT, InputIteratorT> ReverseMoveN(OutputIteratorT itOutputBegin, std::size_t uCount, InputIteratorT itInputEnd){
 	for(auto i = uCount; i; --i){
 		--itInputEnd;
 		*itOutputBegin = std::move(*itInputEnd);
@@ -272,10 +209,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-OutputIteratorT
-	ReverseMoveBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
-{
+OutputIteratorT ReverseMoveBackward(OutputIteratorT itOutputEnd, InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd){
 	while(itInputBegin != itInputEnd){
 		--itOutputEnd;
 		*itOutputEnd = std::move(*itInputBegin);
@@ -284,10 +218,7 @@ OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-InputIteratorT
-	ReverseMoveIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin)
-{
+InputIteratorT ReverseMoveIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd, InputIteratorT itInputBegin){
 	while(itOutputBegin != itOutputEnd){
 		--itOutputEnd;
 		*itOutputEnd = std::move(*itInputBegin);
@@ -296,10 +227,7 @@ InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-std::pair<OutputIteratorT, InputIteratorT>
-	ReverseMoveNBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::size_t uCount)
-{
+std::pair<OutputIteratorT, InputIteratorT> ReverseMoveNBackward(OutputIteratorT itOutputEnd, InputIteratorT itInputBegin, std::size_t uCount){
 	for(auto i = uCount; i; --i){
 		--itOutputEnd;
 		*itOutputEnd = std::move(*itInputBegin);
@@ -309,10 +237,7 @@ std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-OutputIteratorT
-	Fill(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
-		const ParamsT &...vParams)
-{
+OutputIteratorT Fill(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd, const ParamsT &...vParams){
 	while(itOutputBegin != itOutputEnd){
 		*itOutputBegin = std::conditional_t<std::is_void<ValueT>::value, std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>(vParams...);
 		++itOutputBegin;
@@ -320,10 +245,7 @@ OutputIteratorT
 	return itOutputBegin;
 }
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-OutputIteratorT
-	FillN(OutputIteratorT itOutputBegin, std::size_t uCount,
-		const ParamsT &...vParams)
-{
+OutputIteratorT FillN(OutputIteratorT itOutputBegin, std::size_t uCount, const ParamsT &...vParams){
 	for(auto i = uCount; i; --i){
 		*itOutputBegin = std::conditional_t<std::is_void<ValueT>::value, std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>(vParams...);
 		++itOutputBegin;
@@ -331,10 +253,7 @@ OutputIteratorT
 	return itOutputBegin;
 }
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-OutputIteratorT
-	FillBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
-		const ParamsT &...vParams)
-{
+OutputIteratorT FillBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd, const ParamsT &...vParams){
 	while(itOutputBegin != itOutputEnd){
 		--itOutputEnd;
 		*itOutputEnd = std::conditional_t<std::is_void<ValueT>::value, std::remove_reference_t<decltype(*itOutputEnd)>, ValueT>(vParams...);
@@ -342,10 +261,7 @@ OutputIteratorT
 	return itOutputEnd;
 }
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-OutputIteratorT
-	FillNBackward(std::size_t uCount, OutputIteratorT itOutputEnd,
-		const ParamsT &...vParams)
-{
+OutputIteratorT FillNBackward(std::size_t uCount, OutputIteratorT itOutputEnd, const ParamsT &...vParams){
 	for(auto i = uCount; i; --i){
 		--itOutputEnd;
 		*itOutputEnd = std::conditional_t<std::is_void<ValueT>::value, std::remove_reference_t<decltype(*itOutputEnd)>, ValueT>(vParams...);

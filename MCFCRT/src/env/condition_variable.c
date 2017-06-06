@@ -52,10 +52,7 @@ static_assert(__builtin_popcountll(MASK_THREADS_RELEASED) == __builtin_popcountl
 #define MAX_SPIN_MULTIPLIER     ((uintptr_t)32)
 
 __attribute__((__always_inline__))
-static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
-	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
-	size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut)
-{
+static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut){
 	size_t uMaxSpinCount, uSpinMultiplier;
 	bool bSignaled, bSpinnable;
 	{
@@ -221,28 +218,16 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 	return uCountToSignal;
 }
 
-bool __MCFCRT_ReallyWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
-	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
-	size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock)
-{
-	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext,
-		uMaxSpinCount, true, u64UntilFastMonoClock, true);
+bool __MCFCRT_ReallyWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, uMaxSpinCount, true, u64UntilFastMonoClock, true);
 	return bSignaled;
 }
-bool __MCFCRT_ReallyWaitForConditionVariableOrAbandon(_MCFCRT_ConditionVariable *pConditionVariable,
-	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
-	size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock)
-{
-	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext,
-		uMaxSpinCount, true, u64UntilFastMonoClock, false);
+bool __MCFCRT_ReallyWaitForConditionVariableOrAbandon(_MCFCRT_ConditionVariable *pConditionVariable, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, uMaxSpinCount, true, u64UntilFastMonoClock, false);
 	return bSignaled;
 }
-void __MCFCRT_ReallyWaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
-	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
-	size_t uMaxSpinCount)
-{
-	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext,
-		uMaxSpinCount, false, UINT64_MAX, true);
+void __MCFCRT_ReallyWaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCount){
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, uMaxSpinCount, false, UINT64_MAX, true);
 	_MCFCRT_ASSERT(bSignaled);
 }
 size_t __MCFCRT_ReallySignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){

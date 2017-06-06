@@ -220,9 +220,7 @@ static void UpdateRecur(_MCFCRT_AvlNodeHeader *pWhere){
 	}
 }
 
-void _MCFCRT_AvlInternalAttach(_MCFCRT_AvlNodeHeader *pNode,
-	_MCFCRT_AvlNodeHeader *pParent, _MCFCRT_AvlNodeHeader **ppRefl)
-{
+void _MCFCRT_AvlInternalAttach(_MCFCRT_AvlNodeHeader *pNode, _MCFCRT_AvlNodeHeader *pParent, _MCFCRT_AvlNodeHeader **ppRefl){
 	_MCFCRT_ASSERT(*ppRefl == _MCFCRT_NULLPTR);
 
 	*ppRefl = pNode;

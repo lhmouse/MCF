@@ -6,7 +6,6 @@
 #include "../Core/Exception.hpp"
 #include <MCFCRT/env/_nt_timeout.h>
 #include <ntdef.h>
-#include <ntstatus.h>
 
 extern "C" {
 
@@ -16,7 +15,12 @@ __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtCreateSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, LONG lInitialCount, LONG lMaximumCount) noexcept;
 
 __attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWaitForSingleObject(HANDLE hObject, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout) noexcept;
+__attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevCount) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 
@@ -74,7 +78,7 @@ bool KernelSemaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hSemaphore.Get(), false, &liTimeout);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
-	return lStatus != STATUS_TIMEOUT;
+	return lStatus != (NTSTATUS)STATUS_TIMEOUT;
 }
 void KernelSemaphore::Wait() noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hSemaphore.Get(), false, nullptr);

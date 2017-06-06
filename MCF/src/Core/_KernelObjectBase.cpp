@@ -13,6 +13,8 @@ extern "C" {
 
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 

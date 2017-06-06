@@ -4,8 +4,9 @@
 
 #include "String.hpp"
 #include "Exception.hpp"
-#include <ntstatus.h>
 #include <MCFCRT/ext/utf.h>
+#include <ntdef.h>
+#include <ntstatus.h>
 
 extern "C" {
 
@@ -13,6 +14,9 @@ __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS RtlMultiByteToUnicodeN(wchar_t *pwcBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const char *pchMultiByteString, ULONG ulMultiByteStringSize) noexcept;
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS RtlUnicodeToMultiByteN(char *pchBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const wchar_t *pwcUnicodeString, ULONG ulUnicodeStringSize) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 

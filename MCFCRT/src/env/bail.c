@@ -7,7 +7,6 @@
 #include "../ext/wcpcpy.h"
 #include "standard_streams.h"
 #include <ntdef.h>
-#include <ntstatus.h>
 
 #undef GetCurrentProcess
 #define GetCurrentProcess()  ((HANDLE)-1)

@@ -6,7 +6,6 @@
 #include "Exception.hpp"
 #include <MCFCRT/env/mcfwin.h>
 #include <ntdef.h>
-#include <ntstatus.h>
 
 extern "C" {
 
@@ -16,6 +15,9 @@ __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS LdrUnloadDll(HANDLE hDll) noexcept;
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS LdrGetProcedureAddress(HANDLE hDll, const ANSI_STRING *pProcName, WORD wOrdinal, FARPROC *ppfnProcAddress) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 

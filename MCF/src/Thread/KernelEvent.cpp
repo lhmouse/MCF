@@ -25,11 +25,16 @@ typedef struct tagEVENT_BASIC_INFORMATION {
 } EVENT_BASIC_INFORMATION;
 
 __attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWaitForSingleObject(HANDLE hObject, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout) noexcept;
+__attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtQueryEvent(HANDLE hEvent, EVENT_INFORMATION_CLASS eInfoClass, void *pInfo, DWORD dwInfoSize, DWORD *pdwInfoSizeRet) noexcept;
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtSetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 
@@ -94,7 +99,7 @@ bool KernelEvent::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	::__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
-	return lStatus != STATUS_TIMEOUT;
+	return lStatus != (NTSTATUS)STATUS_TIMEOUT;
 }
 void KernelEvent::Wait() const noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, nullptr);

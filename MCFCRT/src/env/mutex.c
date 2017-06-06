@@ -8,7 +8,6 @@
 #include "xassert.h"
 #include "expect.h"
 #include <ntdef.h>
-#include <ntstatus.h>
 
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);

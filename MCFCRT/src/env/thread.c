@@ -21,14 +21,14 @@ typedef struct _CLIENT_ID {
 } CLIENT_ID;
 
 __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended, ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, void *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);
+extern NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended, ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, void *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);
 __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtClose(HANDLE hObject);
+extern NTSTATUS NtClose(HANDLE hObject);
 
 __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtWaitForSingleObject(HANDLE hObject, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+extern NTSTATUS NtWaitForSingleObject(HANDLE hObject, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 __attribute__((__dllimport__, __stdcall__))
-ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus);
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus);
 
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);

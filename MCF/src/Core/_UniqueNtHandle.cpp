@@ -3,6 +3,14 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "_UniqueNtHandle.hpp"
+#include <ntdef.h>
+
+extern "C" {
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtClose(HANDLE hObject) noexcept;
+
+}
 
 namespace MCF {
 

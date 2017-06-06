@@ -14,9 +14,6 @@
 
 extern "C" {
 
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
-
 typedef enum tagRTL_PATH_TYPE {
 	RtlPathTypeUnknown,
 	RtlPathTypeUncAbsolute,
@@ -29,18 +26,110 @@ typedef enum tagRTL_PATH_TYPE {
 } RTL_PATH_TYPE;
 
 __attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICODE_STRING *pStaticBuffer, UNICODE_STRING *pDynamicBuffer,
-	UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, RTL_PATH_TYPE *pePathType, SIZE_T *puBytesRequired);
+extern NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICODE_STRING *pStaticBuffer, UNICODE_STRING *pDynamicBuffer, UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, RTL_PATH_TYPE *pePathType, SIZE_T *puBytesRequired) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern void WINAPI RtlFreeUnicodeString(UNICODE_STRING *pUnicodeString) noexcept;
+
+typedef struct _IO_STATUS_BLOCK {
+	union {
+		NTSTATUS Status;
+		PVOID Pointer;
+	};
+	ULONG_PTR Information;
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 __attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
-	void *pBuffer, ULONG ulLength, const LARGE_INTEGER *pliOffset, const ULONG *pulKey) noexcept;
+extern NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
 __attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
-	const void *pBuffer, ULONG ulLength, const LARGE_INTEGER *pliOffset, const ULONG *pulKey) noexcept;
+extern NTSTATUS NtCreateFile(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, IO_STATUS_BLOCK *pIoStatusBlock, const LARGE_INTEGER *pAllocationSize, ULONG dwFileAttributes, ULONG dwShareAccess, ULONG dwCreateDisposition, ULONG dwCreateOptions, PVOID pEaBuffer, ULONG dwEaLength) noexcept;
 
+typedef enum _FILE_INFORMATION_CLASS {
+	FileDirectoryInformation         = 1,
+	FileFullDirectoryInformation,   // 2
+	FileBothDirectoryInformation,   // 3
+	FileBasicInformation,           // 4
+	FileStandardInformation,        // 5
+	FileInternalInformation,        // 6
+	FileEaInformation,              // 7
+	FileAccessInformation,          // 8
+	FileNameInformation,            // 9
+	FileRenameInformation,          // 10
+	FileLinkInformation,            // 11
+	FileNamesInformation,           // 12
+	FileDispositionInformation,     // 13
+	FilePositionInformation,        // 14
+	FileFullEaInformation,          // 15
+	FileModeInformation,            // 16
+	FileAlignmentInformation,       // 17
+	FileAllInformation,             // 18
+	FileAllocationInformation,      // 19
+	FileEndOfFileInformation,       // 20
+	FileAlternateNameInformation,   // 21
+	FileStreamInformation,          // 22
+	FilePipeInformation,            // 23
+	FilePipeLocalInformation,       // 24
+	FilePipeRemoteInformation,      // 25
+	FileMailslotQueryInformation,   // 26
+	FileMailslotSetInformation,     // 27
+	FileCompressionInformation,     // 28
+	FileObjectIdInformation,        // 29
+	FileCompletionInformation,      // 30
+	FileMoveClusterInformation,     // 31
+	FileQuotaInformation,           // 32
+	FileReparsePointInformation,    // 33
+	FileNetworkOpenInformation,     // 34
+	FileAttributeTagInformation,    // 35
+	FileTrackingInformation,        // 36
+	FileIdBothDirectoryInformation, // 37
+	FileIdFullDirectoryInformation, // 38
+	FileValidDataLengthInformation, // 39
+	FileShortNameInformation,       // 40
+	FileIoCompletionNotificationInformation, // 41
+	FileIoStatusBlockRangeInformation,       // 42
+	FileIoPriorityHintInformation,           // 43
+	FileSfioReserveInformation,              // 44
+	FileSfioVolumeInformation,               // 45
+	FileHardLinkInformation,                 // 46
+	FileProcessIdsUsingFileInformation,      // 47
+	FileNormalizedNameInformation,           // 48
+	FileNetworkPhysicalNameInformation,      // 49
+	FileIdGlobalTxDirectoryInformation,      // 50
+	FileIsRemoteDeviceInformation,           // 51
+	FileAttributeCacheInformation,           // 52
+	FileNumaNodeInformation,                 // 53
+	FileStandardLinkInformation,             // 54
+	FileRemoteProtocolInformation,           // 55
+	FileMaximumInformation
+} FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
+
+typedef struct _FILE_STANDARD_INFORMATION {
+	LARGE_INTEGER AllocationSize;
+	LARGE_INTEGER EndOfFile;
+	ULONG NumberOfLinks;
+	BOOLEAN DeletePending;
+	BOOLEAN Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION {
+	LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtQueryInformationFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus, void *pFileInformation, ULONG pInformationLength, FILE_INFORMATION_CLASS eFileInformationClass) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtSetInformationFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus, const void *pFileInformation, ULONG pInformationLength, FILE_INFORMATION_CLASS eFileInformationClass) noexcept;
+
+typedef void (NTAPI *PIO_APC_ROUTINE)(void *pContext, IO_STATUS_BLOCK *pIoStatus, ULONG dwUnknown);
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus, void *pBuffer, ULONG ulLength, const LARGE_INTEGER *pliOffset, const ULONG *pulKey) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus, const void *pBuffer, ULONG ulLength, const LARGE_INTEGER *pliOffset, const ULONG *pulKey) noexcept;
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 

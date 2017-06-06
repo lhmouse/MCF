@@ -6,7 +6,6 @@
 #include "../Core/Exception.hpp"
 #include <MCFCRT/env/_nt_timeout.h>
 #include <ntdef.h>
-#include <ntstatus.h>
 
 extern "C" {
 
@@ -16,7 +15,12 @@ __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
 
 __attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWaitForSingleObject(HANDLE hObject, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout) noexcept;
+__attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 }
 
@@ -70,7 +74,7 @@ bool KernelRecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, &liTimeout);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
-	return lStatus != STATUS_TIMEOUT;
+	return lStatus != (NTSTATUS)STATUS_TIMEOUT;
 }
 void KernelRecursiveMutex::Lock() noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, nullptr);

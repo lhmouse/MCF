@@ -65,17 +65,11 @@ private:
 		};
 	};
 
-private:
-	std::size_t X_GetSmallLength() const noexcept {
-		return CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength);
-	}
-	void X_SetSmallLength(std::size_t uLength) noexcept {
-		x_schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_achData) - uLength);
-	}
-
 public:
 	String() noexcept {
-		x_achData[0]     = static_cast<Char>(0xCAACACCA);
+#ifndef NDEBUG
+		std::memset(x_achData, 0xCA, sizeof(x_achData));
+#endif
 		x_schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_achData));
 	}
 	explicit String(Char chFill, std::size_t uCount = 1)
@@ -218,7 +212,7 @@ private:
 		MCF_DEBUG_CHECK(uNewSize <= GetCapacity());
 
 		if(x_schComplLength >= 0){
-			X_SetSmallLength(uNewSize);
+			x_schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_achData) - uNewSize);
 		} else {
 			x_uLength = uNewSize;
 		}
@@ -366,21 +360,21 @@ public:
 
 	const Char *GetEnd() const noexcept {
 		if(x_schComplLength >= 0){
-			return x_achData + X_GetSmallLength();
+			return x_achData + (CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength));
 		} else {
 			return x_pchBegin + x_uLength;
 		}
 	}
 	Char *GetEnd() noexcept {
 		if(x_schComplLength >= 0){
-			return x_achData + X_GetSmallLength();
+			return x_achData + (CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength));
 		} else {
 			return x_pchBegin + x_uLength;
 		}
 	}
 	std::size_t GetSize() const noexcept {
 		if(x_schComplLength >= 0){
-			return X_GetSmallLength();
+			return CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength);
 		} else {
 			return x_uLength;
 		}
@@ -397,7 +391,7 @@ public:
 	}
 	const Char *GetStr() const noexcept {
 		if(x_schComplLength >= 0){
-			const auto &chTerminator = x_achData[X_GetSmallLength()];
+			const auto &chTerminator = x_achData[CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength)];
 			if(chTerminator != Char()){
 				const_cast<Char &>(chTerminator) = Char();
 			}
@@ -412,7 +406,7 @@ public:
 	}
 	Char *GetStr() noexcept {
 		if(x_schComplLength >= 0){
-			x_achData[X_GetSmallLength()] = Char();
+			x_achData[CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength)] = Char();
 			return x_achData;
 		} else {
 			x_pchBegin[x_uLength] = Char();
@@ -451,7 +445,7 @@ public:
 
 	View GetView() const noexcept {
 		if(x_schComplLength >= 0){
-			return View(x_achData, X_GetSmallLength());
+			return View(x_achData, CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength));
 		} else {
 			return View(x_pchBegin, x_uLength);
 		}
@@ -578,7 +572,7 @@ public:
 		MCF_DEBUG_CHECK(GetSize() < GetCapacity());
 
 		if(x_schComplLength >= 0){
-			x_achData[X_GetSmallLength()] = chFill;
+			x_achData[CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength)] = chFill;
 			--x_schComplLength;
 		} else {
 			x_pchBegin[x_uLength] = chFill;

@@ -3,6 +3,9 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "mcfcrt.h"
+#include "env/standard_streams.h"
+#include "env/heap_debug.h"
+#include "env/_mopthread.h"
 
 static ptrdiff_t g_nCounter = 0;
 
@@ -14,6 +17,10 @@ bool __MCFCRT_InitRecursive(void){
 		}
 		if(!__MCFCRT_HeapDebugInit()){
 			__MCFCRT_StandardStreamsUninit();
+			return false;
+		}
+		if(!__MCFCRT_MopthreadInit()){
+			__MCFCRT_TlsUninit();
 			return false;
 		}
 		// Add more initialization...
@@ -29,6 +36,7 @@ void __MCFCRT_UninitRecursive(void){
 	g_nCounter = nCounter;
 	if(nCounter == 0){
 		// Add more uninitialization...
+		__MCFCRT_MopthreadUninit();
 		__MCFCRT_DiscardCrtModuleQuickExitCallbacks();
 		__MCFCRT_HeapDebugUninit();
 		__MCFCRT_StandardStreamsUninit();

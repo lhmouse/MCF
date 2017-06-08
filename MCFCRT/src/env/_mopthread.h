@@ -12,6 +12,9 @@ _MCFCRT_EXTERN_C_BEGIN
 
 // mopthread = the mother of pthread
 
+extern bool __MCFCRT_MopthreadInit(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_MopthreadUninit(void) _MCFCRT_NOEXCEPT;
+
 // The parameter of the thread procedure will point to a copy of the memory block that __pParams and __uSize define.
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreate(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreateDetached(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;

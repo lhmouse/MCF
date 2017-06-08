@@ -12,12 +12,16 @@
 #include "inline_mem.h"
 #include "bail.h"
 #include "expect.h"
+#include <ntdef.h>
 
 #undef GetCurrentProcess
 #define GetCurrentProcess()  ((HANDLE)-1)
 
 #undef GetCurrentThread
 #define GetCurrentThread()   ((HANDLE)-2)
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtDuplicateObject(HANDLE hSourceProcess, HANDLE hSource, HANDLE hTargetProcess, HANDLE *pTarget, ACCESS_MASK dwDesiredAccess, ULONG dwAttributes, DWORD dwOptions);
 
 static const _MCFCRT_ThreadHandle g_hPseudoSelfHandle = (_MCFCRT_ThreadHandle)GetCurrentThread();
 
@@ -72,13 +76,66 @@ static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *p
 	return MopthreadControlComparatorNodeOther(pNodeSelf, (intptr_t)(((const MopthreadControl *)pNodeOther)->uTid));
 }
 
+static unsigned char g_abyInitialControlStorage[sizeof(MopthreadControl) + sizeof(void *) * 3]; // XXX: This should enough for both gthread and c11thread.
+static_assert(sizeof(g_abyInitialControlStorage) == sizeof(void *) * 17, "??");
+
 // The caller must have the global mutex locked!
 static inline void DropControlRefUnsafe(MopthreadControl *restrict pControl){
+	_MCFCRT_ASSERT(pControl->uRefCount > 0);
 	if(--(pControl->uRefCount) == 0){
 		_MCFCRT_ASSERT(pControl->eState == kStateJoined);
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 		_MCFCRT_CloseThread(pControl->hThread);
-		_MCFCRT_free(pControl);
+#ifndef NDEBUG
+		pControl->hThread = (HANDLE)0xDEADBEEF;
+#endif
+		if(pControl != (MopthreadControl *)g_abyInitialControlStorage){
+			_MCFCRT_free(pControl);
+		}
+	}
+}
+
+// *** WARNING: No other threads shall be running when calling these functions. ***
+static void AttachInitialThread(void){
+	MopthreadControl *const restrict pControl = (MopthreadControl *)g_abyInitialControlStorage;
+
+	pControl->pfnProc       = _MCFCRT_NULLPTR;
+	pControl->uSizeOfParams = sizeof(g_abyInitialControlStorage) - sizeof(MopthreadControl);
+	_MCFCRT_inline_mempset_fwd(pControl->abyParams, 0, pControl->uSizeOfParams);
+	pControl->eState        = kStateJoinable;
+	pControl->uRefCount     = 2;
+	_MCFCRT_InitializeConditionVariable(&(pControl->condTermination));
+
+	HANDLE hThread;
+	NTSTATUS lStatus = NtDuplicateObject(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, 0, DUPLICATE_SAME_ACCESS);
+	if(!NT_SUCCESS(lStatus)){
+		_MCFCRT_Bail(L"NtDuplicateObject() 失败：无法获取主线程句柄。");
+	}
+	pControl->uTid    = (uintptr_t)GetCurrentThreadId();
+	pControl->hThread = (HANDLE)hThread;
+
+	_MCFCRT_AvlAttach(&g_avlControlMap, (_MCFCRT_AvlNodeHeader *)pControl, &MopthreadControlComparatorNodes);
+}
+static void DetachInitialThread(void){
+	MopthreadControl *const restrict pControl = (MopthreadControl *)g_abyInitialControlStorage;
+
+	switch(pControl->eState){
+	case kStateJoinable:
+		pControl->eState = kStateDetached;
+		goto jJoinSuccess;
+	case kStateZombie:
+		pControl->eState = kStateJoined;
+		goto jJoinSuccess;
+	case kStateJoining:
+	case kStateJoined:
+	case kStateDetached:
+		break;
+	default:
+		_MCFCRT_ASSERT(false);
+	jJoinSuccess:
+		DropControlRefUnsafe(pControl);
+		// bSuccess = true;
+		break;
 	}
 }
 
@@ -113,6 +170,14 @@ static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, Mopt
 
 	ExitThread(0);
 	__builtin_unreachable();
+}
+
+bool __MCFCRT_MopthreadInit(void){
+	AttachInitialThread();
+	return true;
+}
+void __MCFCRT_MopthreadUninit(void){
+	DetachInitialThread();
 }
 
 __MCFCRT_C_STDCALL __attribute__((__noreturn__))

@@ -55,28 +55,28 @@ public:
 private:
 	__extension__ union {
 		struct {
-			Char achData[31];
-			std::make_signed_t<Char> schComplLength;
+			Char x_achData[31];
+			std::make_signed_t<Char> x_schComplLength;
 		};
 		struct {
-			Char *pchBegin;
-			std::size_t uLength;
-			std::size_t uSizeAllocated;
+			Char *x_pchBegin;
+			std::size_t x_uLength;
+			std::size_t x_uSizeAllocated;
 		};
-	} x_vStorage;
+	};
 
 private:
 	std::size_t X_GetSmallLength() const noexcept {
-		return CountOf(x_vStorage.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.schComplLength);
+		return CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength);
 	}
 	void X_SetSmallLength(std::size_t uLength) noexcept {
-		x_vStorage.schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_vStorage.achData) - uLength);
+		x_schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_achData) - uLength);
 	}
 
 public:
 	String() noexcept {
-		x_vStorage.achData[0]     = static_cast<Char>(0xDEADBEEF);
-		x_vStorage.schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_vStorage.achData));
+		x_achData[0]     = static_cast<Char>(0xCAACACCA);
+		x_schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_achData));
 	}
 	explicit String(Char chFill, std::size_t uCount = 1)
 		: String()
@@ -115,10 +115,10 @@ public:
 		Append(svOther);
 	}
 	template<StringType kOtherTypeT>
-	explicit String(const String<kOtherTypeT> &sOther)
+	explicit String(const String<kOtherTypeT> &strOther)
 		: String()
 	{
-		Append(sOther);
+		Append(strOther);
 	}
 	String(const String &svOther)
 		: String()
@@ -161,11 +161,11 @@ public:
 		return *this;
 	}
 	~String() noexcept {
-		if(x_vStorage.schComplLength < 0){
-			::operator delete[](x_vStorage.pchBegin);
+		if(x_schComplLength < 0){
+			::operator delete[](x_pchBegin);
 		}
 #ifndef NDEBUG
-		std::memset(&x_vStorage, 0xDD, sizeof(x_vStorage));
+		std::memset(this, 0xDD, sizeof(*this));
 #endif
 	}
 
@@ -201,15 +201,15 @@ private:
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
-			if(x_vStorage.schComplLength >= 0){
-				x_vStorage.schComplLength = -1;
+			if(x_schComplLength >= 0){
+				x_schComplLength = -1;
 			} else {
 				::operator delete[](pchOldBuffer);
 			}
 
-			x_vStorage.pchBegin = pchNewBuffer;
-			x_vStorage.uLength = uOldSize;
-			x_vStorage.uSizeAllocated = uCharsToAlloc;
+			x_pchBegin = pchNewBuffer;
+			x_uLength = uOldSize;
+			x_uSizeAllocated = uCharsToAlloc;
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
@@ -217,10 +217,10 @@ private:
 	void X_SetSize(std::size_t uNewSize) noexcept {
 		MCF_DEBUG_CHECK(uNewSize <= GetCapacity());
 
-		if(x_vStorage.schComplLength >= 0){
+		if(x_schComplLength >= 0){
 			X_SetSmallLength(uNewSize);
 		} else {
-			x_vStorage.uLength = uNewSize;
+			x_uLength = uNewSize;
 		}
 	}
 
@@ -341,46 +341,48 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(String &svOther) noexcept {
-		using std::swap;
-		swap(x_vStorage, svOther.x_vStorage);
+	void Swap(String &strOther) noexcept {
+		unsigned char abyTemp[sizeof(*this)];
+		std::memcpy(abyTemp, this, sizeof(*this));
+		std::memcpy(this, &strOther, sizeof(*this));
+		std::memcpy(&strOther, abyTemp, sizeof(*this));
 	}
 
 	// String 需求。
 	const Char *GetBegin() const noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			return x_vStorage.achData;
+		if(x_schComplLength >= 0){
+			return x_achData;
 		} else {
-			return x_vStorage.pchBegin;
+			return x_pchBegin;
 		}
 	}
 	Char *GetBegin() noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			return x_vStorage.achData;
+		if(x_schComplLength >= 0){
+			return x_achData;
 		} else {
-			return x_vStorage.pchBegin;
+			return x_pchBegin;
 		}
 	}
 
 	const Char *GetEnd() const noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			return x_vStorage.achData + X_GetSmallLength();
+		if(x_schComplLength >= 0){
+			return x_achData + X_GetSmallLength();
 		} else {
-			return x_vStorage.pchBegin + x_vStorage.uLength;
+			return x_pchBegin + x_uLength;
 		}
 	}
 	Char *GetEnd() noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			return x_vStorage.achData + X_GetSmallLength();
+		if(x_schComplLength >= 0){
+			return x_achData + X_GetSmallLength();
 		} else {
-			return x_vStorage.pchBegin + x_vStorage.uLength;
+			return x_pchBegin + x_uLength;
 		}
 	}
 	std::size_t GetSize() const noexcept {
-		if(x_vStorage.schComplLength >= 0){
+		if(x_schComplLength >= 0){
 			return X_GetSmallLength();
 		} else {
-			return x_vStorage.uLength;
+			return x_uLength;
 		}
 	}
 
@@ -394,27 +396,27 @@ public:
 		return GetData();
 	}
 	const Char *GetStr() const noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			const auto &chTerminator = x_vStorage.achData[X_GetSmallLength()];
+		if(x_schComplLength >= 0){
+			const auto &chTerminator = x_achData[X_GetSmallLength()];
 			if(chTerminator != Char()){
 				const_cast<Char &>(chTerminator) = Char();
 			}
-			return x_vStorage.achData;
+			return x_achData;
 		} else {
-			auto &chTerminator = x_vStorage.pchBegin[x_vStorage.uLength];
+			auto &chTerminator = x_pchBegin[x_uLength];
 			if(chTerminator != Char()){
 				const_cast<Char &>(chTerminator) = Char();
 			}
-			return x_vStorage.pchBegin;
+			return x_pchBegin;
 		}
 	}
 	Char *GetStr() noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			x_vStorage.achData[X_GetSmallLength()] = Char();
-			return x_vStorage.achData;
+		if(x_schComplLength >= 0){
+			x_achData[X_GetSmallLength()] = Char();
+			return x_achData;
 		} else {
-			x_vStorage.pchBegin[x_vStorage.uLength] = Char();
-			return x_vStorage.pchBegin;
+			x_pchBegin[x_uLength] = Char();
+			return x_pchBegin;
 		}
 	}
 	const Char *GetConstStr() const noexcept {
@@ -448,18 +450,18 @@ public:
 	}
 
 	View GetView() const noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			return View(x_vStorage.achData, X_GetSmallLength());
+		if(x_schComplLength >= 0){
+			return View(x_achData, X_GetSmallLength());
 		} else {
-			return View(x_vStorage.pchBegin, x_vStorage.uLength);
+			return View(x_pchBegin, x_uLength);
 		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		if(x_vStorage.schComplLength >= 0){
-			return CountOf(x_vStorage.achData);
+		if(x_schComplLength >= 0){
+			return CountOf(x_achData);
 		} else {
-			return x_vStorage.uSizeAllocated - 1;
+			return x_uSizeAllocated - 1;
 		}
 	}
 	std::size_t GetCapacityRemaining() const noexcept {
@@ -548,25 +550,25 @@ public:
 		}
 	}
 	template<StringType kOtherTypeT>
-	void Assign(const String<kOtherTypeT> &sOther){
-		Assign(StringView<kOtherTypeT>(sOther));
+	void Assign(const String<kOtherTypeT> &strOther){
+		Assign(StringView<kOtherTypeT>(strOther));
 	}
-	void Assign(const String &sOther){
-		if(&sOther != this){
-			Assign(View(sOther));
+	void Assign(const String &strOther){
+		if(&strOther != this){
+			Assign(View(strOther));
 		}
 	}
-	void Assign(String &&sOther) noexcept {
-		MCF_DEBUG_CHECK(this != &sOther);
+	void Assign(String &&strOther) noexcept {
+		MCF_DEBUG_CHECK(this != &strOther);
 
-		if(x_vStorage.schComplLength < 0){
-			::operator delete[](x_vStorage.pchBegin);
+		if(x_schComplLength < 0){
+			::operator delete[](x_pchBegin);
 		}
-		x_vStorage = sOther.x_vStorage;
+		std::memcpy(this, &strOther, sizeof(*this));
 #ifndef NDEBUG
-		std::memset(sOther.x_vStorage.achData, 0xCD, sizeof(sOther.x_vStorage.achData));
+		std::memset(&strOther, 0xCD, sizeof(*this));
 #endif
-		sOther.x_vStorage.schComplLength = 0;
+		strOther.x_schComplLength = 0;
 	}
 
 	void Push(Char chFill){
@@ -575,12 +577,12 @@ public:
 	void UncheckedPush(Char chFill) noexcept {
 		MCF_DEBUG_CHECK(GetSize() < GetCapacity());
 
-		if(x_vStorage.schComplLength >= 0){
-			x_vStorage.achData[X_GetSmallLength()] = chFill;
-			--x_vStorage.schComplLength;
+		if(x_schComplLength >= 0){
+			x_achData[X_GetSmallLength()] = chFill;
+			--x_schComplLength;
 		} else {
-			x_vStorage.pchBegin[x_vStorage.uLength] = chFill;
-			++x_vStorage.uLength;
+			x_pchBegin[x_uLength] = chFill;
+			++x_uLength;
 		}
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
@@ -608,17 +610,17 @@ public:
 	void Append(std::initializer_list<Char> ilElements){
 		Append(View(ilElements));
 	}
-	void Append(const String &sOther){
-		const auto pWrite = ResizeMore(sOther.GetSize());
-		Copy(pWrite, sOther.GetBegin(), sOther.GetEnd()); // 这是正确的即使对于 &sOther == this 的情况。
+	void Append(const String &strOther){
+		const auto pWrite = ResizeMore(strOther.GetSize());
+		Copy(pWrite, strOther.GetBegin(), strOther.GetEnd()); // 这是正确的即使对于 &strOther == this 的情况。
 	}
 	template<StringType kOtherTypeT>
 	void Append(const StringView<kOtherTypeT> &svOther){
 		Impl_String::Transcoder<kOtherTypeT>()(*this, svOther);
 	}
 	template<StringType kOtherTypeT>
-	void Append(const String<kOtherTypeT> &sOther){
-		Append(sOther.GetView());
+	void Append(const String<kOtherTypeT> &strOther){
+		Append(strOther.GetView());
 	}
 
 	View Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
@@ -733,8 +735,8 @@ public:
 	}
 
 	template<StringType kOtherTypeT>
-	String &operator+=(const String<kOtherTypeT> &sOther){
-		Append(sOther);
+	String &operator+=(const String<kOtherTypeT> &strOther){
+		Append(strOther);
 		return *this;
 	}
 	template<StringType kOtherTypeT>
@@ -751,136 +753,136 @@ public:
 		return *this;
 	}
 	template<StringType kOtherTypeT>
-	friend String operator+(const String &sSelf, const StringView<kOtherTypeT> &svOther){
-		auto sTemp = sSelf;
-		sTemp += svOther;
-		return sTemp;
+	friend String operator+(const String &strSelf, const StringView<kOtherTypeT> &svOther){
+		auto strTemp = strSelf;
+		strTemp += svOther;
+		return strTemp;
 	}
 	template<StringType kOtherTypeT>
-	friend String operator+(String &&sSelf, const StringView<kOtherTypeT> &svOther){
-		sSelf += svOther;
-		return std::move(sSelf);
+	friend String operator+(String &&strSelf, const StringView<kOtherTypeT> &svOther){
+		strSelf += svOther;
+		return std::move(strSelf);
 	}
-	friend String operator+(const String &sSelf, Char chOther){
-		auto sTemp = sSelf;
-		sTemp += chOther;
-		return sTemp;
+	friend String operator+(const String &strSelf, Char chOther){
+		auto strTemp = strSelf;
+		strTemp += chOther;
+		return strTemp;
 	}
-	friend String operator+(String &&sSelf, Char chOther){
-		sSelf += chOther;
-		return std::move(sSelf);
+	friend String operator+(String &&strSelf, Char chOther){
+		strSelf += chOther;
+		return std::move(strSelf);
 	}
-	friend String operator+(const String &sSelf, const Char *pszOther){
-		auto sTemp = sSelf;
-		sTemp += pszOther;
-		return sTemp;
+	friend String operator+(const String &strSelf, const Char *pszOther){
+		auto strTemp = strSelf;
+		strTemp += pszOther;
+		return strTemp;
 	}
-	friend String operator+(String &&sSelf, const Char *pszOther){
-		sSelf += pszOther;
-		return std::move(sSelf);
+	friend String operator+(String &&strSelf, const Char *pszOther){
+		strSelf += pszOther;
+		return std::move(strSelf);
 	}
-	friend String operator+(Char chSelf, const String &sOther){
-		auto sTemp = String(chSelf);
-		sTemp += sOther;
-		return sTemp;
+	friend String operator+(Char chSelf, const String &strOther){
+		auto strTemp = String(chSelf);
+		strTemp += strOther;
+		return strTemp;
 	}
-	friend String operator+(Char chSelf, String &&sOther){
-		auto sTemp = String(chSelf);
-		sTemp += std::move(sOther);
-		return sTemp;
+	friend String operator+(Char chSelf, String &&strOther){
+		auto strTemp = String(chSelf);
+		strTemp += std::move(strOther);
+		return strTemp;
 	}
-	friend String operator+(const Char *pszSelf, const String &sOther){
-		auto sTemp = String(pszSelf);
-		sTemp += sOther;
-		return sTemp;
+	friend String operator+(const Char *pszSelf, const String &strOther){
+		auto strTemp = String(pszSelf);
+		strTemp += strOther;
+		return strTemp;
 	}
-	friend String operator+(const Char *pszSelf, String &&sOther){
-		auto sTemp = String(pszSelf);
-		sTemp += std::move(sOther);
-		return sTemp;
+	friend String operator+(const Char *pszSelf, String &&strOther){
+		auto strTemp = String(pszSelf);
+		strTemp += std::move(strOther);
+		return strTemp;
 	}
 
-	bool operator==(const String &sOther) const noexcept {
-		return GetView() == sOther.GetView();
+	bool operator==(const String &strOther) const noexcept {
+		return GetView() == strOther.GetView();
 	}
 	bool operator==(const View &svOther) const noexcept {
 		return GetView() == svOther;
 	}
-	friend bool operator==(const View &svSelf, const String &sOther) noexcept {
-		return svSelf == sOther.GetView();
+	friend bool operator==(const View &svSelf, const String &strOther) noexcept {
+		return svSelf == strOther.GetView();
 	}
 
-	bool operator!=(const String &sOther) const noexcept {
-		return GetView() != sOther.GetView();
+	bool operator!=(const String &strOther) const noexcept {
+		return GetView() != strOther.GetView();
 	}
 	bool operator!=(const View &svOther) const noexcept {
 		return GetView() != svOther;
 	}
-	friend bool operator!=(const View &svSelf, const String &sOther) noexcept {
-		return svSelf != sOther.GetView();
+	friend bool operator!=(const View &svSelf, const String &strOther) noexcept {
+		return svSelf != strOther.GetView();
 	}
 
-	bool operator<(const String &sOther) const noexcept {
-		return GetView() < sOther.GetView();
+	bool operator<(const String &strOther) const noexcept {
+		return GetView() < strOther.GetView();
 	}
 	bool operator<(const View &svOther) const noexcept {
 		return GetView() < svOther;
 	}
-	friend bool operator<(const View &svSelf, const String &sOther) noexcept {
-		return svSelf < sOther.GetView();
+	friend bool operator<(const View &svSelf, const String &strOther) noexcept {
+		return svSelf < strOther.GetView();
 	}
 
-	bool operator>(const String &sOther) const noexcept {
-		return GetView() > sOther.GetView();
+	bool operator>(const String &strOther) const noexcept {
+		return GetView() > strOther.GetView();
 	}
 	bool operator>(const View &svOther) const noexcept {
 		return GetView() > svOther;
 	}
-	friend bool operator>(const View &svSelf, const String &sOther) noexcept {
-		return svSelf > sOther.GetView();
+	friend bool operator>(const View &svSelf, const String &strOther) noexcept {
+		return svSelf > strOther.GetView();
 	}
 
-	bool operator<=(const String &sOther) const noexcept {
-		return GetView() <= sOther.GetView();
+	bool operator<=(const String &strOther) const noexcept {
+		return GetView() <= strOther.GetView();
 	}
 	bool operator<=(const View &svOther) const noexcept {
 		return GetView() <= svOther;
 	}
-	friend bool operator<=(const View &svSelf, const String &sOther) noexcept {
-		return svSelf <= sOther.GetView();
+	friend bool operator<=(const View &svSelf, const String &strOther) noexcept {
+		return svSelf <= strOther.GetView();
 	}
 
-	bool operator>=(const String &sOther) const noexcept {
-		return GetView() >= sOther.GetView();
+	bool operator>=(const String &strOther) const noexcept {
+		return GetView() >= strOther.GetView();
 	}
 	bool operator>=(const View &svOther) const noexcept {
 		return GetView() >= svOther;
 	}
-	friend bool operator>=(const View &svSelf, const String &sOther) noexcept {
-		return svSelf >= sOther.GetView();
+	friend bool operator>=(const View &svSelf, const String &strOther) noexcept {
+		return svSelf >= strOther.GetView();
 	}
 
-	friend void swap(String &svSelf, String &sOther) noexcept {
-		svSelf.Swap(sOther);
+	friend void swap(String &svSelf, String &strOther) noexcept {
+		svSelf.Swap(strOther);
 	}
 
-	friend decltype(auto) begin(const String &sOther) noexcept {
-		return sOther.GetBegin();
+	friend decltype(auto) begin(const String &strOther) noexcept {
+		return strOther.GetBegin();
 	}
-	friend decltype(auto) begin(String &sOther) noexcept {
-		return sOther.GetBegin();
+	friend decltype(auto) begin(String &strOther) noexcept {
+		return strOther.GetBegin();
 	}
-	friend decltype(auto) cbegin(const String &sOther) noexcept {
-		return begin(sOther);
+	friend decltype(auto) cbegin(const String &strOther) noexcept {
+		return begin(strOther);
 	}
-	friend decltype(auto) end(const String &sOther) noexcept {
-		return sOther.GetEnd();
+	friend decltype(auto) end(const String &strOther) noexcept {
+		return strOther.GetEnd();
 	}
-	friend decltype(auto) end(String &sOther) noexcept {
-		return sOther.GetEnd();
+	friend decltype(auto) end(String &strOther) noexcept {
+		return strOther.GetEnd();
 	}
-	friend decltype(auto) cend(const String &sOther) noexcept {
-		return end(sOther);
+	friend decltype(auto) cend(const String &strOther) noexcept {
+		return end(strOther);
 	}
 };
 

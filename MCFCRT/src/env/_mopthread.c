@@ -76,7 +76,7 @@ static inline int MopthreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *p
 	return MopthreadControlComparatorNodeOther(pNodeSelf, (intptr_t)(((const MopthreadControl *)pNodeOther)->uTid));
 }
 
-static unsigned char g_abyInitialControlStorage[sizeof(MopthreadControl) + sizeof(void *) * 3]; // XXX: This should enough for both gthread and c11thread.
+static unsigned char g_abyInitialControlStorage[sizeof(MopthreadControl) + sizeof(void *) * 3]; // XXX: This should suffice for both gthread and c11thread.
 static_assert(sizeof(g_abyInitialControlStorage) == sizeof(void *) * 17, "??");
 
 // The caller must have the global mutex locked!

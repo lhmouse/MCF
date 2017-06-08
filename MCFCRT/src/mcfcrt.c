@@ -23,6 +23,8 @@ bool __MCFCRT_InitRecursive(void){
 			return false;
 		}
 		if(!__MCFCRT_MopthreadInit()){
+			__MCFCRT_HeapDebugUninit();
+			__MCFCRT_StandardStreamsUninit();
 			return false;
 		}
 		// Add more initialization...

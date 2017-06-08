@@ -2,10 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
+#define __MCFCRT_NO_GENERAL_INCLUDES    1
 #include "mcfcrt.h"
+#include "env/xassert.h"
 #include "env/standard_streams.h"
 #include "env/heap_debug.h"
 #include "env/_mopthread.h"
+#include "env/crt_module.h"
 
 static ptrdiff_t g_nCounter = 0;
 
@@ -20,7 +23,6 @@ bool __MCFCRT_InitRecursive(void){
 			return false;
 		}
 		if(!__MCFCRT_MopthreadInit()){
-			__MCFCRT_TlsUninit();
 			return false;
 		}
 		// Add more initialization...

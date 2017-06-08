@@ -97,7 +97,7 @@ static inline void DropControlRefUnsafe(MopthreadControl *restrict pControl){
 
 // *** WARNING: No other threads shall be running when calling these functions. ***
 static void AttachInitialThread(void){
-	MopthreadControl *const restrict pControl = (MopthreadControl *)(void *)g_abyInitialControlStorage;
+	MopthreadControl *const restrict pControl = (void *)g_abyInitialControlStorage;
 
 	pControl->pfnProc       = _MCFCRT_NULLPTR;
 	pControl->uSizeOfParams = sizeof(g_abyInitialControlStorage) - sizeof(MopthreadControl);
@@ -117,7 +117,7 @@ static void AttachInitialThread(void){
 	_MCFCRT_AvlAttach(&g_avlControlMap, (_MCFCRT_AvlNodeHeader *)pControl, &MopthreadControlComparatorNodes);
 }
 static void DetachInitialThread(void){
-	MopthreadControl *const restrict pControl = (MopthreadControl *)(void *)g_abyInitialControlStorage;
+	MopthreadControl *const restrict pControl = (void *)g_abyInitialControlStorage;
 
 	switch(pControl->eState){
 	case kStateJoinable:

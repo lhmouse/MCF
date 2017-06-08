@@ -89,7 +89,7 @@ static inline void DropControlRefUnsafe(MopthreadControl *restrict pControl){
 #ifndef NDEBUG
 		pControl->hThread = (HANDLE)0xDEADBEEF;
 #endif
-		if(pControl != (MopthreadControl *)g_abyInitialControlStorage){
+		if(pControl != (void *)g_abyInitialControlStorage){
 			_MCFCRT_free(pControl);
 		}
 	}

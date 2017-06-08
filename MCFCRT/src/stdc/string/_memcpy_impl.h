@@ -38,22 +38,14 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 					do {	\
 						_mm_prefetch(__rp + 256, _MM_HINT_NTA);	\
 						_mm_prefetch(__rp + 320, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__));	\
-				default: __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 7:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 6:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 5:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 4:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 3:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 2:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 1:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); default: __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
 					} while((size_t)(__wend - __wp) >= 128);	\
 				}	\
 			}
@@ -103,22 +95,14 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 					do {	\
 						_mm_prefetch(__rp - 384, _MM_HINT_NTA);	\
 						_mm_prefetch(__rp - 320, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__));	\
-				default: __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 7:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 6:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 5:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 4:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 3:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 2:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__));	\
-				case 1:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); default: __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
 					} while((size_t)(__wp - __wbegin) >= 128);	\
 				}	\
 			}

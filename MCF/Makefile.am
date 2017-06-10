@@ -17,7 +17,7 @@ CLEANFILES = \
 	__pch.hpp.gch
 
 __pch.hpp: ${srcdir}/src/StdMCF.hpp
-	echo "#include \"$<\"" > $@
+	echo "#include \"$$(cygpath -m "$<" || readlink -f "$<")\"" > $@
 
 __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} -Wno-error $< -o $@

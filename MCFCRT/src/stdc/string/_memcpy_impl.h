@@ -14,15 +14,15 @@ _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	register char *__wp = (char *)__s1;
-	char *const __wend = __wp + __n;
-	register const char *__rp = (const char *)__s2;
+	register unsigned char *__wp = (unsigned char *)__s1;
+	unsigned char *const __wend = __wp + __n;
+	register const unsigned char *__rp = (const unsigned char *)__s2;
 	if(_MCFCRT_EXPECT_NOT((size_t)(__wend - __wp) >= 256)){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wp == __wend){
 				return;
 			}
-			*(volatile char *)(__wp++) = *(__rp++);
+			*(volatile unsigned char *)(__wp++) = *(__rp++);
 		}
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
@@ -71,15 +71,15 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 }
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	char *const __wbegin = (char *)__s1;
-	register char *__wp = __wbegin + __n;
-	register const char *__rp = (const char *)__s2 + __n;
+	unsigned char *const __wbegin = (unsigned char *)__s1;
+	register unsigned char *__wp = __wbegin + __n;
+	register const unsigned char *__rp = (const unsigned char *)__s2 + __n;
 	if(_MCFCRT_EXPECT_NOT((size_t)(__wp - __wbegin) >= 256)){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wbegin == __wp){
 				return;
 			}
-			*(volatile char *)(--__wp) = *(--__rp);
+			*(volatile unsigned char *)(--__wp) = *(--__rp);
 		}
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
@@ -133,7 +133,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 	for(__t = (_MCFCRT_STD size_t)(__wp - __wbegin); __t != 0; --__t){
 		__wp -= 1;
 		__rp -= 1;
-		*(volatile unsigned char *)__wp = *(const unsigned char *)__rp;
+		*(volatile unsigned unsigned char *)__wp = *(const unsigned unsigned char *)__rp;
 	}
 }
 

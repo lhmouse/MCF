@@ -7,7 +7,7 @@
 #undef wmemmove
 
 wchar_t *wmemmove(wchar_t *restrict s1, const wchar_t *restrict s2, size_t n){
-	if(s1 < s2){
+	if((uintptr_t)s1 < (uintptr_t)s2){
 		__MCFCRT_memcpy_impl_fwd(s1, s2, sizeof(wchar_t) * n);
 	} else {
 		__MCFCRT_memcpy_impl_bkwd(s1, s2, sizeof(wchar_t) * n);

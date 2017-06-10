@@ -1,10 +1,14 @@
-#include <MCFCRT/mcfcrt.h>
+#include <cstring>
+#include <cstdio>
+
+char str[100];
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	auto p = static_cast<char *>(::_MCFCRT_malloc(10));
-	// ::_MCFCRT_free(p);
-	auto p2 = static_cast<char *>(::_MCFCRT_malloc(100));
-	p2[100] = 'a';
-	::_MCFCRT_free(p2);
+	std::memcpy(str, "abcdefghijklmnopqrstuvwxyz", 27);
+	std::memmove(str, str + 1, 10);
+	std::puts(str);
+	std::memcpy(str, "abcdefghijklmnopqrstuvwxyz", 27);
+	std::memmove(str + 1, str, 10);
+	std::puts(str);
 	return 0;
 }

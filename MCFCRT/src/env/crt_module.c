@@ -13,7 +13,7 @@
 #undef GetCurrentThread
 #define GetCurrentThread()   ((HANDLE)-2)
 
-static __MCFCRT_AtExitQueue g_vAtQuickExitQueue = { 0 };
+static __MCFCRT_AtExitQueue g_vAtQuickExitQueue = __MCFCRT_ATEXIT_QUEUE_INIT;
 
 static void Dispose_at_quick_exit_queue(void){
 	__MCFCRT_AtExitElement vElement;

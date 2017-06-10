@@ -37,7 +37,7 @@ static void RunGlobalDestructors(void){
 	}
 }
 
-static __MCFCRT_AtExitQueue g_vAtExitQueue = { 0 };
+static __MCFCRT_AtExitQueue g_vAtExitQueue = __MCFCRT_ATEXIT_QUEUE_INIT;
 
 static void Dispose_atexit_queue(void){
 	__MCFCRT_AtExitElement vElement;

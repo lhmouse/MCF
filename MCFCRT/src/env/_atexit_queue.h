@@ -28,6 +28,8 @@ typedef struct __MCFCRT_tagAtExitQueue {
 	__MCFCRT_AtExitQueueNode __vSpare;
 } __MCFCRT_AtExitQueue;
 
+#define __MCFCRT_ATEXIT_QUEUE_INIT        { { 0 }, _MCFCRT_NULLPTR, { 0 } }
+
 #if defined(_MCFCRT_C11) || defined(_MCFCRT_CXX11)
 static_assert(sizeof(__MCFCRT_AtExitQueue) % 256 == 0, "??");
 #endif

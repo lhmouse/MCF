@@ -3,10 +3,14 @@
 // Copyleft 2013 - 2032, LH_Mouse. All wrongs reserved.
 
 #include "_memcpy_impl.h"
+#include "../../env/inline_mem.h"
 
 #undef memcpy
 
-void *memcpy(void *s1, const void *s2, size_t n){
+void *memcpy(void *restrict s1, const void *restrict s2, size_t n){
+#ifndef NDEBUG
+	_MCFCRT_inline_mempset_fwd(s1, 0xEF, n);
+#endif
 	__MCFCRT_memcpy_impl_fwd(s1, s2, n);
 	return s1;
 }

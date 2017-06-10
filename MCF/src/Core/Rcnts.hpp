@@ -82,22 +82,18 @@ private:
 private:
 	constexpr Rcnts(int, Atomic<std::size_t> *puRef, const Char *pszStr) noexcept
 		: x_puRef(puRef), x_pszStr(pszStr)
-	{
-	}
+	{ }
 
 public:
 	constexpr Rcnts() noexcept
 		: Rcnts(1, nullptr, X_GetNullTerminator())
-	{
-	}
+	{ }
 	Rcnts(const Rcnts &vOther) noexcept
 		: Rcnts(1, vOther.X_Fork(), vOther.x_pszStr)
-	{
-	}
+	{ }
 	Rcnts(Rcnts &&vOther) noexcept
 		: Rcnts(1, std::exchange(vOther.x_puRef, nullptr), std::exchange(vOther.x_pszStr, X_GetNullTerminator()))
-	{
-	}
+	{ }
 	Rcnts &operator=(const Rcnts &vOther) noexcept {
 		Rcnts(vOther).Swap(*this);
 		return *this;

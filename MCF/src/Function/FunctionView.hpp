@@ -34,25 +34,21 @@ protected:
 	const void *x_pSource = nullptr;
 
 public:
-	constexpr FunctionView() noexcept {
-	}
+	constexpr FunctionView() noexcept { }
 	template<typename FunctionT>
 	FunctionView(const FunctionT *pFunction) noexcept
 		: x_pfnSpringboard(pFunction ? +[](const void *pSource, X_ForwardedParams &&tupParams) -> X_ReturnType { return DesignatedSqueeze<X_ReturnType>(*static_cast<const FunctionT *>(pSource), std::move(tupParams)); }
 		                             : nullptr)
 		, x_pSource(pFunction)
-	{
-	}
+	{ }
 	template<typename FunctionT, class DeleterT>
 	FunctionView(const UniquePtr<FunctionT, DeleterT> &pFunction) noexcept
 		: FunctionView(pFunction.Get())
-	{
-	}
+	{ }
 	template<typename FunctionT>
 	FunctionView(const IntrusivePtr<FunctionT> &pFunction) noexcept
 		: FunctionView(pFunction.Get())
-	{
-	}
+	{ }
 	template<typename FunctionT,
 		std::enable_if_t<
 			!std::is_base_of<FunctionView, std::decay_t<FunctionT>>::value &&
@@ -60,8 +56,7 @@ public:
 			int> = 0>
 	FunctionView(FunctionT &vFunction) noexcept
 		: FunctionView(AddressOf(vFunction))
-	{
-	}
+	{ }
 
 public:
 	FunctionView &Reset(std::nullptr_t = nullptr) noexcept {

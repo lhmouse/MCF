@@ -17,8 +17,7 @@ private:
 	Variant<ElementT, std::exception_ptr> x_vData;
 
 public:
-	Optional() noexcept {
-	}
+	Optional() noexcept { }
 	template<typename vOtherT,
 		std::enable_if_t<
 			!std::is_base_of<Optional, std::decay_t<vOtherT>>::value,
@@ -28,8 +27,7 @@ public:
 	}
 	Optional(std::exception_ptr pException) noexcept
 		: x_vData(std::move(pException))
-	{
-	}
+	{ }
 
 public:
 	bool IsSet() const noexcept {
@@ -104,8 +102,7 @@ private:
 	Variant<ElementT *, std::exception_ptr> x_vData;
 
 public:
-	Optional() noexcept {
-	}
+	Optional() noexcept { }
 	Optional(ElementT &vElement) noexcept {
 		Reset(vElement);
 	}

@@ -8,8 +8,7 @@
 
 namespace MCF {
 
-StandardInputStream::~StandardInputStream(){
-}
+StandardInputStream::~StandardInputStream(){ }
 
 int StandardInputStream::Peek(){
 	return ::_MCFCRT_PeekStandardInputByte();
@@ -50,8 +49,7 @@ std::size_t StandardInputStream::Discard(std::size_t uSize){
 	}
 	return uRead;
 }
-void StandardInputStream::Invalidate(){
-}
+void StandardInputStream::Invalidate(){ }
 
 long StandardInputStream::PeekChar32(){
 	return ::_MCFCRT_PeekStandardInputChar32();

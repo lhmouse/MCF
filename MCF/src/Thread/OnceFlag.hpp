@@ -26,8 +26,7 @@ private:
 public:
 	constexpr OnceFlag() noexcept
 		: x_vOnce{ 0 }
-	{
-	}
+	{ }
 
 	OnceFlag(const OnceFlag &) = delete;
 	OnceFlag &operator=(const OnceFlag &) = delete;

@@ -22,8 +22,7 @@ private:
 public:
 	explicit constexpr Event(bool bInitSet) noexcept
 		: x_mtxGuard(), x_cvWaiter(), x_bSet(bInitSet)
-	{
-	}
+	{ }
 
 	Event(const Event &) = delete;
 	Event &operator=(const Event &) = delete;

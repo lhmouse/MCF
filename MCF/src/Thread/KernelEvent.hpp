@@ -18,8 +18,7 @@ private:
 public:
 	explicit KernelEvent(bool bInitSet)
 		: KernelEvent(bInitSet, nullptr, 0)
-	{
-	}
+	{ }
 	KernelEvent(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags);
 
 	KernelEvent(const KernelEvent &) = delete;

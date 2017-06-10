@@ -8,8 +8,7 @@
 
 namespace MCF {
 
-Thread::~Thread(){
-}
+Thread::~Thread(){ }
 
 template class IntrusivePtr<Thread>;
 

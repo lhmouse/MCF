@@ -44,12 +44,10 @@ namespace Impl_Enumerator {
 	public:
 		constexpr Enumerator() noexcept
 			: x_pContainer(nullptr), x_pElement(nullptr)
-		{
-		}
+		{ }
 		constexpr Enumerator(ContainerT &vContainer, Element *pElement) noexcept
 			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
-		{
-		}
+		{ }
 
 	public:
 		Element *GetElement() const noexcept {
@@ -122,16 +120,13 @@ namespace Impl_Enumerator {
 	public:
 		constexpr ConstEnumerator() noexcept
 			: x_pContainer(nullptr), x_pElement(nullptr)
-		{
-		}
+		{ }
 		constexpr ConstEnumerator(const ContainerT &vContainer, const Element *pElement) noexcept
 			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
-		{
-		}
+		{ }
 		constexpr ConstEnumerator(const Enumerator<ContainerT> &enOther) noexcept
 			: x_pContainer(enOther.x_pContainer), x_pElement(enOther.x_pElement)
-		{
-		}
+		{ }
 
 	public:
 		const Element *GetElement() const noexcept {

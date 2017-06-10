@@ -18,8 +18,7 @@ private:
 public:
 	explicit BufferingInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: AbstractInputStreamFilter(std::move(pUnderlyingStream))
-	{
-	}
+	{ }
 	~BufferingInputStreamFilter() override;
 
 public:

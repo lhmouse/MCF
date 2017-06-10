@@ -6,8 +6,7 @@
 
 namespace MCF {
 
-ZeroInputStream::~ZeroInputStream(){
-}
+ZeroInputStream::~ZeroInputStream(){ }
 
 int ZeroInputStream::Peek() noexcept {
 	return 0;
@@ -29,7 +28,6 @@ std::size_t ZeroInputStream::Get(void *pData, std::size_t uSize) noexcept {
 std::size_t ZeroInputStream::Discard(std::size_t uSize) noexcept {
 	return uSize;
 }
-void ZeroInputStream::Invalidate() noexcept {
-}
+void ZeroInputStream::Invalidate() noexcept { }
 
 }

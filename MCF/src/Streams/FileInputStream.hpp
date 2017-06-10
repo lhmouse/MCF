@@ -20,8 +20,7 @@ private:
 public:
 	explicit FileInputStream(File &&vFile = File(), std::uint64_t u64Offset = 0) noexcept
 		: x_vFile(std::move(vFile)), x_u64Offset(u64Offset)
-	{
-	}
+	{ }
 	~FileInputStream() override;
 
 public:

@@ -25,13 +25,11 @@ namespace Impl_Variant {
 	template<typename TargetT, typename FirstT, typename ...RestT>
 	struct IndexByType
 		: std::integral_constant<unsigned, IndexByType<TargetT, RestT...>::value + 1>
-	{
-	};
+	{ };
 	template<typename TargetT, typename ...RestT>
 	struct IndexByType<TargetT, TargetT, RestT...>
 		: std::integral_constant<unsigned, 0>
-	{
-	};
+	{ };
 }
 
 template<typename ...ElementsT>
@@ -56,8 +54,7 @@ private:
 	}
 
 public:
-	Variant() noexcept {
-	}
+	Variant() noexcept { }
 	template<typename vOtherT,
 		std::enable_if_t<
 			!std::is_base_of<Variant, std::decay_t<vOtherT>>::value,

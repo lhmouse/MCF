@@ -23,12 +23,10 @@ namespace Impl_Exception {
 	public:
 		ExceptionContext() noexcept
 			: ExceptionContext("<Unknown>", 0, "<Unknown>", std::exception_ptr())
-		{
-		}
+		{ }
 		ExceptionContext(const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException) noexcept
 			: x_pszFile(pszFile), x_ulLine(ulLine), x_pszFunction(pszFunction), x_pNestedException(std::move(pNestedException))
-		{
-		}
+		{ }
 
 	public:
 		const char *GetFile() const noexcept {
@@ -57,8 +55,7 @@ public:
 		int> = 0>
 	Exception(const CodeT &vCode, Rcntws rcwsErrorMessage) noexcept
 		: x_ulErrorCode(static_cast<unsigned long>(vCode)), x_rcwsErrorMessage(std::move(rcwsErrorMessage))
-	{
-	}
+	{ }
 	~Exception() override;
 
 public:

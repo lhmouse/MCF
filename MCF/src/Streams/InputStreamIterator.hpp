@@ -17,8 +17,7 @@ private:
 public:
 	explicit InputStreamIterator(AbstractInputStream &strmOwner) noexcept
 		: x_pstrmOwner(&strmOwner)
-	{
-	}
+	{ }
 
 public:
 	int operator*() const {

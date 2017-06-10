@@ -8,8 +8,7 @@
 
 namespace MCF {
 
-StandardOutputStream::~StandardOutputStream(){
-}
+StandardOutputStream::~StandardOutputStream(){ }
 
 void StandardOutputStream::Put(unsigned char byData){
 	const auto bSucceeded = ::_MCFCRT_WriteStandardOutputByte(byData);

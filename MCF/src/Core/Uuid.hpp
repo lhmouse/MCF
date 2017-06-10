@@ -28,8 +28,7 @@ private:
 
 public:
 	// 填零。
-	constexpr Uuid() noexcept {
-	}
+	constexpr Uuid() noexcept { }
 	// 填指定字节。
 	explicit Uuid(const Array<unsigned char, 16> &abyData) noexcept {
 		BCopy(x_vData.aby, abyData);

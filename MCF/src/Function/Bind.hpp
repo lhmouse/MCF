@@ -19,8 +19,7 @@ namespace Impl_Bind {
 	class BindResult;
 
 	template<std::size_t kIndexT>
-	struct Placeholder {
-	};
+	struct Placeholder { };
 
 	template<typename LazyParamTupleT, typename ParamT>
 	decltype(auto) SelectParam(LazyParamTupleT &&, ParamT &&vParam){

@@ -7,8 +7,7 @@
 
 namespace MCF {
 
-StringInputStream::~StringInputStream(){
-}
+StringInputStream::~StringInputStream(){ }
 
 int StringInputStream::Peek(){
 	int nRet = -1;
@@ -58,7 +57,6 @@ std::size_t StringInputStream::Discard(std::size_t uSize){
 	x_uOffset += uBytesTotal;
 	return uBytesTotal;
 }
-void StringInputStream::Invalidate(){
-}
+void StringInputStream::Invalidate(){ }
 
 }

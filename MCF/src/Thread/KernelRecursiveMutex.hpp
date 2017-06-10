@@ -19,8 +19,7 @@ private:
 public:
 	KernelRecursiveMutex()
 		: KernelRecursiveMutex(nullptr, 0)
-	{
-	}
+	{ }
 	KernelRecursiveMutex(const WideStringView &wsvName, std::uint32_t u32Flags);
 
 	KernelRecursiveMutex(const KernelRecursiveMutex &) = delete;

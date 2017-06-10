@@ -37,12 +37,10 @@ namespace Impl_IntrusivePtr {
 	protected:
 		constexpr RefCountBase() noexcept
 			: x_uRef(1)
-		{
-		}
+		{ }
 		constexpr RefCountBase(const RefCountBase &) noexcept
 			: RefCountBase() // 默认构造。
-		{
-		}
+		{ }
 		RefCountBase &operator=(const RefCountBase &) noexcept {
 			return *this; // 无操作。
 		}
@@ -109,8 +107,7 @@ namespace Impl_IntrusivePtr {
 	public:
 		explicit constexpr WeakViewTemplate(ObjectT *pParent) noexcept
 			: x_mtxGuard(), x_pParent(pParent)
-		{
-		}
+		{ }
 
 		WeakViewTemplate(const WeakViewTemplate &) = delete;
 		WeakViewTemplate &operator=(const WeakViewTemplate &) = delete;
@@ -183,12 +180,10 @@ public:
 	constexpr IntrusiveBase() noexcept
 		: Impl_IntrusivePtr::RefCountBase()
 		, x_pView(nullptr)
-	{
-	}
+	{ }
 	constexpr IntrusiveBase(const IntrusiveBase & /* pOther */) noexcept
 		: IntrusiveBase()
-	{
-	}
+	{ }
 	IntrusiveBase &operator=(const IntrusiveBase & /* pOther */) noexcept {
 		return *this;
 	}
@@ -306,44 +301,37 @@ private:
 public:
 	constexpr IntrusivePtr(std::nullptr_t = nullptr) noexcept
 		: x_pElement(nullptr)
-	{
-	}
+	{ }
 	explicit constexpr IntrusivePtr(Element *pElement) noexcept
 		: x_pElement(pElement)
-	{
-	}
+	{ }
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value && std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&pOther) noexcept
 		: x_pElement(pOther.Release())
-	{
-	}
+	{ }
 	template<typename OtherObjectT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusivePtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusivePtr<OtherObjectT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(const IntrusivePtr<OtherObjectT> &pOther) noexcept
 		: x_pElement(pOther.X_Fork())
-	{
-	}
+	{ }
 	template<typename OtherObjectT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusivePtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusivePtr<OtherObjectT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(IntrusivePtr<OtherObjectT> &&pOther) noexcept
 		: x_pElement(pOther.Release())
-	{
-	}
+	{ }
 	IntrusivePtr(const IntrusivePtr &pOther) noexcept
 		: x_pElement(pOther.X_Fork())
-	{
-	}
+	{ }
 	IntrusivePtr(IntrusivePtr &&pOther) noexcept
 		: x_pElement(pOther.Release())
-	{
-	}
+	{ }
 	IntrusivePtr &operator=(const IntrusivePtr &pOther) noexcept {
 		return Reset(pOther);
 	}
@@ -598,44 +586,37 @@ private:
 public:
 	constexpr IntrusiveWeakPtr(std::nullptr_t = nullptr) noexcept
 		: x_pView(nullptr)
-	{
-	}
+	{ }
 	explicit IntrusiveWeakPtr(Element *pElement)
 		: x_pView(X_CreateViewFromElement(pElement))
-	{
-	}
+	{ }
 	template<typename OtherObjectT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusivePtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusivePtr<OtherObjectT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT> &pOther)
 		: x_pView(X_CreateViewFromElement(pOther.Get()))
-	{
-	}
+	{ }
 	template<typename OtherObjectT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusivePtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusivePtr<OtherObjectT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(const IntrusiveWeakPtr<OtherObjectT> &pOther) noexcept
 		: x_pView(pOther.X_Fork())
-	{
-	}
+	{ }
 	template<typename OtherObjectT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT>::Element *, Element *>::value && std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(IntrusiveWeakPtr<OtherObjectT> &&pOther) noexcept
 		: x_pView(pOther.X_Release())
-	{
-	}
+	{ }
 	IntrusiveWeakPtr(const IntrusiveWeakPtr &pOther) noexcept
 		: x_pView(pOther.X_Fork())
-	{
-	}
+	{ }
 	IntrusiveWeakPtr(IntrusiveWeakPtr &&pOther) noexcept
 		: x_pView(pOther.X_Release())
-	{
-	}
+	{ }
 	IntrusiveWeakPtr &operator=(const IntrusiveWeakPtr &pOther) noexcept {
 		return Reset(pOther);
 	}

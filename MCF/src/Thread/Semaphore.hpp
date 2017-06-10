@@ -22,8 +22,7 @@ private:
 public:
 	explicit constexpr Semaphore(std::size_t uInitCount) noexcept
 		: x_mtxGuard(), x_cvWaiter(), x_uCount(uInitCount)
-	{
-	}
+	{ }
 
 	Semaphore(const Semaphore &) = delete;
 	Semaphore &operator=(const Semaphore &) = delete;

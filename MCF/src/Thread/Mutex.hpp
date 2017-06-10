@@ -29,8 +29,7 @@ private:
 public:
 	explicit constexpr Mutex(std::size_t uSpinCount = kSuggestedSpinCount) noexcept
 		: x_vMutex{ 0 }, x_uSpinCount(uSpinCount)
-	{
-	}
+	{ }
 
 	Mutex(const Mutex &) = delete;
 	Mutex &operator=(const Mutex &) = delete;

@@ -21,8 +21,7 @@ private:
 public:
 	KernelMutex()
 		: KernelMutex(nullptr, 0)
-	{
-	}
+	{ }
 	KernelMutex(const WideStringView &wsvName, std::uint32_t u32Flags);
 
 	KernelMutex(const KernelMutex &) = delete;

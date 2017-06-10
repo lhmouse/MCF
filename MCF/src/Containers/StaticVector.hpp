@@ -36,8 +36,7 @@ private:
 public:
 	StaticVector() noexcept
 		: x_uSize(0)
-	{
-	}
+	{ }
 	template<typename ...ParamsT>
 	explicit StaticVector(std::size_t uSize, const ParamsT &...vParams)
 		: StaticVector()
@@ -54,8 +53,7 @@ public:
 	}
 	StaticVector(std::initializer_list<Element> ilInitList)
 		: StaticVector(ilInitList.begin(), ilInitList.end())
-	{
-	}
+	{ }
 	StaticVector(const StaticVector &vOther) noexcept(std::is_nothrow_copy_constructible<Element>::value)
 		: StaticVector()
 	{

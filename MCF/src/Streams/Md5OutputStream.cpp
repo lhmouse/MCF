@@ -10,8 +10,7 @@ namespace MCF {
 
 // https://en.wikipedia.org/wiki/MD5
 
-Md5OutputStream::~Md5OutputStream(){
-}
+Md5OutputStream::~Md5OutputStream(){ }
 
 void Md5OutputStream::X_Initialize() noexcept {
 	x_au32Reg       = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u };

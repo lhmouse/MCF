@@ -18,13 +18,11 @@ namespace {
 	template<unsigned kRoundT, std::uint64_t kRegT>
 	struct Generator
 		: std::integral_constant<std::uint64_t, Generator<kRoundT + 1, (kRegT >> 1) ^ ((kRegT & 1) ? 0xC96C5795D7870F42 : 0)>::value>
-	{
-	};
+	{ };
 	template<std::uint64_t kRegT>
 	struct Generator<8, kRegT>
 		: std::integral_constant<std::uint64_t, kRegT>
-	{
-	};
+	{ };
 
 	template<std::uint64_t ...kIndices>
 	constexpr Array<std::uint64_t, sizeof...(kIndices)> GenerateTable(const std::integer_sequence<std::uint64_t, kIndices...> &) noexcept {
@@ -34,8 +32,7 @@ namespace {
 	constexpr auto kCrcTable = GenerateTable(std::make_integer_sequence<std::uint64_t, 256>());
 }
 
-Crc64OutputStream::~Crc64OutputStream(){
-}
+Crc64OutputStream::~Crc64OutputStream(){ }
 
 void Crc64OutputStream::X_Initialize() noexcept {
 	x_u64Reg = static_cast<std::uint64_t>(-1);

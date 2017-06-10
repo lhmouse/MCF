@@ -31,21 +31,17 @@ private:
 public:
 	constexpr ArrayView(std::nullptr_t = nullptr) noexcept
 		: x_pBegin(nullptr), x_uSize(0)
-	{
-	}
+	{ }
 	constexpr ArrayView(Element &vScalar) noexcept
 		: x_pBegin(AddressOf(vScalar)), x_uSize(1)
-	{
-	}
+	{ }
 	constexpr ArrayView(Element *pBegin, std::size_t uSize) noexcept
 		: x_pBegin(pBegin), x_uSize(uSize)
-	{
-	}
+	{ }
 	template<std::size_t kSizeT>
 	constexpr ArrayView(Element (&vScalar)[kSizeT]) noexcept
 		: x_pBegin(vScalar), x_uSize(kSizeT)
-	{
-	}
+	{ }
 
 public:
 	// 容器需求。
@@ -228,29 +224,23 @@ private:
 public:
 	constexpr ArrayView(std::nullptr_t = nullptr) noexcept
 		: x_pBegin(nullptr), x_uSize(0)
-	{
-	}
+	{ }
 	constexpr ArrayView(Element &vScalar) noexcept
 		: x_pBegin(AddressOf(vScalar)), x_uSize(1)
-	{
-	}
+	{ }
 	constexpr ArrayView(Element *pBegin, std::size_t uSize) noexcept
 		: x_pBegin(pBegin), x_uSize(uSize)
-	{
-	}
+	{ }
 	template<std::size_t kSizeT>
 	constexpr ArrayView(Element (&vArray)[kSizeT]) noexcept
 		: x_pBegin(vArray), x_uSize(kSizeT)
-	{
-	}
+	{ }
 	constexpr ArrayView(const ArrayView<Element> &avOther) noexcept
 		: x_pBegin(avOther.GetData()), x_uSize(avOther.GetSize())
-	{
-	}
+	{ }
 	constexpr ArrayView(std::initializer_list<Element> ilElements) noexcept
 		: x_pBegin(ilElements.begin()), x_uSize(ilElements.size())
-	{
-	}
+	{ }
 
 public:
 	// 容器需求。

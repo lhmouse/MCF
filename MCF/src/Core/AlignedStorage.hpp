@@ -14,19 +14,16 @@ namespace Impl_AlignedStorage {
 	template<std::size_t kFirstT, std::size_t kSecondT>
 	struct BinaryMax
 		: std::integral_constant<std::size_t, !(kFirstT < kSecondT) ? kFirstT : kSecondT>
-	{
-	};
+	{ };
 
 	template<std::size_t kFirstT, std::size_t ...kRestT>
 	struct Max
 		: std::integral_constant<std::size_t, BinaryMax<kFirstT, Max<kRestT...>::value>::value>
-	{
-	};
+	{ };
 	template<std::size_t kFirstT>
 	struct Max<kFirstT>
 		: std::integral_constant<std::size_t, kFirstT>
-	{
-	};
+	{ };
 }
 
 template<typename ...ElementsT>

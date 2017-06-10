@@ -34,12 +34,10 @@ private:
 public:
 	constexpr UniquePtr(std::nullptr_t = nullptr) noexcept
 		: x_pElement(nullptr)
-	{
-	}
+	{ }
 	explicit UniquePtr(Element *pElement) noexcept
 		: x_pElement(pElement)
-	{
-	}
+	{ }
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
@@ -47,12 +45,10 @@ public:
 			int> = 0>
 	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&pOther) noexcept
 		: x_pElement(pOther.Release())
-	{
-	}
+	{ }
 	UniquePtr(UniquePtr &&pOther) noexcept
 		: x_pElement(pOther.Release())
-	{
-	}
+	{ }
 	UniquePtr &operator=(UniquePtr &&pOther) noexcept {
 		return Reset(std::move(pOther));
 	}

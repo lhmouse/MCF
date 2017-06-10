@@ -84,8 +84,7 @@ private:
 public:
 	constexpr FlatMultiSet() noexcept
 		: x_vStorage()
-	{
-	}
+	{ }
 	// 如果键有序，则效率最大化；并且是稳定的。
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
@@ -104,16 +103,13 @@ public:
 	// 如果键有序，则效率最大化；并且是稳定的。
 	FlatMultiSet(std::initializer_list<Element> ilInitList)
 		: FlatMultiSet(ilInitList.begin(), ilInitList.end())
-	{
-	}
+	{ }
 	FlatMultiSet(const FlatMultiSet &vOther)
 		: x_vStorage(vOther.x_vStorage)
-	{
-	}
+	{ }
 	FlatMultiSet(FlatMultiSet &&vOther) noexcept
 		: x_vStorage(std::move(vOther.x_vStorage))
-	{
-	}
+	{ }
 	FlatMultiSet &operator=(const FlatMultiSet &vOther){
 		FlatMultiSet(vOther).Swap(*this);
 		return *this;

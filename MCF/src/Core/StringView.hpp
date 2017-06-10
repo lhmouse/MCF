@@ -247,28 +247,22 @@ private:
 public:
 	constexpr StringView() noexcept
 		: x_pchBegin(nullptr), x_pchEnd(nullptr)
-	{
-	}
+	{ }
 	constexpr StringView(const Char *pchBegin, const Char *pchEnd) noexcept
 		: x_pchBegin(pchBegin), x_pchEnd(pchEnd)
-	{
-	}
+	{ }
 	constexpr StringView(std::nullptr_t, std::nullptr_t = nullptr) noexcept
 		: StringView()
-	{
-	}
+	{ }
 	constexpr StringView(const Char *pchBegin, std::size_t uLen) noexcept
 		: StringView(pchBegin, pchBegin + uLen)
-	{
-	}
+	{ }
 	constexpr StringView(std::initializer_list<Char> ilElements) noexcept
 		: StringView(ilElements.begin(), ilElements.size())
-	{
-	}
+	{ }
 	explicit StringView(const Char *pszBegin) noexcept
 		: StringView(pszBegin, Impl_StringView::StrEndOf(pszBegin))
-	{
-	}
+	{ }
 
 public:
 	// 容器需求。

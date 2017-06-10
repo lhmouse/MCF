@@ -6,8 +6,7 @@
 
 namespace MCF {
 
-StringOutputStream::~StringOutputStream(){
-}
+StringOutputStream::~StringOutputStream(){ }
 
 void StringOutputStream::Put(unsigned char byData){
 	StringOutputStream::Put(&byData, 1);

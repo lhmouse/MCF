@@ -87,8 +87,7 @@ private:
 public:
 	constexpr FlatMap() noexcept
 		: x_vStorage()
-	{
-	}
+	{ }
 	// 如果键有序，则效率最大化；并且是稳定的。
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
@@ -107,16 +106,13 @@ public:
 	// 如果键有序，则效率最大化；并且是稳定的。
 	FlatMap(std::initializer_list<Element> ilInitList)
 		: FlatMap(ilInitList.begin(), ilInitList.end())
-	{
-	}
+	{ }
 	FlatMap(const FlatMap &vOther)
 		: x_vStorage(vOther.x_vStorage)
-	{
-	}
+	{ }
 	FlatMap(FlatMap &&vOther) noexcept
 		: x_vStorage(std::move(vOther.x_vStorage))
-	{
-	}
+	{ }
 	FlatMap &operator=(const FlatMap &vOther){
 		FlatMap(vOther).Swap(*this);
 		return *this;

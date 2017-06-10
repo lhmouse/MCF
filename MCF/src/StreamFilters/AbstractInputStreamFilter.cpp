@@ -6,7 +6,6 @@
 
 namespace MCF {
 
-AbstractInputStreamFilter::~AbstractInputStreamFilter(){
-}
+AbstractInputStreamFilter::~AbstractInputStreamFilter(){ }
 
 }

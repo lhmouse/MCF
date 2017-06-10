@@ -45,8 +45,7 @@ private:
 public:
 	explicit constexpr ConditionVariable(std::size_t uSpinCount = kSuggestedSpinCount) noexcept
 		: x_vCond{ 0 }, x_uSpinCount(uSpinCount)
-	{
-	}
+	{ }
 
 	ConditionVariable(const ConditionVariable &) = delete;
 	ConditionVariable &operator=(const ConditionVariable &) = delete;

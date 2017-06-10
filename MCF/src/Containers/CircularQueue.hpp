@@ -36,8 +36,7 @@ private:
 public:
 	constexpr CircularQueue() noexcept
 		: x_pStorage(nullptr), x_uBegin(0), x_uEnd(0), x_uCircularCap(1)
-	{
-	}
+	{ }
 	template<typename ...ParamsT>
 	explicit CircularQueue(std::size_t uSize, const ParamsT &...vParams)
 		: CircularQueue()
@@ -54,8 +53,7 @@ public:
 	}
 	CircularQueue(std::initializer_list<Element> ilInitList)
 		: CircularQueue(ilInitList.begin(), ilInitList.end())
-	{
-	}
+	{ }
 	CircularQueue(const CircularQueue &vOther)
 		: CircularQueue()
 	{

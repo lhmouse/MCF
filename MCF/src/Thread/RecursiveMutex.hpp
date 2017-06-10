@@ -18,8 +18,7 @@ private:
 public:
 	explicit constexpr RecursiveMutex(std::size_t uSpinCount = Mutex::kSuggestedSpinCount) noexcept
 		: x_mtxPlain(uSpinCount), x_uLockingThreadId(0), x_uRecursionCount(0)
-	{
-	}
+	{ }
 
 	RecursiveMutex(const RecursiveMutex &) = delete;
 	RecursiveMutex &operator=(const RecursiveMutex &) = delete;

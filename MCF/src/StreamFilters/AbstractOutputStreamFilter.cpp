@@ -6,7 +6,6 @@
 
 namespace MCF {
 
-AbstractOutputStreamFilter::~AbstractOutputStreamFilter(){
-}
+AbstractOutputStreamFilter::~AbstractOutputStreamFilter(){ }
 
 }

@@ -36,12 +36,10 @@ private:
 public:
 	constexpr Atomic() noexcept
 		: x_vElement()
-	{
-	}
+	{ }
 	explicit constexpr Atomic(const Element &vElement) noexcept
 		: x_vElement(vElement)
-	{
-	}
+	{ }
 
 	Atomic(const Atomic &) noexcept = delete;
 	Atomic &operator=(const Atomic &) noexcept = delete;

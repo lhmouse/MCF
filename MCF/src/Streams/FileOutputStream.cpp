@@ -7,8 +7,7 @@
 
 namespace MCF {
 
-FileOutputStream::~FileOutputStream(){
-}
+FileOutputStream::~FileOutputStream(){ }
 
 void FileOutputStream::Put(unsigned char byData){
 	FileOutputStream::Put(&byData, 1);

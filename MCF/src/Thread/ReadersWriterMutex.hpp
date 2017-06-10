@@ -47,8 +47,7 @@ private:
 public:
 	explicit constexpr ReadersWriterMutex(std::size_t uSpinCount = kSuggestedSpinCount) noexcept
 		: x_mtxReaderGuard(kSuggestedSpinCount), x_mtxExclusive(uSpinCount), x_uReaderCount(0)
-	{
-	}
+	{ }
 
 	ReadersWriterMutex(const ReadersWriterMutex &) = delete;
 	ReadersWriterMutex &operator=(const ReadersWriterMutex &) = delete;

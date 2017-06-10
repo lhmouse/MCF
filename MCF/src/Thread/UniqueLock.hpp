@@ -37,24 +37,19 @@ private:
 public:
 	constexpr UniqueLock() noexcept
 		: x_pMutex(nullptr)
-	{
-	}
+	{ }
 	explicit constexpr UniqueLock(MutexT *pMutex) noexcept
 		: x_pMutex(pMutex)
-	{
-	}
+	{ }
 	UniqueLock(MutexT &vMutex, std::uint64_t u64UntilFastMonoClock) noexcept
 		: x_pMutex((Traits::Try(AddressOf(vMutex), u64UntilFastMonoClock) ? AddressOf(vMutex) : nullptr))
-	{
-	}
+	{ }
 	explicit UniqueLock(MutexT &vMutex)
 		: x_pMutex((Traits::Lock(AddressOf(vMutex)), AddressOf(vMutex)))
-	{
-	}
+	{ }
 	UniqueLock(UniqueLock &&vOther) noexcept
 		: x_pMutex(vOther.Release())
-	{
-	}
+	{ }
 	UniqueLock &operator=(UniqueLock &&vOther) noexcept {
 		return Reset(std::move(vOther));
 	}

@@ -8,8 +8,7 @@
 
 namespace MCF {
 
-StandardErrorStream::~StandardErrorStream(){
-}
+StandardErrorStream::~StandardErrorStream(){ }
 
 void StandardErrorStream::Put(unsigned char byData){
 	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorByte(byData);

@@ -96,8 +96,7 @@ private:
 public:
 	explicit constexpr ReadIterator(StreamBuffer &sbufParent) noexcept
 		: x_psbufParent(&sbufParent)
-	{
-	}
+	{ }
 
 public:
 	int operator*() const {
@@ -119,8 +118,7 @@ private:
 public:
 	explicit constexpr WriteIterator(StreamBuffer &sbufParent) noexcept
 		: x_psbufParent(&sbufParent)
-	{
-	}
+	{ }
 
 public:
 	WriteIterator &operator=(unsigned char byData){

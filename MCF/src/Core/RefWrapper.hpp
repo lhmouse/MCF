@@ -19,8 +19,7 @@ private:
 public:
 	constexpr RefWrapper(ObjectT &vObject) noexcept
 		: x_pObject(AddressOf(vObject))
-	{
-	}
+	{ }
 	RefWrapper(ObjectT &&vObject) = delete;
 
 public:

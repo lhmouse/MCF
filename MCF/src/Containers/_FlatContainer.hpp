@@ -32,8 +32,7 @@ namespace Impl_FlatContainer {
 	public:
 		constexpr FlatContainer() noexcept
 			: x_pStorage(nullptr), x_uSize(0), x_uCapacity(0)
-		{
-		}
+		{ }
 		FlatContainer(const FlatContainer &vOther)
 			: FlatContainer()
 		{

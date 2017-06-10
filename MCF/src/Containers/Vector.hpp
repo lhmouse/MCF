@@ -36,8 +36,7 @@ private:
 public:
 	constexpr Vector() noexcept
 		: x_pStorage(nullptr), x_uSize(0), x_uCapacity(0)
-	{
-	}
+	{ }
 	template<typename ...ParamsT>
 	explicit Vector(std::size_t uSize, const ParamsT &...vParams)
 		: Vector()
@@ -54,8 +53,7 @@ public:
 	}
 	Vector(std::initializer_list<Element> ilInitList)
 		: Vector(ilInitList.begin(), ilInitList.end())
-	{
-	}
+	{ }
 	Vector(const Vector &vOther)
 		: Vector()
 	{

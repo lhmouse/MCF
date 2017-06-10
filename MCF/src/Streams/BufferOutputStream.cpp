@@ -6,8 +6,7 @@
 
 namespace MCF {
 
-BufferOutputStream::~BufferOutputStream(){
-}
+BufferOutputStream::~BufferOutputStream(){ }
 
 void BufferOutputStream::Put(unsigned char byData){
 	x_vBuffer.Put(byData);

@@ -18,8 +18,7 @@ private:
 public:
 	explicit KernelSemaphore(std::size_t uInitCount)
 		: KernelSemaphore(uInitCount, nullptr, 0)
-	{
-	}
+	{ }
 	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags);
 
 	KernelSemaphore(const KernelSemaphore &) = delete;

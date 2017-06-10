@@ -17,8 +17,7 @@ private:
 public:
 	explicit BufferOutputStream(StreamBuffer vBuffer = StreamBuffer()) noexcept
 		: x_vBuffer(std::move(vBuffer))
-	{
-	}
+	{ }
 	~BufferOutputStream() override;
 
 public:

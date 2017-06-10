@@ -53,8 +53,7 @@ private:
 	std::uintptr_t x_uThreadId = 0;
 
 protected:
-	constexpr Thread() noexcept {
-	}
+	constexpr Thread() noexcept { }
 
 public:
 	virtual ~Thread();
@@ -110,8 +109,7 @@ namespace Impl_Thread {
 	};
 
 	template<typename FunctionT>
-	ConcreteThread<FunctionT>::~ConcreteThread(){
-	}
+	ConcreteThread<FunctionT>::~ConcreteThread(){ }
 }
 
 template<typename FunctionT>

@@ -20,12 +20,10 @@ private:
 public:
 	FileOutputStream() noexcept
 		: x_vFile(), x_u64Offset(0)
-	{
-	}
+	{ }
 	explicit FileOutputStream(File &&vFile, std::uint64_t u64Offset = 0) noexcept
 		: x_vFile(std::move(vFile)), x_u64Offset(u64Offset)
-	{
-	}
+	{ }
 	~FileOutputStream() override;
 
 public:

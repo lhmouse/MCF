@@ -27,16 +27,13 @@ private:
 public:
 	constexpr UniqueHandle() noexcept
 		: x_hObject(Closer()())
-	{
-	}
+	{ }
 	explicit constexpr UniqueHandle(Handle hObject) noexcept
 		: x_hObject(hObject)
-	{
-	}
+	{ }
 	UniqueHandle(UniqueHandle &&hOther) noexcept
 		: x_hObject(hOther.Release())
-	{
-	}
+	{ }
 	UniqueHandle &operator=(UniqueHandle &&hOther) noexcept {
 		return Reset(std::move(hOther));
 	}

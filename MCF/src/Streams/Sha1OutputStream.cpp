@@ -10,8 +10,7 @@ namespace MCF {
 
 // https://en.wikipedia.org/wiki/SHA-1
 
-Sha1OutputStream::~Sha1OutputStream(){
-}
+Sha1OutputStream::~Sha1OutputStream(){ }
 
 void Sha1OutputStream::X_Initialize() noexcept {
 	x_au32Reg       = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };

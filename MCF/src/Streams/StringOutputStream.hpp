@@ -18,12 +18,10 @@ private:
 public:
 	StringOutputStream() noexcept
 		: x_vString(), x_uOffset(0)
-	{
-	}
+	{ }
 	explicit StringOutputStream(NarrowString vString, std::size_t uOffset = 0) noexcept
 		: x_vString(std::move(vString)), x_uOffset(uOffset)
-	{
-	}
+	{ }
 	~StringOutputStream() override;
 
 public:

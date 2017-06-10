@@ -27,8 +27,7 @@ protected:
 	using X_ForwardedParams = std::tuple<ParamsT &&...>;
 
 public:
-	constexpr Function() noexcept {
-	}
+	constexpr Function() noexcept { }
 	virtual ~Function();
 
 protected:
@@ -41,8 +40,7 @@ public:
 };
 
 template<typename ReturnT, typename ...ParamsT>
-Function<ReturnT (ParamsT ...)>::~Function(){
-}
+Function<ReturnT (ParamsT ...)>::~Function(){ }
 
 namespace Impl_Function {
 	template<typename PrototypeT, typename FunctionT>
@@ -57,8 +55,7 @@ namespace Impl_Function {
 	public:
 		explicit ConcreteFunction(FunctionT &vFunction)
 			: x_vFunction(std::forward<FunctionT>(vFunction))
-		{
-		}
+		{ }
 		~ConcreteFunction() override;
 
 	protected:
@@ -68,8 +65,7 @@ namespace Impl_Function {
 	};
 
 	template<typename PrototypeT, typename FunctionT>
-	ConcreteFunction<PrototypeT, FunctionT>::~ConcreteFunction(){
-	}
+	ConcreteFunction<PrototypeT, FunctionT>::~ConcreteFunction(){ }
 }
 
 template<typename PrototypeT, typename FunctionT>

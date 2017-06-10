@@ -14,8 +14,7 @@ enum : std::size_t {
 BufferingOutputStreamFilter::~BufferingOutputStreamFilter(){
 	try {
 		BufferingOutputStreamFilter::Flush(false);
-	} catch(...){
-	}
+	} catch(...){ }
 }
 
 void BufferingOutputStreamFilter::Put(unsigned char byData){

@@ -11,8 +11,7 @@ namespace MCF {
 // https://en.wikipedia.org/wiki/SHA-2
 // http://download.intel.com/embedded/processor/whitepaper/327457.pdf
 
-Sha256OutputStream::~Sha256OutputStream(){
-}
+Sha256OutputStream::~Sha256OutputStream(){ }
 
 void Sha256OutputStream::X_Initialize() noexcept {
 	x_au32Reg       = { 0x6A09E667u, 0xBB67AE85u, 0x3C6EF372u, 0xA54FF53Au,

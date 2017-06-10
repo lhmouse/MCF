@@ -6,8 +6,7 @@
 
 namespace MCF {
 
-NullInputStream::~NullInputStream(){
-}
+NullInputStream::~NullInputStream(){ }
 
 int NullInputStream::Peek() noexcept {
 	return -1;
@@ -33,7 +32,6 @@ std::size_t NullInputStream::Discard(std::size_t uSize) noexcept {
 
 	return 0;
 }
-void NullInputStream::Invalidate() noexcept {
-}
+void NullInputStream::Invalidate() noexcept { }
 
 }

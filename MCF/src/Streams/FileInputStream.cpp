@@ -7,8 +7,7 @@
 
 namespace MCF {
 
-FileInputStream::~FileInputStream(){
-}
+FileInputStream::~FileInputStream(){ }
 
 int FileInputStream::Peek(){
 	int nRet = -1;
@@ -63,7 +62,6 @@ std::size_t FileInputStream::Discard(std::size_t uSize){
 	x_u64Offset += uBytesTotal;
 	return uBytesTotal;
 }
-void FileInputStream::Invalidate(){
-}
+void FileInputStream::Invalidate(){ }
 
 }

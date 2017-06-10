@@ -46,8 +46,7 @@ private:
 public:
 	constexpr List() noexcept
 		: x_pLast(nullptr), x_pFirst(nullptr)
-	{
-	}
+	{ }
 	template<typename ...ParamsT>
 	explicit List(std::size_t uSize, const ParamsT &...vParams)
 		: List()
@@ -64,8 +63,7 @@ public:
 	}
 	List(std::initializer_list<Element> ilInitList)
 		: List(ilInitList.begin(), ilInitList.end())
-	{
-	}
+	{ }
 	List(const List &vOther)
 		: List()
 	{

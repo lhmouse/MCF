@@ -17,8 +17,7 @@ private:
 public:
 	explicit OutputStreamIterator(AbstractOutputStream &strmOwner) noexcept
 		: x_pstrmOwner(&strmOwner)
-	{
-	}
+	{ }
 
 public:
 	OutputStreamIterator &operator=(unsigned char byData){

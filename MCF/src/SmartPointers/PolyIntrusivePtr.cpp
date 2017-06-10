@@ -8,8 +8,7 @@
 namespace MCF {
 
 namespace Impl_PolyIntrusivePtr {
-	UnknownBase::~UnknownBase(){
-	}
+	UnknownBase::~UnknownBase(){ }
 }
 
 template class IntrusivePtr     <Impl_PolyIntrusivePtr::UnknownBase>;

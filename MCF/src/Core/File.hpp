@@ -39,8 +39,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hFile;
 
 public:
-	constexpr File() noexcept {
-	}
+	constexpr File() noexcept { }
 	File(const WideStringView &wsvPath, std::uint32_t u32Flags);
 
 public:

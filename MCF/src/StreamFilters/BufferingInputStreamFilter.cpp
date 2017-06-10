@@ -14,8 +14,7 @@ enum : std::size_t {
 BufferingInputStreamFilter::~BufferingInputStreamFilter(){
 	try {
 		BufferingInputStreamFilter::Invalidate();
-	} catch(...){
-	}
+	} catch(...){ }
 }
 
 int BufferingInputStreamFilter::Peek(){

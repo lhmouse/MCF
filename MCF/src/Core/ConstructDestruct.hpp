@@ -20,8 +20,7 @@ namespace Impl_ConstructDestruct {
 inline void *operator new(std::size_t, void *p, const ::MCF::Impl_ConstructDestruct::Tag &){
 	return p;
 }
-inline void operator delete(void *, void *, const ::MCF::Impl_ConstructDestruct::Tag &) noexcept {
-}
+inline void operator delete(void *, void *, const ::MCF::Impl_ConstructDestruct::Tag &) noexcept { }
 
 namespace MCF {
 

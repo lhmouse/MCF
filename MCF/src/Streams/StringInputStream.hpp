@@ -18,8 +18,7 @@ private:
 public:
 	explicit StringInputStream(NarrowString vString = NarrowString(), std::size_t uOffset = 0) noexcept
 		: x_vString(std::move(vString)), x_uOffset(uOffset)
-	{
-	}
+	{ }
 	~StringInputStream() override;
 
 public:

@@ -133,7 +133,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 	for(__t = (_MCFCRT_STD size_t)(__wp - __wbegin); __t != 0; --__t){
 		__wp -= 1;
 		__rp -= 1;
-		*(volatile unsigned unsigned char *)__wp = *(const unsigned unsigned char *)__rp;
+		*(volatile unsigned char *)__wp = *(const unsigned char *)__rp;
 	}
 }
 

@@ -17,12 +17,8 @@ __MCFCRT_REPZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repz_scasb(void **_MCFCRT_RESTRI
 	int __z, __b;
 	const _MCFCRT_STD uint8_t *__p = (const _MCFCRT_STD uint8_t *)__s;
 	__asm__ (
-		"xor %2, %2 \n"
 		"repz scasb \n"
-		"mov ecx, %k2 \n"
-		"setz cl \n"
-		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&q"(__b)
+		: "+D"(__p), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){
@@ -34,12 +30,8 @@ __MCFCRT_REPZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repz_scasw(_MCFCRT_STD uint16_t 
 	int __z, __b;
 	const _MCFCRT_STD uint16_t *__p = __s;
 	__asm__ (
-		"xor %2, %2 \n"
 		"repz scasw \n"
-		"mov ecx, %k2 \n"
-		"setz cl \n"
-		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&q"(__b)
+		: "+D"(__p), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){
@@ -51,12 +43,8 @@ __MCFCRT_REPZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repz_scasd(_MCFCRT_STD uint32_t 
 	int __z, __b;
 	const _MCFCRT_STD uint32_t *__p = __s;
 	__asm__ (
-		"xor %2, %2 \n"
 		"repz scasd \n"
-		"mov ecx, %k2 \n"
-		"setz cl \n"
-		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&q"(__b)
+		: "+D"(__p), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){
@@ -69,12 +57,8 @@ __MCFCRT_REPZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repz_scasq(_MCFCRT_STD uint64_t 
 	int __z, __b;
 	const _MCFCRT_STD uint64_t *__p = __s;
 	__asm__ (
-		"xor %2, %2 \n"
 		"repz scasq \n"
-		"mov ecx, %k2 \n"
-		"setz cl \n"
-		"setb %b2 \n"
-		: "+D"(__p), "=c"(__z), "=&q"(__b)
+		: "+D"(__p), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p), "a"(__c), "c"(__n)
 	);
 	if(__es){

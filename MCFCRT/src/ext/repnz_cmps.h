@@ -18,12 +18,8 @@ __MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsb(void **_MCFCRT_REST
 	const _MCFCRT_STD uint8_t *__p1 = (const _MCFCRT_STD uint8_t *)__s1;
 	const _MCFCRT_STD uint8_t *__p2 = (const _MCFCRT_STD uint8_t *)__s2;
 	__asm__ (
-		"xor %3, %3 \n"
 		"repnz cmpsb \n"
-		"mov ecx, %k3 \n"
-		"setz cl \n"
-		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
+		: "+D"(__p1), "+S"(__p2), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){
@@ -36,12 +32,8 @@ __MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsw(_MCFCRT_STD uint16_
 	const _MCFCRT_STD uint16_t *__p1 = __s1;
 	const _MCFCRT_STD uint16_t *__p2 = __s2;
 	__asm__ (
-		"xor %3, %3 \n"
 		"repnz cmpsw \n"
-		"mov ecx, %k3 \n"
-		"setz cl \n"
-		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
+		: "+D"(__p1), "+S"(__p2), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){
@@ -54,12 +46,8 @@ __MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsd(_MCFCRT_STD uint32_
 	const _MCFCRT_STD uint32_t *__p1 = __s1;
 	const _MCFCRT_STD uint32_t *__p2 = __s2;
 	__asm__ (
-		"xor %3, %3 \n"
 		"repnz cmpsd \n"
-		"mov ecx, %k3 \n"
-		"setz cl \n"
-		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
+		: "+D"(__p1), "+S"(__p2), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){
@@ -73,12 +61,8 @@ __MCFCRT_REPNZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repnz_cmpsq(_MCFCRT_STD uint64_
 	const _MCFCRT_STD uint64_t *__p1 = __s1;
 	const _MCFCRT_STD uint64_t *__p2 = __s2;
 	__asm__ (
-		"xor %3, %3 \n"
 		"repnz cmpsq \n"
-		"mov ecx, %k3 \n"
-		"setz cl \n"
-		"setb %b3 \n"
-		: "+D"(__p1), "+S"(__p2), "=c"(__z), "=&q"(__b)
+		: "+D"(__p1), "+S"(__p2), "=@ccz"(__z), "=@ccb"(__b)
 		: "m"(*__p1), "m"(*__p2), "c"(__n)
 	);
 	if(__es1){

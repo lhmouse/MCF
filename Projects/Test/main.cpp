@@ -1,15 +1,16 @@
-#include <cstring>
+#include <MCFCRT/ext/repz_cmps.h>
 #include <cstdio>
 
-char str[100];
-volatile auto cp = std::memmove;
-
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	std::memcpy(str, "abcdefghijklmnopqrstuvwxyz", 27);
-	cp(str, str + 7, 19);
-	std::puts(str);
-	std::memcpy(str, "abcdefghijklmnopqrstuvwxyz", 27);
-	cp(str + 7, str, 19);
-	std::puts(str);
+	const char *s1 = "xxxxxxacc";
+	const char *s2 = "xxxxxxbcc";
+	int r = ::_MCFCRT_repz_cmpsb(nullptr, s1, s2, 10);
+	if(r > 0){
+		std::puts("gt");
+	} else if(r < 0){
+		std::puts("lt");
+	} else {
+		std::puts("eq");
+	}
 	return 0;
 }

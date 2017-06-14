@@ -59,9 +59,9 @@ private:
 			std::make_signed_t<Char> x_schComplLength;
 		};
 		struct {
-			Char *x_pchBegin;
-			std::size_t x_uLength;
-			std::size_t x_uSizeAllocated;
+			Char *x_pchData;
+			std::size_t x_uSize;
+			std::size_t x_uCapacity;
 		};
 	};
 
@@ -156,7 +156,7 @@ public:
 	}
 	~String() noexcept {
 		if(x_schComplLength < 0){
-			::operator delete[](x_pchBegin);
+			::operator delete[](x_pchData);
 		}
 #ifndef NDEBUG
 		std::memset(this, 0xDD, sizeof(*this));
@@ -201,12 +201,35 @@ private:
 				::operator delete[](pchOldBuffer);
 			}
 
-			x_pchBegin = pchNewBuffer;
-			x_uLength = uOldSize;
-			x_uSizeAllocated = uCharsToAlloc;
+			x_pchData = pchNewBuffer;
+			x_uSize = uOldSize;
+			x_uCapacity = uCharsToAlloc - 1;
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
+	}
+	void X_GetStorage(Char **ppchData, std::size_t *puSize, std::size_t *puCapacity) const noexcept {
+		if(x_schComplLength >= 0){
+			if(ppchData){
+				*ppchData = const_cast<Char *>(x_achData);
+			}
+			if(puSize){
+				*puSize = CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength);
+			}
+			if(puCapacity){
+				*puCapacity = CountOf(x_achData);
+			}
+		} else {
+			if(ppchData){
+				*ppchData = x_pchData;
+			}
+			if(puSize){
+				*puSize = x_uSize;
+			}
+			if(puCapacity){
+				*puCapacity = x_uCapacity;
+			}
+		}
 	}
 	void X_SetSize(std::size_t uNewSize) noexcept {
 		MCF_DEBUG_CHECK(uNewSize <= GetCapacity());
@@ -214,7 +237,7 @@ private:
 		if(x_schComplLength >= 0){
 			x_schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_achData) - uNewSize);
 		} else {
-			x_uLength = uNewSize;
+			x_uSize = uNewSize;
 		}
 	}
 
@@ -344,80 +367,85 @@ public:
 
 	// String 需求。
 	const Char *GetBegin() const noexcept {
-		if(x_schComplLength >= 0){
-			return x_achData;
-		} else {
-			return x_pchBegin;
-		}
+		Char *pchData;
+		X_GetStorage(&pchData, nullptr, nullptr);
+		return pchData;
 	}
 	Char *GetBegin() noexcept {
-		if(x_schComplLength >= 0){
-			return x_achData;
-		} else {
-			return x_pchBegin;
-		}
+		Char *pchData;
+		X_GetStorage(&pchData, nullptr, nullptr);
+		return pchData;
+	}
+	const Char *GetConstBegin() const noexcept {
+		return GetBegin();
 	}
 
 	const Char *GetEnd() const noexcept {
-		if(x_schComplLength >= 0){
-			return x_achData + (CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength));
-		} else {
-			return x_pchBegin + x_uLength;
-		}
+		Char *pchData;
+		std::size_t uSize;
+		X_GetStorage(&pchData, &uSize, nullptr);
+		return pchData + uSize;
 	}
 	Char *GetEnd() noexcept {
-		if(x_schComplLength >= 0){
-			return x_achData + (CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength));
-		} else {
-			return x_pchBegin + x_uLength;
-		}
+		Char *pchData;
+		std::size_t uSize;
+		X_GetStorage(&pchData, &uSize, nullptr);
+		return pchData + uSize;
 	}
-	std::size_t GetSize() const noexcept {
-		if(x_schComplLength >= 0){
-			return CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength);
-		} else {
-			return x_uLength;
-		}
+	const Char *GetConstEnd() const noexcept {
+		return GetEnd();
 	}
 
 	const Char *GetData() const noexcept {
-		return GetBegin();
+		Char *pchData;
+		X_GetStorage(&pchData, nullptr, nullptr);
+		return pchData;
 	}
 	Char *GetData() noexcept {
-		return GetBegin();
+		Char *pchData;
+		X_GetStorage(&pchData, nullptr, nullptr);
+		return pchData;
 	}
 	const Char *GetConstData() const noexcept {
 		return GetData();
 	}
+	std::size_t GetSize() const noexcept {
+		std::size_t uSize;
+		X_GetStorage(nullptr, &uSize, nullptr);
+		return uSize;
+	}
 	const Char *GetStr() const noexcept {
-		if(x_schComplLength >= 0){
-			const auto &chTerminator = x_achData[CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength)];
-			if(chTerminator != Char()){
-				const_cast<Char &>(chTerminator) = Char();
-			}
-			return x_achData;
-		} else {
-			auto &chTerminator = x_pchBegin[x_uLength];
-			if(chTerminator != Char()){
-				const_cast<Char &>(chTerminator) = Char();
-			}
-			return x_pchBegin;
+		Char *pchData;
+		std::size_t uSize;
+		X_GetStorage(&pchData, &uSize, nullptr);
+		if(pchData[uSize] != Char()){
+			pchData[uSize] = Char();
 		}
+		return  pchData;
 	}
 	Char *GetStr() noexcept {
-		if(x_schComplLength >= 0){
-			x_achData[CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength)] = Char();
-			return x_achData;
-		} else {
-			x_pchBegin[x_uLength] = Char();
-			return x_pchBegin;
+		Char *pchData;
+		std::size_t uSize;
+		X_GetStorage(&pchData, &uSize, nullptr);
+		if(pchData[uSize] != Char()){
+			pchData[uSize] = Char();
 		}
+		return  pchData;
 	}
 	const Char *GetConstStr() const noexcept {
 		return GetStr();
 	}
 	std::size_t GetLength() const noexcept {
-		return GetSize();
+		std::size_t uSize;
+		X_GetStorage(nullptr, &uSize, nullptr);
+		return uSize;
+	}
+
+	View GetView() const noexcept {
+		Char *pchData;
+		std::size_t uSize;
+		X_GetStorage(&pchData, &uSize, nullptr);
+		return View(pchData, uSize);
 	}
 
 	const Char &Get(std::size_t uIndex) const {
@@ -443,23 +471,16 @@ public:
 		return GetStr()[uIndex];
 	}
 
-	View GetView() const noexcept {
-		if(x_schComplLength >= 0){
-			return View(x_achData, CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength));
-		} else {
-			return View(x_pchBegin, x_uLength);
-		}
-	}
-
 	std::size_t GetCapacity() const noexcept {
-		if(x_schComplLength >= 0){
-			return CountOf(x_achData);
-		} else {
-			return x_uSizeAllocated - 1;
-		}
+		std::size_t uCapacity;
+		X_GetStorage(nullptr, nullptr, &uCapacity);
+		return uCapacity;
 	}
 	std::size_t GetCapacityRemaining() const noexcept {
-		return GetCapacity() - GetSize();
+		std::size_t uSize;
+		std::size_t uCapacity;
+		X_GetStorage(nullptr, &uSize, &uCapacity);
+		return uCapacity - uSize;
 	}
 	void Reserve(std::size_t uNewCapacity){
 		const auto uOldCapacity = GetCapacity();
@@ -556,7 +577,7 @@ public:
 		MCF_DEBUG_CHECK(this != &strOther);
 
 		if(x_schComplLength < 0){
-			::operator delete[](x_pchBegin);
+			::operator delete[](x_pchData);
 		}
 		std::memcpy(this, &strOther, sizeof(*this));
 #ifndef NDEBUG
@@ -575,8 +596,8 @@ public:
 			x_achData[CountOf(x_achData) - static_cast<std::make_unsigned_t<Char>>(x_schComplLength)] = chFill;
 			--x_schComplLength;
 		} else {
-			x_pchBegin[x_uLength] = chFill;
-			++x_uLength;
+			x_pchData[x_uSize] = chFill;
+			++x_uSize;
 		}
 	}
 	void Pop(std::size_t uCount = 1) noexcept {

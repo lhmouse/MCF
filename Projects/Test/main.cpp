@@ -1,14 +1,11 @@
-#include <MCFCRT/ext/repz_cmps.h>
-#include <cstdio>
+#include <MCF/Core/String.hpp>
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	const char *s1 = "xxxxxxacc";
-	const char *s2 = "xxxxxxbcc";
-	int r = ::_MCFCRT_repz_cmpsb(nullptr, s1, s2, 10);
-	if(r != 0){
-		std::puts("neq");
-	} else {
-		std::puts("eq");
+	MCF::NarrowString str;
+	for(char c = ' '; c < '~'; ++c){
+		str += c;
 	}
+	auto f = static_cast<const char * (MCF::NarrowString::*)() const noexcept>(MCF::NarrowString::GetStr);
+	__builtin_puts((str.*f)());
 	return 0;
 }

@@ -2,10 +2,11 @@
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
 	MCF::NarrowString str;
+	volatile auto f1 = static_cast<void (MCF::NarrowString::*)(char, std::size_t)>(&MCF::NarrowString::Append);
 	for(char c = ' '; c < '~'; ++c){
-		str += c;
+		(str.*f1)(c, 1);
 	}
-	auto f = static_cast<const char * (MCF::NarrowString::*)() const noexcept>(MCF::NarrowString::GetStr);
-	__builtin_puts((str.*f)());
+	volatile auto f2 = static_cast<const char * (MCF::NarrowString::*)() const noexcept>(&MCF::NarrowString::GetStr);
+	__builtin_puts((str.*f2)());
 	return 0;
 }

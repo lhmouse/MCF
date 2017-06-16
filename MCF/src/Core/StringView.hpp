@@ -5,216 +5,23 @@
 #ifndef MCF_CORE_STRING_VIEW_HPP_
 #define MCF_CORE_STRING_VIEW_HPP_
 
+#include "_StringTraits.hpp"
 #include "_Enumerator.hpp"
 #include "Assert.hpp"
-#include "CountOf.hpp"
-#include "Defer.hpp"
 #include "Exception.hpp"
-#include <MCFCRT/ext/alloca.h>
 #include <iterator>
 #include <utility>
 #include <type_traits>
-#include <initializer_list>
 #include <cstddef>
 
 namespace MCF {
 
-enum class StringType {
-	kUtf8          =  0,
-	kUtf16         =  1,
-	kUtf32         =  2,
-	kCesu8         =  3,
-	kAnsi          =  4,
-	kModifiedUtf8  =  5,
-	kNarrow        = 98,
-	kWide          = 99,
-};
-
-template<StringType>
-struct StringEncodingTraits;
-
-template<>
-struct StringEncodingTraits<StringType::kUtf8> {
-	using Char = char;
-	static constexpr int kConversionPreference = 0;
-};
-template<>
-struct StringEncodingTraits<StringType::kUtf16> {
-	using Char = char16_t;
-	static constexpr int kConversionPreference = -1; // UTF-16
-};
-template<>
-struct StringEncodingTraits<StringType::kUtf32> {
-	using Char = char32_t;
-	static constexpr int kConversionPreference = 1; // UTF-32
-};
-template<>
-struct StringEncodingTraits<StringType::kCesu8> {
-	using Char = char;
-	static constexpr int kConversionPreference = 0;
-};
-template<>
-struct StringEncodingTraits<StringType::kAnsi> {
-	using Char = char;
-	static constexpr int kConversionPreference = -1; // UTF-16
-};
-template<>
-struct StringEncodingTraits<StringType::kModifiedUtf8> {
-	using Char = char;
-	static constexpr int kConversionPreference = 0;
-};
-template<>
-struct StringEncodingTraits<StringType::kNarrow> {
-	using Char = char;
-	static constexpr int kConversionPreference = 0;
-};
-template<>
-struct StringEncodingTraits<StringType::kWide> {
-	using Char = wchar_t;
-	static constexpr int kConversionPreference = -1; // UTF-16
-};
-
-namespace Impl_StringView {
-	enum : std::size_t {
-		kNpos = static_cast<std::size_t>(-1),
-	};
-
-	template<typename CharT>
-	const CharT *StrEndOf(const CharT *pszBegin) noexcept {
-		MCF_DEBUG_CHECK(pszBegin);
-
-		auto pchEnd = pszBegin;
-		while(*pchEnd != CharT()){
-			++pchEnd;
-		}
-		return pchEnd;
-	}
-
-	template<typename CharT, typename IteratorT>
-	std::size_t StrChrRep(IteratorT itBegin, std::common_type_t<IteratorT> itEnd, CharT chToFind, std::size_t uFindCount) noexcept {
-		MCF_DEBUG_CHECK(uFindCount != 0);
-		MCF_DEBUG_CHECK(static_cast<std::size_t>(itEnd - itBegin) >= uFindCount);
-
-		auto itCur = itBegin;
-		for(;;){
-			for(;;){
-				if(itEnd - itCur < static_cast<std::ptrdiff_t>(uFindCount)){
-					return kNpos;
-				}
-				if(*itCur == chToFind){
-					break;
-				}
-				++itCur;
-			}
-
-			std::ptrdiff_t nMatchLen = 1;
-			for(;;){
-				if(static_cast<std::size_t>(nMatchLen) >= uFindCount){
-					return static_cast<std::size_t>(itCur - itBegin);
-				}
-				if(itCur[nMatchLen] != chToFind){
-					break;
-				}
-				++nMatchLen;
-			}
-			itCur += nMatchLen;
-			++itCur;
-		}
-	}
-
-	template<typename IteratorT, typename ToFindIteratorT>
-	std::size_t StrStr(IteratorT itBegin, std::common_type_t<IteratorT> itEnd, ToFindIteratorT itToFindBegin, std::common_type_t<ToFindIteratorT> itToFindEnd) noexcept {
-		MCF_DEBUG_CHECK(itToFindEnd != itToFindBegin);
-		MCF_DEBUG_CHECK(static_cast<std::size_t>(itEnd - itBegin) >= static_cast<std::size_t>(itToFindEnd - itToFindBegin));
-
-		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
-
-		std::ptrdiff_t *pTable;
-		bool bTableWasAllocatedFromHeap;
-		const auto uTableSize = uFindCount - 1;
-		if(uTableSize >= 0x10000 / sizeof(std::ptrdiff_t)){
-			pTable = ::new(std::nothrow) std::ptrdiff_t[uTableSize];
-			bTableWasAllocatedFromHeap = true;
-		} else {
-			pTable = static_cast<std::ptrdiff_t *>(_MCFCRT_ALLOCA(uTableSize * sizeof(std::ptrdiff_t)));
-			bTableWasAllocatedFromHeap = false;
-		}
-		const auto vFreeTable = Defer([&]{ if(bTableWasAllocatedFromHeap){ ::delete[](pTable); }; });
-
-		if(pTable){
-			pTable[0] = 0;
-
-			if(uFindCount > 2){
-				std::ptrdiff_t nPos = 1, nCand = 0;
-				for(;;){
-					if(itToFindBegin[nPos] == itToFindBegin[nCand]){
-						++nCand;
-						if(itToFindBegin[nPos + 1] == itToFindBegin[nCand]){
-							pTable[nPos] = pTable[nCand - 1];
-						} else {
-							pTable[nPos] = nCand;
-						}
-					} else if(nCand == 0){
-						pTable[nPos] = 0;
-					} else {
-						nCand = pTable[nCand - 1];
-						continue;
-					}
-					++nPos;
-					if(static_cast<std::size_t>(nPos) >= uFindCount - 1){
-						break;
-					}
-				}
-			}
-		}
-
-		auto itCur = itBegin;
-		for(;;){
-			for(;;){
-				if(itEnd - itCur < static_cast<std::ptrdiff_t>(uFindCount)){
-					return kNpos;
-				}
-				if(*itCur == *itToFindBegin){
-					break;
-				}
-				++itCur;
-			}
-
-			std::ptrdiff_t nMatchLen = 1;
-			for(;;){
-				if(static_cast<std::size_t>(nMatchLen) >= uFindCount){
-					return static_cast<std::size_t>(itCur - itBegin);
-				}
-		jFallback:
-				if(itCur[nMatchLen] != itToFindBegin[nMatchLen]){
-					break;
-				}
-				++nMatchLen;
-			}
-			if(!pTable){
-				++itCur;
-				continue;
-			}
-			itCur += nMatchLen;
-			const auto nFallback = pTable[nMatchLen - 1];
-			if(nFallback != 0){
-				itCur -= nFallback;
-				nMatchLen = nFallback;
-				goto jFallback;
-			}
-		}
-	}
-}
-
-template<StringType kTypeT>
+template<Impl_StringTraits::Type kTypeT>
 class StringView {
 public:
-	using Traits = StringEncodingTraits<kTypeT>;
-	using Char   = typename Traits::Char;
+	enum : std::size_t { kNpos = static_cast<std::size_t>(-1) };
 
-	enum : std::size_t {
-		kNpos = Impl_StringView::kNpos,
-	};
+	using Char  = typename Impl_StringTraits::Encoding<kTypeT>::Char;
 
 	static_assert(std::is_integral<Char>::value, "Char must be an integral type.");
 
@@ -225,12 +32,9 @@ public:
 
 private:
 	// 为了方便理解，想象此处使用的是所谓“插入式光标”：
-
 	// 字符串内容：    a   b   c   d   e   f   g
 	// 正光标位置：  0   1   2   3   4   5   6   7
 	// 负光标位置： -8  -7  -6  -5  -4  -3  -2  -1
-
-	// 以下均以此字符串为例。
 	static std::size_t X_TranslateOffset(std::ptrdiff_t nOffset, std::size_t uLength) noexcept {
 		auto uRet = static_cast<std::size_t>(nOffset);
 		if(nOffset < 0){
@@ -257,11 +61,8 @@ public:
 	constexpr StringView(const Char *pchBegin, std::size_t uLen) noexcept
 		: StringView(pchBegin, pchBegin + uLen)
 	{ }
-	constexpr StringView(std::initializer_list<Char> ilElements) noexcept
-		: StringView(ilElements.begin(), ilElements.size())
-	{ }
 	explicit StringView(const Char *pszBegin) noexcept
-		: StringView(pszBegin, Impl_StringView::StrEndOf(pszBegin))
+		: StringView(pszBegin, Impl_StringTraits::Define(pszBegin))
 	{ }
 
 public:
@@ -415,28 +216,7 @@ public:
 	}
 
 	int Compare(const StringView &svOther) const noexcept {
-		using UChar = std::make_unsigned_t<Char>;
-
-		auto pLRead = GetBegin();
-		const auto pLEnd = GetEnd();
-		auto pRRead = svOther.GetBegin();
-		const auto pREnd = svOther.GetEnd();
-		for(;;){
-			const int nLAtEnd = (pLRead == pLEnd) ? 3 : 0;
-			const int nRAtEnd = (pRRead == pREnd) ? 1 : 0;
-			const int nResult = 2 - (nLAtEnd ^ nRAtEnd);
-			if(nResult != 2){
-				return nResult;
-			}
-
-			const auto uchLhs = static_cast<UChar>(*pLRead);
-			const auto uchRhs = static_cast<UChar>(*pRRead);
-			if(uchLhs != uchRhs){
-				return (uchLhs < uchRhs) ? -1 : 1;
-			}
-			++pLRead;
-			++pRRead;
-		}
+		return Impl_StringTraits::Compare(GetBegin(), GetEnd(), svOther.GetBegin(), svOther.GetEnd());
 	}
 
 	void Assign(const Char *pchBegin, const Char *pchEnd) noexcept {
@@ -450,11 +230,8 @@ public:
 	void Assign(const Char *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	void Assign(std::initializer_list<Char> ilElements) noexcept {
-		Assign(ilElements.begin(), ilElements.end());
-	}
 	void Assign(const Char *pszBegin) noexcept {
-		Assign(pszBegin, Impl_StringView::StrEndOf(pszBegin));
+		Assign(pszBegin, Impl_StringTraits::Define(pszBegin));
 	}
 
 	// 举例：
@@ -463,8 +240,9 @@ public:
 	//   Slice( 5, -1)   返回 "fg"；
 	//   Slice(-5, -1)   返回 "defg"。
 	StringView Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd) const noexcept {
-		const auto uLength = GetLength();
-		return StringView(x_pchBegin + X_TranslateOffset(nBegin, uLength), x_pchBegin + X_TranslateOffset(nEnd, uLength));
+		const auto uRealBegin = X_TranslateOffset(nBegin, GetLength());
+		const auto uRealEnd = X_TranslateOffset(nEnd, GetLength());
+		return StringView(GetBegin() + uRealBegin, GetEnd() + uRealEnd);
 	}
 
 	// 举例：
@@ -472,88 +250,50 @@ public:
 	//   Find("def", 4)             返回 kNpos；
 	//   FindBackward("def", 5)     返回 kNpos；
 	//   FindBackward("def", 6)     返回 3。
-	std::size_t Find(const StringView &vToFind, std::ptrdiff_t nBegin = 0) const noexcept {
-		const auto uLength = GetLength();
-		const auto uRealBegin = X_TranslateOffset(nBegin, uLength);
-		const auto uLenToFind = vToFind.GetLength();
-		if(uLenToFind == 0){
-			return uRealBegin;
-		}
-		if(uLength < uLenToFind){
+	std::size_t Find(const StringView &svToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+		const auto uRealBegin = X_TranslateOffset(nBegin, GetLength());
+		const auto itRealBegin = GetBegin() + uRealBegin;
+		const auto itRealEnd = GetEnd();
+		const auto itPosition = Impl_StringTraits::FindSpan(itRealBegin, itRealEnd, svToFind.GetBegin(), svToFind.GetEnd());
+		if(itPosition == itRealEnd){
 			return kNpos;
 		}
-		if(uRealBegin + uLenToFind > uLength){
-			return kNpos;
-		}
-		const auto uPos = Impl_StringView::StrStr(GetBegin() + uRealBegin, GetEnd(), vToFind.GetBegin(), vToFind.GetEnd());
-		if(uPos == kNpos){
-			return kNpos;
-		}
-		return uPos + uRealBegin;
+		return static_cast<std::size_t>(itPosition - itRealBegin);
 	}
-	std::size_t FindBackward(const StringView &vToFind, std::ptrdiff_t nEnd = -1) const noexcept {
-		const auto uLength = GetLength();
-		const auto uRealEnd = X_TranslateOffset(nEnd, uLength);
-		const auto uLenToFind = vToFind.GetLength();
-		if(uLenToFind == 0){
-			return uRealEnd;
-		}
-		if(uLength < uLenToFind){
+	std::size_t FindBackward(const StringView &svToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+		const auto uRealEnd = X_TranslateOffset(nEnd, GetLength());
+		const auto itRealBegin = std::make_reverse_iterator(GetBegin() + uRealEnd);
+		const auto itRealEnd = std::make_reverse_iterator(GetBegin());
+		const auto itPosition = Impl_StringTraits::FindSpan(itRealBegin, itRealEnd, std::make_reverse_iterator(svToFind.GetEnd()), std::make_reverse_iterator(svToFind.GetBegin()));
+		if(itPosition == itRealEnd){
 			return kNpos;
 		}
-		if(uRealEnd < uLenToFind){
-			return kNpos;
-		}
-		std::reverse_iterator<const Char *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin()),
-			itToFindBegin(vToFind.GetEnd()), itToFindEnd(vToFind.GetBegin());
-		const auto uPos = Impl_StringView::StrStr(itBegin, itEnd, itToFindBegin, itToFindEnd);
-		if(uPos == kNpos){
-			return kNpos;
-		}
-		return uRealEnd - uPos - uLenToFind;
+		return static_cast<std::size_t>(itPosition - itRealBegin);
 	}
-
 	// 举例：
 	//   Find('c', 3)           返回 kNpos；
 	//   Find('d', 3)           返回 3；
 	//   FindBackward('c', 3)   返回 2；
 	//   FindBackward('d', 3)   返回 kNpos。
 	std::size_t FindRep(Char chToFind, std::size_t uFindCount, std::ptrdiff_t nBegin = 0) const noexcept {
-		const auto uLength = GetLength();
-		const auto uRealBegin = X_TranslateOffset(nBegin, uLength);
-		if(uFindCount == 0){
-			return uRealBegin;
-		}
-		if(uLength < uFindCount){
+		const auto uRealBegin = X_TranslateOffset(nBegin, GetLength());
+		const auto itRealBegin = GetBegin() + uRealBegin;
+		const auto itRealEnd = GetEnd();
+		const auto itPosition = Impl_StringTraits::FindRepeat(itRealBegin, itRealEnd, chToFind, uFindCount);
+		if(itPosition == itRealEnd){
 			return kNpos;
 		}
-		if(uRealBegin + uFindCount > uLength){
-			return kNpos;
-		}
-		const auto uPos = Impl_StringView::StrChrRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uFindCount);
-		if(uPos == kNpos){
-			return kNpos;
-		}
-		return uPos + uRealBegin;
+		return static_cast<std::size_t>(itPosition - itRealBegin);
 	}
 	std::size_t FindRepBackward(Char chToFind, std::size_t uFindCount, std::ptrdiff_t nEnd = -1) const noexcept {
-		const auto uLength = GetLength();
-		const auto uRealEnd = X_TranslateOffset(nEnd, uLength);
-		if(uFindCount == 0){
-			return uRealEnd;
-		}
-		if(uLength < uFindCount){
+		const auto uRealEnd = X_TranslateOffset(nEnd, GetLength());
+		const auto itRealBegin = std::make_reverse_iterator(GetBegin() + uRealEnd);
+		const auto itRealEnd = std::make_reverse_iterator(GetBegin());
+		const auto itPosition = Impl_StringTraits::FindRepeat(itRealBegin, itRealEnd, chToFind, uFindCount);
+		if(itPosition == itRealEnd){
 			return kNpos;
 		}
-		if(uRealEnd < uFindCount){
-			return kNpos;
-		}
-		std::reverse_iterator<const Char *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin());
-		const auto uPos = Impl_StringView::StrChrRep(itBegin, itEnd, chToFind, uFindCount);
-		if(uPos == kNpos){
-			return kNpos;
-		}
-		return uRealEnd - uPos - uFindCount;
+		return static_cast<std::size_t>(itPosition - itRealBegin);
 	}
 	std::size_t Find(Char chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		return FindRep(chToFind, 1, nBegin);
@@ -617,23 +357,23 @@ public:
 	}
 };
 
-extern template class StringView<StringType::kUtf8>;
-extern template class StringView<StringType::kUtf16>;
-extern template class StringView<StringType::kUtf32>;
-extern template class StringView<StringType::kCesu8>;
-extern template class StringView<StringType::kAnsi>;
-extern template class StringView<StringType::kModifiedUtf8>;
-extern template class StringView<StringType::kNarrow>;
-extern template class StringView<StringType::kWide>;
+extern template class StringView<Impl_StringTraits::Type::kUtf8>;
+extern template class StringView<Impl_StringTraits::Type::kUtf16>;
+extern template class StringView<Impl_StringTraits::Type::kUtf32>;
+extern template class StringView<Impl_StringTraits::Type::kCesu8>;
+extern template class StringView<Impl_StringTraits::Type::kAnsi>;
+extern template class StringView<Impl_StringTraits::Type::kModifiedUtf8>;
+extern template class StringView<Impl_StringTraits::Type::kNarrow>;
+extern template class StringView<Impl_StringTraits::Type::kWide>;
 
-using Utf8StringView         = StringView<StringType::kUtf8>;
-using Utf16StringView        = StringView<StringType::kUtf16>;
-using Utf32StringView        = StringView<StringType::kUtf32>;
-using Cesu8StringView        = StringView<StringType::kCesu8>;
-using AnsiStringView         = StringView<StringType::kAnsi>;
-using ModifiedUtf8StringView = StringView<StringType::kModifiedUtf8>;
-using NarrowStringView       = StringView<StringType::kNarrow>;
-using WideStringView         = StringView<StringType::kWide>;
+using Utf8StringView         = StringView<Impl_StringTraits::Type::kUtf8>;
+using Utf16StringView        = StringView<Impl_StringTraits::Type::kUtf16>;
+using Utf32StringView        = StringView<Impl_StringTraits::Type::kUtf32>;
+using Cesu8StringView        = StringView<Impl_StringTraits::Type::kCesu8>;
+using AnsiStringView         = StringView<Impl_StringTraits::Type::kAnsi>;
+using ModifiedUtf8StringView = StringView<Impl_StringTraits::Type::kModifiedUtf8>;
+using NarrowStringView       = StringView<Impl_StringTraits::Type::kNarrow>;
+using WideStringView         = StringView<Impl_StringTraits::Type::kWide>;
 
 // 字面量运算符。
 // 注意 StringView 并不是所谓“零结尾的字符串”。

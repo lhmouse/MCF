@@ -12,9 +12,7 @@ namespace MCF {
 
 class ReadersWriterMutex {
 public:
-	enum : std::size_t {
-		kSuggestedSpinCount = Mutex::kSuggestedSpinCount,
-	};
+	enum : std::size_t { kSuggestedSpinCount = Mutex::kSuggestedSpinCount };
 
 	struct MutexTraitsAsReader {
 		static bool Try(ReadersWriterMutex *pMutex, std::uint64_t u64UntilFastMonoClock){

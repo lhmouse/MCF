@@ -18,9 +18,7 @@ namespace MCF {
 
 class Mutex {
 public:
-	enum : std::size_t {
-		kSuggestedSpinCount = _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT,
-	};
+	enum : std::size_t { kSuggestedSpinCount = _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT };
 
 private:
 	::_MCFCRT_Mutex x_vMutex;

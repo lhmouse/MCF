@@ -17,9 +17,7 @@ namespace MCF {
 
 class ConditionVariable {
 public:
-	enum : std::size_t {
-		kSuggestedSpinCount = _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT,
-	};
+	enum : std::size_t { kSuggestedSpinCount = _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT };
 
 private:
 	template<typename LockT>

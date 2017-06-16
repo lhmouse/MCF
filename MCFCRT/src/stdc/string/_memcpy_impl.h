@@ -6,8 +6,8 @@
 #define __MCFCRT_STDC_STRING_MEMCPY_IMPL_H_
 
 #include "../../env/_crtdef.h"
-#include "../../env/inline_mem.h"
 #include "../../env/expect.h"
+#include "../../ext/rep_movs.h"
 #include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
@@ -67,7 +67,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 #undef __MCFCRT_SSE2_FULL_
 		}
 	}
-	_MCFCRT_inline_mempcpy_fwd(__wp, __rp, (size_t)(__wend - __wp));
+	_MCFCRT_rep_movsb(__wp, __rp, (size_t)(__wend - __wp));
 }
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {

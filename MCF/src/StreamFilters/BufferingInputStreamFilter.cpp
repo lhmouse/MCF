@@ -7,9 +7,7 @@
 
 namespace MCF {
 
-enum : std::size_t {
-	kPopulationThreshold = 1024,
-};
+enum : std::size_t { kPopulationThreshold = 1024 };
 
 BufferingInputStreamFilter::~BufferingInputStreamFilter(){
 	try {

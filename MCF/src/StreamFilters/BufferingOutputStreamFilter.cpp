@@ -7,9 +7,7 @@
 
 namespace MCF {
 
-enum : std::size_t {
-	kFlushThreshold = 1024,
-};
+enum : std::size_t { kFlushThreshold = 1024 };
 
 BufferingOutputStreamFilter::~BufferingOutputStreamFilter(){
 	try {

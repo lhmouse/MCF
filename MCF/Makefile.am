@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = no-exeext foreign subdir-objects
 AM_CPPFLAGS = -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter -Winvalid-pch	\
 	-Wwrite-strings -Wconversion -Wsign-conversion -Wdouble-promotion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2	\
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -masm=intel
-AM_CXXFLAGS = -include __pch.hpp -std=c++1z -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -Wsuggest-override -fnothrow-opt
+AM_CXXFLAGS = -include __pch.hpp -std=c++17 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -Wsuggest-override -fnothrow-opt
 
 ## I think you GNU people should just STFU and stop confusing the linker.
 EXEEXT =
@@ -31,6 +31,7 @@ pkginclude_Core_HEADERS = \
 	src/Core/_Enumerator.hpp	\
 	src/Core/_UniqueNtHandle.hpp	\
 	src/Core/_KernelObjectBase.hpp	\
+	src/Core/_StringTraits.hpp	\
 	src/Core/AddressOf.hpp	\
 	src/Core/AlignedStorage.hpp	\
 	src/Core/Array.hpp	\

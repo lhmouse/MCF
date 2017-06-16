@@ -22,14 +22,14 @@ extern ULONG WINAPI RtlNtStatusToDosError(NTSTATUS lStatus) noexcept;
 
 namespace MCF {
 
-template class String<StringType::kUtf8>;
-template class String<StringType::kUtf16>;
-template class String<StringType::kUtf32>;
-template class String<StringType::kCesu8>;
-template class String<StringType::kAnsi>;
-template class String<StringType::kModifiedUtf8>;
-template class String<StringType::kNarrow>;
-template class String<StringType::kWide>;
+template class String<Impl_StringTraits::Type::kUtf8>;
+template class String<Impl_StringTraits::Type::kUtf16>;
+template class String<Impl_StringTraits::Type::kUtf32>;
+template class String<Impl_StringTraits::Type::kCesu8>;
+template class String<Impl_StringTraits::Type::kAnsi>;
+template class String<Impl_StringTraits::Type::kModifiedUtf8>;
+template class String<Impl_StringTraits::Type::kNarrow>;
+template class String<Impl_StringTraits::Type::kWide>;
 
 // UTF-8
 template<>

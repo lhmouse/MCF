@@ -11,6 +11,7 @@
 #include "Assert.hpp"
 #include "CountOf.hpp"
 #include "CopyMoveFill.hpp"
+#include <initializer_list>
 #include <type_traits>
 #include <cstring>
 #include <cstddef>
@@ -21,24 +22,21 @@
 
 namespace MCF {
 
-template<StringType kTypeT>
+template<Impl_StringTraits::Type kTypeT>
 class String;
 
 namespace Impl_String {
-	template<StringType kSrcTypeT>
+	template<Impl_StringTraits::Type kSrcTypeT>
 	struct Transcoder;
 }
 
-template<StringType kTypeT>
+template<Impl_StringTraits::Type kTypeT>
 class String {
 public:
-	using View   = StringView<kTypeT>;
-	using Traits = typename View::Traits;
-	using Char   = typename Traits::Char;
+	enum : std::size_t { kNpos = StringView<kTypeT>::kNpos };
 
-	enum : std::size_t {
-		kNpos = View::kNpos,
-	};
+	using View  = StringView<kTypeT>;
+	using Char  = typename View::Char;
 
 	// 容器需求。
 	using Element         = Char;
@@ -46,11 +44,11 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <String>;
 
 public:
-	static void UnifyAppend(String<StringType::kUtf16> &u16sDst, const View &svSrc);
-	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf16> &u16svSrc);
+	static void UnifyAppend(String<Impl_StringTraits::Type::kUtf16> &u16sDst, const View &svSrc);
+	static void DeunifyAppend(String &strDst, const StringView<Impl_StringTraits::Type::kUtf16> &u16svSrc);
 
-	static void UnifyAppend(String<StringType::kUtf32> &u32sDst, const View &svSrc);
-	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf32> &u32svSrc);
+	static void UnifyAppend(String<Impl_StringTraits::Type::kUtf32> &u32sDst, const View &svSrc);
+	static void DeunifyAppend(String &strDst, const StringView<Impl_StringTraits::Type::kUtf32> &u32svSrc);
 
 private:
 	__extension__ union {
@@ -102,13 +100,13 @@ public:
 	{
 		Append(ilElements);
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	explicit String(const StringView<kOtherTypeT> &svOther)
 		: String()
 	{
 		Append(svOther);
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	explicit String(const String<kOtherTypeT> &strOther)
 		: String()
 	{
@@ -136,12 +134,12 @@ public:
 		Assign(svOther);
 		return *this;
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	String &operator=(const StringView<kOtherTypeT> &svOther){
 		Assign(svOther);
 		return *this;
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	String &operator=(const String<kOtherTypeT> &svOther){
 		Assign(svOther);
 		return *this;
@@ -551,9 +549,9 @@ public:
 		Copy(GetData(), svOther.GetBegin(), svOther.GetEnd());
 	}
 	void Assign(std::initializer_list<Char> ilElements){
-		Assign(View(ilElements));
+		Assign(View(ilElements.begin(), ilElements.end()));
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	void Assign(const StringView<kOtherTypeT> &svOther){
 		const auto uOldSize = GetSize();
 		Append(svOther);
@@ -564,7 +562,7 @@ public:
 			Pop(uOldSize);
 		}
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	void Assign(const String<kOtherTypeT> &strOther){
 		Assign(StringView<kOtherTypeT>(strOther));
 	}
@@ -623,17 +621,17 @@ public:
 		Copy(pWrite, svOther.GetBegin(), svOther.GetEnd());
 	}
 	void Append(std::initializer_list<Char> ilElements){
-		Append(View(ilElements));
+		Append(View(ilElements.begin(), ilElements.end()));
 	}
 	void Append(const String &strOther){
 		const auto pWrite = ResizeMore(strOther.GetSize());
 		Copy(pWrite, strOther.GetBegin(), strOther.GetEnd()); // 这是正确的即使对于 &strOther == this 的情况。
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	void Append(const StringView<kOtherTypeT> &svOther){
 		Impl_String::Transcoder<kOtherTypeT>()(*this, svOther);
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	void Append(const String<kOtherTypeT> &strOther){
 		Append(strOther.GetView());
 	}
@@ -646,16 +644,12 @@ public:
 	}
 
 	void Reverse() noexcept {
-		auto pchBegin = GetBegin();
-		auto pchEnd = GetEnd();
-		if(pchBegin != pchEnd){
-			--pchEnd;
-			while(pchBegin < pchEnd){
-				using std::swap;
-				swap(*pchBegin, *pchEnd);
-				++pchBegin;
-				--pchEnd;
-			}
+		Char *pchData;
+		std::size_t uSize;
+		X_GetStorage(&pchData, &uSize, nullptr);
+		for(std::size_t i = 0, j = uSize; i < j; ++i, --j){
+			using std::swap;
+			swap(pchData[i], pchData[j - 1]);
 		}
 	}
 
@@ -749,12 +743,12 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	String &operator+=(const String<kOtherTypeT> &strOther){
 		Append(strOther);
 		return *this;
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	String &operator+=(const StringView<kOtherTypeT> &svOther){
 		Append(svOther);
 		return *this;
@@ -767,13 +761,13 @@ public:
 		Append(pszOther);
 		return *this;
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	friend String operator+(const String &strSelf, const StringView<kOtherTypeT> &svOther){
 		auto strTemp = strSelf;
 		strTemp += svOther;
 		return strTemp;
 	}
-	template<StringType kOtherTypeT>
+	template<Impl_StringTraits::Type kOtherTypeT>
 	friend String operator+(String &&strSelf, const StringView<kOtherTypeT> &svOther){
 		strSelf += svOther;
 		return std::move(strSelf);
@@ -905,70 +899,67 @@ namespace Impl_String {
 	static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t does not have the same size with char16_t.");
 	static_assert(alignof(wchar_t) == alignof(char16_t), "wchar_t does not have the same alignment with char16_t.");
 
-	template<StringType kSrcTypeT>
+	template<Impl_StringTraits::Type kSrcTypeT>
 	struct Transcoder {
-		template<StringType kDstTypeT>
+		template<Impl_StringTraits::Type kDstTypeT>
 		void operator()(String<kDstTypeT> &strDst, const StringView<kSrcTypeT> &svSrc) const {
-			using DstTraits = StringEncodingTraits<kDstTypeT>;
-			using SrcTraits = StringEncodingTraits<kSrcTypeT>;
-			using UnifiedString = String<(DstTraits::kConversionPreference + SrcTraits::kConversionPreference < 0) ? StringType::kUtf16 : StringType::kUtf32>;
-
-			UnifiedString usTemp;
+			constexpr auto kUnifiedStringType = (Impl_StringTraits::Encoding<kDstTypeT>::kConversionPreference + Impl_StringTraits::Encoding<kSrcTypeT>::kConversionPreference < 0) ? Impl_StringTraits::Type::kUtf16 : Impl_StringTraits::Type::kUtf32;
+			String<kUnifiedStringType> usTemp;
 			String<kSrcTypeT>::UnifyAppend(usTemp, svSrc);
 			String<kDstTypeT>::DeunifyAppend(strDst, usTemp);
 		}
 
-		void operator()(String<StringType::kWide> &wsDst, const StringView<kSrcTypeT> &svSrc) const {
-			String<kSrcTypeT>::UnifyAppend(reinterpret_cast<String<StringType::kUtf16> &>(wsDst), svSrc);
+		void operator()(String<Impl_StringTraits::Type::kWide> &wsDst, const StringView<kSrcTypeT> &svSrc) const {
+			String<kSrcTypeT>::UnifyAppend(reinterpret_cast<String<Impl_StringTraits::Type::kUtf16> &>(wsDst), svSrc);
 		}
-		void operator()(String<StringType::kUtf16> &u16sDst, const StringView<kSrcTypeT> &svSrc) const {
+		void operator()(String<Impl_StringTraits::Type::kUtf16> &u16sDst, const StringView<kSrcTypeT> &svSrc) const {
 			String<kSrcTypeT>::UnifyAppend(u16sDst, svSrc);
 		}
-		void operator()(String<StringType::kUtf32> &u32sDst, const StringView<kSrcTypeT> &svSrc) const {
+		void operator()(String<Impl_StringTraits::Type::kUtf32> &u32sDst, const StringView<kSrcTypeT> &svSrc) const {
 			String<kSrcTypeT>::UnifyAppend(u32sDst, svSrc);
 		}
 	};
 
 	template<>
-	struct Transcoder<StringType::kWide> {
-		template<StringType kDstTypeT>
-		void operator()(String<kDstTypeT> &strDst, const StringView<StringType::kWide> &wsvSrc) const {
-			String<kDstTypeT>::DeunifyAppend(strDst, reinterpret_cast<const StringView<StringType::kUtf16> &>(wsvSrc));
+	struct Transcoder<Impl_StringTraits::Type::kWide> {
+		template<Impl_StringTraits::Type kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<Impl_StringTraits::Type::kWide> &wsvSrc) const {
+			String<kDstTypeT>::DeunifyAppend(strDst, reinterpret_cast<const StringView<Impl_StringTraits::Type::kUtf16> &>(wsvSrc));
 		}
 	};
 	template<>
-	struct Transcoder<StringType::kUtf16> {
-		template<StringType kDstTypeT>
-		void operator()(String<kDstTypeT> &strDst, const StringView<StringType::kUtf16> &u16svSrc) const {
+	struct Transcoder<Impl_StringTraits::Type::kUtf16> {
+		template<Impl_StringTraits::Type kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<Impl_StringTraits::Type::kUtf16> &u16svSrc) const {
 			String<kDstTypeT>::DeunifyAppend(strDst, u16svSrc);
 		}
 	};
 	template<>
-	struct Transcoder<StringType::kUtf32> {
-		template<StringType kDstTypeT>
-		void operator()(String<kDstTypeT> &strDst, const StringView<StringType::kUtf32> &u32svSrc) const {
+	struct Transcoder<Impl_StringTraits::Type::kUtf32> {
+		template<Impl_StringTraits::Type kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<Impl_StringTraits::Type::kUtf32> &u32svSrc) const {
 			String<kDstTypeT>::DeunifyAppend(strDst, u32svSrc);
 		}
 	};
 }
 
-extern template class String<StringType::kUtf8>;
-extern template class String<StringType::kUtf16>;
-extern template class String<StringType::kUtf32>;
-extern template class String<StringType::kCesu8>;
-extern template class String<StringType::kAnsi>;
-extern template class String<StringType::kModifiedUtf8>;
-extern template class String<StringType::kNarrow>;
-extern template class String<StringType::kWide>;
+extern template class String<Impl_StringTraits::Type::kUtf8>;
+extern template class String<Impl_StringTraits::Type::kUtf16>;
+extern template class String<Impl_StringTraits::Type::kUtf32>;
+extern template class String<Impl_StringTraits::Type::kCesu8>;
+extern template class String<Impl_StringTraits::Type::kAnsi>;
+extern template class String<Impl_StringTraits::Type::kModifiedUtf8>;
+extern template class String<Impl_StringTraits::Type::kNarrow>;
+extern template class String<Impl_StringTraits::Type::kWide>;
 
-using Utf8String         = String<StringType::kUtf8>;
-using Utf16String        = String<StringType::kUtf16>;
-using Utf32String        = String<StringType::kUtf32>;
-using Cesu8String        = String<StringType::kCesu8>;
-using AnsiString         = String<StringType::kAnsi>;
-using ModifiedUtf8String = String<StringType::kModifiedUtf8>;
-using NarrowString       = String<StringType::kNarrow>;
-using WideString         = String<StringType::kWide>;
+using Utf8String         = String<Impl_StringTraits::Type::kUtf8>;
+using Utf16String        = String<Impl_StringTraits::Type::kUtf16>;
+using Utf32String        = String<Impl_StringTraits::Type::kUtf32>;
+using Cesu8String        = String<Impl_StringTraits::Type::kCesu8>;
+using AnsiString         = String<Impl_StringTraits::Type::kAnsi>;
+using ModifiedUtf8String = String<Impl_StringTraits::Type::kModifiedUtf8>;
+using NarrowString       = String<Impl_StringTraits::Type::kNarrow>;
+using WideString         = String<Impl_StringTraits::Type::kWide>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>

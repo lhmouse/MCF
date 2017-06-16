@@ -21,11 +21,10 @@ int memcmp(const void *s1, const void *s2, size_t n){
 			if(rp1 == rend1){	\
 				return 0;	\
 			}	\
-			const int32_t rc1 = (uint8_t)*rp1;	\
-			const int32_t rc2 = (uint8_t)*rp2;	\
-			const int32_t d = rc1 - rc2;	\
-			if(d != 0){	\
-				return (d >> 31) | 1;	\
+			const unsigned c1 = (uint8_t)*rp1;	\
+			const unsigned c2 = (uint8_t)*rp2;	\
+			if(c1 != c2){	\
+				return (c1 < c2) ? -1 : 1;	\
 			}	\
 			++rp1;	\
 			++rp2;	\
@@ -41,14 +40,13 @@ int memcmp(const void *s1, const void *s2, size_t n){
 				__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-					const int32_t tzne = __builtin_ctz(mask);	\
+					const int tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi8(-0x80);	\
 					xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),	\
 					                    _mm_add_epi8(xw2, shift));	\
 					mask = (uint32_t)_mm_movemask_epi8(xt) | 0x80000000;	\
-					const int32_t tzgt = __builtin_ctz(mask);	\
-					const int32_t d = tzne - tzgt;	\
-					return (d >> 31) | 1;	\
+					const int tzgt = __builtin_ctz(mask);	\
+					return ((tzne - tzgt) >> 15) | 1;	\
 				}	\
 				rp1 += 16;	\
 				rp2 += 16;	\

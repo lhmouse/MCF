@@ -21,13 +21,12 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 			if(rp1 == rend1){	\
 				return 0;	\
 			}	\
-			const int32_t rc1 = (uint16_t)*rp1;	\
-			const int32_t rc2 = (uint16_t)*rp2;	\
-			const int32_t d = rc1 - rc2;	\
-			if(d != 0){	\
-				return (d >> 31) | 1;	\
+			const unsigned long c1 = (uint16_t)*rp1;	\
+			const unsigned long c2 = (uint16_t)*rp2;	\
+			if(c1 != c2){	\
+				return (c1 < c2) ? -1 : 1;	\
 			}	\
-			if(rc1 == 0){	\
+			if(c1 == 0){	\
 				return 0;	\
 			}	\
 			++rp1;	\
@@ -61,14 +60,13 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20), _mm_cmpeq_epi16(xw11, xw21));	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-					const int32_t tzne = __builtin_ctz(mask);	\
+					const int tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi16(-0x8000);	\
 					xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw10, shift), _mm_add_epi16(xw20, shift)),	\
 					                     _mm_cmpgt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw21, shift)));	\
 					mask = (uint32_t)_mm_movemask_epi8(xt) | 0x80000000;	\
-					const int32_t tzgt = __builtin_ctz(mask);	\
-					const int32_t d = tzne - tzgt;	\
-					return (d >> 31) | 1;	\
+					const int tzgt = __builtin_ctz(mask);	\
+					return ((tzne - tzgt) >> 15) | 1;	\
 				}	\
 				xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xz), _mm_cmpeq_epi16(xw11, xz));	\
 				mask = (uint32_t)_mm_movemask_epi8(xt);	\

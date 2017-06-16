@@ -35,9 +35,7 @@ private:
 	};
 
 public:
-	enum : std::size_t {
-		kNodeSize = sizeof(X_Node),
-	};
+	enum : std::size_t { kNodeSize = sizeof(X_Node) };
 
 private:
 	X_Node *x_pLast;

@@ -6,6 +6,7 @@
 #define MCF_CORE_STRING_TRAITS_HPP_
 
 #include <type_traits>
+#include <iterator>
 #include <cstddef>
 
 // TODO: remove std::search
@@ -86,89 +87,72 @@ namespace Impl_StringTraits {
 
 	template<typename SelfBeginT>
 	SelfBeginT Define(SelfBeginT itSelfBegin){
-		using Self = std::decay_t<decltype(*itSelfBegin)>;
-
-		auto itSelf = itSelfBegin;
-
-		for(;;){
-			const Self chSelf = *itSelf;
-			if(chSelf == Self()){
-				return itSelf;
+		for(std::ptrdiff_t nOffset = 0; ; ++nOffset){
+			const auto chSelf = itSelfBegin[nOffset];
+			if(chSelf == decltype(chSelf)()){
+				return itSelfBegin + nOffset;
 			}
-			++itSelf;
 		}
 	}
 
 	template<typename SelfBeginT, typename SelfEndT, typename ComparandBeginT, typename ComparandEndT>
 	int Compare(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, ComparandBeginT itComparandBegin, ComparandEndT itComparandEnd){
-		using Self = std::decay_t<decltype(*itSelfBegin)>;
-		using Comparand = std::decay_t<decltype(*itComparandBegin)>;
-
-		auto itSelf = itSelfBegin;
-		auto itComparand = itComparandBegin;
-
-		for(;;){
-			const int nEndMarkSelf = static_cast<bool>(itSelf == itSelfEnd);
-			const int nEndMarkComparand = -static_cast<bool>(itComparand == itComparandEnd);
-			if(nEndMarkSelf || nEndMarkComparand){
-				return nEndMarkSelf + nEndMarkComparand;
+		for(std::ptrdiff_t nOffset = 0; ; ++nOffset){
+			const bool bEndMarkSelf = itSelfBegin + nOffset == itSelfEnd;
+			const bool bEndMarkComparand = itComparandBegin + nOffset == itComparandEnd;
+			if(bEndMarkSelf || bEndMarkComparand){
+				return bEndMarkSelf - bEndMarkComparand;
 			}
-			const Self chSelf = *itSelf;
-			const Comparand chComparand = *itComparand;
+			const auto chSelf = itSelfBegin[nOffset];
+			const auto chComparand = itComparandBegin[nOffset];
 			if(chSelf != chComparand){
-				return (static_cast<std::make_unsigned_t<Self>>(chSelf) < static_cast<std::make_unsigned_t<Comparand>>(chComparand)) ? -1 : 1;
+				return (static_cast<std::make_unsigned_t<decltype(chSelf)>>(chSelf) < static_cast<std::make_unsigned_t<decltype(chComparand)>>(chComparand)) ? -1 : 1;
 			}
-			++itSelf;
-			++itComparand;
 		}
 	}
 
 	template<typename SelfBeginT, typename SelfEndT, typename ComparandT>
 	SelfBeginT FindRepeat(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, const ComparandT &chComparand, std::size_t uComparandCount){
-		using Self = std::decay_t<decltype(*itSelfBegin)>;
-
-		if(uComparandCount == 0){
+		const auto nComparandCount = static_cast<std::ptrdiff_t>(uComparandCount);
+		if(nComparandCount < 0){
+			return itSelfEnd;
+		}
+		if(nComparandCount == 0){
 			return itSelfBegin;
 		}
-		const auto uSelfCount = static_cast<std::size_t>(std::distance(itSelfBegin, itSelfEnd));
-		if(uSelfCount < uComparandCount){
+		const auto nSelfCount = std::distance(itSelfBegin, itSelfEnd);
+		if(nSelfCount < nComparandCount){
 			return itSelfEnd;
 		}
 
-		auto itSelf = itSelfBegin;
-		std::ptrdiff_t nMatchCount = 0;
-		decltype(itSelfEnd) itMatch;
-
-		for(;;){
-			if(itSelf == itSelfEnd){
+		for(std::ptrdiff_t nOffset = 0; ; ++nOffset){
+			if(nSelfCount - nOffset < nComparandCount){
 				return itSelfEnd;
 			}
-			const Self chSelf = *itSelf;
-			if(chSelf == chComparand){
-				if(nMatchCount == 0){
-					itMatch = itSelf;
+			for(std::ptrdiff_t nLastMatch = nComparandCount - 1; ; --nLastMatch){
+				const auto chSelf = itSelfBegin[nOffset + nLastMatch];
+				if(chSelf != chComparand){
+					nOffset += nLastMatch;
+					break;
 				}
-				if(static_cast<std::size_t>(++nMatchCount) >= uComparandCount){
-					return itMatch;
+				if(nLastMatch == 0){
+					return itSelfBegin + nOffset;
 				}
-			} else {
-				nMatchCount = 0;
 			}
-			++itSelf;
 		}
 	}
 
 	template<typename SelfBeginT, typename SelfEndT, typename ComparandBeginT, typename ComparandEndT>
 	SelfBeginT FindSpan(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, ComparandBeginT itComparandBegin, ComparandEndT itComparandEnd){
-	//	using Self = std::decay_t<decltype(*itSelfBegin)>;
-	//	using Comparand = std::decay_t<decltype(*itComparandBegin)>;
-
-		const auto uComparandCount = static_cast<std::size_t>(std::distance(itComparandBegin, itComparandEnd));
-		if(uComparandCount == 0){
+		const auto nComparandCount = std::distance(itComparandBegin, itComparandEnd);
+		if(nComparandCount < 0){
+			return itSelfEnd;
+		}
+		if(nComparandCount == 0){
 			return itSelfBegin;
 		}
-		const auto uSelfCount = static_cast<std::size_t>(std::distance(itSelfBegin, itSelfEnd));
-		if(uSelfCount < uComparandCount){
+		const auto nSelfCount = std::distance(itSelfBegin, itSelfEnd);
+		if(nSelfCount < nComparandCount){
 			return itSelfEnd;
 		}
 

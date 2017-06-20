@@ -163,7 +163,7 @@ namespace Impl_StringTraits {
 		// https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm
 		//   table[pattern[i]] = pattern_count - (i + 1)    # where 0 <= i < pattern_count - 1
 		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
-		unsigned short aushBadCharacterTable[256];
+		__attribute__((__aligned__(64))) unsigned short aushBadCharacterTable[256];
 		for(unsigned uIndex = 0; uIndex < 256; ++uIndex){
 			aushBadCharacterTable[uIndex] = static_cast<unsigned short>((nComparandCount <= USHRT_MAX) ? nComparandCount : USHRT_MAX);
 		}

@@ -6,11 +6,8 @@
 #define MCF_CORE_STRING_TRAITS_HPP_
 
 #include <type_traits>
-#include <iterator>
 #include <cstddef>
-
-// TODO: remove std::search
-#include <algorithm>
+#include <climits>
 
 namespace MCF {
 
@@ -87,17 +84,20 @@ namespace Impl_StringTraits {
 
 	template<typename SelfBeginT>
 	SelfBeginT Define(SelfBeginT itSelfBegin){
-		for(std::ptrdiff_t nOffset = 0; ; ++nOffset){
+		std::ptrdiff_t nOffset = 0;
+		for(;;){
 			const auto chSelf = itSelfBegin[nOffset];
 			if(chSelf == decltype(chSelf)()){
 				return itSelfBegin + nOffset;
 			}
+			++nOffset;
 		}
 	}
 
 	template<typename SelfBeginT, typename SelfEndT, typename ComparandBeginT, typename ComparandEndT>
 	int Compare(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, ComparandBeginT itComparandBegin, ComparandEndT itComparandEnd){
-		for(std::ptrdiff_t nOffset = 0; ; ++nOffset){
+		std::ptrdiff_t nOffset = 0;
+		for(;;){
 			const bool bEndMarkSelf = itSelfBegin + nOffset == itSelfEnd;
 			const bool bEndMarkComparand = itComparandBegin + nOffset == itComparandEnd;
 			if(bEndMarkSelf || bEndMarkComparand){
@@ -108,6 +108,7 @@ namespace Impl_StringTraits {
 			if(chSelf != chComparand){
 				return (static_cast<std::make_unsigned_t<decltype(chSelf)>>(chSelf) < static_cast<std::make_unsigned_t<decltype(chComparand)>>(chComparand)) ? -1 : 1;
 			}
+			++nOffset;
 		}
 	}
 
@@ -120,44 +121,79 @@ namespace Impl_StringTraits {
 		if(nComparandCount == 0){
 			return itSelfBegin;
 		}
-		const auto nSelfCount = std::distance(itSelfBegin, itSelfEnd);
+		const auto nSelfCount = static_cast<std::ptrdiff_t>(itSelfEnd - itSelfBegin);
 		if(nSelfCount < nComparandCount){
 			return itSelfEnd;
 		}
 
-		for(std::ptrdiff_t nOffset = 0; ; ++nOffset){
+		std::ptrdiff_t nOffset = 0;
+		for(;;){
 			if(nSelfCount - nOffset < nComparandCount){
 				return itSelfEnd;
 			}
-			for(std::ptrdiff_t nLastMatch = nComparandCount - 1; ; --nLastMatch){
-				const auto chSelf = itSelfBegin[nOffset + nLastMatch];
+			std::ptrdiff_t nTestIndex = nComparandCount - 1;
+			for(;;){
+				const auto chSelf = itSelfBegin[nOffset + nTestIndex];
 				if(chSelf != chComparand){
-					nOffset += nLastMatch;
+					nOffset += nTestIndex + 1;
 					break;
 				}
-				if(nLastMatch == 0){
+				if(nTestIndex == 0){
 					return itSelfBegin + nOffset;
 				}
+				--nTestIndex;
 			}
 		}
 	}
 
 	template<typename SelfBeginT, typename SelfEndT, typename ComparandBeginT, typename ComparandEndT>
 	SelfBeginT FindSpan(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, ComparandBeginT itComparandBegin, ComparandEndT itComparandEnd){
-		const auto nComparandCount = std::distance(itComparandBegin, itComparandEnd);
+		const auto nComparandCount = static_cast<std::ptrdiff_t>(itComparandEnd - itComparandBegin);
 		if(nComparandCount < 0){
 			return itSelfEnd;
 		}
 		if(nComparandCount == 0){
 			return itSelfBegin;
 		}
-		const auto nSelfCount = std::distance(itSelfBegin, itSelfEnd);
+		const auto nSelfCount = static_cast<std::ptrdiff_t>(itSelfEnd - itSelfBegin);
 		if(nSelfCount < nComparandCount){
 			return itSelfEnd;
 		}
 
-		// TODO
-		return std::search(itSelfBegin, itSelfEnd, itComparandBegin, itComparandEnd);
+		// https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
+		// We implement the 'Bad Character' Rule only.
+		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
+		unsigned short aushBadCharacterTable[256];
+		const auto Saturate = [](std::ptrdiff_t nValue){ return static_cast<unsigned short>((nValue <= USHRT_MAX) ? nValue : USHRT_MAX); };
+		//   table[pattern[i]] = pattern_count - (i + 1)    # where 0 <= i < pattern_count - 1
+		for(unsigned uIndex = 0; uIndex < 256; ++uIndex){
+			aushBadCharacterTable[uIndex] = Saturate(nComparandCount);
+		}
+		for(std::ptrdiff_t nGoodCharNext = 1; nGoodCharNext < nComparandCount; ++nGoodCharNext){
+			const auto chGoodChar = itComparandBegin[nGoodCharNext - 1];
+			aushBadCharacterTable[static_cast<unsigned char>(chGoodChar)] = Saturate(nComparandCount - nGoodCharNext);
+		}
+
+		std::ptrdiff_t nOffset = 0;
+		for(;;){
+			if(nSelfCount - nOffset < nComparandCount){
+				return itSelfEnd;
+			}
+			std::ptrdiff_t nTestIndex = nComparandCount - 1;
+			const auto chLast = itSelfBegin[nOffset + nTestIndex];
+			for(;;){
+				const auto chSelf = itSelfBegin[nOffset + nTestIndex];
+				const auto chComparand = itComparandBegin[nTestIndex];
+				if(chSelf != chComparand){
+					nOffset += static_cast<std::ptrdiff_t>(aushBadCharacterTable[static_cast<unsigned char>(chLast)]);
+					break;
+				}
+				if(nTestIndex == 0){
+					return itSelfBegin + nOffset;
+				}
+				--nTestIndex;
+			}
+		}
 	}
 }
 

@@ -12,10 +12,10 @@
 namespace MCF {
 
 inline unsigned CountLeadingZeroes(unsigned char by) noexcept {
-	return (unsigned)__builtin_clz(by) - (unsigned)(sizeof(unsigned) - sizeof(unsigned char)) * CHAR_BIT;
+	return (unsigned)__builtin_clz(by) - (unsigned)(sizeof(unsigned) - 1) * CHAR_BIT;
 }
 inline unsigned CountLeadingZeroes(unsigned short ush) noexcept {
-	return (unsigned)__builtin_clz(ush) - (unsigned)(sizeof(unsigned) - sizeof(unsigned short)) * CHAR_BIT;
+	return (unsigned)__builtin_clz(ush) - (unsigned)(sizeof(unsigned) - 1) * CHAR_BIT;
 }
 inline unsigned CountLeadingZeroes(unsigned u) noexcept {
 	return (unsigned)__builtin_clz(u);

@@ -9,6 +9,11 @@
 #undef fma
 #undef fmal
 
+static inline long saturated_dec(long val){
+	long ret = val - 1;
+	ret &= ~(ret >> 31);
+	return ret;
+}
 static inline void break_down(__MCFCRT_x87Register *restrict lo, __MCFCRT_x87Register *restrict hi, long double x){
 	hi->__val = x;
 	const uint32_t mts_l = hi->__mts_l;
@@ -24,9 +29,8 @@ static inline void break_down(__MCFCRT_x87Register *restrict lo, __MCFCRT_x87Reg
 			unsigned:      __builtin_clz,
 			unsigned long: __builtin_clzl)(mts_l) + 32;
 		const long mask = (shn - exp) >> 31;
-		long expm1 = exp - 1;
-		expm1 &= ~(expm1 >> 31);
-		lo->__mts_q = (uint64_t)mts_l << (((shn ^ expm1) & mask) ^ expm1);
+		const long expm1_sat = saturated_dec(exp);
+		lo->__mts_q = (uint64_t)mts_l << (((shn ^ expm1_sat) & mask) ^ expm1_sat);
 		lo->__exp = ((uint32_t)((exp - shn) & mask) << 17) >> 17;
 	}
 	lo->__sign = sign;

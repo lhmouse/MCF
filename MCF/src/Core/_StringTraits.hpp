@@ -160,18 +160,16 @@ namespace Impl_StringTraits {
 			return itSelfEnd;
 		}
 
-		// https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
-		// We implement the 'Bad Character' Rule only.
+		// https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm
+		//   table[pattern[i]] = pattern_count - (i + 1)    # where 0 <= i < pattern_count - 1
 		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
 		unsigned short aushBadCharacterTable[256];
-		const auto Saturate = [](std::ptrdiff_t nValue){ return static_cast<unsigned short>((nValue <= USHRT_MAX) ? nValue : USHRT_MAX); };
-		//   table[pattern[i]] = pattern_count - (i + 1)    # where 0 <= i < pattern_count - 1
 		for(unsigned uIndex = 0; uIndex < 256; ++uIndex){
-			aushBadCharacterTable[uIndex] = Saturate(nComparandCount);
+			aushBadCharacterTable[uIndex] = static_cast<unsigned short>((nComparandCount <= USHRT_MAX) ? nComparandCount : USHRT_MAX);
 		}
-		for(std::ptrdiff_t nGoodCharNext = 1; nGoodCharNext < nComparandCount; ++nGoodCharNext){
+		for(std::ptrdiff_t nGoodCharNext = ((nComparandCount <= USHRT_MAX) ? 0 : (nComparandCount - USHRT_MAX)) + 1; nGoodCharNext < nComparandCount; ++nGoodCharNext){
 			const auto chGoodChar = itComparandBegin[nGoodCharNext - 1];
-			aushBadCharacterTable[static_cast<unsigned char>(chGoodChar)] = Saturate(nComparandCount - nGoodCharNext);
+			aushBadCharacterTable[static_cast<unsigned char>(chGoodChar)] = static_cast<unsigned short>(nComparandCount - nGoodCharNext);
 		}
 
 		std::ptrdiff_t nOffset = 0;

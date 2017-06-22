@@ -6,8 +6,6 @@
 #define MCF_CORE_STRING_TRAITS_HPP_
 
 #include <type_traits>
-#include <cstddef>
-#include <climits>
 
 namespace MCF {
 
@@ -82,112 +80,113 @@ namespace Impl_StringTraits {
 	// Generic algorithms
 	//-----------------------------------------------------------------------------
 
-	template<typename SelfBeginT>
-	SelfBeginT Define(SelfBeginT itSelfBegin){
+	template<typename TextBeginT>
+	TextBeginT Define(TextBeginT itTextBegin){
 		std::ptrdiff_t nOffset = 0;
 		for(;;){
-			const auto chSelf = itSelfBegin[nOffset];
-			if(chSelf == decltype(chSelf)()){
-				return itSelfBegin + nOffset;
+			const auto chText = itTextBegin[nOffset];
+			if(chText == decltype(chText)()){
+				return itTextBegin + nOffset;
 			}
 			++nOffset;
 		}
 	}
 
-	template<typename SelfBeginT, typename SelfEndT, typename ComparandBeginT, typename ComparandEndT>
-	int Compare(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, ComparandBeginT itComparandBegin, ComparandEndT itComparandEnd){
+	template<typename TextBeginT, typename TextEndT, typename PatternBeginT, typename PatternEndT>
+	int Compare(TextBeginT itTextBegin, TextEndT itTextEnd, PatternBeginT itPatternBegin, PatternEndT itPatternEnd){
 		std::ptrdiff_t nOffset = 0;
 		for(;;){
-			const bool bEndMarkSelf = itSelfBegin + nOffset == itSelfEnd;
-			const bool bEndMarkComparand = itComparandBegin + nOffset == itComparandEnd;
-			if(bEndMarkSelf || bEndMarkComparand){
-				return bEndMarkSelf - bEndMarkComparand;
+			const bool bEndMarkText = itTextBegin + nOffset == itTextEnd;
+			const bool bEndMarkPattern = itPatternBegin + nOffset == itPatternEnd;
+			if(bEndMarkText || bEndMarkPattern){
+				return bEndMarkText - bEndMarkPattern;
 			}
-			const auto chSelf = itSelfBegin[nOffset];
-			const auto chComparand = itComparandBegin[nOffset];
-			if(chSelf != chComparand){
-				return (static_cast<std::make_unsigned_t<decltype(chSelf)>>(chSelf) < static_cast<std::make_unsigned_t<decltype(chComparand)>>(chComparand)) ? -1 : 1;
+			const auto chText = itTextBegin[nOffset];
+			const auto chPattern = itPatternBegin[nOffset];
+			if(chText != chPattern){
+				return (static_cast<std::make_unsigned_t<decltype(chText)>>(chText) < static_cast<std::make_unsigned_t<decltype(chPattern)>>(chPattern)) ? -1 : 1;
 			}
 			++nOffset;
 		}
 	}
 
-	template<typename SelfBeginT, typename SelfEndT, typename ComparandT>
-	SelfBeginT FindRepeat(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, const ComparandT &chComparand, std::size_t uComparandCount){
-		const auto nComparandCount = static_cast<std::ptrdiff_t>(uComparandCount);
-		if(nComparandCount < 0){
-			return itSelfEnd;
+	template<typename TextBeginT, typename TextEndT, typename PatternT>
+	TextBeginT FindRepeat(TextBeginT itTextBegin, TextEndT itTextEnd, const PatternT &chPattern, std::size_t uPatternLength){
+		const auto nPatternLength = static_cast<std::ptrdiff_t>(uPatternLength);
+		if(nPatternLength < 0){
+			return itTextEnd;
 		}
-		if(nComparandCount == 0){
-			return itSelfBegin;
+		if(nPatternLength == 0){
+			return itTextBegin;
 		}
-		const auto nSelfCount = static_cast<std::ptrdiff_t>(itSelfEnd - itSelfBegin);
-		if(nSelfCount < nComparandCount){
-			return itSelfEnd;
+		const auto nTextCount = static_cast<std::ptrdiff_t>(itTextEnd - itTextBegin);
+		if(nTextCount < nPatternLength){
+			return itTextEnd;
 		}
 
 		std::ptrdiff_t nOffset = 0;
 		for(;;){
-			if(nSelfCount - nOffset < nComparandCount){
-				return itSelfEnd;
+			if(nTextCount - nOffset < nPatternLength){
+				return itTextEnd;
 			}
-			std::ptrdiff_t nTestIndex = nComparandCount - 1;
+			std::ptrdiff_t nTestIndex = nPatternLength - 1;
 			for(;;){
-				const auto chSelf = itSelfBegin[nOffset + nTestIndex];
-				if(chSelf != chComparand){
+				const auto chText = itTextBegin[nOffset + nTestIndex];
+				if(chText != chPattern){
 					nOffset += nTestIndex + 1;
 					break;
 				}
 				if(nTestIndex == 0){
-					return itSelfBegin + nOffset;
+					return itTextBegin + nOffset;
 				}
 				--nTestIndex;
 			}
 		}
 	}
 
-	template<typename SelfBeginT, typename SelfEndT, typename ComparandBeginT, typename ComparandEndT>
-	SelfBeginT FindSpan(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, ComparandBeginT itComparandBegin, ComparandEndT itComparandEnd){
-		const auto nComparandCount = static_cast<std::ptrdiff_t>(itComparandEnd - itComparandBegin);
-		if(nComparandCount < 0){
-			return itSelfEnd;
+	template<typename TextBeginT, typename TextEndT, typename PatternBeginT, typename PatternEndT>
+	TextBeginT FindSpan(TextBeginT itTextBegin, TextEndT itTextEnd, PatternBeginT itPatternBegin, PatternEndT itPatternEnd){
+		const auto nPatternLength = static_cast<std::ptrdiff_t>(itPatternEnd - itPatternBegin);
+		if(nPatternLength < 0){
+			return itTextEnd;
 		}
-		if(nComparandCount == 0){
-			return itSelfBegin;
+		if(nPatternLength == 0){
+			return itTextBegin;
 		}
-		const auto nSelfCount = static_cast<std::ptrdiff_t>(itSelfEnd - itSelfBegin);
-		if(nSelfCount < nComparandCount){
-			return itSelfEnd;
+		const auto nTextCount = static_cast<std::ptrdiff_t>(itTextEnd - itTextBegin);
+		if(nTextCount < nPatternLength){
+			return itTextEnd;
 		}
 
 		// https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm
-		//   table[pattern[i]] = pattern_count - (i + 1)    # where 0 <= i < pattern_count - 1
 		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
-		__attribute__((__aligned__(64))) unsigned short aushBadCharacterTable[256];
-		for(unsigned uIndex = 0; uIndex < 256; ++uIndex){
-			aushBadCharacterTable[uIndex] = static_cast<unsigned short>((nComparandCount <= USHRT_MAX) ? nComparandCount : USHRT_MAX);
+		constexpr unsigned kBcrTableSize = 256;
+		__attribute__((__aligned__(64))) short ashBadCharacterTable[kBcrTableSize];
+		const std::ptrdiff_t nMaxBcrShift = (nPatternLength <= 0x7FFF) ? nPatternLength : 0x7FFF;
+		for(unsigned uIndex = 0; uIndex < kBcrTableSize; ++uIndex){
+			ashBadCharacterTable[uIndex] = static_cast<short>(nMaxBcrShift);
 		}
-		for(std::ptrdiff_t nGoodCharNext = ((nComparandCount <= USHRT_MAX) ? 0 : (nComparandCount - USHRT_MAX)) + 1; nGoodCharNext < nComparandCount; ++nGoodCharNext){
-			const auto chGoodChar = itComparandBegin[nGoodCharNext - 1];
-			aushBadCharacterTable[static_cast<unsigned char>(chGoodChar)] = static_cast<unsigned short>(nComparandCount - nGoodCharNext);
+		for(std::ptrdiff_t nBcrShift = nMaxBcrShift - 1; nBcrShift > 0; --nBcrShift){
+			const auto chGoodChar = itPatternBegin[nPatternLength - (nBcrShift + 1)];
+			ashBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chGoodChar)>>(chGoodChar) % kBcrTableSize] = static_cast<short>(nBcrShift);
 		}
 
 		std::ptrdiff_t nOffset = 0;
 		for(;;){
-			if(nSelfCount - nOffset < nComparandCount){
-				return itSelfEnd;
+			if(nTextCount - nOffset < nPatternLength){
+				return itTextEnd;
 			}
-			std::ptrdiff_t nTestIndex = nComparandCount - 1;
-			const auto chLast = itSelfBegin[nOffset + nTestIndex];
+			std::ptrdiff_t nTestIndex = nPatternLength - 1;
+			const auto chLast = itTextBegin[nOffset + nTestIndex];
 			for(;;){
-				const auto chSelf = itSelfBegin[nOffset + nTestIndex];
-				const auto chComparand = itComparandBegin[nTestIndex];
-				if(chSelf != chComparand){
-					nOffset += static_cast<std::ptrdiff_t>(aushBadCharacterTable[static_cast<unsigned char>(chLast)]);
+				const auto chText = itTextBegin[nOffset + nTestIndex];
+				const auto chPattern = itPatternBegin[nTestIndex];
+				if(chText != chPattern){
+					nOffset += ashBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
 					break;
 				}
 				if(nTestIndex == 0){
-					return itSelfBegin + nOffset;
+					return itTextBegin + nOffset;
 				}
 				--nTestIndex;
 			}

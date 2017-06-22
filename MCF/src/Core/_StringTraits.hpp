@@ -161,14 +161,14 @@ namespace Impl_StringTraits {
 		// https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm
 		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
 		constexpr unsigned kBcrTableSize = 256;
-		__attribute__((__aligned__(64))) short ashBadCharacterTable[kBcrTableSize];
-		const std::ptrdiff_t nMaxBcrShift = (nPatternLength <= 0x7FFF) ? nPatternLength : 0x7FFF;
+		__attribute__((__aligned__(64))) unsigned short aushBadCharacterTable[kBcrTableSize];
+		const std::ptrdiff_t nMaxBcrShift = (nPatternLength <= 0xFFFF) ? nPatternLength : 0xFFFF;
 		for(unsigned uIndex = 0; uIndex < kBcrTableSize; ++uIndex){
-			ashBadCharacterTable[uIndex] = static_cast<short>(nMaxBcrShift);
+			aushBadCharacterTable[uIndex] = static_cast<unsigned short>(nMaxBcrShift);
 		}
 		for(std::ptrdiff_t nBcrShift = nMaxBcrShift - 1; nBcrShift > 0; --nBcrShift){
 			const auto chGoodChar = itPatternBegin[nPatternLength - (nBcrShift + 1)];
-			ashBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chGoodChar)>>(chGoodChar) % kBcrTableSize] = static_cast<short>(nBcrShift);
+			aushBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chGoodChar)>>(chGoodChar) % kBcrTableSize] = static_cast<unsigned short>(nBcrShift);
 		}
 
 		std::ptrdiff_t nOffset = 0;
@@ -182,7 +182,7 @@ namespace Impl_StringTraits {
 				const auto chText = itTextBegin[nOffset + nTestIndex];
 				const auto chPattern = itPatternBegin[nTestIndex];
 				if(chText != chPattern){
-					nOffset += ashBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
+					nOffset += aushBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
 					break;
 				}
 				if(nTestIndex == 0){

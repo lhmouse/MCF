@@ -226,7 +226,7 @@ namespace Impl_StringTraits {
 				if(chText != chPattern){
 					const auto nSuffixLength = nPatternLength - nTestIndex - 1;
 					const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
-					const std::ptrdiff_t nGsrShift = (nSuffixLength < nMaxGsrShift) ? ashGsrTable[nSuffixLength] : 1;
+					const std::ptrdiff_t nGsrShift = (nSuffixLength < nMaxGsrShift) ? ashGsrTable[nSuffixLength] : 0;
 					if(nBcrShift > nGsrShift){
 						nOffset += nBcrShift;
 						nKnownMatchEnd = nPatternLength - nBcrShift;

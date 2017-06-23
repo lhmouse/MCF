@@ -168,7 +168,7 @@ namespace Impl_StringTraits {
 			ashBcrTable[uIndex] = static_cast<short>(nMaxBcrShift);
 		}
 		for(std::ptrdiff_t nBcrShift = nMaxBcrShift - 1; nBcrShift > 0; --nBcrShift){
-			const auto chGoodChar = itPatternBegin[nPatternLength - (nBcrShift + 1)];
+			const auto chGoodChar = itPatternBegin[nPatternLength - nBcrShift - 1];
 			ashBcrTable[static_cast<std::make_unsigned_t<decltype(chGoodChar)>>(chGoodChar) % kBcrTableSize] = static_cast<short>(nBcrShift);
 		}
 
@@ -178,19 +178,24 @@ namespace Impl_StringTraits {
 		__attribute__((__aligned__(64))) short ashGsrTable[kGsrTableSize];
 		const std::ptrdiff_t nMaxGsrShift = (nPatternLength <= kGsrTableSize) ? nPatternLength : kGsrTableSize;
 		std::ptrdiff_t nGsrCandidateLength = 0;
-		const auto chCandidateBack = itPatternBegin[nPatternLength - 1];
 		ashGsrTable[0] = 1;
 		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nMaxGsrShift; ++nTestIndex){
-			const auto chTest = itPatternBegin[nPatternLength - (nTestIndex + 1)];
-			const auto chCandidateFront = itPatternBegin[nPatternLength - (nGsrCandidateLength + 1)];
-			if(chTest != chCandidateFront){
-				nGsrCandidateLength = (chTest == chCandidateBack) ? 0 : -1;
+			const auto chTest = itPatternBegin[nPatternLength - nTestIndex - 1];
+			for(;;){
+				const auto chCandidateFront = itPatternBegin[nPatternLength - nGsrCandidateLength - 1];
+				if(chTest == chCandidateFront){
+					++nGsrCandidateLength;
+					break;
+				}
+				if(nGsrCandidateLength == 0){
+					break;
+				}
+				nGsrCandidateLength -= ashGsrTable[nGsrCandidateLength - 1];
 			}
-			ashGsrTable[nTestIndex] = static_cast<short>(nTestIndex - nGsrCandidateLength);
-			++nGsrCandidateLength;
+			ashGsrTable[nTestIndex] = static_cast<short>(nTestIndex - nGsrCandidateLength + 1);
 		}
-		ashGsrTable[0] = 0;
 		std::ptrdiff_t nGsrLastOffset = 1;
+		ashGsrTable[0] = 0;
 		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nMaxGsrShift; ++nTestIndex){
 			const std::ptrdiff_t nGsrOffset = ashGsrTable[nTestIndex];
 			ashGsrTable[nTestIndex] = static_cast<short>(nMaxGsrShift - nGsrCandidateLength);
@@ -202,8 +207,8 @@ namespace Impl_StringTraits {
 					}
 					ashGsrTable[nWriteIndex] = static_cast<short>(nGsrShift);
 				}
-				nGsrLastOffset = nGsrOffset;
 			}
+			nGsrLastOffset = nGsrOffset;
 		}
 
 		std::ptrdiff_t nOffset = 0;
@@ -219,7 +224,7 @@ namespace Impl_StringTraits {
 				const auto chText = itTextBegin[nOffset + nTestIndex];
 				const auto chPattern = itPatternBegin[nTestIndex];
 				if(chText != chPattern){
-					const auto nSuffixLength = nPatternLength - (nTestIndex + 1);
+					const auto nSuffixLength = nPatternLength - nTestIndex - 1;
 					const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
 					const std::ptrdiff_t nGsrShift = (nSuffixLength < nMaxGsrShift) ? ashGsrTable[nSuffixLength] : 1;
 					if(nBcrShift > nGsrShift){

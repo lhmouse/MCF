@@ -111,40 +111,6 @@ namespace Impl_StringTraits {
 		}
 	}
 
-	template<typename TextBeginT, typename TextEndT, typename PatternT>
-	TextBeginT FindRepeat(TextBeginT itTextBegin, TextEndT itTextEnd, const PatternT &chPattern, std::size_t uPatternLength){
-		const auto nPatternLength = static_cast<std::ptrdiff_t>(uPatternLength);
-		if(nPatternLength < 0){
-			return itTextEnd;
-		}
-		if(nPatternLength == 0){
-			return itTextBegin;
-		}
-		const auto nTextCount = static_cast<std::ptrdiff_t>(itTextEnd - itTextBegin);
-		if(nTextCount < nPatternLength){
-			return itTextEnd;
-		}
-
-		std::ptrdiff_t nOffset = 0;
-		for(;;){
-			if(nTextCount - nOffset < nPatternLength){
-				return itTextEnd;
-			}
-			std::ptrdiff_t nTestIndex = nPatternLength - 1;
-			for(;;){
-				const auto chText = itTextBegin[nOffset + nTestIndex];
-				if(chText != chPattern){
-					nOffset += nTestIndex + 1;
-					break;
-				}
-				if(nTestIndex == 0){
-					return itTextBegin + nOffset;
-				}
-				--nTestIndex;
-			}
-		}
-	}
-
 	template<typename TextBeginT, typename TextEndT, typename PatternBeginT, typename PatternEndT>
 	TextBeginT FindSpan(TextBeginT itTextBegin, TextEndT itTextEnd, PatternBeginT itPatternBegin, PatternEndT itPatternEnd){
 		const auto nPatternLength = static_cast<std::ptrdiff_t>(itPatternEnd - itPatternBegin);
@@ -242,6 +208,43 @@ namespace Impl_StringTraits {
 					nTestIndex = nKnownMatchBegin;
 				}
 				if(nTestIndex <= 0){
+					return itTextBegin + nOffset;
+				}
+				--nTestIndex;
+			}
+		}
+	}
+
+	template<typename TextBeginT, typename TextEndT, typename PatternT>
+	TextBeginT FindRepeat(TextBeginT itTextBegin, TextEndT itTextEnd, const PatternT &chPattern, std::size_t uPatternLength){
+		const auto nPatternLength = static_cast<std::ptrdiff_t>(uPatternLength);
+		if(nPatternLength < 0){
+			return itTextEnd;
+		}
+		if(nPatternLength == 0){
+			return itTextBegin;
+		}
+		const auto nTextCount = static_cast<std::ptrdiff_t>(itTextEnd - itTextBegin);
+		if(nTextCount < nPatternLength){
+			return itTextEnd;
+		}
+
+		std::ptrdiff_t nOffset = 0;
+		std::ptrdiff_t nKnownMatchEnd = 0;
+		for(;;){
+			if(nTextCount - nOffset < nPatternLength){
+				return itTextEnd;
+			}
+			std::ptrdiff_t nTestIndex = nPatternLength - 1;
+			for(;;){
+				const auto chText = itTextBegin[nOffset + nTestIndex];
+				if(chText != chPattern){
+					const auto nShift = nTestIndex + 1;
+					nOffset += nShift;
+					nKnownMatchEnd = nPatternLength - nShift;
+					break;
+				}
+				if(nTestIndex <= nKnownMatchEnd){
 					return itTextBegin + nOffset;
 				}
 				--nTestIndex;

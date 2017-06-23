@@ -113,9 +113,7 @@ void Utf8String::DeunifyAppend(Utf8String &u8sDst, const Utf32StringView &u32svS
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));
 	} catch(...){
@@ -158,12 +156,10 @@ void Utf16String::DeunifyAppend(Utf16String &u16sDst, const Utf16StringView &u16
 		while(pc16Read < pc16ReadEnd){
 			auto c32CodePoint = ::_MCFCRT_DecodeUtf16(&pc16Read, pc16ReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf16() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_DecodeUtf16() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
 	} catch(...){
@@ -205,12 +201,10 @@ void Utf16String::DeunifyAppend(Utf16String &u16sDst, const Utf32StringView &u32
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_DecodeUtf32() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
 	} catch(...){
@@ -231,12 +225,10 @@ void Utf32String::UnifyAppend(Utf16String &u16sDst, const Utf32StringView &u32sv
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_DecodeUtf32() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
 	} catch(...){
@@ -278,12 +270,10 @@ void Utf32String::UnifyAppend(Utf32String &u32sDst, const Utf32StringView &u32sv
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_DecodeUtf32() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf32(&pc32Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_UncheckedEncodeUtf32() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32Write));
 	} catch(...){
@@ -393,12 +383,10 @@ void Cesu8String::DeunifyAppend(Cesu8String &u8sDst, const Utf32StringView &u32s
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_DecodeUtf32() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_UncheckedEncodeCesu8() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));
 	} catch(...){
@@ -578,16 +566,14 @@ void ModifiedUtf8String::DeunifyAppend(ModifiedUtf8String &u8sDst, const Utf32St
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: _MCFCRT_DecodeUtf32() 失败。"));
 			}
 			if(c32CodePoint == 0){
 				*(pchWrite++) = (char)0xC0;
 				*(pchWrite++) = (char)0x80;
 			} else {
 				c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, true);
-				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-					MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: _MCFCRT_UncheckedEncodeCesu8() 失败。"));
-				}
+				MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 			}
 		}
 		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));

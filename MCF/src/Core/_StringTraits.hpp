@@ -6,6 +6,7 @@
 #define MCF_CORE_STRING_TRAITS_HPP_
 
 #include <type_traits>
+#include <cstddef>
 
 namespace MCF {
 
@@ -161,17 +162,53 @@ namespace Impl_StringTraits {
 		// https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm
 		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
 		constexpr unsigned kBcrTableSize = 256;
-		__attribute__((__aligned__(64))) unsigned short aushBadCharacterTable[kBcrTableSize];
-		const std::ptrdiff_t nMaxBcrShift = (nPatternLength <= 0xFFFF) ? nPatternLength : 0xFFFF;
+		__attribute__((__aligned__(64))) short ashBcrTable[kBcrTableSize];
+		const std::ptrdiff_t nMaxBcrShift = (nPatternLength <= 0x7FFF) ? nPatternLength : 0x7FFF;
 		for(unsigned uIndex = 0; uIndex < kBcrTableSize; ++uIndex){
-			aushBadCharacterTable[uIndex] = static_cast<unsigned short>(nMaxBcrShift);
+			ashBcrTable[uIndex] = static_cast<short>(nMaxBcrShift);
 		}
 		for(std::ptrdiff_t nBcrShift = nMaxBcrShift - 1; nBcrShift > 0; --nBcrShift){
 			const auto chGoodChar = itPatternBegin[nPatternLength - (nBcrShift + 1)];
-			aushBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chGoodChar)>>(chGoodChar) % kBcrTableSize] = static_cast<unsigned short>(nBcrShift);
+			ashBcrTable[static_cast<std::make_unsigned_t<decltype(chGoodChar)>>(chGoodChar) % kBcrTableSize] = static_cast<short>(nBcrShift);
+		}
+
+		// https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
+		// We create the GSR table from an intermediate table of suffix offsets.
+		constexpr unsigned kGsrTableSize = 512;
+		__attribute__((__aligned__(64))) short ashGsrTable[kGsrTableSize];
+		const std::ptrdiff_t nMaxGsrShift = (nPatternLength <= kGsrTableSize) ? nPatternLength : kGsrTableSize;
+		std::ptrdiff_t nGsrCandidateLength = 0;
+		const auto chCandidateBack = itPatternBegin[nPatternLength - 1];
+		ashGsrTable[0] = 1;
+		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nMaxGsrShift; ++nTestIndex){
+			const auto chTest = itPatternBegin[nPatternLength - (nTestIndex + 1)];
+			const auto chCandidateFront = itPatternBegin[nPatternLength - (nGsrCandidateLength + 1)];
+			if(chTest != chCandidateFront){
+				nGsrCandidateLength = (chTest == chCandidateBack) ? 0 : -1;
+			}
+			ashGsrTable[nTestIndex] = static_cast<short>(nTestIndex - nGsrCandidateLength);
+			++nGsrCandidateLength;
+		}
+		ashGsrTable[0] = 0;
+		std::ptrdiff_t nGsrLastOffset = 1;
+		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nMaxGsrShift; ++nTestIndex){
+			const std::ptrdiff_t nGsrOffset = ashGsrTable[nTestIndex];
+			ashGsrTable[nTestIndex] = static_cast<short>(nMaxGsrShift - nGsrCandidateLength);
+			if(nGsrLastOffset != nGsrOffset){
+				for(std::ptrdiff_t nWriteIndex = nTestIndex - nGsrLastOffset; nWriteIndex > 0; nWriteIndex -= nGsrLastOffset){
+					const std::ptrdiff_t nGsrShift = nTestIndex - nWriteIndex;
+					if(ashGsrTable[nWriteIndex] <= nGsrShift){
+						break;
+					}
+					ashGsrTable[nWriteIndex] = static_cast<short>(nGsrShift);
+				}
+				nGsrLastOffset = nGsrOffset;
+			}
 		}
 
 		std::ptrdiff_t nOffset = 0;
+		std::ptrdiff_t nKnownMatchEnd = 0;
+		std::ptrdiff_t nKnownMatchBegin = 0;
 		for(;;){
 			if(nTextCount - nOffset < nPatternLength){
 				return itTextEnd;
@@ -182,10 +219,24 @@ namespace Impl_StringTraits {
 				const auto chText = itTextBegin[nOffset + nTestIndex];
 				const auto chPattern = itPatternBegin[nTestIndex];
 				if(chText != chPattern){
-					nOffset += aushBadCharacterTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
+					const auto nSuffixLength = nPatternLength - (nTestIndex + 1);
+					const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
+					const std::ptrdiff_t nGsrShift = (nSuffixLength < nMaxGsrShift) ? ashGsrTable[nSuffixLength] : 1;
+					if(nBcrShift > nGsrShift){
+						nOffset += nBcrShift;
+						nKnownMatchEnd = nPatternLength - nBcrShift;
+						nKnownMatchBegin = nKnownMatchEnd - 1;
+					} else {
+						nOffset += nGsrShift;
+						nKnownMatchEnd = nPatternLength - nGsrShift;
+						nKnownMatchBegin = nKnownMatchEnd - nSuffixLength;
+					}
 					break;
 				}
-				if(nTestIndex == 0){
+				if(nTestIndex == nKnownMatchEnd){
+					nTestIndex = nKnownMatchBegin;
+				}
+				if(nTestIndex <= 0){
 					return itTextBegin + nOffset;
 				}
 				--nTestIndex;

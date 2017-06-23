@@ -24,7 +24,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasb(void **_MCFCRT_REST
 	if(__es){
 		*__es = (_MCFCRT_STD uint8_t *)(__p - __z);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasw(_MCFCRT_STD uint16_t **_MCFCRT_RESTRICT __es, const _MCFCRT_STD uint16_t *__s, int __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	bool __z, __b;
@@ -37,7 +37,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasw(_MCFCRT_STD uint16_
 	if(__es){
 		*__es = (_MCFCRT_STD uint16_t *)(__p - __z);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasd(_MCFCRT_STD uint32_t **_MCFCRT_RESTRICT __es, const _MCFCRT_STD uint32_t *__s, int __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	bool __z, __b;
@@ -50,7 +50,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasd(_MCFCRT_STD uint32_
 	if(__es){
 		*__es = (_MCFCRT_STD uint32_t *)(__p - __z);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 #ifdef _WIN64
 __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasq(_MCFCRT_STD uint64_t **_MCFCRT_RESTRICT __es, const _MCFCRT_STD uint64_t *__s, int __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
@@ -64,7 +64,7 @@ __MCFCRT_REPNZ_SCAS_INLINE_OR_EXTERN int _MCFCRT_repnz_scasq(_MCFCRT_STD uint64_
 	if(__es){
 		*__es = (_MCFCRT_STD uint64_t *)(__p - __z);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 #endif
 

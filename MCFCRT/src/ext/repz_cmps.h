@@ -25,7 +25,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsb(void **_MCFCRT_RESTRI
 	if(__es1){
 		*__es1 = (_MCFCRT_STD uint8_t *)(__p1 + __z - 1);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsw(_MCFCRT_STD uint16_t **_MCFCRT_RESTRICT __es1, const _MCFCRT_STD uint16_t *__s1, const _MCFCRT_STD uint16_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	bool __z, __b;
@@ -39,7 +39,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsw(_MCFCRT_STD uint16_t 
 	if(__es1){
 		*__es1 = (_MCFCRT_STD uint16_t *)(__p1 + __z - 1);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsd(_MCFCRT_STD uint32_t **_MCFCRT_RESTRICT __es1, const _MCFCRT_STD uint32_t *__s1, const _MCFCRT_STD uint32_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	bool __z, __b;
@@ -53,7 +53,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsd(_MCFCRT_STD uint32_t 
 	if(__es1){
 		*__es1 = (_MCFCRT_STD uint32_t *)(__p1 + __z - 1);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 #ifdef _WIN64
 __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsq(_MCFCRT_STD uint64_t **_MCFCRT_RESTRICT __es1, const _MCFCRT_STD uint64_t *__s1, const _MCFCRT_STD uint64_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
@@ -68,7 +68,7 @@ __MCFCRT_REPZ_CMPS_INLINE_OR_EXTERN int _MCFCRT_repz_cmpsq(_MCFCRT_STD uint64_t 
 	if(__es1){
 		*__es1 = (_MCFCRT_STD uint64_t *)(__p1 + __z - 1);
 	}
-	return (__z - 1) & ((__b - 1) | 1);
+	return __z ? 0 : (__b ? -1 : 1);
 }
 #endif
 

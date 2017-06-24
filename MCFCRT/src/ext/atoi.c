@@ -6,66 +6,66 @@
 #include "repnz_scas.h"
 
 __attribute__((__always_inline__))
-static inline char *Really_atoi_u(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer, unsigned uMaxDigits, uintptr_t uBound, const char *pchDualTable, unsigned uRadix){
-	unsigned uDigitsRead = 0;
-	_MCFCRT_atoi_result eResult = _MCFCRT_atoi_result_no_digit;
+static inline char *Really_atoi_u(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits, uintptr_t bound, const char *dual_table, unsigned radix){
+	unsigned digits_read = 0;
+	_MCFCRT_atoi_result result = _MCFCRT_atoi_result_no_digit;
 	// Parse digits.
-	uintptr_t uWord = 0;
-	while(uDigitsRead + 1 <= uMaxDigits){
-		const char chDigit = pchBuffer[uDigitsRead];
+	uintptr_t word = 0;
+	while(digits_read + 1 <= max_digits){
+		const char digit = buffer[digits_read];
 		// Search for this digit in the table. Handle lower and upper cases universally.
-		void *pDigitInTable;
-		if(_MCFCRT_repnz_scasb(&pDigitInTable, pchDualTable, chDigit, uRadix * 2) != 0){
+		void *digit_in_table;
+		if(_MCFCRT_repnz_scasb(&digit_in_table, dual_table, digit, radix * 2) != 0){
 			break;
 		}
-		const unsigned uDigitValue = (unsigned)((const char *)pDigitInTable - pchDualTable) / 2;
-		// Check for overflows.
-		const uintptr_t uThisBound = (uBound - uDigitValue) / uRadix;
-		if(uWord > uThisBound){
-			eResult = _MCFCRT_atoi_result_would_overflow;
+		const unsigned digit_value = (unsigned)((const char *)digit_in_table - dual_table) / 2;
+		// Check for overflow.
+		const uintptr_t digit_bound = (bound - digit_value) / radix;
+		if(word > digit_bound){
+			result = _MCFCRT_atoi_result_would_overflow;
 			break;
 		}
-		uWord *= uRadix;
-		uWord += uDigitValue;
-		++uDigitsRead;
-		eResult = _MCFCRT_atoi_result_success;
+		word *= radix;
+		word += digit_value;
+		++digits_read;
+		result = _MCFCRT_atoi_result_success;
 	}
-	*peResult = eResult;
-	*puValue = uWord;
-	return (char *)pchBuffer + uDigitsRead;
+	*result_out = result;
+	*value_out = word;
+	return (char *)buffer + digits_read;
 }
 
-char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *peResult, intptr_t *pnValue, const char *pchBuffer){
-	return _MCFCRT_atoi0d(peResult, pnValue, pchBuffer, UINT_MAX);
+char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *result_out, intptr_t *value_out, const char *buffer){
+	return _MCFCRT_atoi0d(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer){
-	return _MCFCRT_atoi0u(peResult, puValue, pchBuffer, UINT_MAX);
+char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer){
+	return _MCFCRT_atoi0u(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer){
-	return _MCFCRT_atoi0x(peResult, puValue, pchBuffer, UINT_MAX);
+char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer){
+	return _MCFCRT_atoi0x(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer){
-	return _MCFCRT_atoi0X(peResult, puValue, pchBuffer, UINT_MAX);
+char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer){
+	return _MCFCRT_atoi0X(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *peResult, intptr_t *pnValue, const char *pchBuffer, unsigned uMaxDigits){
-	char *pchEnd;
-	if(*pchBuffer == '-'){
-		uintptr_t uValue;
-		pchEnd = Really_atoi_u(peResult, &uValue, pchBuffer + 1, uMaxDigits, -(uintptr_t)INTPTR_MIN, "00112233445566778899", 10);
-		*pnValue = -(intptr_t)uValue;
+char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *result_out, intptr_t *value_out, const char *buffer, unsigned max_digits){
+	char *end;
+	if(*buffer == '-'){
+		uintptr_t value;
+		end = Really_atoi_u(result_out, &value, buffer + 1, max_digits, -(uintptr_t)INTPTR_MIN, "00112233445566778899", 10);
+		*value_out = -(intptr_t)value;
 	} else {
-		uintptr_t uValue;
-		pchEnd = Really_atoi_u(peResult, &uValue, pchBuffer    , uMaxDigits,  (uintptr_t)INTPTR_MAX, "00112233445566778899", 10);
-		*pnValue =  (intptr_t)uValue;
+		uintptr_t value;
+		end = Really_atoi_u(result_out, &value, buffer    , max_digits,  (uintptr_t)INTPTR_MAX, "00112233445566778899", 10);
+		*value_out =  (intptr_t)value;
 	}
-	return pchEnd;
+	return end;
 }
-char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer, unsigned uMaxDigits){
-	return Really_atoi_u(peResult, puValue, pchBuffer, uMaxDigits, UINTPTR_MAX, "00112233445566778899"            , 10);
+char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits){
+	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899"            , 10);
 }
-char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer, unsigned uMaxDigits){
-	return Really_atoi_u(peResult, puValue, pchBuffer, uMaxDigits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
+char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits){
+	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
 }
-char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *peResult, uintptr_t *puValue, const char *pchBuffer, unsigned uMaxDigits){
-	return Really_atoi_u(peResult, puValue, pchBuffer, uMaxDigits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
+char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits){
+	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
 }

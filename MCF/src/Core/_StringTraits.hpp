@@ -198,8 +198,13 @@ namespace Impl_StringTraits {
 					const std::ptrdiff_t nGsrShift = (nSuffixLength < nGsrTableSize) ? ashGsrTable[nSuffixLength] : 0;
 					if(nBcrShift > nGsrShift){
 						nOffset += nBcrShift;
-						nKnownMatchEnd = nPatternLength - nBcrShift;
-						nKnownMatchBegin = nKnownMatchEnd - 1;
+						if(static_cast<std::make_unsigned_t<decltype(chText)>>(-1) < kBcrTableSize){
+							nKnownMatchEnd = nPatternLength - nBcrShift;
+							nKnownMatchBegin = nKnownMatchEnd - 1;
+						} else {
+							nKnownMatchEnd = 0;
+							nKnownMatchBegin = 0;
+						}
 					} else {
 						nOffset += nGsrShift;
 						nKnownMatchEnd = nPatternLength - nGsrShift;

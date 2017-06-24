@@ -141,11 +141,11 @@ namespace Impl_StringTraits {
 		// https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
 		// We create the GSR table from an intermediate table of suffix offsets.
 		constexpr unsigned kGsrTableSize = 512;
-		__attribute__((__aligned__(64))) short ashGsrTable[kGsrTableSize];
-		const std::ptrdiff_t nMaxGsrShift = (nPatternLength <= kGsrTableSize) ? nPatternLength : kGsrTableSize;
+		__attribute__((__aligned__(64))) short ashGsrOffsetTable[kGsrTableSize];
+		const auto nGsrTableSize = (nPatternLength <= kGsrTableSize) ? nPatternLength : kGsrTableSize;
 		std::ptrdiff_t nGsrCandidateLength = 0;
-		ashGsrTable[0] = 1;
-		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nMaxGsrShift; ++nTestIndex){
+		ashGsrOffsetTable[0] = 1;
+		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nGsrTableSize; ++nTestIndex){
 			const auto chTest = itPatternBegin[nPatternLength - nTestIndex - 1];
 			for(;;){
 				const auto chCandidateFront = itPatternBegin[nPatternLength - nGsrCandidateLength - 1];
@@ -153,28 +153,28 @@ namespace Impl_StringTraits {
 					++nGsrCandidateLength;
 					break;
 				}
-				if(nGsrCandidateLength == 0){
+				if(nGsrCandidateLength <= 0){
 					break;
 				}
-				nGsrCandidateLength -= ashGsrTable[nGsrCandidateLength - 1];
+				nGsrCandidateLength -= ashGsrOffsetTable[nGsrCandidateLength - 1];
 			}
-			ashGsrTable[nTestIndex] = static_cast<short>(nTestIndex - nGsrCandidateLength + 1);
+			ashGsrOffsetTable[nTestIndex] = static_cast<short>(nTestIndex - nGsrCandidateLength + 1);
 		}
-		std::ptrdiff_t nGsrLastOffset = 1;
+		__attribute__((__aligned__(64))) short ashGsrTable[kGsrTableSize];
+		const auto nMaxGsrShift = nGsrTableSize - nGsrCandidateLength;
 		ashGsrTable[0] = 0;
-		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nMaxGsrShift; ++nTestIndex){
-			const std::ptrdiff_t nGsrOffset = ashGsrTable[nTestIndex];
-			ashGsrTable[nTestIndex] = static_cast<short>(nMaxGsrShift - nGsrCandidateLength);
-			if(nGsrLastOffset != nGsrOffset){
-				for(std::ptrdiff_t nWriteIndex = nTestIndex - nGsrLastOffset; nWriteIndex > 0; nWriteIndex -= nGsrLastOffset){
-					const std::ptrdiff_t nGsrShift = nTestIndex - nWriteIndex;
-					if(ashGsrTable[nWriteIndex] <= nGsrShift){
-						break;
-					}
-					ashGsrTable[nWriteIndex] = static_cast<short>(nGsrShift);
-				}
+		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nGsrTableSize; ++nTestIndex){
+			ashGsrTable[nTestIndex] = static_cast<short>(nMaxGsrShift);
+			std::ptrdiff_t nGsrShift = ashGsrOffsetTable[nTestIndex - 1];
+			if(nGsrShift == ashGsrOffsetTable[nTestIndex]){
+				continue;
 			}
-			nGsrLastOffset = nGsrOffset;
+			while(nTestIndex > nGsrShift){
+				if(ashGsrTable[nTestIndex - nGsrShift] > nGsrShift){
+					ashGsrTable[nTestIndex - nGsrShift] = static_cast<short>(nGsrShift);
+				}
+				nGsrShift += ashGsrOffsetTable[nTestIndex - nGsrShift - 1];
+			}
 		}
 
 		std::ptrdiff_t nOffset = 0;
@@ -192,7 +192,7 @@ namespace Impl_StringTraits {
 				if(chText != chPattern){
 					const auto nSuffixLength = nPatternLength - nTestIndex - 1;
 					const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
-					const std::ptrdiff_t nGsrShift = (nSuffixLength < nMaxGsrShift) ? ashGsrTable[nSuffixLength] : 0;
+					const std::ptrdiff_t nGsrShift = (nSuffixLength < nGsrTableSize) ? ashGsrTable[nSuffixLength] : 0;
 					if(nBcrShift > nGsrShift){
 						nOffset += nBcrShift;
 						nKnownMatchEnd = nPatternLength - nBcrShift;

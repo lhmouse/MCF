@@ -169,11 +169,15 @@ namespace Impl_StringTraits {
 			if(nGsrShift == ashGsrOffsetTable[nTestIndex]){
 				continue;
 			}
-			while(nTestIndex > nGsrShift){
-				if(ashGsrTable[nTestIndex - nGsrShift] > nGsrShift){
-					ashGsrTable[nTestIndex - nGsrShift] = static_cast<short>(nGsrShift);
+			for(;;){
+				const auto nAdjustIndex = nTestIndex - nGsrShift;
+				if(nAdjustIndex <= 0){
+					break;
 				}
-				nGsrShift += ashGsrOffsetTable[nTestIndex - nGsrShift - 1];
+				if(ashGsrTable[nAdjustIndex] > nGsrShift){
+					ashGsrTable[nAdjustIndex] = static_cast<short>(nGsrShift);
+				}
+				nGsrShift += ashGsrOffsetTable[nAdjustIndex - 1];
 			}
 		}
 

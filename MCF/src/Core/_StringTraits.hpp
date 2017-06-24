@@ -164,21 +164,20 @@ namespace Impl_StringTraits {
 		const auto nMaxGsrShift = nGsrTableSize - nGsrCandidateLength;
 		ashGsrTable[0] = 0;
 		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nGsrTableSize; ++nTestIndex){
-			ashGsrTable[nTestIndex] = static_cast<short>(nMaxGsrShift);
 			std::ptrdiff_t nGsrShift = ashGsrOffsetTable[nTestIndex - 1];
-			if(nGsrShift == ashGsrOffsetTable[nTestIndex]){
-				continue;
-			}
-			for(;;){
-				const auto nAdjustIndex = nTestIndex - nGsrShift;
-				if(nAdjustIndex <= 0){
-					break;
+			if(nGsrShift != ashGsrOffsetTable[nTestIndex]){
+				for(;;){
+					const auto nAdjustIndex = nTestIndex - nGsrShift;
+					if(nAdjustIndex <= 0){
+						break;
+					}
+					if(ashGsrTable[nAdjustIndex] > nGsrShift){
+						ashGsrTable[nAdjustIndex] = static_cast<short>(nGsrShift);
+					}
+					nGsrShift += ashGsrOffsetTable[nAdjustIndex - 1];
 				}
-				if(ashGsrTable[nAdjustIndex] > nGsrShift){
-					ashGsrTable[nAdjustIndex] = static_cast<short>(nGsrShift);
-				}
-				nGsrShift += ashGsrOffsetTable[nAdjustIndex - 1];
 			}
+			ashGsrTable[nTestIndex] = static_cast<short>(nMaxGsrShift);
 		}
 
 		std::ptrdiff_t nOffset = 0;

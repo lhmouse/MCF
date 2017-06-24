@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_STRING_TRAITS_HPP_
 #define MCF_CORE_STRING_TRAITS_HPP_
 
+#include <MCFCRT/env/expect.h>
 #include <type_traits>
 #include <cstddef>
 
@@ -196,15 +197,10 @@ namespace Impl_StringTraits {
 					const auto nSuffixLength = nPatternLength - nTestIndex - 1;
 					const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
 					const std::ptrdiff_t nGsrShift = (nSuffixLength < nGsrTableSize) ? ashGsrTable[nSuffixLength] : 0;
-					if(nBcrShift > nGsrShift){
+					if(_MCFCRT_EXPECT(nBcrShift > nGsrShift)){
 						nOffset += nBcrShift;
-						if(static_cast<std::make_unsigned_t<decltype(chText)>>(-1) < kBcrTableSize){
-							nKnownMatchEnd = nPatternLength - nBcrShift;
-							nKnownMatchBegin = nKnownMatchEnd - 1;
-						} else {
-							nKnownMatchEnd = 0;
-							nKnownMatchBegin = 0;
-						}
+						nKnownMatchEnd = 0;
+						nKnownMatchBegin = 0;
 					} else {
 						nOffset += nGsrShift;
 						nKnownMatchEnd = nPatternLength - nGsrShift;

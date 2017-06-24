@@ -40,6 +40,7 @@ noinst_HEADERS = \
 
 pkginclude_HEADERS = \
 	src/mcfcrt.h	\
+	src/mcfwin.h	\
 	src/gthread.h	\
 	src/c11thread.h
 

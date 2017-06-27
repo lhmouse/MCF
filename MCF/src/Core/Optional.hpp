@@ -18,6 +18,7 @@ private:
 
 public:
 	Optional() noexcept { }
+
 	template<typename vOtherT,
 		std::enable_if_t<
 			!std::is_base_of<Optional, std::decay_t<vOtherT>>::value,
@@ -41,16 +42,16 @@ public:
 	}
 
 	const ElementT *Get() const {
-		const auto pException = x_vData.template Get<1>();
-		if(pException){
-			std::rethrow_exception(*pException);
+		const auto ppException = x_vData.template Get<1>();
+		if(ppException){
+			std::rethrow_exception(*ppException);
 		}
 		return x_vData.template Get<0>();
 	}
 	ElementT *Get(){
-		const auto pException = x_vData.template Get<1>();
-		if(pException){
-			std::rethrow_exception(*pException);
+		const auto ppException = x_vData.template Get<1>();
+		if(ppException){
+			std::rethrow_exception(*ppException);
 		}
 		return x_vData.template Get<0>();
 	}
@@ -69,11 +70,11 @@ public:
 		return pElement;
 	}
 	std::exception_ptr GetException() const noexcept {
-		const auto pException = x_vData.template Get<1>();
-		if(!pException){
+		const auto ppException = x_vData.template Get<1>();
+		if(!ppException){
 			return { };
 		}
-		return *pException;
+		return *ppException;
 	}
 
 	Optional &Reset() noexcept {
@@ -103,6 +104,7 @@ private:
 
 public:
 	Optional() noexcept { }
+
 	Optional(ElementT &vElement) noexcept {
 		Reset(vElement);
 	}
@@ -122,9 +124,9 @@ public:
 	}
 
 	ElementT &Get() const {
-		const auto pException = x_vData.template Get<1>();
-		if(pException){
-			std::rethrow_exception(*pException);
+		const auto ppException = x_vData.template Get<1>();
+		if(ppException){
+			std::rethrow_exception(*ppException);
 		}
 		return *x_vData.template Get<0>();
 	}
@@ -132,11 +134,11 @@ public:
 		return Get();
 	}
 	std::exception_ptr GetException() const noexcept {
-		const auto pException = x_vData.template Get<1>();
-		if(!pException){
+		const auto ppException = x_vData.template Get<1>();
+		if(!ppException){
 			return { };
 		}
-		return *pException;
+		return *ppException;
 	}
 
 	Optional &Reset() noexcept {

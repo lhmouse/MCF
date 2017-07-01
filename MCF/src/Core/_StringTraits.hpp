@@ -194,18 +194,6 @@ namespace Impl_StringTraits {
 				const auto chText = itTextBegin[nOffset + nTestIndex];
 				const auto chPattern = itPatternBegin[nTestIndex];
 				if(chText != chPattern){
-					const auto nSuffixLength = nPatternLength - nTestIndex - 1;
-					const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
-					const std::ptrdiff_t nGsrShift = (nSuffixLength < nGsrTableSize) ? ashGsrTable[nSuffixLength] : 0;
-					if(_MCFCRT_EXPECT(nBcrShift > nGsrShift)){
-						nOffset += nBcrShift;
-						nKnownMatchEnd = 0;
-						nKnownMatchBegin = 0;
-					} else {
-						nOffset += nGsrShift;
-						nKnownMatchEnd = nPatternLength - nGsrShift;
-						nKnownMatchBegin = nKnownMatchEnd - nSuffixLength;
-					}
 					break;
 				}
 				if(nTestIndex == nKnownMatchEnd){
@@ -215,6 +203,18 @@ namespace Impl_StringTraits {
 					return itTextBegin + nOffset;
 				}
 				--nTestIndex;
+			}
+			const auto nSuffixLength = nPatternLength - nTestIndex - 1;
+			const std::ptrdiff_t nBcrShift = ashBcrTable[static_cast<std::make_unsigned_t<decltype(chLast)>>(chLast) % kBcrTableSize];
+			const std::ptrdiff_t nGsrShift = (nSuffixLength < nGsrTableSize) ? ashGsrTable[nSuffixLength] : 0;
+			if(_MCFCRT_EXPECT(nBcrShift > nGsrShift)){
+				nOffset += nBcrShift;
+				nKnownMatchEnd = 0;
+				nKnownMatchBegin = 0;
+			} else {
+				nOffset += nGsrShift;
+				nKnownMatchEnd = nPatternLength - nGsrShift;
+				nKnownMatchBegin = nKnownMatchEnd - nSuffixLength;
 			}
 		}
 	}
@@ -243,9 +243,6 @@ namespace Impl_StringTraits {
 			for(;;){
 				const auto chText = itTextBegin[nOffset + nTestIndex];
 				if(chText != chPattern){
-					const auto nShift = nTestIndex + 1;
-					nOffset += nShift;
-					nKnownMatchEnd = nPatternLength - nShift;
 					break;
 				}
 				if(nTestIndex <= nKnownMatchEnd){
@@ -253,6 +250,9 @@ namespace Impl_StringTraits {
 				}
 				--nTestIndex;
 			}
+			const auto nShift = nTestIndex + 1;
+			nOffset += nShift;
+			nKnownMatchEnd = nPatternLength - nShift;
 		}
 	}
 }

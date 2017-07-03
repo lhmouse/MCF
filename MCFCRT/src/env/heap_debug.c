@@ -95,15 +95,8 @@ static void CheckForMemoryLeaks(void){
 		wchar_t *pwcWrite = awcLine;
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"*** ... ");
 		pwcWrite = _MCFCRT_itow_u(pwcWrite, uCount - 9999);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" more memory leak");
-		if(uCount != 10000){
-			*(pwcWrite++) = L's';
-		}
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" follow");
-		if(uCount == 10000){
-			*(pwcWrite++) = L's';
-		}
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L". ***");
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, (uCount == 10000) ? L" more memory leak follows. ***"
+		                                                      : L" more memory leaks follow. ***");
 		_MCFCRT_WriteStandardErrorText(awcLine, (size_t)(pwcWrite - awcLine), true);
 	}
 	if(uCount != 0){

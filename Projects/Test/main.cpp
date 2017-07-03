@@ -1,8 +1,8 @@
-#include <MCF/Core/String.hpp>
+#include <MCFCRT/MCFCRT.h>
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	constexpr char text[] = "aqwebqwecqwedqwef", pattern[] = "cqwedqwe";
-	auto pos = MCF::NarrowStringView(text).Find(MCF::NarrowStringView(pattern));
-	__builtin_printf("pos = %d\n", (int)pos);
+	for(int i = 0; i < 10001; ++i){
+		::_MCFCRT_malloc(10);
+	}
 	return 0;
 }

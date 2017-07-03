@@ -69,24 +69,44 @@ static bool CheckSentry(uintptr_t uCookie, const unsigned char *pbyData, size_t 
 static _MCFCRT_AvlRoot s_avlBlocks = _MCFCRT_NULLPTR;
 
 static void CheckForMemoryLeaks(void){
-	uintptr_t uIndex = 0;
 	wchar_t awcLine[1024];
-	for(const BlockHeader *pHeader = (BlockHeader *)_MCFCRT_AvlFront(&s_avlBlocks); pHeader; pHeader = (BlockHeader *)_MCFCRT_AvlNext((_MCFCRT_AvlNodeHeader *)pHeader)){
+	uintptr_t uCount = 0;
+	const BlockHeader *pHeader = (BlockHeader *)_MCFCRT_AvlFront(&s_avlBlocks);
+	while(pHeader){
+		if(uCount < 9999){
+			wchar_t *pwcWrite = awcLine;
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"*** Memory leak ");
+			pwcWrite = _MCFCRT_itow0u(pwcWrite, uCount + 1, 4);
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L": address = 0x");
+			pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)((char *)pHeader + sizeof(BlockHeader)), sizeof(void *) * 2);
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L", size = 0x");
+			pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)(pHeader->uSize), sizeof(size_t) * 2);
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L", allocated from 0x");
+			pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)(pHeader->pRetAddrInner), sizeof(void *) * 2);
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" inside 0x");
+			pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)(pHeader->pRetAddrOuter), sizeof(void *) * 2);
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" ***");
+			_MCFCRT_WriteStandardErrorText(awcLine, (size_t)(pwcWrite - awcLine), true);
+		}
+		++uCount;
+		pHeader = (BlockHeader *)_MCFCRT_AvlNext((_MCFCRT_AvlNodeHeader *)pHeader);
+	}
+	if(uCount > 9999){
 		wchar_t *pwcWrite = awcLine;
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"*** Memory leak ");
-		pwcWrite = _MCFCRT_itow0u(pwcWrite, ++uIndex, 4);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L": address = ");
-		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)((char *)pHeader + sizeof(BlockHeader)), sizeof(void *) * 2);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L", size = ");
-		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)(pHeader->uSize), sizeof(void *) * 2);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L", allocated from ");
-		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)(pHeader->pRetAddrInner), sizeof(void *) * 2);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" inside ");
-		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)(pHeader->pRetAddrOuter), sizeof(void *) * 2);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" ***");
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"*** ... ");
+		pwcWrite = _MCFCRT_itow_u(pwcWrite, uCount - 9999);
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" more memory leak");
+		if(uCount != 10000){
+			*(pwcWrite++) = L's';
+		}
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" follow");
+		if(uCount == 10000){
+			*(pwcWrite++) = L's';
+		}
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L". ***");
 		_MCFCRT_WriteStandardErrorText(awcLine, (size_t)(pwcWrite - awcLine), true);
 	}
-	if(uIndex != 0){
+	if(uCount != 0){
 		_MCFCRT_Bail(L"检测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 	}
 }

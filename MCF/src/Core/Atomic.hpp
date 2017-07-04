@@ -45,13 +45,6 @@ public:
 	Atomic &operator=(const Atomic &) noexcept = delete;
 
 public:
-	const volatile Element &Get() const volatile noexcept {
-		return x_vElement;
-	}
-	volatile Element &Get() volatile noexcept {
-		return x_vElement;
-	}
-
 	Element Load(MemoryModel eModel) const volatile noexcept {
 		Element vRet;
 		__atomic_load(AddressOf(x_vElement), AddressOf(vRet), static_cast<int>(eModel));
@@ -198,14 +191,6 @@ public:
 		Element> Decrement(MemoryModel eModel) volatile noexcept
 	{
 		return SubFetch(1, eModel);
-	}
-
-public:
-	explicit operator const volatile Element &() const volatile noexcept {
-		return Get();
-	}
-	explicit operator volatile Element &() volatile noexcept {
-		return Get();
 	}
 };
 

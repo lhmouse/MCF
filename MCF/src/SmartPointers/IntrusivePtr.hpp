@@ -99,7 +99,7 @@ namespace Impl_IntrusivePtr {
 	}
 
 	template<typename ObjectT>
-	class WeakViewTemplate : public RefCountBase  {
+	class WeakViewTemplate : public RefCountBase {
 	private:
 		mutable Mutex x_mtxGuard;
 		ObjectT *x_pParent;

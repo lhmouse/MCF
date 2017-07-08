@@ -82,31 +82,31 @@ namespace Impl_StringTraits {
 	// Generic algorithms
 	//-----------------------------------------------------------------------------
 
-	template<typename TextBeginT>
-	TextBeginT Define(TextBeginT itTextBegin){
+	template<typename SelfBeginT>
+	SelfBeginT Define(SelfBeginT itSelfBegin){
 		std::ptrdiff_t nOffset = 0;
 		for(;;){
-			const auto chText = itTextBegin[nOffset];
-			if(chText == decltype(chText)()){
-				return itTextBegin + nOffset;
+			const auto chSelf = itSelfBegin[nOffset];
+			if(chSelf == decltype(chSelf)()){
+				return itSelfBegin + nOffset;
 			}
 			++nOffset;
 		}
 	}
 
-	template<typename TextBeginT, typename TextEndT, typename PatternBeginT, typename PatternEndT>
-	int Compare(TextBeginT itTextBegin, TextEndT itTextEnd, PatternBeginT itPatternBegin, PatternEndT itPatternEnd){
+	template<typename SelfBeginT, typename SelfEndT, typename OtherBeginT, typename OtherEndT>
+	int Compare(SelfBeginT itSelfBegin, SelfEndT itSelfEnd, OtherBeginT itOtherBegin, OtherEndT itOtherEnd){
 		std::ptrdiff_t nOffset = 0;
 		for(;;){
-			const bool bEndMarkText = itTextBegin + nOffset == itTextEnd;
-			const bool bEndMarkPattern = itPatternBegin + nOffset == itPatternEnd;
-			if(bEndMarkText || bEndMarkPattern){
-				return bEndMarkText - bEndMarkPattern;
+			const bool bEndMarkSelf = itSelfBegin + nOffset == itSelfEnd;
+			const bool bEndMarkOther = itOtherBegin + nOffset == itOtherEnd;
+			if(bEndMarkSelf || bEndMarkOther){
+				return bEndMarkSelf - bEndMarkOther;
 			}
-			const auto chText = itTextBegin[nOffset];
-			const auto chPattern = itPatternBegin[nOffset];
-			if(chText != chPattern){
-				return (static_cast<std::make_unsigned_t<decltype(chText)>>(chText) < static_cast<std::make_unsigned_t<decltype(chPattern)>>(chPattern)) ? -1 : 1;
+			const auto chSelf = itSelfBegin[nOffset];
+			const auto chOther = itOtherBegin[nOffset];
+			if(chSelf != chOther){
+				return (static_cast<std::make_unsigned_t<decltype(chSelf)>>(chSelf) < static_cast<std::make_unsigned_t<decltype(chOther)>>(chOther)) ? -1 : 1;
 			}
 			++nOffset;
 		}

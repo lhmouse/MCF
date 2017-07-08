@@ -101,7 +101,7 @@ namespace Impl_StringTraits {
 			const bool bEndMarkSelf = itSelfBegin + nOffset == itSelfEnd;
 			const bool bEndMarkOther = itOtherBegin + nOffset == itOtherEnd;
 			if(bEndMarkSelf || bEndMarkOther){
-				return bEndMarkSelf - bEndMarkOther;
+				return bEndMarkOther - bEndMarkSelf;
 			}
 			const auto chSelf = itSelfBegin[nOffset];
 			const auto chOther = itOtherBegin[nOffset];

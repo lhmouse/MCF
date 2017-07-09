@@ -38,7 +38,32 @@ static void UnprotectAllSections(UnprotectedSection *restrict pUnprotectedSectio
 		if(VirtualQuery(pBase, &vMemInfo, sizeof(vMemInfo)) < sizeof(vMemInfo)){
 			_MCFCRT_Bail(L"VirtualQuery() 失败。");
 		}
-		if((vMemInfo.Protect == PAGE_READWRITE) || (vMemInfo.Protect == PAGE_EXECUTE_READWRITE)){
+		const DWORD dwOldProtect = vMemInfo.Protect;
+		DWORD dwNewProtect;
+		switch(dwOldProtect & 0xFF){
+		case PAGE_EXECUTE:
+		case PAGE_EXECUTE_READ:
+		case PAGE_EXECUTE_READWRITE:
+			dwNewProtect = PAGE_EXECUTE_READWRITE;
+			break;
+		case PAGE_EXECUTE_WRITECOPY:
+			dwNewProtect = PAGE_EXECUTE_WRITECOPY;
+			break;
+		case PAGE_NOACCESS:
+			dwNewProtect = PAGE_NOACCESS;
+			break;
+		case PAGE_READONLY:
+		case PAGE_READWRITE:
+			dwNewProtect = PAGE_READWRITE;
+			break;
+		case PAGE_WRITECOPY:
+			dwNewProtect = PAGE_WRITECOPY;
+			break;
+		default:
+			dwNewProtect = PAGE_NOACCESS;
+			break;
+		}
+		if(dwOldProtect == dwNewProtect){
 			pUnprotected->pBase = _MCFCRT_NULLPTR;
 			pUnprotected->uSize = 0;
 		} else {

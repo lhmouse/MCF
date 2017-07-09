@@ -67,7 +67,7 @@ static void UnprotectAllSections(UnprotectedSection *restrict pUnprotectedSectio
 			pUnprotected->pBase = _MCFCRT_NULLPTR;
 			pUnprotected->uSize = 0;
 		} else {
-			if(!VirtualProtect(pBase, uSize, PAGE_EXECUTE_READWRITE, &(pUnprotected->dwOldProtect))){
+			if(!VirtualProtect(pBase, uSize, dwNewProtect, &(pUnprotected->dwOldProtect))){
 				_MCFCRT_Bail(L"VirtualProtect() 失败。");
 			}
 			pUnprotected->pBase = pBase;

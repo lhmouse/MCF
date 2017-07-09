@@ -128,7 +128,7 @@ namespace Impl_StringTraits {
 
 		// https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm
 		// We store the offsets as small integers using saturation arithmetic for space efficiency. Bits that do not fit into a byte are truncated.
-		constexpr unsigned kBcrTableSize = 256;
+		constexpr unsigned short kBcrTableSize = 256;
 		__attribute__((__aligned__(64))) short ashBcrTable[kBcrTableSize];
 		const std::ptrdiff_t nMaxBcrShift = (nPatternLength <= 0x7FFF) ? nPatternLength : 0x7FFF;
 		for(unsigned uIndex = 0; uIndex < kBcrTableSize; ++uIndex){
@@ -141,9 +141,9 @@ namespace Impl_StringTraits {
 
 		// https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
 		// We create the GSR table from an intermediate table of suffix offsets.
-		constexpr unsigned kGsrTableSize = 512;
+		constexpr unsigned short kGsrTableSize = 512;
 		__attribute__((__aligned__(64))) short ashGsrOffsetTable[kGsrTableSize];
-		const auto nGsrTableSize = (nPatternLength <= kGsrTableSize) ? nPatternLength : kGsrTableSize;
+		const auto nGsrTableSize = (nPatternLength <= kGsrTableSize) ? nPatternLength : static_cast<std::ptrdiff_t>(kGsrTableSize);
 		std::ptrdiff_t nGsrCandidateLength = 0;
 		ashGsrOffsetTable[0] = 1;
 		for(std::ptrdiff_t nTestIndex = 1; nTestIndex < nGsrTableSize; ++nTestIndex){

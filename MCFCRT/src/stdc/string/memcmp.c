@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include <emmintrin.h>
+#include <pmmintrin.h>
 
 #undef memcmp
 
@@ -55,7 +55,7 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		if(((uintptr_t)rp2 & 15) == 0){
 			CMP_SSE2(_mm_load_si128, _mm_load_si128)
 		} else {
-			CMP_SSE2(_mm_load_si128, _mm_loadu_si128)
+			CMP_SSE2(_mm_load_si128, _mm_lddqu_si128)
 		}
 	}
 	for(;;){

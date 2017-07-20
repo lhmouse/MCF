@@ -109,32 +109,7 @@ static inline void __MCFCRT_fistpll(long long *__p, long double __x) _MCFCRT_NOE
 		: "st"
 	);
 }
-/* TODO: SSE3
-static inline void __MCFCRT_fisttp(int *__p, long double __x) _MCFCRT_NOEXCEPT {
-	__asm__ (
-		"fisttp dword ptr[%0] \n"
-		: "=m"(*__p)
-		: "t"(__x)
-		: "st"
-	);
-}
-static inline void __MCFCRT_fisttpl(long *__p, long double __x) _MCFCRT_NOEXCEPT {
-	__asm__ (
-		"fisttp dword ptr[%0] \n"
-		: "=m"(*__p)
-		: "t"(__x)
-		: "st"
-	);
-}
-static inline void __MCFCRT_fisttpll(long long *__p, long double __x) _MCFCRT_NOEXCEPT {
-	__asm__ (
-		"fisttp qword ptr[%0] \n"
-		: "=m"(*__p)
-		: "t"(__x)
-		: "st"
-	);
-}
-*/
+
 static inline long double __MCFCRT_frndintany(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (

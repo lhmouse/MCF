@@ -9,6 +9,10 @@
 #  error This processor architecture is not supported.
 #endif
 
+#if !defined(__SSE3__)
+#  error SSE3 is required to use MCFCRT. Check your `-march=` command-line option.
+#endif
+
 #ifdef __STDC_VERSION__
 #  if __STDC_VERSION__ >= 199409l
 #    define  _MCFCRT_C95                1

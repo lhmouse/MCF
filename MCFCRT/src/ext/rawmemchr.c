@@ -4,7 +4,7 @@
 
 #include "rawmemchr.h"
 #include "../env/expect.h"
-#include <emmintrin.h>
+#include <pmmintrin.h>
 
 void *_MCFCRT_rawmemchr(const void *s, int c){
 	register const char *rp = s;

@@ -4,6 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
+#include "_sse3.h"
 
 #undef llroundf
 #undef llround
@@ -12,8 +13,10 @@
 static inline long fpu_lround(long double x){
 	bool sign;
 	__MCFCRT_fxam(&sign, x);
-	return sign ? (long)__MCFCRT_ftrunc(x - 0.5l)
-	            : (long)__MCFCRT_ftrunc(x + 0.5l);
+	long ret;
+	__MCFCRT_fisttpl(&ret, sign ? (x - 0.5l)
+	                            : (x + 0.5l));
+	return ret;
 }
 
 long lroundf(float x){

@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include <emmintrin.h>
+#include <pmmintrin.h>
 
 #undef strchr
 

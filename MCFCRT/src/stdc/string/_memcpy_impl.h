@@ -8,7 +8,7 @@
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
 #include "../../ext/rep_movs.h"
-#include <emmintrin.h>
+#include <pmmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 
@@ -53,13 +53,13 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_loadu_si128)
+					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_lddqu_si128)
 				}
 			} else {
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_loadu_si128)
+					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_lddqu_si128)
 				}
 				_mm_sfence();
 			}
@@ -110,13 +110,13 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_loadu_si128)
+					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_lddqu_si128)
 				}
 			} else {
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_loadu_si128)
+					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_lddqu_si128)
 				}
 				_mm_sfence();
 			}

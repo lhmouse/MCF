@@ -6,7 +6,7 @@
 #include "../env/expect.h"
 #include "../env/xassert.h"
 #include "rep_movs.h"
-#include <emmintrin.h>
+#include <pmmintrin.h>
 
 char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 	register char *wp = dst;

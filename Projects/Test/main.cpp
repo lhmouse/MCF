@@ -1,15 +1,14 @@
-#include <MCF/Core/Exception.hpp>
 #include <MCF/Streams/StandardErrorStream.hpp>
+#include <MCFCRT/MCFCRT.h>
+
+volatile long double val = 1234.5678;
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
 	using namespace MCF;
+
+	char str[100];
+	auto eptr = ::_MCFCRT_itoa_u(str, (unsigned)val);
 	const auto err_s = MakeIntrusive<StandardErrorStream>();
-	try {
-		MCF_THROW(Exception, 123, Rcntws::View(L"Test exception"));
-	} catch(std::exception &e){
-		err_s->Put("std::exception caught: ", 23);
-		err_s->Put(e.what(), std::strlen(e.what()));
-		err_s->Put('\n');
-	}
+	err_s->Put(str, (unsigned)(eptr - str));
 	return 0;
 }

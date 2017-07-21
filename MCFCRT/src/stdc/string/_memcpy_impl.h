@@ -26,45 +26,45 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 		}
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
-#define __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+#define __MCFCRT_SSE3_STEP_(__si_, __li_)	\
 			{	\
 				(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
 				__wp += 16;	\
 				__rp += 16;	\
 			}
-#define __MCFCRT_SSE2_FULL_(__si_, __li_)	\
+#define __MCFCRT_SSE3_FULL_(__si_, __li_)	\
 			{	\
 				switch(__t % 8){	\
 					do {	\
 						_mm_prefetch(__rp + 256, _MM_HINT_NTA);	\
 						_mm_prefetch(__rp + 320, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); default: __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
 					} while((size_t)(__wend - __wp) >= 128);	\
 				}	\
 			}
 			if(_MCFCRT_EXPECT(__t < 0x1000)){
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
-					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_load_si128)
+					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_lddqu_si128)
+					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_lddqu_si128)
 				}
 			} else {
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
-					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_load_si128)
+					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_lddqu_si128)
+					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_lddqu_si128)
 				}
 				_mm_sfence();
 			}
-#undef __MCFCRT_SSE2_STEP_
-#undef __MCFCRT_SSE2_FULL_
+#undef __MCFCRT_SSE3_STEP_
+#undef __MCFCRT_SSE3_FULL_
 		}
 	}
 	_MCFCRT_rep_movsb(__wp, __rp, (size_t)(__wend - __wp));
@@ -83,45 +83,45 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 		}
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
-#define __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+#define __MCFCRT_SSE3_STEP_(__si_, __li_)	\
 			{	\
 				__wp -= 16;	\
 				__rp -= 16;	\
 				(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
 			}
-#define __MCFCRT_SSE2_FULL_(__si_, __li_)	\
+#define __MCFCRT_SSE3_FULL_(__si_, __li_)	\
 			{	\
 				switch(__t % 8){	\
 					do {	\
 						_mm_prefetch(__rp - 384, _MM_HINT_NTA);	\
 						_mm_prefetch(__rp - 320, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); default: __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE2_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
 					} while((size_t)(__wp - __wbegin) >= 128);	\
 				}	\
 			}
 			if(_MCFCRT_EXPECT(__t < 0x1000)){
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
-					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_load_si128)
+					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_store_si128, _mm_lddqu_si128)
+					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_lddqu_si128)
 				}
 			} else {
 				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
-					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_load_si128)
+					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_load_si128)
 				} else {
-					__MCFCRT_SSE2_FULL_(_mm_stream_si128, _mm_lddqu_si128)
+					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_lddqu_si128)
 				}
 				_mm_sfence();
 			}
-#undef __MCFCRT_SSE2_STEP_
-#undef __MCFCRT_SSE2_FULL_
+#undef __MCFCRT_SSE3_STEP_
+#undef __MCFCRT_SSE3_FULL_
 		}
 	}
 	_MCFCRT_STD size_t __t;

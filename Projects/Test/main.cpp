@@ -1,14 +1,9 @@
-#include <MCF/Streams/StandardErrorStream.hpp>
 #include <MCFCRT/MCFCRT.h>
 
-volatile long double val = 1234.5678;
-
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	using namespace MCF;
-
-	char str[100];
-	auto eptr = ::_MCFCRT_itoa_u(str, (unsigned)val);
-	const auto err_s = MakeIntrusive<StandardErrorStream>();
-	err_s->Put(str, (unsigned)(eptr - str));
+	const auto ptr = static_cast<char *>(::_MCFCRT_malloc(10));
+	_MCFCRT_ASSERT(ptr);
+	ptr[10] = 'a';
+	::_MCFCRT_free(ptr);
 	return 0;
 }

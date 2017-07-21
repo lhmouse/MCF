@@ -32,7 +32,7 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		CMP_GEN()
 	}
 	if((size_t)(rend1 - rp1) >= 64){
-#define CMP_SSE2(load1_, load2_)	\
+#define CMP_SSE3(load1_, load2_)	\
 		{	\
 			do {	\
 				const __m128i xw1 = (load1_)((const __m128i *)rp1);	\
@@ -53,9 +53,9 @@ int memcmp(const void *s1, const void *s2, size_t n){
 			} while((size_t)(rend1 - rp1) >= 16);	\
 		}
 		if(((uintptr_t)rp2 & 15) == 0){
-			CMP_SSE2(_mm_load_si128, _mm_load_si128)
+			CMP_SSE3(_mm_load_si128, _mm_load_si128)
 		} else {
-			CMP_SSE2(_mm_load_si128, _mm_lddqu_si128)
+			CMP_SSE3(_mm_load_si128, _mm_lddqu_si128)
 		}
 	}
 	for(;;){

@@ -251,7 +251,7 @@ public:
 		pNewFirst->pNext = x_pFirst;
 
 		const auto pOldFirst = x_pFirst;
-		*(pOldFirst ? &(pOldFirst->pPrev) : &x_pLast) = pNewFirst;
+		(pOldFirst ? pOldFirst->pPrev : x_pLast) = pNewFirst;
 		x_pFirst = pNewFirst;
 
 		return *pElement;
@@ -268,7 +268,7 @@ public:
 			Allocator()(pElementRaw);
 			pNewFirst = pNext;
 		}
-		*(pNewFirst ? &(pNewFirst->pPrev) : &x_pLast) = nullptr;
+		(pNewFirst ? pNewFirst->pPrev : x_pLast) = nullptr;
 		x_pFirst = pNewFirst;
 	}
 
@@ -287,7 +287,7 @@ public:
 		pNewLast->pNext = nullptr;
 
 		const auto pOldLast = x_pLast;
-		*(pOldLast ? &(pOldLast->pNext) : &x_pFirst) = pNewLast;
+		(pOldLast ? pOldLast->pNext : x_pFirst) = pNewLast;
 		x_pLast = pNewLast;
 
 		return *pElement;
@@ -304,7 +304,7 @@ public:
 			Allocator()(pElementRaw);
 			pNewLast = pPrev;
 		}
-		*(pNewLast ? &(pNewLast->pNext) : &x_pFirst) = nullptr;
+		(pNewLast ? pNewLast->pNext : x_pFirst) = nullptr;
 		x_pLast = pNewLast;
 	}
 
@@ -407,11 +407,11 @@ public:
 			MCF_DEBUG_CHECK(pBeginNode);
 
 			const auto pBeginPrev  = pBeginNode->pPrev;
-			const auto pEndPrev    = std::exchange(*(pEndNode ? &(pEndNode->pPrev) : &(lstSrc.x_pLast)), pBeginPrev);
-			const auto pInsertPrev = std::exchange(*(pInsertNode ? &(pInsertNode->pPrev) : &x_pLast), pEndPrev);
+			const auto pEndPrev    = std::exchange(pEndNode ? pEndNode->pPrev : lstSrc.x_pLast, pBeginPrev);
+			const auto pInsertPrev = std::exchange(pInsertNode ? pInsertNode->pPrev : x_pLast, pEndPrev);
 
-			*(pInsertPrev ? &(pInsertPrev->pNext) : &x_pFirst) = pBeginNode;
-			*(pBeginPrev ? &(pBeginPrev->pNext) : &lstSrc.x_pFirst) = pEndNode;
+			(pInsertPrev ? pInsertPrev->pNext : x_pFirst) = pBeginNode;
+			(pBeginPrev ? pBeginPrev->pNext : lstSrc.x_pFirst) = pEndNode;
 			pBeginNode->pPrev = pInsertPrev;
 			pEndPrev->pNext = pInsertNode;
 		}

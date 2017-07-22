@@ -385,8 +385,8 @@ void StreamBuffer::Splice(StreamBuffer &vOther) noexcept {
 }
 
 bool StreamBuffer::EnumerateChunk(const void **ppData, std::size_t *puSize, StreamBuffer::EnumerationCookie &vCookie) const noexcept {
-	const auto pChunk = vCookie.pPrev ? vCookie.pPrev->pNext : x_pFirst;
-	vCookie.pPrev = pChunk;
+	const auto pChunk = vCookie.x_pPrev ? vCookie.x_pPrev->pNext : x_pFirst;
+	vCookie.x_pPrev = pChunk;
 	if(!pChunk){
 		return false;
 	}
@@ -399,8 +399,8 @@ bool StreamBuffer::EnumerateChunk(const void **ppData, std::size_t *puSize, Stre
 	return true;
 }
 bool StreamBuffer::EnumerateChunk(void **ppData, std::size_t *puSize, StreamBuffer::EnumerationCookie &vCookie) noexcept {
-	const auto pChunk = vCookie.pPrev ? vCookie.pPrev->pNext : x_pFirst;
-	vCookie.pPrev = pChunk;
+	const auto pChunk = vCookie.x_pPrev ? vCookie.x_pPrev->pNext : x_pFirst;
+	vCookie.x_pPrev = pChunk;
 	if(!pChunk){
 		return false;
 	}

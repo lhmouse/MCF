@@ -15,10 +15,15 @@ private:
 	struct X_ChunkHeader;
 
 public:
-	struct EnumerationCookie {
-		X_ChunkHeader *pPrev = nullptr;
+	class EnumerationCookie {
+		friend StreamBuffer;
 
+	private:
+		X_ChunkHeader *x_pPrev = nullptr;
+
+	public:
 		constexpr EnumerationCookie() noexcept { }
+
 		EnumerationCookie(const EnumerationCookie &) = delete;
 		EnumerationCookie &operator=(const EnumerationCookie &) = delete;
 	};

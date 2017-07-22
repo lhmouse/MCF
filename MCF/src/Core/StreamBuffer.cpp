@@ -10,7 +10,7 @@ namespace MCF {
 
 struct StreamBuffer::X_ChunkHeader {
 	static X_ChunkHeader *Create(std::size_t uMinCapacity, X_ChunkHeader *pPrev, X_ChunkHeader *pNext, bool bBackward){
-		const auto uCapacity = uMinCapacity | 3; // TODO: debug...  was 1024.
+		const auto uCapacity = uMinCapacity | 1024;
 		const auto uOrigin = bBackward ? uCapacity : 0;
 		const auto pChunk = static_cast<X_ChunkHeader *>(::operator new(Impl_CheckedSizeArithmetic::Add(sizeof(X_ChunkHeader), uCapacity)));
 		pChunk->uCapacity = uCapacity;

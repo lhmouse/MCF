@@ -35,14 +35,19 @@ struct StreamBuffer::X_ChunkHeader {
 };
 
 StreamBuffer::StreamBuffer(const StreamBuffer &vOther){
-	const auto pNewChunk = X_ChunkHeader::Create(vOther.x_uSize, nullptr, nullptr, false);
-	for(auto pChunk = vOther.x_pFirst; pChunk; pChunk = pChunk->pNext){
-		const auto uBytesAvail = pChunk->uEnd - pChunk->uBegin;
-		std::memcpy(pNewChunk->abyData + pNewChunk->uEnd, pChunk->abyData + pChunk->uBegin, uBytesAvail);
-		pNewChunk->uEnd += uBytesAvail;
+	auto pChunk = vOther.x_pFirst;
+	if(!pChunk){
+		return;
 	}
-	x_pLast  = pNewChunk;
-	x_pFirst = pNewChunk;
+	const auto pIntegral = X_ChunkHeader::Create(vOther.x_uSize, nullptr, nullptr, false);
+	while(pChunk){
+		const auto uAvail = pChunk->uEnd - pChunk->uBegin;
+		std::memcpy(pIntegral->abyData + pIntegral->uEnd, pChunk->abyData + pChunk->uBegin, uAvail);
+		pIntegral->uEnd += uAvail;
+		pChunk = pChunk->pNext;
+	}
+	x_pLast  = pIntegral;
+	x_pFirst = pIntegral;
 	x_uSize  = vOther.x_uSize;
 }
 StreamBuffer::~StreamBuffer(){
@@ -315,18 +320,8 @@ void *StreamBuffer::Squash(){
 		return nullptr;
 	}
 	if(pChunk != x_pLast){
-		const auto pIntegral = X_ChunkHeader::Create(x_uSize, nullptr, nullptr, false);
-		while(pChunk){
-			const auto uAvail = pChunk->uEnd - pChunk->uBegin;
-			std::memcpy(pIntegral->abyData, pChunk->abyData + pChunk->uBegin, uAvail);
-			pIntegral->uEnd = uAvail;
-			const auto pNext = pChunk->pNext;
-			X_ChunkHeader::Destroy(pChunk);
-			pChunk = pNext;
-		}
-		x_pLast  = pIntegral;
-		x_pFirst = pIntegral;
-		pChunk = pIntegral;
+		StreamBuffer(*this).Swap(*this);
+		pChunk = x_pFirst;
 	}
 	return pChunk->abyData + pChunk->uBegin;
 }

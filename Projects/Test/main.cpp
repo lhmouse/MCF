@@ -4,10 +4,11 @@
 extern "C" unsigned _MCFCRT_Main() noexcept {
 	const auto os = MCF::MakeIntrusive<MCF::StandardErrorStream>();
 	for(unsigned i = 0; i < 30; ++i){
-		MCF::StreamBuffer buf1;
+		MCF::StreamBuffer buf;
 		for(unsigned j = 0; j < 26; ++j){
-			buf1.Put(static_cast<unsigned char>('A' + j));
+			buf.Put(static_cast<unsigned char>('A' + j));
 		}
+		auto buf1 = buf;
 		auto buf2 = buf1.CutOff(i);
 		int c;
 

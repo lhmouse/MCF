@@ -226,14 +226,14 @@ std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
 		if(uAvail >= uRemaining){
 			std::memcpy(static_cast<unsigned char *>(pData) + uTotal, pChunk->abyData + pChunk->uBegin, uRemaining);
 			pChunk->uBegin += uRemaining;
-			uTotal += uRemaining;
 			x_uSize -= uRemaining;
+			uTotal += uRemaining;
 			break;
 		}
 		std::memcpy(static_cast<unsigned char *>(pData) + uTotal, pChunk->abyData + pChunk->uBegin, uAvail);
 		pChunk->uBegin += uAvail;
-		uTotal += uAvail;
 		x_uSize -= uAvail;
+		uTotal += uAvail;
 		const auto pNext = pChunk->pNext;
 		(pNext ? pNext->pPrev : x_pLast) = nullptr;
 		x_pFirst = pNext;
@@ -253,13 +253,13 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 		const auto uAvail = pChunk->uEnd - pChunk->uBegin;
 		if(uAvail >= uRemaining){
 			pChunk->uBegin += uRemaining;
-			uTotal += uRemaining;
 			x_uSize -= uRemaining;
+			uTotal += uRemaining;
 			break;
 		}
 		pChunk->uBegin += uAvail;
-		uTotal += uAvail;
 		x_uSize -= uAvail;
+		uTotal += uAvail;
 		const auto pNext = pChunk->pNext;
 		(pNext ? pNext->pPrev : x_pLast) = nullptr;
 		x_pFirst = pNext;

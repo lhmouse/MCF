@@ -146,7 +146,8 @@ int StreamBuffer::PeekBack() const noexcept {
 			nRead = pChunk->abyData[pChunk->uEnd - 1];
 			break;
 		}
-		pChunk = pChunk->pPrev;
+		const auto pPrev = pChunk->pPrev;
+		pChunk = pPrev;
 	}
 	return nRead;
 }

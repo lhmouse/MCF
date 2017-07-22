@@ -155,8 +155,8 @@ int StreamBuffer::Unput() noexcept {
 	auto pChunk = x_pLast;
 	while(pChunk){
 		if(pChunk->uEnd != pChunk->uBegin){
+			nRead = pChunk->abyData[pChunk->uEnd - 1];
 			pChunk->uEnd -= 1;
-			nRead = pChunk->abyData[pChunk->uEnd];
 			x_uSize -= 1;
 			break;
 		}
@@ -187,8 +187,8 @@ void StreamBuffer::Unget(unsigned char byData){
 		x_pFirst = pPrev;
 		pChunk = pPrev;
 	}
+	pChunk->abyData[pChunk->uBegin - 1] = byData;
 	pChunk->uBegin -= 1;
-	pChunk->abyData[pChunk->uBegin] = byData;
 	x_uSize += 1;
 }
 

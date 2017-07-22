@@ -11,12 +11,22 @@
 namespace MCF {
 
 class StreamBuffer {
+private:
+	struct X_ChunkHeader;
+
 public:
+	struct EnumerationCookie {
+		X_ChunkHeader *pPrev = nullptr;
+
+		constexpr EnumerationCookie() noexcept { }
+		EnumerationCookie(const EnumerationCookie &) = delete;
+		EnumerationCookie &operator=(const EnumerationCookie &) = delete;
+	};
+
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	struct X_ChunkHeader;
 	X_ChunkHeader *x_pLast = nullptr;
 	X_ChunkHeader *x_pFirst = nullptr;
 	std::size_t x_uSize = 0;
@@ -53,12 +63,13 @@ public:
 	void Clear() noexcept;
 
 	int PeekFront() const noexcept;
-	int PeekBack() const noexcept;
-
-	int Peek() const noexcept;
+	int Peek() const noexcept {
+		return PeekFront();
+	}
 	int Get() noexcept;
 	bool Discard() noexcept;
 	void Put(unsigned char byData);
+	int PeekBack() const noexcept;
 	int Unput() noexcept;
 	void Unget(unsigned char byData);
 
@@ -70,11 +81,14 @@ public:
 
 	void *Squash();
 
-	StreamBuffer CutOff(std::size_t uOffsetEnd);
+	StreamBuffer CutOff(std::size_t uSize);
 	void Splice(StreamBuffer &vOther) noexcept;
 	void Splice(StreamBuffer &&vOther) noexcept {
 		Splice(vOther);
 	}
+
+	bool EnumerateChunk(const void **ppData, std::size_t *puSize, EnumerationCookie &vCookie) const noexcept;
+	bool EnumerateChunk(void **ppData, std::size_t *puSize, EnumerationCookie &vCookie) noexcept;
 
 	void Swap(StreamBuffer &vOther) noexcept {
 		using std::swap;
@@ -111,6 +125,7 @@ public:
 		return *this;
 	}
 };
+
 class StreamBuffer::WriteIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
 private:
 	StreamBuffer *x_psbufParent;

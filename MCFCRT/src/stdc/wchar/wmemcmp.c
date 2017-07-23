@@ -35,11 +35,12 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 #define CMP_SSE3(load2_)	\
 		{	\
 			do {	\
-				const __m128i xw10 = _mm_load_si128((const __m128i *)rp1);	\
+				const __m128i xw10 = _mm_load_si128((const __m128i *)rp1 + 0);	\
 				const __m128i xw11 = _mm_load_si128((const __m128i *)rp1 + 1);	\
-				const __m128i xw20 = load2_((const __m128i *)rp2);	\
+				const __m128i xw20 = load2_((const __m128i *)rp2 + 0);	\
 				const __m128i xw21 = load2_((const __m128i *)rp2 + 1);	\
-				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20), _mm_cmpeq_epi16(xw11, xw21));	\
+				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20),	\
+				                             _mm_cmpeq_epi16(xw11, xw21));	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int tzne = __builtin_ctzl(mask);	\

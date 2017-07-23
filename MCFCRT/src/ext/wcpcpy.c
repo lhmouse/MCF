@@ -27,13 +27,14 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 		}
 		CPY_GEN()
 	}
-#define SSE2_CPY(save_, load_)	\
+#define SSE3_CPY(save_, load_)	\
 	{	\
 		const __m128i xz = _mm_setzero_si128();	\
 		for(;;){	\
 			const __m128i xw0 = (load_)((const __m128i *)rp);	\
 			const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
-			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));	\
+			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz),	\
+			                             _mm_cmpeq_epi16(xw1, xz));	\
 			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 				const unsigned tz = (unsigned)__builtin_ctzl(mask);	\
@@ -49,9 +50,9 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 		}	\
 	}
 	if(((uintptr_t)wp & 15) == 0){
-		SSE2_CPY(_mm_store_si128, _mm_load_si128)
+		SSE3_CPY(_mm_store_si128, _mm_load_si128)
 	} else {
-		SSE2_CPY(_mm_storeu_si128, _mm_load_si128)
+		SSE3_CPY(_mm_storeu_si128, _mm_load_si128)
 	}
 }
 wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src){
@@ -80,13 +81,14 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 		PCPY_GEN()
 	}
 	if((size_t)(wend - wp) >= 64){
-#define SSE2_PCPY(save_, load_)	\
+#define SSE3_PCPY(save_, load_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
 			do {	\
 				const __m128i xw0 = (load_)((const __m128i *)rp);	\
 				const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
-				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));	\
+				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz),	\
+				                             _mm_cmpeq_epi16(xw1, xz));	\
 				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const unsigned tz = (unsigned)__builtin_ctzl(mask);	\
@@ -102,9 +104,9 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 			} while((size_t)(wend - wp) >= 16);	\
 		}
 		if(((uintptr_t)wp & 15) == 0){
-			SSE2_PCPY(_mm_store_si128, _mm_load_si128)
+			SSE3_PCPY(_mm_store_si128, _mm_load_si128)
 		} else {
-			SSE2_PCPY(_mm_storeu_si128, _mm_load_si128)
+			SSE3_PCPY(_mm_storeu_si128, _mm_load_si128)
 		}
 	}
 	for(;;){

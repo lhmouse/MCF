@@ -27,7 +27,7 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		}
 		CPY_GEN()
 	}
-#define SSE2_CPY(save_, load_)	\
+#define SSE3_CPY(save_, load_)	\
 	{	\
 		const __m128i xz = _mm_setzero_si128();	\
 		for(;;){	\
@@ -47,9 +47,9 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		}	\
 	}
 	if(((uintptr_t)wp & 15) == 0){
-		SSE2_CPY(_mm_store_si128, _mm_load_si128)
+		SSE3_CPY(_mm_store_si128, _mm_load_si128)
 	} else {
-		SSE2_CPY(_mm_storeu_si128, _mm_load_si128)
+		SSE3_CPY(_mm_storeu_si128, _mm_load_si128)
 	}
 }
 char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
@@ -78,7 +78,7 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 		PCPY_GEN()
 	}
 	if((size_t)(wend - wp) >= 64){
-#define PCPY_SSE2(save_, load_)	\
+#define PCPY_SSE3(save_, load_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
 			do {	\
@@ -98,9 +98,9 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 			} while((size_t)(wend - wp) >= 16);	\
 		}
 		if(((uintptr_t)wp & 15) == 0){
-			PCPY_SSE2(_mm_store_si128, _mm_load_si128)
+			PCPY_SSE3(_mm_store_si128, _mm_load_si128)
 		} else {
-			PCPY_SSE2(_mm_storeu_si128, _mm_load_si128)
+			PCPY_SSE3(_mm_storeu_si128, _mm_load_si128)
 		}
 	}
 	for(;;){

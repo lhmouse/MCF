@@ -15,7 +15,7 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp1 & 30) != 0){
+	while(((uintptr_t)rp1 & 31) != 0){
 #define CMP_GEN()	\
 		{	\
 			if(rp1 == rend1){	\

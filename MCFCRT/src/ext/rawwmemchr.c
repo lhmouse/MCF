@@ -25,7 +25,7 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 		__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xc), _mm_cmpeq_epi16(xw1, xc));
 		uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return (wchar_t *)rp + __builtin_ctz(mask);
+			return (wchar_t *)rp + __builtin_ctzl(mask);
 		}
 		rp += 16;
 	}

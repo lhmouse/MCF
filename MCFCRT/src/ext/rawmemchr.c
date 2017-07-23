@@ -24,7 +24,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 		__m128i xt = _mm_cmpeq_epi8(xw, xc);
 		uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return (char *)rp + __builtin_ctz(mask);
+			return (char *)rp + __builtin_ctzl(mask);
 		}
 		rp += 16;
 	}

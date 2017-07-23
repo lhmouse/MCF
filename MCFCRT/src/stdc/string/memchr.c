@@ -15,35 +15,36 @@ void *memchr(const void *s, int c, size_t n){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & 15) != 0){
-		if(rp == rend){
-			return _MCFCRT_NULLPTR;
+#define CHR_GEN()	\
+		{	\
+			if(rp == rend){	\
+				return _MCFCRT_NULLPTR;	\
+			}	\
+			const char rc = *rp;	\
+			if(rc == (char)c){	\
+				return (char *)rp;	\
+			}	\
+			++rp;	\
 		}
-		const char rc = *rp;
-		if(rc == (char)c){
-			return (char *)rp;
-		}
-		++rp;
+		CHR_GEN()
 	}
 	if((size_t)(rend - rp) >= 64){
-		const __m128i xc = _mm_set1_epi8((char)c);
-		do {
-			const __m128i xw = _mm_load_si128((const __m128i *)rp);
-			__m128i xt = _mm_cmpeq_epi8(xw, xc);
-			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){
-				return (char *)rp + __builtin_ctz(mask);
-			}
-			rp += 16;
-		} while((size_t)(rend - rp) >= 16);
+#define CHR_SSE3(load_)	\
+		{	\
+			const __m128i xc = _mm_set1_epi8((char)c);	\
+			do {	\
+				const __m128i xw = (load_)((const __m128i *)rp);	\
+				__m128i xt = _mm_cmpeq_epi8(xw, xc);	\
+				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+					return (char *)rp + __builtin_ctzl(mask);	\
+				}	\
+				rp += 16;	\
+			} while((size_t)(rend - rp) >= 16);	\
+		}
+		CHR_SSE3(_mm_load_si128)
 	}
 	for(;;){
-		if(rp == rend){
-			return _MCFCRT_NULLPTR;
-		}
-		const char rc = *rp;
-		if(rc == (char)c){
-			return (char *)rp;
-		}
-		++rp;
+		CHR_GEN()
 	}
 }

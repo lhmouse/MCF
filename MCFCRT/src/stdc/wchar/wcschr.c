@@ -14,30 +14,38 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & 31) != 0){
-		const wchar_t rc = *rp;
-		if(rc == c){
-			return (wchar_t *)rp;
+#define CHR_GEN()	\
+		{	\
+			const wchar_t rc = *rp;	\
+			if(rc == c){	\
+				return (wchar_t *)rp;	\
+			}	\
+			if(rc == 0){	\
+				return _MCFCRT_NULLPTR;	\
+			}	\
+			++rp;	\
 		}
-		if(rc == 0){
-			return _MCFCRT_NULLPTR;
-		}
-		++rp;
+		CHR_GEN()
 	}
-	const __m128i xc = _mm_set1_epi16((int16_t)c);
-	const __m128i xz = _mm_setzero_si128();
-	for(;;){
-		const __m128i xw0 = _mm_load_si128((const __m128i *)rp);
-		const __m128i xw1 = _mm_load_si128((const __m128i *)rp + 1);
-		__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xc), _mm_cmpeq_epi16(xw1, xc));
-		uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return (wchar_t *)rp + __builtin_ctz(mask);
-		}
-		xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));
-		mask = (uint32_t)_mm_movemask_epi8(xt);
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return _MCFCRT_NULLPTR;
-		}
-		rp += 16;
+#define CHR_SSE3(load_)	\
+	{	\
+		const __m128i xc = _mm_set1_epi16((int16_t)c);	\
+		const __m128i xz = _mm_setzero_si128();	\
+		for(;;){	\
+			const __m128i xw0 = (load_)((const __m128i *)rp);	\
+			const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
+			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xc), _mm_cmpeq_epi16(xw1, xc));	\
+			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
+			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+				return (wchar_t *)rp + __builtin_ctzl(mask);	\
+			}	\
+			xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));	\
+			mask = (uint32_t)_mm_movemask_epi8(xt);	\
+			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+				return _MCFCRT_NULLPTR;	\
+			}	\
+			rp += 16;	\
+		}	\
 	}
+	CHR_SSE3(_mm_load_si128)
 }

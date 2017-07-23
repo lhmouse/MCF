@@ -40,12 +40,12 @@ int memcmp(const void *s1, const void *s2, size_t n){
 				__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-					const int tzne = __builtin_ctz(mask);	\
+					const int tzne = __builtin_ctzl(mask);	\
 					const __m128i shift = _mm_set1_epi8(-0x80);	\
 					xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),	\
 					                    _mm_add_epi8(xw2, shift));	\
 					mask = (uint32_t)_mm_movemask_epi8(xt) | 0x80000000;	\
-					const int tzgt = __builtin_ctz(mask);	\
+					const int tzgt = __builtin_ctzl(mask);	\
 					return ((tzne - tzgt) >> 15) | 1;	\
 				}	\
 				rp1 += 16;	\

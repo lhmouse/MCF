@@ -15,7 +15,7 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp1 & 31) != 0){
+	while(((uintptr_t)rp1 & 63) != 0){
 #define CMP_GEN()	\
 		{	\
 			if(rp1 == rend1){	\
@@ -37,23 +37,33 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 			do {	\
 				const __m128i xw10 = _mm_load_si128((const __m128i *)rp1 + 0);	\
 				const __m128i xw11 = _mm_load_si128((const __m128i *)rp1 + 1);	\
+				const __m128i xw12 = _mm_load_si128((const __m128i *)rp1 + 2);	\
+				const __m128i xw13 = _mm_load_si128((const __m128i *)rp1 + 3);	\
 				const __m128i xw20 = load2_((const __m128i *)rp2 + 0);	\
 				const __m128i xw21 = load2_((const __m128i *)rp2 + 1);	\
+				const __m128i xw22 = load2_((const __m128i *)rp2 + 2);	\
+				const __m128i xw23 = load2_((const __m128i *)rp2 + 3);	\
 				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20),	\
 				                             _mm_cmpeq_epi16(xw11, xw21));	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
+				xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw12, xw22),	\
+				                     _mm_cmpeq_epi16(xw13, xw23));	\
+				mask += (uint32_t)~_mm_movemask_epi8(xt) << 16;	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int tzne = __builtin_ctzl(mask);	\
 					const __m128i shift = _mm_set1_epi16(-0x8000);	\
 					xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw10, shift), _mm_add_epi16(xw20, shift)),	\
 					                     _mm_cmpgt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw21, shift)));	\
-					mask = (uint32_t)_mm_movemask_epi8(xt) | 0x80000000;	\
-					const int tzgt = __builtin_ctzl(mask);	\
+					mask = (uint32_t)_mm_movemask_epi8(xt);	\
+					xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw12, shift), _mm_add_epi16(xw22, shift)),	\
+					                     _mm_cmpgt_epi16(_mm_add_epi16(xw13, shift), _mm_add_epi16(xw23, shift)));	\
+					mask += (uint32_t)_mm_movemask_epi8(xt) << 16;	\
+					const int tzgt = (mask == 0) ? 32 : __builtin_ctzl(mask);	\
 					return ((tzne - tzgt) >> 15) | 1;	\
 				}	\
-				rp1 += 16;	\
-				rp2 += 16;	\
-			} while((size_t)(rend1 - rp1) >= 16);	\
+				rp1 += 32;	\
+				rp2 += 32;	\
+			} while((size_t)(rend1 - rp1) >= 32);	\
 		}
 		if(((uintptr_t)rp2 & 15) == 0){
 			CMP_SSE3(_mm_load_si128)

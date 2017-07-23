@@ -35,7 +35,7 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		CMP_GEN()
 	}
 	if((size_t)(rend1 - rp1) >= 64){
-#define CMP_SSE3(load1_, load2_, care_about_page_boundaries_)	\
+#define CMP_SSE3(load2_, care_about_page_boundaries_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
 			uint8_t xmid = ((uintptr_t)rp2 >> 4) & 0xFE;	\
@@ -53,10 +53,10 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 						}	\
 					}	\
 				}	\
-				const __m128i xw10 = (load1_)((const __m128i *)rp1);	\
-				const __m128i xw11 = (load1_)((const __m128i *)rp1 + 1);	\
-				const __m128i xw20 = (load2_)((const __m128i *)rp2);	\
-				const __m128i xw21 = (load2_)((const __m128i *)rp2 + 1);	\
+				const __m128i xw10 = _mm_load_si128((const __m128i *)rp1);	\
+				const __m128i xw11 = _mm_load_si128((const __m128i *)rp1 + 1);	\
+				const __m128i xw20 = load2_((const __m128i *)rp2);	\
+				const __m128i xw21 = load2_((const __m128i *)rp2 + 1);	\
 				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20), _mm_cmpeq_epi16(xw11, xw21));	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -78,9 +78,9 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 			} while((size_t)(rend1 - rp1) >= 16);	\
 		}
 		if(((uintptr_t)rp2 & 15) == 0){
-			CMP_SSE3(_mm_load_si128, _mm_load_si128, false)
+			CMP_SSE3(_mm_load_si128, false)
 		} else {
-			CMP_SSE3(_mm_load_si128, _mm_lddqu_si128, true)
+			CMP_SSE3(_mm_lddqu_si128, true)
 		}
 	}
 	for(;;){

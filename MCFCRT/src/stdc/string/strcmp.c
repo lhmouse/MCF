@@ -30,7 +30,7 @@ int strcmp(const char *s1, const char *s2){
 		}
 		CMP_GEN()
 	}
-#define CMP_SSE3(load1_, load2_, care_about_page_boundaries_)	\
+#define CMP_SSE3(load2_, care_about_page_boundaries_)	\
 	{	\
 		const __m128i xz = _mm_setzero_si128();	\
 		uint8_t xmid = ((uintptr_t)rp2 >> 4) & 0xFF;	\
@@ -47,8 +47,8 @@ int strcmp(const char *s1, const char *s2){
 					}	\
 				}	\
 			}	\
-			const __m128i xw1 = (load1_)((const __m128i *)rp1);	\
-			const __m128i xw2 = (load2_)((const __m128i *)rp2);	\
+			const __m128i xw1 = _mm_load_si128((const __m128i *)rp1);	\
+			const __m128i xw2 = load2_((const __m128i *)rp2);	\
 			__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
 			uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -70,9 +70,9 @@ int strcmp(const char *s1, const char *s2){
 		}	\
 	}
 	if(((uintptr_t)rp2 & 15) == 0){
-		CMP_SSE3(_mm_load_si128, _mm_load_si128, false)
+		CMP_SSE3(_mm_load_si128, false)
 	} else {
-		CMP_SSE3(_mm_load_si128, _mm_lddqu_si128, true)
+		CMP_SSE3(_mm_lddqu_si128, true)
 	}
 	for(;;){
 		CMP_GEN()

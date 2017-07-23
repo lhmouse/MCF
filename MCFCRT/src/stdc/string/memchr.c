@@ -29,11 +29,11 @@ void *memchr(const void *s, int c, size_t n){
 		CHR_GEN()
 	}
 	if((size_t)(rend - rp) >= 64){
-#define CHR_SSE3(load_)	\
+#define CHR_SSE3()	\
 		{	\
 			const __m128i xc = _mm_set1_epi8((char)c);	\
 			do {	\
-				const __m128i xw = (load_)((const __m128i *)rp);	\
+				const __m128i xw = _mm_load_si128((const __m128i *)rp);	\
 				__m128i xt = _mm_cmpeq_epi8(xw, xc);	\
 				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -42,7 +42,7 @@ void *memchr(const void *s, int c, size_t n){
 				rp += 16;	\
 			} while((size_t)(rend - rp) >= 16);	\
 		}
-		CHR_SSE3(_mm_load_si128)
+		CHR_SSE3()
 	}
 	for(;;){
 		CHR_GEN()

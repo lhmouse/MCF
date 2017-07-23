@@ -27,12 +27,12 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 		}
 		CPY_GEN()
 	}
-#define SSE3_CPY(save_, load_)	\
+#define CPY_SSE3(store_)	\
 	{	\
 		const __m128i xz = _mm_setzero_si128();	\
 		for(;;){	\
-			const __m128i xw0 = (load_)((const __m128i *)rp);	\
-			const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
+			const __m128i xw0 = _mm_load_si128((const __m128i *)rp);	\
+			const __m128i xw1 = _mm_load_si128((const __m128i *)rp + 1);	\
 			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz),	\
 			                             _mm_cmpeq_epi16(xw1, xz));	\
 			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
@@ -43,16 +43,16 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			(save_)((__m128i *)wp, xw0);	\
-			(save_)((__m128i *)wp + 1, xw1);	\
+			(store_)((__m128i *)wp, xw0);	\
+			(store_)((__m128i *)wp + 1, xw1);	\
 			rp += 16;	\
 			wp += 16;	\
 		}	\
 	}
 	if(((uintptr_t)wp & 15) == 0){
-		SSE3_CPY(_mm_store_si128, _mm_load_si128)
+		CPY_SSE3(_mm_store_si128)
 	} else {
-		SSE3_CPY(_mm_storeu_si128, _mm_load_si128)
+		CPY_SSE3(_mm_storeu_si128)
 	}
 }
 wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src){
@@ -81,12 +81,12 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 		PCPY_GEN()
 	}
 	if((size_t)(wend - wp) >= 64){
-#define SSE3_PCPY(save_, load_)	\
+#define PCPY_SSE3(store_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
 			do {	\
-				const __m128i xw0 = (load_)((const __m128i *)rp);	\
-				const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
+				const __m128i xw0 = _mm_load_si128((const __m128i *)rp);	\
+				const __m128i xw1 = _mm_load_si128((const __m128i *)rp + 1);	\
 				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz),	\
 				                             _mm_cmpeq_epi16(xw1, xz));	\
 				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
@@ -97,16 +97,16 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 					*wp = 0;	\
 					return wp;	\
 				}	\
-				(save_)((__m128i *)wp, xw0);	\
-				(save_)((__m128i *)wp + 1, xw1);	\
+				(store_)((__m128i *)wp, xw0);	\
+				(store_)((__m128i *)wp + 1, xw1);	\
 				rp += 16;	\
 				wp += 16;	\
 			} while((size_t)(wend - wp) >= 16);	\
 		}
 		if(((uintptr_t)wp & 15) == 0){
-			SSE3_PCPY(_mm_store_si128, _mm_load_si128)
+			PCPY_SSE3(_mm_store_si128)
 		} else {
-			SSE3_PCPY(_mm_storeu_si128, _mm_load_si128)
+			PCPY_SSE3(_mm_storeu_si128)
 		}
 	}
 	for(;;){

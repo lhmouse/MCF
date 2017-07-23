@@ -27,11 +27,11 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		}
 		CPY_GEN()
 	}
-#define SSE3_CPY(save_, load_)	\
+#define CPY_SSE3(store2_)	\
 	{	\
 		const __m128i xz = _mm_setzero_si128();	\
 		for(;;){	\
-			const __m128i xw = (load_)((const __m128i *)rp);	\
+			const __m128i xw = _mm_load_si128((const __m128i *)rp);	\
 			__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
 			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -41,15 +41,15 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			(save_)((__m128i *)wp, xw);	\
+			(store2_)((__m128i *)wp, xw);	\
 			rp += 16;	\
 			wp += 16;	\
 		}	\
 	}
 	if(((uintptr_t)wp & 15) == 0){
-		SSE3_CPY(_mm_store_si128, _mm_load_si128)
+		CPY_SSE3(_mm_store_si128)
 	} else {
-		SSE3_CPY(_mm_storeu_si128, _mm_load_si128)
+		CPY_SSE3(_mm_storeu_si128)
 	}
 }
 char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
@@ -78,11 +78,11 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 		PCPY_GEN()
 	}
 	if((size_t)(wend - wp) >= 64){
-#define PCPY_SSE3(save_, load_)	\
+#define PCPY_SSE3(store2_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
 			do {	\
-				const __m128i xw = (load_)((const __m128i *)rp);	\
+				const __m128i xw = _mm_load_si128((const __m128i *)rp);	\
 				__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
 				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -92,15 +92,15 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 					*wp = 0;	\
 					return wp;	\
 				}	\
-				(save_)((__m128i *)wp, xw);	\
+				(store2_)((__m128i *)wp, xw);	\
 				rp += 16;	\
 				wp += 16;	\
 			} while((size_t)(wend - wp) >= 16);	\
 		}
 		if(((uintptr_t)wp & 15) == 0){
-			PCPY_SSE3(_mm_store_si128, _mm_load_si128)
+			PCPY_SSE3(_mm_store_si128)
 		} else {
-			PCPY_SSE3(_mm_storeu_si128, _mm_load_si128)
+			PCPY_SSE3(_mm_storeu_si128)
 		}
 	}
 	for(;;){

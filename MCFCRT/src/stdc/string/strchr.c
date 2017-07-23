@@ -27,12 +27,12 @@ char *strchr(const char *s, int c){
 		}
 		CHR_GEN()
 	}
-#define CHR_SSE3(load_)	\
+#define CHR_SSE3()	\
 	{	\
 		const __m128i xc = _mm_set1_epi8((char)c);	\
 		const __m128i xz = _mm_setzero_si128();	\
 		for(;;){	\
-			const __m128i xw = (load_)((const __m128i *)rp);	\
+			const __m128i xw = _mm_load_si128((const __m128i *)rp);	\
 			__m128i xt = _mm_cmpeq_epi8(xw, xc);	\
 			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -46,5 +46,5 @@ char *strchr(const char *s, int c){
 			rp += 16;	\
 		}	\
 	}
-	CHR_SSE3(_mm_load_si128)
+	CHR_SSE3()
 }

@@ -32,11 +32,11 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		CMP_GEN()
 	}
 	if((size_t)(rend1 - rp1) >= 64){
-#define CMP_SSE3(load1_, load2_)	\
+#define CMP_SSE3(load2_)	\
 		{	\
 			do {	\
-				const __m128i xw1 = (load1_)((const __m128i *)rp1);	\
-				const __m128i xw2 = (load2_)((const __m128i *)rp2);	\
+				const __m128i xw1 = _mm_load_si128((const __m128i *)rp1);	\
+				const __m128i xw2 = load2_((const __m128i *)rp2);	\
 				__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
 				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -53,9 +53,9 @@ int memcmp(const void *s1, const void *s2, size_t n){
 			} while((size_t)(rend1 - rp1) >= 16);	\
 		}
 		if(((uintptr_t)rp2 & 15) == 0){
-			CMP_SSE3(_mm_load_si128, _mm_load_si128)
+			CMP_SSE3(_mm_load_si128)
 		} else {
-			CMP_SSE3(_mm_load_si128, _mm_lddqu_si128)
+			CMP_SSE3(_mm_lddqu_si128)
 		}
 	}
 	for(;;){

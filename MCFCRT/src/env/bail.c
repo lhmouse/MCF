@@ -5,6 +5,7 @@
 #include "bail.h"
 #include "mcfwin.h"
 #include "../ext/wcpcpy.h"
+#include "../ext/wcppcpy.h"
 #include "standard_streams.h"
 #include <ntdef.h>
 

@@ -5,6 +5,7 @@
 #include "xassert.h"
 #include "bail.h"
 #include "../ext/wcpcpy.h"
+#include "../ext/wcppcpy.h"
 #include "../ext/itow.h"
 
 __attribute__((__noreturn__))

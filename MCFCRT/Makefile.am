@@ -97,9 +97,11 @@ pkginclude_ext_HEADERS = \
 	src/ext/mul64.h	\
 	src/ext/random.h	\
 	src/ext/stpcpy.h	\
+	src/ext/stppcpy.h	\
 	src/ext/thunk.h	\
 	src/ext/utf.h	\
 	src/ext/wcpcpy.h	\
+	src/ext/wcppcpy.h	\
 	src/ext/rawmemchr.h	\
 	src/ext/rawwmemchr.h	\
 	src/ext/rep_stos.h	\
@@ -149,9 +151,11 @@ mcfcrt_sources = \
 	src/ext/wtoi.c	\
 	src/ext/random.c	\
 	src/ext/stpcpy.c	\
+	src/ext/stppcpy.c	\
 	src/ext/thunk.c	\
 	src/ext/utf.c	\
 	src/ext/wcpcpy.c	\
+	src/ext/wcppcpy.c	\
 	src/ext/rawmemchr.c	\
 	src/ext/rawwmemchr.c	\
 	src/ext/rep_stos.c	\

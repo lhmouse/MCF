@@ -429,10 +429,11 @@ public:
 	}
 
 	void Reverse() noexcept {
-		std::swap(x_pFirst, x_pLast);
+		using std::swap;
+		swap(x_pFirst, x_pLast);
 		auto pPrev = x_pFirst;
 		while(pPrev){
-			std::swap(pPrev->pNext, pPrev->pPrev);
+			swap(pPrev->pNext, pPrev->pPrev);
 			pPrev = pPrev->pNext;
 		}
 	}

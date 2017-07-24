@@ -15,14 +15,14 @@ typedef enum __MCFCRT_tag_atoi_result {
 	_MCFCRT_atoi_result_would_overflow = 2,
 } _MCFCRT_atoi_result;
 
-extern char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD  intptr_t *__value_out, const char *__buffer) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD uintptr_t *__value_out, const char *__buffer) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD uintptr_t *__value_out, const char *__buffer) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD uintptr_t *__value_out, const char *__buffer) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD  intptr_t *__value_out, const char *__buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD uintptr_t *__value_out, const char *__buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD uintptr_t *__value_out, const char *__buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *__result_out, _MCFCRT_STD uintptr_t *__value_out, const char *__buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD  intptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD  intptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *_MCFCRT_RESTRICT __result_out, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __value_out, const char *_MCFCRT_RESTRICT __buffer, unsigned __max_digits) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

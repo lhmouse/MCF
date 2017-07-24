@@ -6,7 +6,7 @@
 #include "repnz_scas.h"
 
 __attribute__((__always_inline__))
-static inline char *Really_atoi_u(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits, uintptr_t bound, const char *dual_table, unsigned radix){
+static inline char *Really_atoi_u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits, uintptr_t bound, const char *restrict dual_table, unsigned radix){
 	unsigned digits_read = 0;
 	_MCFCRT_atoi_result result = _MCFCRT_atoi_result_no_digit;
 	// Parse digits.
@@ -35,19 +35,19 @@ static inline char *Really_atoi_u(_MCFCRT_atoi_result *result_out, uintptr_t *va
 	return (char *)buffer + digits_read;
 }
 
-char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *result_out, intptr_t *value_out, const char *buffer){
+char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *restrict result_out, intptr_t *restrict value_out, const char *restrict buffer){
 	return _MCFCRT_atoi0d(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer){
+char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
 	return _MCFCRT_atoi0u(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer){
+char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
 	return _MCFCRT_atoi0x(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer){
+char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
 	return _MCFCRT_atoi0X(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *result_out, intptr_t *value_out, const char *buffer, unsigned max_digits){
+char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *restrict result_out, intptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	char *end;
 	if(*buffer == '-'){
 		uintptr_t value;
@@ -60,12 +60,12 @@ char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *result_out, intptr_t *value_out, const
 	}
 	return end;
 }
-char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits){
+char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899"            , 10);
 }
-char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits){
+char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
 }
-char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *result_out, uintptr_t *value_out, const char *buffer, unsigned max_digits){
+char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
 }

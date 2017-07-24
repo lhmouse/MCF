@@ -6,7 +6,7 @@
 #include "repnz_scas.h"
 
 __attribute__((__always_inline__))
-static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer, unsigned max_digits, uintptr_t bound, const wchar_t *dual_table, unsigned radix){
+static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits, uintptr_t bound, const wchar_t *restrict dual_table, unsigned radix){
 	unsigned digits_read = 0;
 	_MCFCRT_wtoi_result result = _MCFCRT_wtoi_result_no_digit;
 	// Parse digits.
@@ -35,19 +35,19 @@ static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *result_out, uintptr_t 
 	return (wchar_t *)buffer + digits_read;
 }
 
-wchar_t *_MCFCRT_wtoi_d(_MCFCRT_wtoi_result *result_out, intptr_t *value_out, const wchar_t *buffer){
+wchar_t *_MCFCRT_wtoi_d(_MCFCRT_wtoi_result *restrict result_out, intptr_t *restrict value_out, const wchar_t *restrict buffer){
 	return _MCFCRT_wtoi0d(result_out, value_out, buffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_u(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer){
+wchar_t *_MCFCRT_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
 	return _MCFCRT_wtoi0u(result_out, value_out, buffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_x(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer){
+wchar_t *_MCFCRT_wtoi_x(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
 	return _MCFCRT_wtoi0x(result_out, value_out, buffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_X(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer){
+wchar_t *_MCFCRT_wtoi_X(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
 	return _MCFCRT_wtoi0X(result_out, value_out, buffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi0d(_MCFCRT_wtoi_result *result_out, intptr_t *value_out, const wchar_t *buffer, unsigned max_digits){
+wchar_t *_MCFCRT_wtoi0d(_MCFCRT_wtoi_result *restrict result_out, intptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	wchar_t *end;
 	if(*buffer == L'-'){
 		uintptr_t value;
@@ -60,12 +60,12 @@ wchar_t *_MCFCRT_wtoi0d(_MCFCRT_wtoi_result *result_out, intptr_t *value_out, co
 	}
 	return end;
 }
-wchar_t *_MCFCRT_wtoi0u(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer, unsigned max_digits){
+wchar_t *_MCFCRT_wtoi0u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	return Really_wtoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, L"0123456789"      , 10);
 }
-wchar_t *_MCFCRT_wtoi0x(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer, unsigned max_digits){
+wchar_t *_MCFCRT_wtoi0x(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	return Really_wtoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, L"0123456789ABCDEF", 16);
 }
-wchar_t *_MCFCRT_wtoi0X(_MCFCRT_wtoi_result *result_out, uintptr_t *value_out, const wchar_t *buffer, unsigned max_digits){
+wchar_t *_MCFCRT_wtoi0X(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	return Really_wtoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, L"0123456789ABCDEF", 16);
 }

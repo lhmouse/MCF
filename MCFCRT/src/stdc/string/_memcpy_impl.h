@@ -69,6 +69,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 	}
 	_MCFCRT_rep_movsb(__wp, __rp, (size_t)(__wend - __wp));
 }
+
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	unsigned char *const __wbegin = (unsigned char *)__s1;

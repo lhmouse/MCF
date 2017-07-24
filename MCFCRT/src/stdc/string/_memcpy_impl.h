@@ -26,26 +26,26 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 		}
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
-#define __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+#define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			{	\
-				(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
+				__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
 				__wp += 16;	\
 				__rp += 16;	\
 			}
-#define __MCFCRT_SSE3_FULL_(__si_, __li_)	\
+#define __MCFCRT_SSE3_FULL_(__store_, __load_)	\
 			{	\
 				switch(__t % 8){	\
 					do {	\
 						_mm_prefetch(__rp + 256, _MM_HINT_NTA);	\
 						_mm_prefetch(__rp + 320, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 					} while((size_t)(__wend - __wp) >= 128);	\
 				}	\
 			}
@@ -83,26 +83,26 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 		}
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
-#define __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+#define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			{	\
 				__wp -= 16;	\
 				__rp -= 16;	\
-				(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
+				__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
 			}
-#define __MCFCRT_SSE3_FULL_(__si_, __li_)	\
+#define __MCFCRT_SSE3_FULL_(__store_, __load_)	\
 			{	\
 				switch(__t % 8){	\
 					do {	\
 						_mm_prefetch(__rp - 384, _MM_HINT_NTA);	\
 						_mm_prefetch(__rp - 320, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
-				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__si_, __li_)	\
+				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 					} while((size_t)(__wp - __wbegin) >= 128);	\
 				}	\
 			}

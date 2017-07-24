@@ -38,12 +38,12 @@ int strncmp(const char *s1, const char *s2, size_t n){
 #define CMP_SSE3(load2_, care_about_page_boundaries_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
-			uint8_t xmid = ((uintptr_t)rp2 >> 4) & 0xFF;	\
+			uint8_t xmid = (uint8_t)((uintptr_t)rp2 / 32 * 2);	\
 			do {	\
 				if(care_about_page_boundaries_){	\
 					xmid = (uint8_t)(xmid + 2);	\
 					if(_MCFCRT_EXPECT_NOT(xmid == 0)){	\
-						char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-0x10);	\
+						char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-32);	\
 						const __m128i xw20 = _mm_load_si128((const __m128i *)arp2 + 0);	\
 						const __m128i xw21 = _mm_load_si128((const __m128i *)arp2 + 1);	\
 						__m128i xt = _mm_cmpeq_epi8(xw20, xz);	\
@@ -86,10 +86,12 @@ int strncmp(const char *s1, const char *s2, size_t n){
 				rp2 += 32;	\
 			} while((size_t)(rend1 - rp1) >= 32);	\
 		}
-		if(((uintptr_t)rp2 & 15) == 0){
-			CMP_SSE3(_mm_load_si128, false)
-		} else {
+		if(((uintptr_t)rp2 & 15) != 0){
 			CMP_SSE3(_mm_lddqu_si128, true)
+		} else if(((uintptr_t)rp2 & 63) != 0){
+			CMP_SSE3(_mm_load_si128, true)
+		} else {
+			CMP_SSE3(_mm_load_si128, false)
 		}
 	}
 	for(;;){

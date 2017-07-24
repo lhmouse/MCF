@@ -33,12 +33,12 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 #define CMP_SSE3(load2_, care_about_page_boundaries_)	\
 	{	\
 		const __m128i xz = _mm_setzero_si128();	\
-		uint8_t xmid = ((uintptr_t)rp2 >> 4) & 0xFE;	\
+		uint8_t xmid = (uint8_t)((uintptr_t)rp2 / 64 * 4);	\
 		for(;;){	\
 			if(care_about_page_boundaries_){	\
 				xmid = (uint8_t)(xmid + 4);	\
 				if(_MCFCRT_EXPECT_NOT(xmid == 0)){	\
-					char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-0x20);	\
+					char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-64);	\
 					const __m128i xw20 = _mm_load_si128((const __m128i *)arp2 + 0);	\
 					const __m128i xw21 = _mm_load_si128((const __m128i *)arp2 + 1);	\
 					const __m128i xw22 = _mm_load_si128((const __m128i *)arp2 + 2);	\
@@ -93,10 +93,12 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 			rp2 += 32;	\
 		}	\
 	}
-	if(((uintptr_t)rp2 & 15) == 0){
-		CMP_SSE3(_mm_load_si128, false)
-	} else {
+	if(((uintptr_t)rp2 & 15) != 0){
 		CMP_SSE3(_mm_lddqu_si128, true)
+	} else if(((uintptr_t)rp2 & 63) != 0){
+		CMP_SSE3(_mm_load_si128, true)
+	} else {
+		CMP_SSE3(_mm_load_si128, false)
 	}
 	for(;;){
 		CMP_GEN()

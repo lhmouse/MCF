@@ -51,19 +51,27 @@ StreamBuffer::StreamBuffer(const StreamBuffer &vOther){
 	x_uSize  = vOther.x_uSize;
 }
 StreamBuffer::~StreamBuffer(){
-	Clear();
-}
-
-void StreamBuffer::Clear() noexcept {
 	auto pChunk = x_pFirst;
 	while(pChunk){
 		const auto pNext = pChunk->pNext;
 		X_ChunkHeader::Destroy(pChunk);
 		pChunk = pNext;
 	}
-	x_pLast  = nullptr;
-	x_pFirst = nullptr;
-	x_uSize  = 0;
+#ifndef NDEBUG
+	__builtin_memset(&x_pLast,  0xEA, sizeof(x_pLast));
+	__builtin_memset(&x_pFirst, 0xEF, sizeof(x_pFirst));
+	__builtin_memset(&x_uSize,  0xEC, sizeof(x_uSize));
+#endif
+}
+
+void StreamBuffer::Clear() noexcept {
+	auto pChunk = x_pFirst;
+	while(pChunk){
+		pChunk->uBegin = pChunk->uEnd;
+		const auto pNext = pChunk->pNext;
+		pChunk = pNext;
+	}
+	x_uSize = 0;
 }
 
 int StreamBuffer::PeekFront() const noexcept {

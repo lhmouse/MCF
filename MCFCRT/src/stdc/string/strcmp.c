@@ -55,9 +55,9 @@ int strcmp(const char *s1, const char *s2){
 			const __m128i xw20 = load2_((const __m128i *)rp2 + 0);	\
 			const __m128i xw21 = load2_((const __m128i *)rp2 + 1);	\
 			__m128i xt = _mm_cmpeq_epi8(xw10, xw20);	\
-			uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
+			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt) ^ 0xFFFF;	\
 			xt = _mm_cmpeq_epi8(xw11, xw21);	\
-			mask += (uint32_t)~_mm_movemask_epi8(xt) << 16;	\
+			mask += ((uint32_t)_mm_movemask_epi8(xt) ^ 0xFFFF) << 16;	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 				const int tzne = __builtin_ctzl(mask);	\
 				const __m128i shift = _mm_set1_epi8(-0x80);	\

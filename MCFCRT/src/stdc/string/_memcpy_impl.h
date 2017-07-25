@@ -46,7 +46,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-					} while((size_t)(__wend - __wp) >= 128);	\
+					} while(__wend - __wp >= 128);	\
 				}	\
 			}
 			if(_MCFCRT_EXPECT(__t < 0x1000)){
@@ -104,7 +104,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-					} while((size_t)(__wp - __wbegin) >= 128);	\
+					} while(__wp - __wbegin >= 128);	\
 				}	\
 			}
 			if(_MCFCRT_EXPECT(__t < 0x1000)){

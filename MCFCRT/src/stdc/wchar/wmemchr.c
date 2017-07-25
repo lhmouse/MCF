@@ -4,54 +4,39 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include <pmmintrin.h>
+#include "../string/_sse3.h"
 
 #undef wmemchr
 
 wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
-	register const wchar_t *rp = s;
-	const wchar_t *const rend = rp + n;
+	if(_MCFCRT_EXPECT_NOT(n == 0)){
+		return _MCFCRT_NULLPTR;
+	}
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & 63) != 0){
-#define CHR_GEN()	\
-		{	\
-			if(rp == rend){	\
-				return _MCFCRT_NULLPTR;	\
-			}	\
-			const wchar_t rc = *rp;	\
-			if(rc == c){	\
-				return (wchar_t *)rp;	\
-			}	\
-			++rp;	\
-		}
-		CHR_GEN()
-	}
-	if((size_t)(rend - rp) >= 64){
-#define CHR_SSE3()	\
-		{	\
-			const __m128i xc = _mm_set1_epi16((int16_t)c);	\
-			do {	\
-				const __m128i xw0 = _mm_load_si128((const __m128i *)rp + 0);	\
-				const __m128i xw1 = _mm_load_si128((const __m128i *)rp + 1);	\
-				const __m128i xw2 = _mm_load_si128((const __m128i *)rp + 2);	\
-				const __m128i xw3 = _mm_load_si128((const __m128i *)rp + 3);	\
-				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xc),	\
-				                             _mm_cmpeq_epi16(xw1, xc));	\
-				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
-				xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw2, xc),	\
-				                     _mm_cmpeq_epi16(xw3, xc));	\
-				mask += (uint32_t)_mm_movemask_epi8(xt) << 16;	\
-				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-					return (wchar_t *)rp + __builtin_ctzl(mask);	\
-				}	\
-				rp += 32;	\
-			} while((size_t)(rend - rp) >= 32);	\
-		}
-		CHR_SSE3()
-	}
+	register const wchar_t *rp = s;
+	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
+	__m128i xc[1];
+	__MCFCRT_xmmsetw(xc, (uint16_t)c);
+	ptrdiff_t shift = (const wchar_t *)s - rp;
+	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
-		CHR_GEN()
+		__m128i xw[4];
+		uint32_t mask;
+		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
+		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){
+			shift = __builtin_ctzl(mask);
+			return (wchar_t *)rp + shift;
+		}
+		rp += 32;
+		shift = rp - ((const wchar_t *)s + n);
+		if(_MCFCRT_EXPECT_NOT(shift >= 0)){
+			return _MCFCRT_NULLPTR;
+		}
+		shift += 32;
+		shift &= ~(shift >> 31);
+		skip = (uint32_t)-1 >> shift;
 	}
 }

@@ -16,29 +16,35 @@ struct PageDeleter {
 	}
 };
 
-using Char = wchar_t;
+using Char = char;
 
 constexpr std::size_t kSize = 0x200F000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const auto s1  = (Char *)((char *)p1.Get() + 2);
+	const auto s1  = (Char *)((char *)p1.Get() + 6);
 	const auto s1e = (Char *)((char *)p1.Get() + kSize);
-	Fill(s1, s1e, 'a')[-1] = 0;
-	const auto s2  = (Char *)((char *)p2.Get() + 18);
+	Fill(s1, s1e, 'a');
+	s1e[-3] = 'b';
+	s1e[-2] = 0;
+	s1e[-1] = 'b';
+	const auto s2  = (Char *)((char *)p2.Get() + 2);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
-	Fill(s2, s2e, 'a')[-1] = 0;
+	Fill(s2, s2e, 'a');
+	s2e[-3] = 'b';
+	s2e[-2] = 0;
+	s2e[-1] = 'b';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcscmp"_nsv;
+		const auto fname = "memchr"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *)>(fname);
+			const auto pf = dll.RequireProcAddress<char * (*)(const char *, int, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){
-				r = (std::ptrdiff_t)(*pf)(s1, s2);
+				r = (std::ptrdiff_t)(*pf)(s1, 'b', (std::size_t)(s1e - s1));
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

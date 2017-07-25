@@ -28,13 +28,13 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	Fill(s1, s1e, 'a');
 	s1e[-3] = 'b';
 	s1e[-2] = 0;
-	s1e[-1] = 'b';
+	s1e[-1] = 'c';
 	const auto s2  = (Char *)((char *)p2.Get() + 2);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
 	Fill(s2, s2e, 'a');
 	s2e[-3] = 'b';
 	s2e[-2] = 0;
-	s2e[-1] = 'b';
+	s2e[-1] = 'c';
 
 	const auto test = [&](WideStringView name){
 		const auto fname = "memchr"_nsv;
@@ -44,7 +44,8 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){
-				r = (std::ptrdiff_t)(*pf)(s1, 'b', (std::size_t)(s1e - s1));
+				//r = (std::ptrdiff_t)(*pf)(s1, 'c', (std::size_t)(s1e - s1));
+				r = (std::ptrdiff_t)(*pf)("abcdefg\0h" + 1, 'h', 7);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

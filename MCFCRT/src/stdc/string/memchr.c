@@ -9,9 +9,6 @@
 #undef memchr
 
 void *memchr(const void *s, int c, size_t n){
-	if(_MCFCRT_EXPECT_NOT(n == 0)){
-		return _MCFCRT_NULLPTR;
-	}
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
@@ -22,6 +19,13 @@ void *memchr(const void *s, int c, size_t n){
 	ptrdiff_t shift = (const char *)s - rp;
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
+		shift = rp - ((const char *)s + n);
+		if(_MCFCRT_EXPECT_NOT(shift >= 0)){
+			return _MCFCRT_NULLPTR;
+		}
+		shift += 32;
+		shift &= ~(shift >> 31);
+		skip &= (uint32_t)-1 >> shift;
 		__m128i xw[2];
 		uint32_t mask;
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
@@ -31,12 +35,6 @@ void *memchr(const void *s, int c, size_t n){
 			return (char *)rp + shift;
 		}
 		rp += 32;
-		shift = rp - ((const char *)s + n);
-		if(_MCFCRT_EXPECT_NOT(shift >= 0)){
-			return _MCFCRT_NULLPTR;
-		}
-		shift += 32;
-		shift &= ~(shift >> 31);
-		skip = (uint32_t)-1 >> shift;
+		skip = (uint32_t)-1;
 	}
 }

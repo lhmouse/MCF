@@ -12,11 +12,10 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 	// 每个字内的字节的权限必然一致。
 	register const char *rp = s;
 	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
-	ptrdiff_t shift = (const char *)s - rp;
-	uint32_t skip = (uint32_t)-1 << shift;
-
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
+	ptrdiff_t shift = (const char *)s - rp;
+	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[2];
 		uint32_t mask;

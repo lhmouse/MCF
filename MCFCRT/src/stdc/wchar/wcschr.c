@@ -14,13 +14,12 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	// 每个字内的字节的权限必然一致。
 	register const wchar_t *rp = s;
 	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
-	ptrdiff_t shift = (const wchar_t *)s - rp;
-	uint32_t skip = (uint32_t)-1 << shift;
-
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
+	ptrdiff_t shift = (const wchar_t *)s - rp;
+	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[4];
 		uint32_t mask;

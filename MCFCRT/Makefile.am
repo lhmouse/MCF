@@ -37,7 +37,8 @@ noinst_HEADERS = \
 	src/stdc/math/_fpu.h	\
 	src/stdc/math/_sse2.h	\
 	src/stdc/math/_sse3.h	\
-	src/stdc/string/_memcpy_impl.h
+	src/stdc/string/_memcpy_impl.h	\
+	src/stdc/string/_sse3.h
 
 pkginclude_HEADERS = \
 	src/mcfcrt.h	\

@@ -12,7 +12,8 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 	// 每个字内的字节的权限必然一致。
 	register const wchar_t *rp = s;
 	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
-	uint32_t skip = (uint32_t)-1 << ((const wchar_t *)s - rp);
+	ptrdiff_t shift = (const wchar_t *)s - rp;
+	uint32_t skip = (uint32_t)-1 << shift;
 
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
@@ -22,7 +23,8 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return (wchar_t *)rp + __builtin_ctzl(mask);
+			shift = __builtin_ctzl(mask);
+			return (wchar_t *)rp + shift;
 		}
 		rp += 32;
 		skip = (uint32_t)-1;

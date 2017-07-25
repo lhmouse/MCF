@@ -2,18 +2,18 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#include "wcppcpy.h"
+#include "stpcpy.h"
 #include "../env/expect.h"
 #include "../env/xassert.h"
+#include "../stdc/string/_sse3.h"
 #include "rep_movs.h"
-#include <pmmintrin.h>
 
-wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src){
-	_MCFCRT_ASSERT(dst + 1 <= end);
+wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
+	_MCFCRT_ASSERT(s1 + 1 <= es1);
 
-	register wchar_t *wp = dst;
-	wchar_t *const wend = end - 1;
-	register const wchar_t *rp = src;
+	register wchar_t *wp = s1;
+	wchar_t *const wend = es1 - 1;
+	register const wchar_t *rp = s2;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。

@@ -5,15 +5,15 @@
 #include "stpcpy.h"
 #include "../env/expect.h"
 #include "../env/xassert.h"
+#include "../stdc/string/_sse3.h"
 #include "rep_movs.h"
-#include <pmmintrin.h>
 
-char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
-	_MCFCRT_ASSERT(dst + 1 <= end);
+char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
+	_MCFCRT_ASSERT(s1 + 1 <= es1);
 
-	register char *wp = dst;
-	char *const wend = end - 1;
-	register const char *rp = src;
+	register char *wp = s1;
+	char *const wend = es1 - 1;
+	register const char *rp = s2;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。

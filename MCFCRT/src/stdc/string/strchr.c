@@ -14,7 +14,8 @@ char *strchr(const char *s, int c){
 	// 每个字内的字节的权限必然一致。
 	register const char *rp = s;
 	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
-	uint32_t skip = (uint32_t)-1 << ((const char *)s - rp);
+	ptrdiff_t shift = (const char *)s - rp;
+	uint32_t skip = (uint32_t)-1 << shift;
 
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
@@ -26,7 +27,8 @@ char *strchr(const char *s, int c){
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			return (char *)rp + __builtin_ctzl(mask);
+			shift = __builtin_ctzl(mask);
+			return (char *)rp + shift;
 		}
 		mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){

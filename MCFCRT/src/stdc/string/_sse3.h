@@ -24,35 +24,44 @@ static inline void __MCFCRT_xmmsetw(__m128i *__word, _MCFCRT_STD uint16_t __val)
 }
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmload_n(__m128i (*__loader)(const __m128i *), __m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-#pragma GCC ivdep
-	for(_MCFCRT_STD size_t __i = 0; __i < __n; ++__i){
-		__words[__i] = __loader((const __m128i *)__src + __i);
-	}
+static inline void __MCFCRT_xmmload_2(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
+	__words[0] = __loader((const __m128i *)__src + 0);
+	__words[1] = __loader((const __m128i *)__src + 1);
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmstore_n(void (*__storer)(__m128i *, __m128i), void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-#pragma GCC ivdep
-	for(_MCFCRT_STD size_t __i = 0; __i < __n; ++__i){
-		__storer((__m128i *)__dst + __i, __words[__i]);
-	}
+static inline void __MCFCRT_xmmload_4(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
+	__words[0] = __loader((const __m128i *)__src + 0);
+	__words[1] = __loader((const __m128i *)__src + 1);
+	__words[2] = __loader((const __m128i *)__src + 2);
+	__words[3] = __loader((const __m128i *)__src + 3);
 }
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmchsb_n(__m128i *_MCFCRT_RESTRICT __words, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	const __m128i __mask = _mm_set1_epi8((char)0x80);
-#pragma GCC ivdep
-	for(_MCFCRT_STD size_t __i = 0; __i < __n; ++__i){
-		__words[__i] = _mm_xor_si128(__words[__i], __mask);
-	}
+static inline void __MCFCRT_xmmstore_2(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
+	__storer((__m128i *)__dst + 0, __words[0]);
+	__storer((__m128i *)__dst + 1, __words[1]);
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmchsw_n(__m128i *_MCFCRT_RESTRICT __words, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
+	__storer((__m128i *)__dst + 0, __words[0]);
+	__storer((__m128i *)__dst + 1, __words[1]);
+	__storer((__m128i *)__dst + 2, __words[2]);
+	__storer((__m128i *)__dst + 3, __words[3]);
+}
+
+__attribute__((__always_inline__))
+static inline void __MCFCRT_xmmchs_2b(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT_NOEXCEPT {
+	const __m128i __mask = _mm_set1_epi8((char)0x80);
+	__words[0] = _mm_xor_si128(__words[0], __mask);
+	__words[1] = _mm_xor_si128(__words[1], __mask);
+}
+__attribute__((__always_inline__))
+static inline void __MCFCRT_xmmchs_4w(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT_NOEXCEPT {
 	const __m128i __mask = _mm_set1_epi16((short)0x8000);
-#pragma GCC ivdep
-	for(_MCFCRT_STD size_t __i = 0; __i < __n; ++__i){
-		__words[__i] = _mm_xor_si128(__words[__i], __mask);
-	}
+	__words[0] = _mm_xor_si128(__words[0], __mask);
+	__words[1] = _mm_xor_si128(__words[1], __mask);
+	__words[2] = _mm_xor_si128(__words[2], __mask);
+	__words[3] = _mm_xor_si128(__words[3], __mask);
 }
 
 __attribute__((__always_inline__))

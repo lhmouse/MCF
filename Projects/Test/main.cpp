@@ -31,14 +31,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	Fill(s2, s2e, 'a')[-1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcslen"_nsv;
+		const auto fname = "wcscmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<std::size_t (*)(const wchar_t *)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){
-				r = (std::ptrdiff_t)(*pf)(s1);
+				r = (std::ptrdiff_t)(*pf)(s1, s2);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

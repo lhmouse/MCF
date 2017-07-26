@@ -8,6 +8,11 @@
 #include "../env/_fpu.h"
 #include <winnt.h>
 
+extern unsigned _MCFCRT_Main(void);
+
+__attribute__((__weak__))
+extern void _MCFCRT_OnCtrlEvent(bool bIsSigInt);
+
 // -Wl,-e@__MCFCRT_ExeStartup
 _Noreturn __MCFCRT_C_STDCALL
 extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)

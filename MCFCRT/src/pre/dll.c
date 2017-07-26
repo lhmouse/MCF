@@ -7,6 +7,15 @@
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
 
+__attribute__((__weak__))
+extern bool _MCFCRT_OnDllProcessAttach(void *pInstance, bool bDynamic);
+__attribute__((__weak__))
+extern void _MCFCRT_OnDllThreadAttach(void *pInstance);
+__attribute__((__weak__))
+extern void _MCFCRT_OnDllThreadDetach(void *pInstance);
+__attribute__((__weak__))
+extern void _MCFCRT_OnDllProcessDetach(void *pInstance, bool bDynamic);
+
 // -Wl,-e@__MCFCRT_DllStartup
 __MCFCRT_C_STDCALL
 extern BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved)

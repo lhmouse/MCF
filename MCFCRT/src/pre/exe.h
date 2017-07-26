@@ -11,7 +11,6 @@ _MCFCRT_EXTERN_C_BEGIN
 
 extern unsigned _MCFCRT_Main(void) _MCFCRT_NOEXCEPT;
 
-__attribute__((__weak__))
 extern void _MCFCRT_OnCtrlEvent(bool __bIsSigInt) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END

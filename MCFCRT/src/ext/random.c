@@ -5,16 +5,13 @@
 #include "random.h"
 #include "../env/clocks.h"
 
-static volatile uint64_t g_u64RandSeed = 0;
-
 uint32_t _MCFCRT_GetRandomUint32(void){
+	static volatile uint64_t s_u64Seed = 0;
 	uint64_t u64OldSeed, u64Seed;
-
-	u64OldSeed = __atomic_load_n(&g_u64RandSeed, __ATOMIC_RELAXED);
+	u64OldSeed = __atomic_load_n(&s_u64Seed, __ATOMIC_RELAXED);
 	do {
 		u64Seed = (u64OldSeed ^ _MCFCRT_ReadTimeStampCounter32()) * 6364136223846793005u + 1442695040888963407u;
-	} while(!__atomic_compare_exchange_n(&g_u64RandSeed, &u64OldSeed, u64Seed, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
-
+	} while(!__atomic_compare_exchange_n(&s_u64Seed, &u64OldSeed, u64Seed, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 	return (uint32_t)(u64Seed >> 32);
 }
 uint64_t _MCFCRT_GetRandomUint64(void){

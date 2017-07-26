@@ -45,7 +45,9 @@
 #  include "ext/repz_scas.h"
 #  include "ext/repnz_scas.h"
 #  include "ext/stpcpy.h"
+#  include "ext/stppcpy.h"
 #  include "ext/wcpcpy.h"
+#  include "ext/wcppcpy.h"
 #  include "ext/utf.h"
 #  include "ext/thunk.h"
 // ------------------------------ pre ------------------------------

@@ -26,8 +26,8 @@ char *strchr(const char *s, int c){
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			skip &= (mask & -mask) * 2 - 1;
-			mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
+			uint32_t zskip = (mask & -mask) * 2 - 1;
+			mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip & zskip;
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){
 				goto found;
 			}

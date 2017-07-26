@@ -25,11 +25,11 @@ void *memchr(const void *s, int c, size_t n){
 		}
 		dist += 32;
 		dist &= ~dist >> (sizeof(dist) * 8 - 1);
-		skip &= (uint32_t)-1 >> dist;
+		uint32_t zskip = (uint32_t)-1 >> dist;
 		__m128i xw[2];
 		uint32_t mask;
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
-		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
+		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip & zskip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = __builtin_ctzl(mask);
 			return (char *)rp + shift;

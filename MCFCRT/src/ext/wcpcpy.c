@@ -2,62 +2,43 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#include "stpcpy.h"
+#include "wcpcpy.h"
 #include "../env/expect.h"
 #include "../stdc/string/_sse3.h"
 #include "rep_movs.h"
 
 wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
-	register wchar_t *wp = s1;
-	register const wchar_t *rp = s2;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & 63) != 0){
-#define CPY_GEN()	\
-		{	\
-			const wchar_t rc = *rp;	\
-			*wp = rc;	\
-			if(rc == 0){	\
-				return wp;	\
-			}	\
-			++rp;	\
-			++wp;	\
+	register const wchar_t *rp = s2;
+	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
+	wchar_t *ewp = s1;
+	const wchar_t *erp = s2;
+	__m128i xz[1];
+	__MCFCRT_xmmsetz(xz);
+	int shift = (int)((const wchar_t *)s2 - rp);
+	uint32_t skip = (uint32_t)-1 << shift;
+	for(;;){
+		__m128i xw[4];
+		uint32_t mask;
+		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
+		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){
+			shift = __builtin_ctzl(mask);
+			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp + shift - erp));
+			*ewp = 0;
+			return ewp;
 		}
-		CPY_GEN()
-	}
-#define CPY_SSE3(store_)	\
-	{	\
-		const __m128i xz = _mm_setzero_si128();	\
-		for(;;){	\
-			const __m128i xw0 = _mm_load_si128((const __m128i *)rp + 0);	\
-			const __m128i xw1 = _mm_load_si128((const __m128i *)rp + 1);	\
-			const __m128i xw2 = _mm_load_si128((const __m128i *)rp + 2);	\
-			const __m128i xw3 = _mm_load_si128((const __m128i *)rp + 3);	\
-			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz),	\
-			                             _mm_cmpeq_epi16(xw1, xz));	\
-			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
-			xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw2, xz),	\
-			                     _mm_cmpeq_epi16(xw3, xz));	\
-			mask += (uint32_t)_mm_movemask_epi8(xt) << 16;	\
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-				const unsigned tz = (unsigned)__builtin_ctzl(mask);	\
-				_MCFCRT_rep_movsw(wp, rp, tz);	\
-				wp += tz;	\
-				*wp = 0;	\
-				return wp;	\
-			}	\
-			store_((__m128i *)wp + 0, xw0);	\
-			store_((__m128i *)wp + 1, xw1);	\
-			store_((__m128i *)wp + 2, xw2);	\
-			store_((__m128i *)wp + 3, xw3);	\
-			rp += 32;	\
-			wp += 32;	\
-		}	\
-	}
-	if(((uintptr_t)wp & 15) == 0){
-		CPY_SSE3(_mm_store_si128)
-	} else {
-		CPY_SSE3(_mm_storeu_si128)
+		if(_MCFCRT_EXPECT_NOT(rp != erp)){
+			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp + 32 - erp));
+		} else if(((uintptr_t)ewp & ~(uintptr_t)-16) == 0){
+			ewp = __MCFCRT_xmmstore_4(ewp, xw, _mm_store_si128);
+		} else {
+			ewp = __MCFCRT_xmmstore_4(ewp, xw, _mm_storeu_si128);
+		}
+		rp += 32;
+		erp = rp;
+		skip = (uint32_t)-1;
 	}
 }

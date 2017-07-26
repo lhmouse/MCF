@@ -24,29 +24,41 @@ static inline void __MCFCRT_xmmsetw(__m128i *__word, _MCFCRT_STD uint16_t __val)
 }
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmload_2(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
-	__words[0] = __loader((const __m128i *)__src + 0);
-	__words[1] = __loader((const __m128i *)__src + 1);
+static inline const void *__MCFCRT_xmmload_2(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
+	__m128i *__wp = __words;
+	const __m128i *__rp = (const __m128i *)__src;
+	for(unsigned i = 0; i < 2; ++i){
+		*(__wp++) = __loader(__rp++);
+	}
+	return __rp;
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmload_4(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
-	__words[0] = __loader((const __m128i *)__src + 0);
-	__words[1] = __loader((const __m128i *)__src + 1);
-	__words[2] = __loader((const __m128i *)__src + 2);
-	__words[3] = __loader((const __m128i *)__src + 3);
+static inline const void *__MCFCRT_xmmload_4(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
+	__m128i *__wp = __words;
+	const __m128i *__rp = (const __m128i *)__src;
+	for(unsigned i = 0; i < 4; ++i){
+		*(__wp++) = __loader(__rp++);
+	}
+	return __rp;
 }
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmstore_2(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
-	__storer((__m128i *)__dst + 0, __words[0]);
-	__storer((__m128i *)__dst + 1, __words[1]);
+static inline void *__MCFCRT_xmmstore_2(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
+	__m128i *__wp = (__m128i *)__dst;
+	const __m128i *__rp = __words;
+	for(unsigned i = 0; i < 2; ++i){
+		__storer(__wp++, *(__rp++));
+	}
+	return __wp;
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
-	__storer((__m128i *)__dst + 0, __words[0]);
-	__storer((__m128i *)__dst + 1, __words[1]);
-	__storer((__m128i *)__dst + 2, __words[2]);
-	__storer((__m128i *)__dst + 3, __words[3]);
+static inline void *__MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
+	__m128i *__wp = (__m128i *)__dst;
+	const __m128i *__rp = __words;
+	for(unsigned i = 0; i < 4; ++i){
+		__storer(__wp++, *(__rp++));
+	}
+	return __wp;
 }
 
 __attribute__((__always_inline__))

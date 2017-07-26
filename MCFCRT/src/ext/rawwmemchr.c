@@ -14,7 +14,7 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
-	int shift = (int)((const wchar_t *)s - rp);
+	unsigned shift = (unsigned)((const wchar_t *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[4];
@@ -22,7 +22,7 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			shift = __builtin_ctzl(mask);
+			shift = (unsigned)__builtin_ctzl(mask);
 			return (wchar_t *)rp + shift;
 		}
 		rp += 32;

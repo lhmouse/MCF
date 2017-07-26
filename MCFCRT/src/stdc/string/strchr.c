@@ -18,7 +18,7 @@ char *strchr(const char *s, int c){
 	__MCFCRT_xmmsetz(xz);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
-	int shift = (int)((const char *)s - rp);
+	unsigned shift = (unsigned)((const char *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[2];
@@ -36,7 +36,7 @@ char *strchr(const char *s, int c){
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 found:
-			shift = __builtin_ctzl(mask);
+			shift = (unsigned)__builtin_ctzl(mask);
 			return (char *)rp + shift;
 		}
 		rp += 32;

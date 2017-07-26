@@ -17,7 +17,7 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 	const char *erp = s2;
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
-	int shift = (int)((const char *)s2 - rp);
+	unsigned shift = (unsigned)((const char *)s2 - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[2];
@@ -25,7 +25,7 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			shift = __builtin_ctzl(mask);
+			shift = (unsigned)__builtin_ctzl(mask);
 			ewp = _MCFCRT_rep_movsb(ewp, erp, (size_t)(rp + shift - erp));
 			*ewp = 0;
 			return ewp;

@@ -16,7 +16,7 @@ void *memchr(const void *s, int c, size_t n){
 	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
-	int shift = (int)((const char *)s - rp);
+	unsigned shift = (unsigned)((const char *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		ptrdiff_t dist = rp - ((const char *)s + n);
@@ -31,7 +31,7 @@ void *memchr(const void *s, int c, size_t n){
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip & zskip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			shift = __builtin_ctzl(mask);
+			shift = (unsigned)__builtin_ctzl(mask);
 			return (char *)rp + shift;
 		}
 		rp += 32;

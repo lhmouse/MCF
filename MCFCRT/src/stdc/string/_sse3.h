@@ -27,7 +27,7 @@ __attribute__((__always_inline__))
 static inline const void *__MCFCRT_xmmload_2(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
 	__m128i *__wp = __words;
 	const __m128i *__rp = (const __m128i *)__src;
-	for(unsigned i = 0; i < 2; ++i){
+	for(unsigned __i = 0; __i < 2; ++__i){
 		*(__wp++) = __loader(__rp++);
 	}
 	return __rp;
@@ -36,7 +36,7 @@ __attribute__((__always_inline__))
 static inline const void *__MCFCRT_xmmload_4(__m128i *_MCFCRT_RESTRICT __words, const void *_MCFCRT_RESTRICT __src, __m128i (*__loader)(const __m128i *)) _MCFCRT_NOEXCEPT {
 	__m128i *__wp = __words;
 	const __m128i *__rp = (const __m128i *)__src;
-	for(unsigned i = 0; i < 4; ++i){
+	for(unsigned __i = 0; __i < 4; ++__i){
 		*(__wp++) = __loader(__rp++);
 	}
 	return __rp;
@@ -46,7 +46,7 @@ __attribute__((__always_inline__))
 static inline void *__MCFCRT_xmmstore_2(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
 	__m128i *__wp = (__m128i *)__dst;
 	const __m128i *__rp = __words;
-	for(unsigned i = 0; i < 2; ++i){
+	for(unsigned __i = 0; __i < 2; ++__i){
 		__storer(__wp++, *(__rp++));
 	}
 	return __wp;
@@ -55,7 +55,7 @@ __attribute__((__always_inline__))
 static inline void *__MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m128i *_MCFCRT_RESTRICT __words, void (*__storer)(__m128i *, __m128i)) _MCFCRT_NOEXCEPT {
 	__m128i *__wp = (__m128i *)__dst;
 	const __m128i *__rp = __words;
-	for(unsigned i = 0; i < 4; ++i){
+	for(unsigned __i = 0; __i < 4; ++__i){
 		__storer(__wp++, *(__rp++));
 	}
 	return __wp;
@@ -64,16 +64,16 @@ static inline void *__MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m1
 __attribute__((__always_inline__))
 static inline void __MCFCRT_xmmchs_2b(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT_NOEXCEPT {
 	const __m128i __mask = _mm_set1_epi8((char)0x80);
-	__words[0] = _mm_xor_si128(__words[0], __mask);
-	__words[1] = _mm_xor_si128(__words[1], __mask);
+	for(unsigned __i = 0; __i < 2; ++__i){
+		__words[__i] = _mm_xor_si128(__words[__i], __mask);
+	}
 }
 __attribute__((__always_inline__))
 static inline void __MCFCRT_xmmchs_4w(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT_NOEXCEPT {
 	const __m128i __mask = _mm_set1_epi16((short)0x8000);
-	__words[0] = _mm_xor_si128(__words[0], __mask);
-	__words[1] = _mm_xor_si128(__words[1], __mask);
-	__words[2] = _mm_xor_si128(__words[2], __mask);
-	__words[3] = _mm_xor_si128(__words[3], __mask);
+	for(unsigned __i = 0; __i < 4; ++__i){
+		__words[__i] = _mm_xor_si128(__words[__i], __mask);
+	}
 }
 
 __attribute__((__always_inline__))

@@ -16,16 +16,16 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
-	ptrdiff_t shift = (const wchar_t *)s - rp;
+	int shift = (int)((const wchar_t *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
-		shift = rp - ((const wchar_t *)s + n);
-		if(_MCFCRT_EXPECT_NOT(shift >= 0)){
+		ptrdiff_t dist = rp - ((const wchar_t *)s + n);
+		if(_MCFCRT_EXPECT_NOT(dist >= 0)){
 			return _MCFCRT_NULLPTR;
 		}
-		shift += 32;
-		shift &= ~(shift >> 31);
-		skip &= (uint32_t)-1 >> shift;
+		dist += 32;
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);
+		skip &= (uint32_t)-1 >> dist;
 		__m128i xw[4];
 		uint32_t mask;
 		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);

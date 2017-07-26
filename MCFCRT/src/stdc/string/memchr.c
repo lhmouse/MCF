@@ -16,16 +16,16 @@ void *memchr(const void *s, int c, size_t n){
 	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
-	ptrdiff_t shift = (const char *)s - rp;
+	int shift = (int)((const char *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
-		shift = rp - ((const char *)s + n);
-		if(_MCFCRT_EXPECT_NOT(shift >= 0)){
+		ptrdiff_t dist = rp - ((const char *)s + n);
+		if(_MCFCRT_EXPECT_NOT(dist >= 0)){
 			return _MCFCRT_NULLPTR;
 		}
-		shift += 32;
-		shift &= ~(shift >> 31);
-		skip &= (uint32_t)-1 >> shift;
+		dist += 32;
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);
+		skip &= (uint32_t)-1 >> dist;
 		__m128i xw[2];
 		uint32_t mask;
 		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);

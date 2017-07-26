@@ -18,7 +18,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	__MCFCRT_xmmsetz(xz);
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
-	ptrdiff_t shift = (const wchar_t *)s - rp;
+	int shift = (int)((const wchar_t *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[4];

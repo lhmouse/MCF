@@ -14,7 +14,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
-	ptrdiff_t shift = (const char *)s - rp;
+	int shift = (int)((const char *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
 		__m128i xw[2];

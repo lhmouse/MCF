@@ -28,7 +28,8 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 		__m128i xw[4];
 		uint32_t mask;
 		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
-		mask = (__MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip) | ~zskip;
+		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;
+		mask |= ~zskip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = (unsigned)__builtin_ctzl(mask);
 			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp + shift - erp));

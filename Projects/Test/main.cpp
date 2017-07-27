@@ -38,14 +38,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2e[-1] = 'c';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strlen"_nsv;
+		const auto fname = "strchr"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<std::size_t (*)(const char *)>(fname);
+			const auto pf = dll.RequireProcAddress<char * (*)(const char *, int, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(unsigned i = 0; i < 100; ++i){
-				r = (std::ptrdiff_t)(*pf)(s1);
+			for(unsigned i = 0; i < 10; ++i){
+				r = (std::ptrdiff_t)(*pf)(s1, 'c', (std::size_t)(s1e - s1));
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

@@ -26,7 +26,8 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			uint32_t zskip = (mask & -mask) * 2 - 1;
-			mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip & zskip;
+			mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
+			mask &= zskip;
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){
 				goto found;
 			}

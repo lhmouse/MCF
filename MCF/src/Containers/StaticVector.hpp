@@ -89,8 +89,8 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(std::size_t i = 0; i < x_uSize; ++i){
-				void *const pElementRaw = x_aStorage + i;
+			for(std::size_t uIndex = 0; uIndex < x_uSize; ++uIndex){
+				void *const pElementRaw = x_aStorage + uIndex;
 				const auto pElement = static_cast<Element *>(pElementRaw);
 				*itOutput = std::move(*pElement);
 				++itOutput;
@@ -333,8 +333,8 @@ public:
 	void Pop(std::size_t uCount = 1) noexcept {
 		MCF_DEBUG_CHECK(uCount <= GetSize());
 
-		for(std::size_t i = 0; i < uCount; ++i){
-			void *const pElementRaw = x_aStorage + x_uSize - 1 - i;
+		for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
+			void *const pElementRaw = x_aStorage + x_uSize - 1 - uIndex;
 			const auto pElement = static_cast<Element *>(pElementRaw);
 			Destruct(pElement);
 		}
@@ -347,7 +347,7 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(vParams...);
 				++uElementsPushed;
 			}
@@ -364,7 +364,7 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(*itBegin);
 				++itBegin;
 				++uElementsPushed;
@@ -408,7 +408,7 @@ public:
 	void UncheckedAppend(std::size_t uDeltaSize, const ParamsT &...vParams){
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(vParams...);
 				++uElementsPushed;
 			}
@@ -423,7 +423,7 @@ public:
 	void UncheckedAppend(IteratorT itBegin, std::size_t uDeltaSize){
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(*itBegin);
 				++itBegin;
 				++uElementsPushed;

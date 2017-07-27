@@ -46,7 +46,7 @@ void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
 	auto pchWrite = achHex.GetData();
 
 #define PRINT(count_)	\
-	for(std::size_t i = 0; i < count_; ++i){	\
+	for(std::size_t uIndex = 0; uIndex < count_; ++uIndex){	\
 		const unsigned uByte = *(pbyRead++);	\
 		unsigned uChar = uByte >> 4;	\
 		if(uChar <= 9){	\
@@ -81,7 +81,7 @@ bool Uuid::Scan(const Array<char, 36> &achHex) noexcept {
 	auto pbyWrite = abyTemp.GetData();
 
 #define SCAN(count_)	\
-	for(std::size_t i = 0; i < count_; ++i){	\
+	for(std::size_t uIndex = 0; uIndex < count_; ++uIndex){	\
 		unsigned uByte;	\
 		unsigned uChar = (unsigned char)*(pchRead++);	\
 		if(('0' <= uChar) && (uChar <= '9')){	\

@@ -48,10 +48,10 @@ public:
 	Matrix operator+() const {
 		Matrix vResult;
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t uRow = 0; uRow < kRows; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				vResult.m_a[r][c] = +(m_a[r][c]);
+			for(std::size_t uColumn = 0; uColumn < kColumns; ++uColumn){
+				vResult.m_a[uRow][uColumn] = +(m_a[uRow][uColumn]);
 			}
 		}
 		return vResult;
@@ -59,10 +59,10 @@ public:
 	Matrix operator-() const {
 		Matrix vResult;
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t uRow = 0; uRow < kRows; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				vResult.m_a[r][c] = -(m_a[r][c]);
+			for(std::size_t uColumn = 0; uColumn < kColumns; ++uColumn){
+				vResult.m_a[uRow][uColumn] = -(m_a[uRow][uColumn]);
 			}
 		}
 		return vResult;
@@ -70,20 +70,20 @@ public:
 
 	Matrix &operator+=(const Matrix &vOther){
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t uRow = 0; uRow < kRows; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] += vOther.m_a[r][c];
+			for(std::size_t uColumn = 0; uColumn < kColumns; ++uColumn){
+				m_a[uRow][uColumn] += vOther.m_a[uRow][uColumn];
 			}
 		}
 		return *this;
 	}
 	Matrix &operator-=(const Matrix &vOther){
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t uRow = 0; uRow < kRows; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] -= vOther.m_a[r][c];
+			for(std::size_t uColumn = 0; uColumn < kColumns; ++uColumn){
+				m_a[uRow][uColumn] -= vOther.m_a[uRow][uColumn];
 			}
 		}
 		return *this;
@@ -91,20 +91,20 @@ public:
 
 	Matrix &operator*=(const Element &vOther){
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t uRow = 0; uRow < kRows; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] *= vOther;
+			for(std::size_t uColumn = 0; uColumn < kColumns; ++uColumn){
+				m_a[uRow][uColumn] *= vOther;
 			}
 		}
 		return *this;
 	}
 	Matrix &operator/=(const Element &vOther){
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t uRow = 0; uRow < kRows; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				m_a[r][c] /= vOther;
+			for(std::size_t uColumn = 0; uColumn < kColumns; ++uColumn){
+				m_a[uRow][uColumn] /= vOther;
 			}
 		}
 		return *this;
@@ -136,12 +136,12 @@ public:
 	Matrix<ElementT, kRowsT, kOtherColumnsT> operator*(const Matrix<ElementT, kColumnsT, kOtherColumnsT> &vOther){
 		auto vResult = Matrix<ElementT, kRowsT, kOtherColumnsT>();
 #pragma GCC ivdep
-		for(std::size_t r = 0; r < kRowsT; ++r){
+		for(std::size_t uRow = 0; uRow < kRowsT; ++uRow){
 #pragma GCC ivdep
-			for(std::size_t c = 0; c < kOtherColumnsT; ++c){
+			for(std::size_t uColumn = 0; uColumn < kOtherColumnsT; ++uColumn){
 #pragma GCC ivdep
-				for(std::size_t i = 0; i < kColumnsT; ++i){
-					vResult[r][c] += m_a[r][i] * vOther[i][c];
+				for(std::size_t uIndex = 0; uIndex < kColumnsT; ++uIndex){
+					vResult[uRow][uColumn] += m_a[uRow][uIndex] * vOther[uIndex][uColumn];
 				}
 			}
 		}

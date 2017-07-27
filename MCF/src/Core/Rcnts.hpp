@@ -26,32 +26,36 @@ private:
 	}
 
 private:
-	static std::size_t X_Len(const Char *s) noexcept {
-		std::size_t i = 0;
-		while(s[i] != Char()){
-			++i;
-		}
-		return i;
-	}
-	static int X_Cmp(const Char *s1, const Char *s2) noexcept {
-		std::size_t i = 0;
+	static std::size_t X_Define(const Char *pszSelf) noexcept {
+		std::size_t uIndex = 0;
 		for(;;){
-			const auto c1 = static_cast<std::int32_t>(static_cast<std::make_unsigned_t<Char>>(s1[i]));
-			const auto c2 = static_cast<std::int32_t>(static_cast<std::make_unsigned_t<Char>>(s2[i]));
-			const auto d = c1 - c2;
-			if(d != 0){
-				return static_cast<int>(d >> 31) | 1;
+			const auto chSelf = pszSelf[uIndex];
+			if(chSelf == Char()){
+				return uIndex;
 			}
-			if(c1 == 0){
-				return 0;
+			++uIndex;
+		}
+	}
+	static int X_Compare(const Char *pszSelf, const Char *pszOther) noexcept {
+		std::size_t uIndex = 0;
+		for(;;){
+			const auto chSelf = pszSelf[uIndex];
+			const auto chOther = pszOther[uIndex];
+			const bool bEndMarkSelf = chSelf == Char();
+			const bool bEndMarkOther = chOther == Char();
+			if(bEndMarkSelf || bEndMarkOther){
+				return bEndMarkOther - bEndMarkSelf;
 			}
-			++i;
+			if(chSelf != chOther){
+				return (static_cast<std::make_unsigned_t<Char>>(chSelf) < static_cast<std::make_unsigned_t<Char>>(chOther)) ? -1 : 1;
+			}
+			++uIndex;
 		}
 	}
 
 public:
 	static Rcnts Copy(const Char *pszBegin){
-		return Copy(pszBegin, X_Len(pszBegin));
+		return Copy(pszBegin, X_Define(pszBegin));
 	}
 	static Rcnts Copy(const Char *pchBegin, std::size_t uLength){
 		const auto uSizeToCopy = Impl_CheckedSizeArithmetic::Mul(sizeof(Char), uLength);
@@ -141,10 +145,10 @@ public:
 	}
 
 	int Compare(const Char *pszOther) const noexcept {
-		return X_Cmp(GetStr(), pszOther);
+		return X_Compare(GetStr(), pszOther);
 	}
 	int Compare(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr());
+		return X_Compare(GetStr(), vOther.GetStr());
 	}
 
 	void Swap(Rcnts &vOther) noexcept {
@@ -162,63 +166,63 @@ public:
 	}
 
 	bool operator==(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr()) == 0;
+		return X_Compare(GetStr(), vOther.GetStr()) == 0;
 	}
 	bool operator==(const Char *vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther) == 0;
+		return X_Compare(GetStr(), vOther) == 0;
 	}
 	friend bool operator==(const Char *vSelf, const Rcnts &vOther) noexcept {
-		return X_Cmp(vSelf, vOther.GetStr()) == 0;
+		return X_Compare(vSelf, vOther.GetStr()) == 0;
 	}
 
 	bool operator!=(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr()) != 0;
+		return X_Compare(GetStr(), vOther.GetStr()) != 0;
 	}
 	bool operator!=(const Char *vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther) != 0;
+		return X_Compare(GetStr(), vOther) != 0;
 	}
 	friend bool operator!=(const Char *vSelf, const Rcnts &vOther) noexcept {
-		return X_Cmp(vSelf, vOther.GetStr()) != 0;
+		return X_Compare(vSelf, vOther.GetStr()) != 0;
 	}
 
 	bool operator<(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr()) < 0;
+		return X_Compare(GetStr(), vOther.GetStr()) < 0;
 	}
 	bool operator<(const Char *vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther) < 0;
+		return X_Compare(GetStr(), vOther) < 0;
 	}
 	friend bool operator<(const Char *vSelf, const Rcnts &vOther) noexcept {
-		return X_Cmp(vSelf, vOther.GetStr()) < 0;
+		return X_Compare(vSelf, vOther.GetStr()) < 0;
 	}
 
 	bool operator>(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr()) > 0;
+		return X_Compare(GetStr(), vOther.GetStr()) > 0;
 	}
 	bool operator>(const Char *vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther) > 0;
+		return X_Compare(GetStr(), vOther) > 0;
 	}
 	friend bool operator>(const Char *vSelf, const Rcnts &vOther) noexcept {
-		return X_Cmp(vSelf, vOther.GetStr()) > 0;
+		return X_Compare(vSelf, vOther.GetStr()) > 0;
 	}
 
 	bool operator<=(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr()) <= 0;
+		return X_Compare(GetStr(), vOther.GetStr()) <= 0;
 	}
 	bool operator<=(const Char *vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther) <= 0;
+		return X_Compare(GetStr(), vOther) <= 0;
 	}
 	friend bool operator<=(const Char *vSelf, const Rcnts &vOther) noexcept {
-		return X_Cmp(vSelf, vOther.GetStr()) <= 0;
+		return X_Compare(vSelf, vOther.GetStr()) <= 0;
 	}
 
 	bool operator>=(const Rcnts &vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther.GetStr()) >= 0;
+		return X_Compare(GetStr(), vOther.GetStr()) >= 0;
 	}
 	bool operator>=(const Char *vOther) const noexcept {
-		return X_Cmp(GetStr(), vOther) >= 0;
+		return X_Compare(GetStr(), vOther) >= 0;
 	}
 	friend bool operator>=(const Char *vSelf, const Rcnts &vOther) noexcept {
-		return X_Cmp(vSelf, vOther.GetStr()) >= 0;
+		return X_Compare(vSelf, vOther.GetStr()) >= 0;
 	}
 
 	friend void swap(Rcnts &vSelf, Rcnts &vOther) noexcept {

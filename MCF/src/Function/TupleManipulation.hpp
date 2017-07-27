@@ -14,8 +14,8 @@ namespace MCF {
 
 namespace Impl_TupleManipulators {
 	template<typename FunctionT, std::size_t ...kIndicesT, typename GetterT>
-	constexpr void RealAbsorb(FunctionT &vFunction, const std::index_sequence<kIndicesT...> &, const GetterT &vGetter){
-		(void)(..., (void)Invoke(std::forward<FunctionT>(vFunction), vGetter(std::integral_constant<std::size_t, kIndicesT>())));
+	constexpr void RealAbsorb(FunctionT &vFunction, const std::index_sequence<kIndicesT...> &, const GetterT &fnGetter){
+		(void)(..., (void)Invoke(std::forward<FunctionT>(vFunction), fnGetter(std::integral_constant<std::size_t, kIndicesT>())));
 	}
 }
 
@@ -36,8 +36,8 @@ constexpr FunctionT &&ReverseAbsorb(FunctionT &&vFunction, TupleT &&vTuple){
 
 namespace Impl_TupleManipulators {
 	template<typename FunctionT, std::size_t ...kIndicesT, typename GetterT>
-	constexpr decltype(auto) RealSqueeze(FunctionT &vFunction, const std::index_sequence<kIndicesT...> &, const GetterT &vGetter){
-		return Invoke(std::forward<FunctionT>(vFunction), vGetter(std::integral_constant<std::size_t, kIndicesT>())...);
+	constexpr decltype(auto) RealSqueeze(FunctionT &vFunction, const std::index_sequence<kIndicesT...> &, const GetterT &fnGetter){
+		return Invoke(std::forward<FunctionT>(vFunction), fnGetter(std::integral_constant<std::size_t, kIndicesT>())...);
 	}
 }
 
@@ -56,8 +56,8 @@ constexpr decltype(auto) ReverseSqueeze(FunctionT &&vFunction, TupleT &&vTuple){
 
 namespace Impl_TupleManipulators {
 	template<typename RetT, typename FunctionT, std::size_t ...kIndicesT, typename GetterT>
-	constexpr decltype(auto) RealDesignatedSqueeze(FunctionT &vFunction, const std::index_sequence<kIndicesT...> &, const GetterT &vGetter){
-		return DesignatedInvoke<RetT>(std::forward<FunctionT>(vFunction), vGetter(std::integral_constant<std::size_t, kIndicesT>())...);
+	constexpr decltype(auto) RealDesignatedSqueeze(FunctionT &vFunction, const std::index_sequence<kIndicesT...> &, const GetterT &fnGetter){
+		return DesignatedInvoke<RetT>(std::forward<FunctionT>(vFunction), fnGetter(std::integral_constant<std::size_t, kIndicesT>())...);
 	}
 }
 

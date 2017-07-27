@@ -37,8 +37,8 @@ namespace Impl_FlatContainer {
 			: FlatContainer()
 		{
 			Reserve(vOther.x_uSize);
-			for(std::size_t i = 0; i < vOther.x_uSize; ++i){
-				X_UncheckedPush(vOther.x_pStorage[i]);
+			for(std::size_t uIndex = 0; uIndex < vOther.x_uSize; ++uIndex){
+				X_UncheckedPush(vOther.x_pStorage[uIndex]);
 			}
 		}
 		FlatContainer(FlatContainer &&vOther) noexcept
@@ -50,8 +50,8 @@ namespace Impl_FlatContainer {
 			if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
 				Reserve(vOther.x_uSize);
 				try {
-					for(std::size_t i = 0; i < vOther.x_uSize; ++i){
-						X_UncheckedPush(vOther.x_pStorage[i]);
+					for(std::size_t uIndex = 0; uIndex < vOther.x_uSize; ++uIndex){
+						X_UncheckedPush(vOther.x_pStorage[uIndex]);
 					}
 				} catch(...){
 					Clear();
@@ -87,8 +87,8 @@ namespace Impl_FlatContainer {
 			MCF_DEBUG_CHECK(uCount <= GetSize());
 
 			const auto pData = x_pStorage;
-			for(std::size_t i = 0; i < uCount; ++i){
-				Destruct(pData + x_uSize - 1 - i);
+			for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
+				Destruct(pData + x_uSize - 1 - uIndex);
 			}
 			x_uSize -= uCount;
 		}
@@ -103,8 +103,8 @@ namespace Impl_FlatContainer {
 		template<typename OutputIteratorT>
 		OutputIteratorT Extract(OutputIteratorT itOutput){
 			try {
-				for(std::size_t i = 0; i < x_uSize; ++i){
-					*itOutput = MoveCaster()(x_pStorage[i]);
+				for(std::size_t uIndex = 0; uIndex < x_uSize; ++uIndex){
+					*itOutput = MoveCaster()(x_pStorage[uIndex]);
 					++itOutput;
 				}
 			} catch(...){
@@ -168,11 +168,11 @@ namespace Impl_FlatContainer {
 			const auto pOldStorage = x_pStorage;
 			auto pWrite = pNewStorage;
 			try {
-				for(std::size_t i = 0; i < x_uSize; ++i){
+				for(std::size_t uIndex = 0; uIndex < x_uSize; ++uIndex){
 					if(MoveCaster::kEnabled){
-						Construct(pWrite, MoveCaster()(pOldStorage[i]));
+						Construct(pWrite, MoveCaster()(pOldStorage[uIndex]));
 					} else {
-						Construct(pWrite, std::move_if_noexcept(pOldStorage[i]));
+						Construct(pWrite, std::move_if_noexcept(pOldStorage[uIndex]));
 					}
 					++pWrite;
 				}
@@ -184,8 +184,8 @@ namespace Impl_FlatContainer {
 				Allocator()(static_cast<void *>(pNewStorage));
 				throw;
 			}
-			for(std::size_t i = x_uSize; i > 0; --i){
-				Destruct(pOldStorage + i - 1);
+			for(std::size_t uIndex = x_uSize; uIndex > 0; --uIndex){
+				Destruct(pOldStorage + uIndex - 1);
 			}
 			Allocator()(static_cast<void *>(pOldStorage));
 
@@ -208,17 +208,17 @@ namespace Impl_FlatContainer {
 
 			if(MoveCaster::kEnabled){
 				ReserveMore(1);
-				for(std::size_t i = x_uSize; i > uOffset; --i){
-					Construct(x_pStorage + i, MoveCaster()(x_pStorage[i - 1]));
-					Destruct(x_pStorage + i - 1);
+				for(std::size_t uIndex = x_uSize; uIndex > uOffset; --uIndex){
+					Construct(x_pStorage + uIndex, MoveCaster()(x_pStorage[uIndex - 1]));
+					Destruct(x_pStorage + uIndex - 1);
 				}
 				auto uWrite = uOffset;
 				try {
 					DefaultConstruct(x_pStorage + uWrite, std::forward<ParamsT>(vParams)...);
 				} catch(...){
-					for(std::size_t i = uOffset; i < x_uSize; ++i){
-						Construct(x_pStorage + i, MoveCaster()(x_pStorage[i + 1]));
-						Destruct(x_pStorage + i + 1);
+					for(std::size_t uIndex = uOffset; uIndex < x_uSize; ++uIndex){
+						Construct(x_pStorage + uIndex, MoveCaster()(x_pStorage[uIndex + 1]));
+						Destruct(x_pStorage + uIndex + 1);
 					}
 					throw;
 				}
@@ -231,12 +231,12 @@ namespace Impl_FlatContainer {
 				}
 				FlatContainer vTemp;
 				vTemp.Reserve(uNewCapacity);
-				for(std::size_t i = 0; i < uOffset; ++i){
-					vTemp.X_UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = 0; uIndex < uOffset; ++uIndex){
+					vTemp.X_UncheckedPush(x_pStorage[uIndex]);
 				}
 				vTemp.X_UncheckedPush(std::forward<ParamsT>(vParams)...);
-				for(std::size_t i = uOffset; i < x_uSize; ++i){
-					vTemp.X_UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = uOffset; uIndex < x_uSize; ++uIndex){
+					vTemp.X_UncheckedPush(x_pStorage[uIndex]);
 				}
 				*this = std::move(vTemp);
 			}
@@ -260,23 +260,23 @@ namespace Impl_FlatContainer {
 			if(uOffsetBegin != uOffsetEnd){
 				if(MoveCaster::kEnabled){
 					const auto uDeltaSize = uOffsetEnd - uOffsetBegin;
-					for(std::size_t i = uOffsetBegin; i < uOffsetEnd; ++i){
-						Destruct(x_pStorage + i);
+					for(std::size_t uIndex = uOffsetBegin; uIndex < uOffsetEnd; ++uIndex){
+						Destruct(x_pStorage + uIndex);
 					}
-					for(std::size_t i = uOffsetEnd; i < x_uSize; ++i){
-						Construct(x_pStorage + i - uDeltaSize, MoveCaster()(x_pStorage[i]));
-						Destruct(x_pStorage + i);
+					for(std::size_t uIndex = uOffsetEnd; uIndex < x_uSize; ++uIndex){
+						Construct(x_pStorage + uIndex - uDeltaSize, MoveCaster()(x_pStorage[uIndex]));
+						Destruct(x_pStorage + uIndex);
 					}
 					x_uSize -= uDeltaSize;
 				} else {
 					FlatContainer vTemp;
 					const auto uCapacity = x_uCapacity;
 					vTemp.Reserve(uCapacity);
-					for(std::size_t i = 0; i < uOffsetBegin; ++i){
-						vTemp.X_UncheckedPush(x_pStorage[i]);
+					for(std::size_t uIndex = 0; uIndex < uOffsetBegin; ++uIndex){
+						vTemp.X_UncheckedPush(x_pStorage[uIndex]);
 					}
-					for(std::size_t i = uOffsetEnd; i < x_uSize; ++i){
-						vTemp.X_UncheckedPush(x_pStorage[i]);
+					for(std::size_t uIndex = uOffsetEnd; uIndex < x_uSize; ++uIndex){
+						vTemp.X_UncheckedPush(x_pStorage[uIndex]);
 					}
 					*this = std::move(vTemp);
 				}

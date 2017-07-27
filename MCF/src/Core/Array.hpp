@@ -51,8 +51,8 @@ public:
 	}
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
-		for(std::size_t i = 0; i < kSizeT; ++i){
-			*itOutput = std::move(m_a[i]);
+		for(std::size_t uIndex = 0; uIndex < kSizeT; ++uIndex){
+			*itOutput = std::move(m_a[uIndex]);
 			++itOutput;
 		}
 		return itOutput;

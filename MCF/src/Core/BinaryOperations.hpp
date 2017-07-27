@@ -48,9 +48,9 @@ void BSwap(Ty &dst, Tx &src) noexcept {
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
 	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
 
-	for(std::size_t i = 0; i < sizeof(dst); ++i){
-		auto &chd = reinterpret_cast<char (&)[sizeof(dst)]>(dst)[i];
-		auto &chs = reinterpret_cast<char (&)[sizeof(src)]>(src)[i];
+	for(std::size_t uIndex = 0; uIndex < sizeof(dst); ++uIndex){
+		auto &chd = reinterpret_cast<char (&)[sizeof(dst)]>(dst)[uIndex];
+		auto &chs = reinterpret_cast<char (&)[sizeof(src)]>(src)[uIndex];
 		const char cht = chd;
 		chd = chs;
 		chs = cht;

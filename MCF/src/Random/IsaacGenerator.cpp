@@ -14,21 +14,21 @@ void IsaacGenerator::X_RefreshInternal() noexcept {
 	++x_u32C;
 	x_u32B += x_u32C;
 
-	for(std::size_t i = 0; i < 256; i += 4){
-		const auto Step = [&](unsigned j, auto fnSpec){
-			const auto x = x_au32Internal[i + j];
-			fnSpec(x_u32A);
-			x_u32A += x_au32Internal[(i + j + 128) % 256];
-			const auto y = x_au32Internal[(x >> 2) % 256] + x_u32A + x_u32B;
-			x_au32Internal[i + j] = y;
-			x_u32B = x_au32Internal[(y >> 10) % 256] + x;
-			x_au32Result[i + j] = x_u32B;
+	for(std::size_t uIndex = 0; uIndex < 256; uIndex += 4){
+		const auto Step = [&](auto uStep, auto fnSpec){
+			const auto u32X = x_au32Internal[uIndex + uStep];
+			fnSpec();
+			x_u32A += x_au32Internal[(uIndex + uStep + 128) % 256];
+			const auto u32Y = x_au32Internal[(u32X >> 2) % 256] + x_u32A + x_u32B;
+			x_au32Internal[uIndex + uStep] = u32Y;
+			x_u32B = x_au32Internal[(u32Y >> 10) % 256] + u32X;
+			x_au32Result[uIndex + uStep] = x_u32B;
 		};
 
-		Step(0, [](auto &a){ a ^= (a << 13); });
-		Step(1, [](auto &a){ a ^= (a >>  6); });
-		Step(2, [](auto &a){ a ^= (a <<  2); });
-		Step(3, [](auto &a){ a ^= (a >> 16); });
+		Step(0u, [this]{ x_u32A ^= (x_u32A << 13); });
+		Step(1u, [this]{ x_u32A ^= (x_u32A >>  6); });
+		Step(2u, [this]{ x_u32A ^= (x_u32A <<  2); });
+		Step(3u, [this]{ x_u32A ^= (x_u32A >> 16); });
 	}
 }
 
@@ -52,22 +52,22 @@ void IsaacGenerator::Init(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 		au32Temp[7] ^= (au32Temp[0] >>  9); au32Temp[2] += au32Temp[7]; au32Temp[0] += au32Temp[1];
 	};
 
-	for(std::size_t i = 0; i < 4; ++i){
+	for(std::size_t uIndex = 0; uIndex < 4; ++uIndex){
 		Mix();
 	}
-	for(std::size_t i = 0; i < 256; i += 8){
-		for(std::size_t j = 0; j < 8; ++j){
-			au32Temp[j] += au32Seed[j];
+	for(std::size_t uIndex = 0; uIndex < 256; uIndex += 8){
+		for(std::size_t uStep = 0; uStep < 8; ++uStep){
+			au32Temp[uStep] += au32Seed[uStep];
 		}
 		Mix();
-		CopyN(x_au32Internal + i, au32Temp, 8);
+		CopyN(x_au32Internal + uIndex, au32Temp, 8);
 	}
-	for(std::size_t i = 0; i < 256; i += 8){
-		for(std::size_t j = 0; j < 8; ++j){
-			au32Temp[j] += x_au32Internal[i + j];
+	for(std::size_t uIndex = 0; uIndex < 256; uIndex += 8){
+		for(std::size_t uStep = 0; uStep < 8; ++uStep){
+			au32Temp[uStep] += x_au32Internal[uIndex + uStep];
 		}
 		Mix();
-		CopyN(x_au32Internal + i, au32Temp, 8);
+		CopyN(x_au32Internal + uIndex, au32Temp, 8);
 	}
 	x_u32A = 0;
 	x_u32B = 0;

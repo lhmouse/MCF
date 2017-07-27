@@ -77,10 +77,10 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			const auto pBegin = GetBegin();
-			const auto pEnd = GetEnd();
-			for(auto p = pBegin; p != pEnd; ++p){
-				*itOutput = *p;
+			const auto itBegin = GetBegin();
+			const auto itEnd = GetEnd();
+			for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+				*itOutput = *itCur;
 				++itOutput;
 			}
 		} catch(...){

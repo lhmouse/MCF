@@ -16,7 +16,7 @@ enum : std::uint64_t {
 
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
 	std::uint64_t u64Seed = u32Seed;
-	for(unsigned i = 0; i < 8; ++i){
+	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
 		u64Seed = u64Seed * kMultiplier + kIncrement;
 	}
 	x_u64Seed = u64Seed;

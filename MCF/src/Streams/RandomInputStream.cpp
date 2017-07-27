@@ -19,14 +19,14 @@ bool RandomInputStream::Discard() noexcept {
 	return true;
 }
 std::size_t RandomInputStream::Peek(void *pData, std::size_t uSize) noexcept {
-	for(std::size_t i = 0; i < uSize; ++i){
-		static_cast<unsigned char *>(pData)[i] = GetRandomUint32() & 0xFF;
+	for(std::size_t uIndex = 0; uIndex < uSize; ++uIndex){
+		static_cast<unsigned char *>(pData)[uIndex] = GetRandomUint32() & 0xFF;
 	}
 	return uSize;
 }
 std::size_t RandomInputStream::Get(void *pData, std::size_t uSize) noexcept {
-	for(std::size_t i = 0; i < uSize; ++i){
-		static_cast<unsigned char *>(pData)[i] = GetRandomUint32() & 0xFF;
+	for(std::size_t uIndex = 0; uIndex < uSize; ++uIndex){
+		static_cast<unsigned char *>(pData)[uIndex] = GetRandomUint32() & 0xFF;
 	}
 	return uSize;
 }

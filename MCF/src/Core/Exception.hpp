@@ -44,7 +44,7 @@ namespace Impl_Exception {
 	};
 }
 
-class Exception : public virtual std::exception, public Impl_Exception::ExceptionContext {
+class Exception : public virtual std::exception, private Impl_Exception::ExceptionContext {
 private:
 	unsigned long x_ulErrorCode;
 	Rcntws x_rcwsErrorMessage;
@@ -85,22 +85,16 @@ namespace Impl_Exception {
 	};
 
 	template<typename ExceptionT, typename ...ParamsT>
-	[[noreturn]] DummyReturnType DebugThrow(
-		const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException,
-		ParamsT &&...vParams)
-	{
-		auto e = ExceptionT(std::forward<ParamsT>(vParams)...);
-		static_cast<ExceptionContext &>(e) = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
-		throw e;
+	[[noreturn]] DummyReturnType DebugThrow(const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException, ParamsT &&...vParams){
+		auto exMyException = ExceptionT(std::forward<ParamsT>(vParams)...);
+		(ExceptionContext &)exMyException = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
+		throw exMyException;
 	}
 	template<typename ExceptionT, typename ...ParamsT>
-	std::exception_ptr DebugMakeExceptionPtr(
-		const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException,
-		ParamsT &&...vParams)
-	{
-		auto e = ExceptionT(std::forward<ParamsT>(vParams)...);
-		static_cast<ExceptionContext &>(e) = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
-		return std::make_exception_ptr(std::move(e));
+	std::exception_ptr DebugMakeExceptionPtr(const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException, ParamsT &&...vParams){
+		auto exMyException = ExceptionT(std::forward<ParamsT>(vParams)...);
+		(ExceptionContext &)exMyException = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
+		return std::make_exception_ptr(std::move(exMyException));
 	}
 }
 

@@ -20,8 +20,8 @@ extern NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLang
 __attribute__((__dllimport__, __stdcall__))
 extern void *RtlPcToFileHeader(void *pAddress, void **ppBase);
 
-static inline bool IsLineBreak(wchar_t wc){
-	return (wc == 0) || (wc == L'\n') || (wc == L'\r');
+static inline bool IsLineBreak(wchar_t wcChar){
+	return (wcChar == 0) || (wcChar == L'\n') || (wcChar == L'\r');
 }
 
 size_t _MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){

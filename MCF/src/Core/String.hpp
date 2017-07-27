@@ -250,10 +250,10 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			const auto pBegin = GetBegin();
-			const auto pEnd = GetEnd();
-			for(auto p = pBegin; p != pEnd; ++p){
-				*itOutput = *p;
+			const auto itBegin = GetBegin();
+			const auto itEnd = GetEnd();
+			for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+				*itOutput = *itCur;
 				++itOutput;
 			}
 		} catch(...){
@@ -647,9 +647,9 @@ public:
 		Char *pchData;
 		std::size_t uSize;
 		X_GetStorage(&pchData, &uSize, nullptr);
-		for(std::size_t i = 0, j = uSize; i < j; ++i, --j){
+		for(std::size_t uIndex = 0, uBackIndex = uSize; uIndex < uBackIndex; ++uIndex, --uBackIndex){
 			using std::swap;
-			swap(pchData[i], pchData[j - 1]);
+			swap(pchData[uIndex], pchData[uBackIndex - 1]);
 		}
 	}
 

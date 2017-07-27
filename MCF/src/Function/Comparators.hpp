@@ -8,44 +8,44 @@
 namespace MCF {
 
 struct Equal {
-	template<typename T, typename U>
-	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t == u)) {
-		return t == u;
+	template<typename SelfT, typename OtherT>
+	constexpr decltype(auto) operator()(const SelfT &vSelf, const OtherT &vOther) const noexcept(noexcept(vSelf == vOther)) {
+		return vSelf == vOther;
 	}
 };
 
 struct Unequal {
-	template<typename T, typename U>
-	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t != u)) {
-		return t != u;
+	template<typename SelfT, typename OtherT>
+	constexpr decltype(auto) operator()(const SelfT &vSelf, const OtherT &vOther) const noexcept(noexcept(vSelf != vOther)) {
+		return vSelf != vOther;
 	}
 };
 
 struct Less {
-	template<typename T, typename U>
-	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t < u)) {
-		return t < u;
+	template<typename SelfT, typename OtherT>
+	constexpr decltype(auto) operator()(const SelfT &vSelf, const OtherT &vOther) const noexcept(noexcept(vSelf < vOther)) {
+		return vSelf < vOther;
 	}
 };
 
 struct Greater {
-	template<typename T, typename U>
-	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t > u)) {
-		return t > u;
+	template<typename SelfT, typename OtherT>
+	constexpr decltype(auto) operator()(const SelfT &vSelf, const OtherT &vOther) const noexcept(noexcept(vSelf > vOther)) {
+		return vSelf > vOther;
 	}
 };
 
 struct LessEqual {
-	template<typename T, typename U>
-	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t <= u)) {
-		return t <= u;
+	template<typename SelfT, typename OtherT>
+	constexpr decltype(auto) operator()(const SelfT &vSelf, const OtherT &vOther) const noexcept(noexcept(vSelf <= vOther)) {
+		return vSelf <= vOther;
 	}
 };
 
 struct GreaterEqual {
-	template<typename T, typename U>
-	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t >= u)) {
-		return t >= u;
+	template<typename SelfT, typename OtherT>
+	constexpr decltype(auto) operator()(const SelfT &vSelf, const OtherT &vOther) const noexcept(noexcept(vSelf >= vOther)) {
+		return vSelf >= vOther;
 	}
 };
 

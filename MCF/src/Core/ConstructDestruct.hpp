@@ -89,7 +89,7 @@ void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vPara
 
 	auto pCur = pBegin;
 	try {
-		for(std::size_t i = 0; i < uCount; ++i){
+		for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
 			Construct(pCur, vParams...);
 			++pCur;
 		}
@@ -107,7 +107,7 @@ void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &.
 
 	auto pCur = pBegin;
 	try {
-		for(std::size_t i = 0; i < uCount; ++i){
+		for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
 			DefaultConstruct(pCur, vParams...);
 			++pCur;
 		}

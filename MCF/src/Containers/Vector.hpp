@@ -58,8 +58,8 @@ public:
 		: Vector()
 	{
 		Reserve(vOther.GetSize());
-		for(std::size_t i = 0; i < vOther.GetSize(); ++i){
-			UncheckedPush(vOther.x_pStorage[i]);
+		for(std::size_t uIndex = 0; uIndex < vOther.GetSize(); ++uIndex){
+			UncheckedPush(vOther.x_pStorage[uIndex]);
 		}
 	}
 	Vector(Vector &&vOther) noexcept
@@ -71,8 +71,8 @@ public:
 		if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
 			Reserve(vOther.GetSize());
 			try {
-				for(std::size_t i = 0; i < vOther.GetSize(); ++i){
-					UncheckedPush(vOther.x_pStorage[i]);
+				for(std::size_t uIndex = 0; uIndex < vOther.GetSize(); ++uIndex){
+					UncheckedPush(vOther.x_pStorage[uIndex]);
 				}
 			} catch(...){
 				Clear();
@@ -99,9 +99,9 @@ private:
 		MCF_DEBUG_CHECK(uPos <= x_uSize);
 
 		ReserveMore(uDeltaSize);
-		for(std::size_t i = x_uSize; i > uPos; --i){
-			Construct(x_pStorage + i - 1 + uDeltaSize, std::move(x_pStorage[i - 1]));
-			Destruct(x_pStorage + i - 1);
+		for(std::size_t uIndex = x_uSize; uIndex > uPos; --uIndex){
+			Construct(x_pStorage + uIndex - 1 + uDeltaSize, std::move(x_pStorage[uIndex - 1]));
+			Destruct(x_pStorage + uIndex - 1);
 		}
 	}
 	void X_UndoPreparation(std::size_t uPos, std::size_t uDeltaSize) noexcept {
@@ -110,9 +110,9 @@ private:
 		MCF_DEBUG_CHECK(uPos <= x_uSize);
 		MCF_DEBUG_CHECK(uDeltaSize <= x_uSize - uPos);
 
-		for(std::size_t i = uPos; i < x_uSize; ++i){
-			Construct(x_pStorage + i, std::move(x_pStorage[i + uDeltaSize]));
-			Destruct(x_pStorage + i + uDeltaSize);
+		for(std::size_t uIndex = uPos; uIndex < x_uSize; ++uIndex){
+			Construct(x_pStorage + uIndex, std::move(x_pStorage[uIndex + uDeltaSize]));
+			Destruct(x_pStorage + uIndex + uDeltaSize);
 		}
 	}
 
@@ -127,8 +127,8 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(std::size_t i = 0; i < x_uSize; ++i){
-				*itOutput = std::move(x_pStorage[i]);
+			for(std::size_t uIndex = 0; uIndex < x_uSize; ++uIndex){
+				*itOutput = std::move(x_pStorage[uIndex]);
 				++itOutput;
 			}
 		} catch(...){
@@ -329,8 +329,8 @@ public:
 		const auto pOldStorage = x_pStorage;
 		auto pWrite = pNewStorage;
 		try {
-			for(std::size_t i = 0; i < GetSize(); ++i){
-				Construct(pWrite, std::move_if_noexcept(pOldStorage[i]));
+			for(std::size_t uIndex = 0; uIndex < GetSize(); ++uIndex){
+				Construct(pWrite, std::move_if_noexcept(pOldStorage[uIndex]));
 				++pWrite;
 			}
 		} catch(...){
@@ -341,8 +341,8 @@ public:
 			Allocator()(static_cast<void *>(pNewStorage));
 			throw;
 		}
-		for(std::size_t i = GetSize(); i > 0; --i){
-			Destruct(pOldStorage + i - 1);
+		for(std::size_t uIndex = GetSize(); uIndex > 0; --uIndex){
+			Destruct(pOldStorage + uIndex - 1);
 		}
 		Allocator()(static_cast<void *>(pOldStorage));
 
@@ -396,8 +396,8 @@ public:
 	void Pop(std::size_t uCount = 1) noexcept {
 		MCF_DEBUG_CHECK(uCount <= GetSize());
 
-		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(x_pStorage + x_uSize - 1 - i);
+		for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
+			Destruct(x_pStorage + x_uSize - 1 - uIndex);
 		}
 		x_uSize -= uCount;
 	}
@@ -408,7 +408,7 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(vParams...);
 				++uElementsPushed;
 			}
@@ -425,7 +425,7 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(*itBegin);
 				++itBegin;
 				++uElementsPushed;
@@ -469,7 +469,7 @@ public:
 	void UncheckedAppend(std::size_t uDeltaSize, const ParamsT &...vParams){
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(vParams...);
 				++uElementsPushed;
 			}
@@ -484,7 +484,7 @@ public:
 	void UncheckedAppend(IteratorT itBegin, std::size_t uDeltaSize){
 		std::size_t uElementsPushed = 0;
 		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
+			for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 				UncheckedPush(*itBegin);
 				++itBegin;
 				++uElementsPushed;
@@ -540,12 +540,12 @@ public:
 			}
 			Vector vecTemp;
 			vecTemp.Reserve(uNewCapacity);
-			for(std::size_t i = 0; i < uOffset; ++i){
-				vecTemp.UncheckedPush(x_pStorage[i]);
+			for(std::size_t uIndex = 0; uIndex < uOffset; ++uIndex){
+				vecTemp.UncheckedPush(x_pStorage[uIndex]);
 			}
 			vecTemp.UncheckedPush(std::forward<ParamsT>(vParams)...);
-			for(std::size_t i = uOffset; i < x_uSize; ++i){
-				vecTemp.UncheckedPush(x_pStorage[i]);
+			for(std::size_t uIndex = uOffset; uIndex < x_uSize; ++uIndex){
+				vecTemp.UncheckedPush(x_pStorage[uIndex]);
 			}
 			*this = std::move(vecTemp);
 		}
@@ -567,7 +567,7 @@ public:
 				X_PrepareForInsertion(uOffset, uDeltaSize);
 				auto uWrite = uOffset;
 				try {
-					for(std::size_t i = 0; i < uDeltaSize; ++i){
+					for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 						DefaultConstruct(x_pStorage + uWrite, vParams...);
 						++uWrite;
 					}
@@ -588,14 +588,14 @@ public:
 				}
 				Vector vecTemp;
 				vecTemp.Reserve(uNewCapacity);
-				for(std::size_t i = 0; i < uOffset; ++i){
-					vecTemp.UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = 0; uIndex < uOffset; ++uIndex){
+					vecTemp.UncheckedPush(x_pStorage[uIndex]);
 				}
-				for(std::size_t i = 0; i < uDeltaSize; ++i){
+				for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 					vecTemp.UncheckedPush(vParams...);
 				}
-				for(std::size_t i = uOffset; i < x_uSize; ++i){
-					vecTemp.UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = uOffset; uIndex < x_uSize; ++uIndex){
+					vecTemp.UncheckedPush(x_pStorage[uIndex]);
 				}
 				*this = std::move(vecTemp);
 			}
@@ -642,14 +642,14 @@ public:
 					}
 					Vector vecTemp;
 					vecTemp.Reserve(uNewCapacity);
-					for(std::size_t i = 0; i < uOffset; ++i){
-						vecTemp.UncheckedPush(x_pStorage[i]);
+					for(std::size_t uIndex = 0; uIndex < uOffset; ++uIndex){
+						vecTemp.UncheckedPush(x_pStorage[uIndex]);
 					}
 					for(auto itCur = itBegin; itCur != itEnd; ++itCur){
 						vecTemp.UncheckedPush(*itCur);
 					}
-					for(std::size_t i = uOffset; i < x_uSize; ++i){
-						vecTemp.UncheckedPush(x_pStorage[i]);
+					for(std::size_t uIndex = uOffset; uIndex < x_uSize; ++uIndex){
+						vecTemp.UncheckedPush(x_pStorage[uIndex]);
 					}
 					*this = std::move(vecTemp);
 				}
@@ -657,14 +657,14 @@ public:
 				Vector vecTemp;
 				const auto uCapacity = GetCapacity();
 				vecTemp.Reserve(uCapacity);
-				for(std::size_t i = 0; i < uOffset; ++i){
-					vecTemp.UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = 0; uIndex < uOffset; ++uIndex){
+					vecTemp.UncheckedPush(x_pStorage[uIndex]);
 				}
 				for(auto itCur = itBegin; itCur != itEnd; ++itCur){
 					vecTemp.Push(*itCur);
 				}
-				for(std::size_t i = uOffset; i < x_uSize; ++i){
-					vecTemp.Push(x_pStorage[i]);
+				for(std::size_t uIndex = uOffset; uIndex < x_uSize; ++uIndex){
+					vecTemp.Push(x_pStorage[uIndex]);
 				}
 				*this = std::move(vecTemp);
 			}
@@ -695,23 +695,23 @@ public:
 				Pop(uDeltaSize);
 			} else if(std::is_nothrow_move_constructible<Element>::value){
 				const auto uDeltaSize = uOffsetEnd - uOffsetBegin;
-				for(std::size_t i = uOffsetBegin; i < uOffsetEnd; ++i){
-					Destruct(x_pStorage + i);
+				for(std::size_t uIndex = uOffsetBegin; uIndex < uOffsetEnd; ++uIndex){
+					Destruct(x_pStorage + uIndex);
 				}
-				for(std::size_t i = uOffsetEnd; i < x_uSize; ++i){
-					Construct(x_pStorage + i - uDeltaSize, std::move(x_pStorage[i]));
-					Destruct(x_pStorage + i);
+				for(std::size_t uIndex = uOffsetEnd; uIndex < x_uSize; ++uIndex){
+					Construct(x_pStorage + uIndex - uDeltaSize, std::move(x_pStorage[uIndex]));
+					Destruct(x_pStorage + uIndex);
 				}
 				x_uSize -= uDeltaSize;
 			} else {
 				Vector vecTemp;
 				const auto uCapacity = GetCapacity();
 				vecTemp.Reserve(uCapacity);
-				for(std::size_t i = 0; i < uOffsetBegin; ++i){
-					vecTemp.UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = 0; uIndex < uOffsetBegin; ++uIndex){
+					vecTemp.UncheckedPush(x_pStorage[uIndex]);
 				}
-				for(std::size_t i = uOffsetEnd; i < x_uSize; ++i){
-					vecTemp.UncheckedPush(x_pStorage[i]);
+				for(std::size_t uIndex = uOffsetEnd; uIndex < x_uSize; ++uIndex){
+					vecTemp.UncheckedPush(x_pStorage[uIndex]);
 				}
 				*this = std::move(vecTemp);
 			}

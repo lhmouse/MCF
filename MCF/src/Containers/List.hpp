@@ -260,7 +260,7 @@ public:
 		MCF_DEBUG_CHECK(uCount <= CountElements());
 
 		auto pNewFirst = x_pFirst;
-		for(std::size_t i = 0; i < uCount; ++i){
+		for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
 			const auto pNext = pNewFirst->pNext;
 			void *const pElementRaw = pNewFirst;
 			const auto pElement = static_cast<Element *>(pElementRaw);
@@ -296,7 +296,7 @@ public:
 		MCF_DEBUG_CHECK(uCount <= CountElements());
 
 		auto pNewLast = x_pLast;
-		for(std::size_t i = 0; i < uCount; ++i){
+		for(std::size_t uIndex = 0; uIndex < uCount; ++uIndex){
 			const auto pPrev = pNewLast->pPrev;
 			void *const pElementRaw = pNewLast;
 			const auto pElement = static_cast<Element *>(pElementRaw);
@@ -329,7 +329,7 @@ public:
 	template<typename ...ParamsT>
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;
-		for(std::size_t i = 0; i < uDeltaSize; ++i){
+		for(std::size_t uIndex = 0; uIndex < uDeltaSize; ++uIndex){
 			lstNew.Push(vParams...);
 		}
 		Splice(nullptr, lstNew);

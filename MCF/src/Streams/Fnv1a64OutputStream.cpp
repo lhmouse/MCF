@@ -17,7 +17,7 @@ void Fnv1a64OutputStream::X_Initialize() noexcept {
 }
 void Fnv1a64OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
 	auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
-	for(unsigned i = 0; i < sizeof(u64Word); ++i){
+	for(unsigned uIndex = 0; uIndex < sizeof(u64Word); ++uIndex){
 		const unsigned uLow = static_cast<unsigned char>(u64Word);
 		u64Word >>= 8;
 		x_u64Reg ^= uLow;
@@ -25,8 +25,8 @@ void Fnv1a64OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
 	}
 }
 void Fnv1a64OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
-	for(unsigned i = 0; i < uBytesInChunk; ++i){
-		const unsigned uLow = abyChunk[i];
+	for(unsigned uIndex = 0; uIndex < uBytesInChunk; ++uIndex){
+		const unsigned uLow = abyChunk[uIndex];
 		x_u64Reg ^= uLow;
 		x_u64Reg *= 1099511628211u;
 	}

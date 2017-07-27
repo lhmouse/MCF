@@ -12,8 +12,7 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register const char *rp = s2;
-	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
+	register const char *rp = (const char *)((uintptr_t)s2 & (uintptr_t)-32);
 	char *ewp = s1;
 	const char *erp = s2;
 	__m128i xz[1];

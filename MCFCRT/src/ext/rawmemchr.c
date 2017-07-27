@@ -10,8 +10,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register const char *rp = s;
-	rp = (const char *)((uintptr_t)rp & (uintptr_t)-32);
+	register const char *rp = (const char *)((uintptr_t)s & (uintptr_t)-32);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
 	unsigned shift = (unsigned)((const char *)s - rp);

@@ -12,8 +12,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register const wchar_t *rp = s;
-	rp = (const wchar_t *)((uintptr_t)rp & (uintptr_t)-64);
+	register const wchar_t *rp = (const wchar_t *)((uintptr_t)s & (uintptr_t)-64);
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
 	__m128i xc[1];

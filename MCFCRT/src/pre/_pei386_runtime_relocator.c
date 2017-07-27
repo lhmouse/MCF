@@ -28,9 +28,9 @@ typedef struct tagUnprotectedSection {
 
 static void UnprotectAllSections(UnprotectedSection *restrict pUnprotectedSections, const void *restrict pSectionTable, size_t uSectionCount){
 	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	for(size_t i = 0; i < uSectionCount; ++i){
-		UnprotectedSection *const pUnprotected = pUnprotectedSections + i;
-		const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pSectionTable + i;
+	for(size_t uIndex = 0; uIndex < uSectionCount; ++uIndex){
+		UnprotectedSection *const pUnprotected = pUnprotectedSections + uIndex;
+		const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pSectionTable + uIndex;
 		void *const pBase = (char *)pImageBase + pHeader->VirtualAddress;
 		const size_t uSize = pHeader->Misc.VirtualSize;
 
@@ -76,8 +76,8 @@ static void UnprotectAllSections(UnprotectedSection *restrict pUnprotectedSectio
 	}
 }
 static void ReprotectAllSections(const UnprotectedSection *restrict pUnprotectedSections, size_t uSectionCount){
-	for(size_t i = 0; i < uSectionCount; ++i){
-		const UnprotectedSection *const pUnprotected = pUnprotectedSections + i;
+	for(size_t uIndex = 0; uIndex < uSectionCount; ++uIndex){
+		const UnprotectedSection *const pUnprotected = pUnprotectedSections + uIndex;
 		void *const pBase = pUnprotected->pBase;
 		const size_t uSize = pUnprotected->uSize;
 

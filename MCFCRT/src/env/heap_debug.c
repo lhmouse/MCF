@@ -51,15 +51,15 @@ static inline unsigned char LcgGetByte(unsigned long *pulSeed){
 __attribute__((__noinline__))
 static void MakeSentry(unsigned char *pbyData, size_t uSize, uintptr_t uCookie){
 	unsigned long ulSeed = (unsigned long)uCookie;
-	for(size_t i = 0; i < uSize; ++i){
-		pbyData[i] = LcgGetByte(&ulSeed);
+	for(size_t uIndex = 0; uIndex < uSize; ++uIndex){
+		pbyData[uIndex] = LcgGetByte(&ulSeed);
 	}
 }
 __attribute__((__noinline__))
 static bool CheckSentry(uintptr_t uCookie, const unsigned char *pbyData, size_t uSize){
 	unsigned long ulSeed = (unsigned long)uCookie;
-	for(size_t i = 0; i < uSize; ++i){
-		if(pbyData[i] != LcgGetByte(&ulSeed)){
+	for(size_t uIndex = 0; uIndex < uSize; ++uIndex){
+		if(pbyData[uIndex] != LcgGetByte(&ulSeed)){
 			return false;
 		}
 	}

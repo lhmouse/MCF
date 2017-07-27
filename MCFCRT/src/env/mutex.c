@@ -84,12 +84,12 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			return true;
 		}
 		if(_MCFCRT_EXPECT(bSpinnable)){
-			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
-				register size_t j = uSpinMultiplier + 1;
+			for(size_t uSpinIndex = 0; _MCFCRT_EXPECT(uSpinIndex < uMaxSpinCount); ++uSpinIndex){
+				register size_t uMultiplierIndex = uSpinMultiplier + 1;
 				__atomic_thread_fence(__ATOMIC_SEQ_CST);
 				do {
 					__builtin_ia32_pause();
-				} while(--j != 0);
+				} while(--uMultiplierIndex != 0);
 				__atomic_thread_fence(__ATOMIC_SEQ_CST);
 				{
 					uintptr_t uOld, uNew;

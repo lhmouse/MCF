@@ -91,12 +91,12 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	intptr_t nUnlocked;
 	if(_MCFCRT_EXPECT(bSpinnable)){
 		nUnlocked = (*pfnUnlockCallback)(nContext);
-		for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
-			register size_t j = uSpinMultiplier + 1;
+		for(size_t uSpinIndex = 0; _MCFCRT_EXPECT(uSpinIndex < uMaxSpinCount); ++uSpinIndex){
+			register size_t uMultiplierIndex = uSpinMultiplier + 1;
 			__atomic_thread_fence(__ATOMIC_SEQ_CST);
 			do {
 				__builtin_ia32_pause();
-			} while(--j != 0);
+			} while(--uMultiplierIndex != 0);
 			__atomic_thread_fence(__ATOMIC_SEQ_CST);
 			{
 				uintptr_t uOld, uNew;
@@ -209,7 +209,7 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.
 	if(_MCFCRT_EXPECT_NOT((uCountToSignal > 0) && !RtlDllShutdownInProgress())){
-		for(size_t i = 0; i < uCountToSignal; ++i){
+		for(size_t uIndex = 0; uIndex < uCountToSignal; ++uIndex){
 			NTSTATUS lStatus = NtReleaseKeyedEvent(_MCFCRT_NULLPTR, (void *)puControl, false, _MCFCRT_NULLPTR);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);

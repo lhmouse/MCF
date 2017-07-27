@@ -323,8 +323,8 @@ static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
 	(void)nUnused;
 
 	AtExitCallbackBlock *const pBlock = pStorage;
-	for(size_t i = pBlock->uSize; i != 0; --i){
-		(*(pBlock->aCallbacks[i - 1].pfnProc))(pBlock->aCallbacks[i - 1].nContext);
+	for(size_t uIndex = pBlock->uSize; uIndex != 0; --uIndex){
+		(*(pBlock->aCallbacks[uIndex - 1].pfnProc))(pBlock->aCallbacks[uIndex - 1].nContext);
 	}
 }
 

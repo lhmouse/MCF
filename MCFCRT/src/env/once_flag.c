@@ -113,7 +113,7 @@ static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFin
 	// If `RtlDllShutdownInProgress()` is `true`, other threads will have been terminated.
 	// Calling `NtReleaseKeyedEvent()` when no thread is waiting results in deadlocks. Don't do that.
 	if(_MCFCRT_EXPECT_NOT((uCountToSignal > 0) && !RtlDllShutdownInProgress())){
-		for(size_t i = 0; i < uCountToSignal; ++i){
+		for(size_t uIndex = 0; uIndex < uCountToSignal; ++uIndex){
 			NTSTATUS lStatus = NtReleaseKeyedEvent(_MCFCRT_NULLPTR, (void *)puControl, false, _MCFCRT_NULLPTR);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);

@@ -35,7 +35,7 @@ char *strchr(const char *s, int c){
 		}
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-found:
+	found:
 			shift = (unsigned)__builtin_ctzl(mask);
 			return (char *)rp + shift;
 		}

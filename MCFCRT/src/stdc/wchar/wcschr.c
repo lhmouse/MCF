@@ -35,7 +35,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		}
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-found:
+	found:
 			shift = (unsigned)__builtin_ctzl(mask);
 			return (wchar_t *)rp + shift;
 		}

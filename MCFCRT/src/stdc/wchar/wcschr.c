@@ -24,8 +24,8 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		uint32_t mask;
 		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;
+		uint32_t zskip = (mask & -mask) * 2 - 1;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			uint32_t zskip = (mask & -mask) * 2 - 1;
 			mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 			mask &= zskip;
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){

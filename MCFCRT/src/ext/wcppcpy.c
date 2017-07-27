@@ -19,32 +19,39 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 	__MCFCRT_xmmsetz(xz);
 	unsigned shift = (unsigned)((const wchar_t *)s2 - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
-	for(;;){
-		_MCFCRT_ASSERT(es1 - s1 > 0);
-		ptrdiff_t dist = rp - (s2 + (es1 - s1) - 1);
-		dist += 32;
-		dist &= ~dist >> (sizeof(dist) * 8 - 1);
-		uint32_t zskip = (uint32_t)-1 >> dist;
-		__m128i xw[4];
-		uint32_t mask;
-		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
-		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;
-		mask |= ~zskip;
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			shift = (unsigned)__builtin_ctzl(mask);
-			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp + shift - erp));
-			*ewp = 0;
-			return ewp;
+//=============================================================================
+#define LOOP_BODY(ewp_next_)	\
+	{	\
+		_MCFCRT_ASSERT(es1 - s1 > 0);	\
+		ptrdiff_t dist = rp - (s2 + (es1 - s1) - 1);	\
+		dist += 32;	\
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
+		uint32_t zskip = (uint32_t)-1 >> dist;	\
+		__m128i xw[4];	\
+		uint32_t mask;	\
+		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);	\
+		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;	\
+		mask |= ~zskip;	\
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+			shift = (unsigned)__builtin_ctzl(mask);	\
+			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp + shift - erp));	\
+			*ewp = 0;	\
+			return ewp;	\
+		}	\
+		rp += 32;	\
+		ewp = (ewp_next_);	\
+		erp = rp;	\
+		skip = (uint32_t)-1;	\
+	}
+//=============================================================================
+	LOOP_BODY(_MCFCRT_rep_movsw(ewp, erp, (size_t)(rp - erp)));
+	if(((uintptr_t)ewp & ~(uintptr_t)-16) == 0){
+		for(;;){
+			LOOP_BODY(__MCFCRT_xmmstore_4(ewp, xw, _mm_store_si128));
 		}
-		if(_MCFCRT_EXPECT_NOT(rp != erp)){
-			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp + 32 - erp));
-		} else if(((uintptr_t)ewp & ~(uintptr_t)-16) == 0){
-			ewp = __MCFCRT_xmmstore_4(ewp, xw, _mm_store_si128);
-		} else {
-			ewp = __MCFCRT_xmmstore_4(ewp, xw, _mm_storeu_si128);
+	} else {
+		for(;;){
+			LOOP_BODY(__MCFCRT_xmmstore_4(ewp, xw, _mm_storeu_si128));
 		}
-		rp += 32;
-		erp = rp;
-		skip = (uint32_t)-1;
 	}
 }

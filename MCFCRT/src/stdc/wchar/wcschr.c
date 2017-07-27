@@ -28,10 +28,10 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 			mask &= zskip;
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){
-				goto found;
+			if(_MCFCRT_EXPECT_NOT(mask == 0)){
+				return _MCFCRT_NULLPTR;
 			}
-			return _MCFCRT_NULLPTR;
+			goto found;
 		}
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){

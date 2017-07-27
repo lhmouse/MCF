@@ -28,10 +28,10 @@ char *strchr(const char *s, int c){
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 			mask &= zskip;
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){
-				goto found;
+			if(_MCFCRT_EXPECT_NOT(mask == 0)){
+				return _MCFCRT_NULLPTR;
 			}
-			return _MCFCRT_NULLPTR;
+			goto found;
 		}
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){

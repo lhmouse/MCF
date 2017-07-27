@@ -880,8 +880,8 @@ public:
 					const auto vPrepared = X_PrepareForInsertion(uOffset, uDeltaSize);
 					auto uWrite = vPrepared.first;
 					try {
-						for(auto it = itBegin; it != itEnd; ++it){
-							DefaultConstruct(x_pStorage + uWrite, *it);
+						for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+							DefaultConstruct(x_pStorage + uWrite, *itCur);
 							uWrite = X_Advance(uWrite, 1);
 						}
 					} catch(...){
@@ -911,8 +911,8 @@ public:
 							const auto pStorage = this->x_pStorage;
 							queTemp.UncheckedPush(pStorage[n]);
 						});
-					for(auto it = itBegin; it != itEnd; ++it){
-						queTemp.UncheckedPush(*it);
+					for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+						queTemp.UncheckedPush(*itCur);
 					}
 					X_IterateForward(uOffset, x_uEnd,
 						[&, this](auto n){
@@ -930,8 +930,8 @@ public:
 						const auto pStorage = this->x_pStorage;
 						queTemp.UncheckedPush(pStorage[n]);
 					});
-				for(auto it = itBegin; it != itEnd; ++it){
-					queTemp.Push(*it);
+				for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+					queTemp.Push(*itCur);
 				}
 				X_IterateForward(uOffset, x_uEnd,
 					[&, this](auto n){

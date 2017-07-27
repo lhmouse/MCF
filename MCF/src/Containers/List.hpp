@@ -339,8 +339,8 @@ public:
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
-		for(auto it = itBegin; it != itEnd; ++it){
-			lstNew.Push(*it);
+		for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+			lstNew.Push(*itCur);
 		}
 		Splice(nullptr, lstNew);
 	}

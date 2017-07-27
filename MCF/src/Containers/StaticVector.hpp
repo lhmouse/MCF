@@ -387,11 +387,11 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			for(auto it = itBegin; it != itEnd; ++it){
+			for(auto itCur = itBegin; itCur != itEnd; ++itCur){
 				if(kHasDeltaSizeHint){
-					UncheckedPush(*it);
+					UncheckedPush(*itCur);
 				} else {
-					Push(*it);
+					Push(*itCur);
 				}
 				++uElementsPushed;
 			}
@@ -439,8 +439,8 @@ public:
 	void UncheckedAppend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		std::size_t uElementsPushed = 0;
 		try {
-			for(auto it = itBegin; it != itEnd; ++it){
-				UncheckedPush(*it);
+			for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+				UncheckedPush(*itCur);
 				++uElementsPushed;
 			}
 		} catch(...){

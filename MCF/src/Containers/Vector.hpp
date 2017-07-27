@@ -448,11 +448,11 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			for(auto it = itBegin; it != itEnd; ++it){
+			for(auto itCur = itBegin; itCur != itEnd; ++itCur){
 				if(kHasDeltaSizeHint){
-					UncheckedPush(*it);
+					UncheckedPush(*itCur);
 				} else {
-					Push(*it);
+					Push(*itCur);
 				}
 				++uElementsPushed;
 			}
@@ -500,8 +500,8 @@ public:
 	void UncheckedAppend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		std::size_t uElementsPushed = 0;
 		try {
-			for(auto it = itBegin; it != itEnd; ++it){
-				UncheckedPush(*it);
+			for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+				UncheckedPush(*itCur);
 				++uElementsPushed;
 			}
 		} catch(...){
@@ -621,8 +621,8 @@ public:
 					X_PrepareForInsertion(uOffset, uDeltaSize);
 					auto uWrite = uOffset;
 					try {
-						for(auto it = itBegin; it != itEnd; ++it){
-							DefaultConstruct(x_pStorage + uWrite, *it);
+						for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+							DefaultConstruct(x_pStorage + uWrite, *itCur);
 							++uWrite;
 						}
 					} catch(...){
@@ -645,8 +645,8 @@ public:
 					for(std::size_t i = 0; i < uOffset; ++i){
 						vecTemp.UncheckedPush(x_pStorage[i]);
 					}
-					for(auto it = itBegin; it != itEnd; ++it){
-						vecTemp.UncheckedPush(*it);
+					for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+						vecTemp.UncheckedPush(*itCur);
 					}
 					for(std::size_t i = uOffset; i < x_uSize; ++i){
 						vecTemp.UncheckedPush(x_pStorage[i]);
@@ -660,8 +660,8 @@ public:
 				for(std::size_t i = 0; i < uOffset; ++i){
 					vecTemp.UncheckedPush(x_pStorage[i]);
 				}
-				for(auto it = itBegin; it != itEnd; ++it){
-					vecTemp.Push(*it);
+				for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+					vecTemp.Push(*itCur);
 				}
 				for(std::size_t i = uOffset; i < x_uSize; ++i){
 					vecTemp.Push(x_pStorage[i]);

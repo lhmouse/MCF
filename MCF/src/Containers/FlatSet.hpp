@@ -96,8 +96,8 @@ public:
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 			Reserve(uDeltaSize);
 		}
-		for(auto it = itBegin; it != itEnd; ++it){
-			AddWithHint(GetEnd(), *it);
+		for(auto itCur = itBegin; itCur != itEnd; ++itCur){
+			AddWithHint(GetEnd(), *itCur);
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。

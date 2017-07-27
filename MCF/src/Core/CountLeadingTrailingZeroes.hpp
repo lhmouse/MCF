@@ -5,42 +5,40 @@
 #ifndef MCF_CORE_COUNT_LEADING_TRAILING_ZEROES_HPP_
 #define MCF_CORE_COUNT_LEADING_TRAILING_ZEROES_HPP_
 
-#include <cstdint>
 #include <climits>
-#include <cstddef>
 
 namespace MCF {
 
-inline unsigned CountLeadingZeroes(unsigned char by) noexcept {
-	return (unsigned)__builtin_clz(by) - (unsigned)(sizeof(unsigned) - 1) * CHAR_BIT;
+constexpr unsigned CountLeadingZeroes(unsigned char byValue) noexcept {
+	return (unsigned)__builtin_clz(byValue) - (unsigned)(sizeof(unsigned) - 1) * CHAR_BIT;
 }
-inline unsigned CountLeadingZeroes(unsigned short ush) noexcept {
-	return (unsigned)__builtin_clz(ush) - (unsigned)(sizeof(unsigned) - 1) * CHAR_BIT;
+constexpr unsigned CountLeadingZeroes(unsigned short ushValue) noexcept {
+	return (unsigned)__builtin_clz(ushValue) - (unsigned)(sizeof(unsigned) - 1) * CHAR_BIT;
 }
-inline unsigned CountLeadingZeroes(unsigned u) noexcept {
-	return (unsigned)__builtin_clz(u);
+constexpr unsigned CountLeadingZeroes(unsigned uValue) noexcept {
+	return (unsigned)__builtin_clz(uValue);
 }
-inline unsigned CountLeadingZeroes(unsigned long ul) noexcept {
-	return (unsigned)__builtin_clzl(ul);
+constexpr unsigned CountLeadingZeroes(unsigned long ulValue) noexcept {
+	return (unsigned)__builtin_clzl(ulValue);
 }
-inline unsigned CountLeadingZeroes(unsigned long long ull) noexcept {
-	return (unsigned)__builtin_clzll(ull);
+constexpr unsigned CountLeadingZeroes(unsigned long long ullValue) noexcept {
+	return (unsigned)__builtin_clzll(ullValue);
 }
 
-inline unsigned CountTrailingZeroes(unsigned char by) noexcept {
-	return (unsigned)__builtin_ctz(by);
+constexpr unsigned CountTrailingZeroes(unsigned char byValue) noexcept {
+	return (unsigned)__builtin_ctz(byValue);
 }
-inline unsigned CountTrailingZeroes(unsigned short ush) noexcept {
-	return (unsigned)__builtin_ctz(ush);
+constexpr unsigned CountTrailingZeroes(unsigned short ushValue) noexcept {
+	return (unsigned)__builtin_ctz(ushValue);
 }
-inline unsigned CountTrailingZeroes(unsigned u) noexcept {
-	return (unsigned)__builtin_ctz(u);
+constexpr unsigned CountTrailingZeroes(unsigned uValue) noexcept {
+	return (unsigned)__builtin_ctz(uValue);
 }
-inline unsigned CountTrailingZeroes(unsigned long ul) noexcept {
-	return (unsigned)__builtin_ctzl(ul);
+constexpr unsigned CountTrailingZeroes(unsigned long ulValue) noexcept {
+	return (unsigned)__builtin_ctzl(ulValue);
 }
-inline unsigned CountTrailingZeroes(unsigned long long ull) noexcept {
-	return (unsigned)__builtin_ctzll(ull);
+constexpr unsigned CountTrailingZeroes(unsigned long long ullValue) noexcept {
+	return (unsigned)__builtin_ctzll(ullValue);
 }
 
 }

@@ -20,7 +20,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 		uint32_t mask;
 		rp = __MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
-		__builtin_prefetch(rp + 64);
+		__builtin_prefetch(rp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = (unsigned)__builtin_ctzl(mask);
 			return (char *)rp - 32 + shift;

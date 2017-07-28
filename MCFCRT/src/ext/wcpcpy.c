@@ -25,7 +25,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 		uint32_t mask;	\
 		rp = __MCFCRT_xmmload_4(xw, rp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;	\
-		__builtin_prefetch(rp + 64);	\
+		__builtin_prefetch(rp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			shift = (unsigned)__builtin_ctzl(mask);	\
 			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp - 32 + shift - erp));	\

@@ -31,7 +31,7 @@ char *strchr(const char *s, int c){
 		uint32_t zskip = ~mask & (mask - 1);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 		mask |= ~zskip;
-		__builtin_prefetch(rp + 64);
+		__builtin_prefetch(rp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			if((mask & zskip) == 0){
 				return _MCFCRT_NULLPTR;

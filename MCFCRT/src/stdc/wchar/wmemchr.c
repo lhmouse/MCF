@@ -32,7 +32,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 		rp = __MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 		mask |= ~zskip;
-		__builtin_prefetch(rp + 64);
+		__builtin_prefetch(rp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			if((mask & zskip) == 0){
 				return _MCFCRT_NULLPTR;

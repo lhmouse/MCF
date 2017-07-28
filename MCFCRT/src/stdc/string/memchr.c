@@ -32,7 +32,7 @@ void *memchr(const void *s, int c, size_t n){
 		rp = __MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
 		mask |= ~zskip;
-		__builtin_prefetch(rp + 64);
+		__builtin_prefetch(rp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			if((mask & zskip) == 0){
 				return _MCFCRT_NULLPTR;

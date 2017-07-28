@@ -32,7 +32,7 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 		rp = __MCFCRT_xmmload_2(xw, rp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8) & skip;	\
 		mask |= ~zskip;	\
-		__builtin_prefetch(rp + 64);	\
+		__builtin_prefetch(rp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			shift = (unsigned)__builtin_ctzl(mask);	\
 			ewp = _MCFCRT_rep_movsb(ewp, erp, (size_t)(rp - 32 + shift - erp));	\

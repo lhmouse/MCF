@@ -30,7 +30,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s1e[-3] = 'a';
 	s1e[-2] = 0;
 	s1e[-1] = 'c';
-	const auto s2  = (Char *)((char *)p2.Get() + 2);
+	const auto s2  = (Char *)((char *)p2.Get() + 4);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
 	Fill(s2, s2e, 'b');
 	s2e[-3] = 'a';
@@ -38,14 +38,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2e[-1] = 'c';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strcpy"_nsv;
+		const auto fname = "memchr"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<char * (*)(char *, const char *)>(fname);
+			const auto pf = dll.RequireProcAddress<Char * (*)(const Char *, Char, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 10; ++i){
-				r = (std::ptrdiff_t)(*pf)(s2, s1);
+				r = (std::ptrdiff_t)(*pf)(s2, 'c', (std::size_t)(s2e - s2));
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

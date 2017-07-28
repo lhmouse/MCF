@@ -77,35 +77,35 @@ static inline void __MCFCRT_xmmchs_4w(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT
 }
 
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_21b(const __m128i *__lhs, __m128i *__rhs, __m128i (*__comparator)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
-	__m128i __t = __comparator(__lhs[0], __rhs[0]);
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_21b(const __m128i *__lhs, __m128i *__rhs, __m128i (*__comp)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
+	__m128i __t = __comp(__lhs[0], __rhs[0]);
 	_MCFCRT_STD uint32_t __mask = (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t);
-	__t = __comparator(__lhs[1], __rhs[0]);
+	__t = __comp(__lhs[1], __rhs[0]);
 	__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << 16;
 	return __mask;
 }
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_41w(const __m128i *__lhs, __m128i *__rhs, __m128i (*__comparator)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
-	__m128i __t = _mm_packs_epi16(__comparator(__lhs[0], __rhs[0]), __comparator(__lhs[1], __rhs[0]));
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_41w(const __m128i *__lhs, __m128i *__rhs, __m128i (*__comp)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
+	__m128i __t = _mm_packs_epi16(__comp(__lhs[0], __rhs[0]), __comp(__lhs[1], __rhs[0]));
 	_MCFCRT_STD uint32_t __mask = (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t);
-	__t = _mm_packs_epi16(__comparator(__lhs[2], __rhs[0]), __comparator(__lhs[3], __rhs[0]));
+	__t = _mm_packs_epi16(__comp(__lhs[2], __rhs[0]), __comp(__lhs[3], __rhs[0]));
 	__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << 16;
 	return __mask;
 }
 
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_22b(const __m128i *__lhs, const __m128i *__rhs, __m128i (*__comparator)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
-	__m128i __t = __comparator(__lhs[0], __rhs[0]);
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_22b(const __m128i *__lhs, const __m128i *__rhs, __m128i (*__comp)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
+	__m128i __t = __comp(__lhs[0], __rhs[0]);
 	_MCFCRT_STD uint32_t __mask = (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t);
-	__t = __comparator(__lhs[1], __rhs[1]);
+	__t = __comp(__lhs[1], __rhs[1]);
 	__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << 16;
 	return __mask;
 }
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_44w(const __m128i *__lhs, const __m128i *__rhs, __m128i (*__comparator)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
-	__m128i __t = _mm_packs_epi16(__comparator(__lhs[0], __rhs[0]), __comparator(__lhs[1], __rhs[1]));
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_44w(const __m128i *__lhs, const __m128i *__rhs, __m128i (*__comp)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
+	__m128i __t = _mm_packs_epi16(__comp(__lhs[0], __rhs[0]), __comp(__lhs[1], __rhs[1]));
 	_MCFCRT_STD uint32_t __mask = (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t);
-	__t = _mm_packs_epi16(__comparator(__lhs[2], __rhs[2]), __comparator(__lhs[3], __rhs[3]));
+	__t = _mm_packs_epi16(__comp(__lhs[2], __rhs[2]), __comp(__lhs[3], __rhs[3]));
 	__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << 16;
 	return __mask;
 }

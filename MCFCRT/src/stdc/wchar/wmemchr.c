@@ -29,17 +29,17 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 		uint32_t zskip = ~(uint32_t)-1 >> dist;
 		__m128i xw[4];
 		uint32_t mask;
-		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
+		rp = __MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
 		mask |= ~zskip;
+		__builtin_prefetch(rp + 64);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			if((mask & zskip) == 0){
 				return _MCFCRT_NULLPTR;
 			}
 			shift = (unsigned)__builtin_ctzl(mask);
-			return (wchar_t *)rp + shift;
+			return (wchar_t *)rp - 32 + shift;
 		}
-		rp += 32;
 		skip = (uint32_t)-1;
 	}
 }

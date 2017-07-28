@@ -18,13 +18,13 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 	for(;;){
 		__m128i xw[2];
 		uint32_t mask;
-		__MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
+		rp = __MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
+		__builtin_prefetch(rp + 64);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = (unsigned)__builtin_ctzl(mask);
-			return (char *)rp + shift;
+			return (char *)rp - 32 + shift;
 		}
-		rp += 32;
 		skip = (uint32_t)-1;
 	}
 }

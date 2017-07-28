@@ -4,11 +4,15 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
+#include "../../ext/rawwmemchr.h"
 #include "../string/_sse3.h"
 
 #undef wcschr
 
 wchar_t *wcschr(const wchar_t *s, wchar_t c){
+	if(_MCFCRT_EXPECT_NOT((uint16_t)c == 0)){
+		return _MCFCRT_rawwmemchr(s, 0);
+	}
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
@@ -24,18 +28,13 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		uint32_t mask;
 		__MCFCRT_xmmload_4(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;
-		uint32_t zskip = (mask & -mask) * 2 - 1;
+		uint32_t zskip = ~mask & (mask - 1);
+		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
+		mask |= ~zskip;
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
-			mask &= zskip;
-			if(mask == 0){
+			if((mask & zskip) == 0){
 				return _MCFCRT_NULLPTR;
 			}
-			goto found;
-		}
-		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-	found:
 			shift = (unsigned)__builtin_ctzl(mask);
 			return (wchar_t *)rp + shift;
 		}

@@ -9,6 +9,8 @@
 #include "rep_movs.h"
 
 wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
+	_MCFCRT_ASSERT(s1 < es1);
+
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
@@ -22,16 +24,13 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 //=============================================================================
 #define LOOP_BODY(ewp_next_)	\
 	{	\
-		_MCFCRT_ASSERT(es1 - s1 > 0);	\
-		ptrdiff_t dist = rp - (s2 + (es1 - s1) - 1);	\
-		dist += 32;	\
-		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
-		uint32_t zskip = (uint32_t)-1 >> dist;	\
 		__m128i xw[4];	\
 		uint32_t mask;	\
 		rp = __MCFCRT_xmmload_4(xw, rp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;	\
-		mask |= ~zskip;	\
+		ptrdiff_t dist = rp - (s2 + (es1 - s1) - 1);	\
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
+		mask |= ~((uint32_t)-1 >> dist);	\
 		__builtin_prefetch(rp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			shift = (unsigned)__builtin_ctzl(mask);	\

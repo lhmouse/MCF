@@ -4,7 +4,6 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include "../../env/xassert.h"
 #include "_sse3.h"
 
 #undef memchr
@@ -22,19 +21,16 @@ void *memchr(const void *s, int c, size_t n){
 	unsigned shift = (unsigned)((const char *)s - rp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
-		_MCFCRT_ASSERT(rp < ((const char *)s + n));
-		ptrdiff_t dist = rp - ((const char *)s + n);
-		dist += 32;
-		dist &= ~dist >> (sizeof(dist) * 8 - 1);
-		uint32_t zskip = (uint32_t)-1 >> dist;
 		__m128i xw[2];
 		uint32_t mask;
 		rp = __MCFCRT_xmmload_2(xw, rp, _mm_load_si128);
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
-		mask |= ~zskip;
+		ptrdiff_t dist = rp - ((const char *)s + n);
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);
+		mask |= ~((uint32_t)-1 >> dist);
 		__builtin_prefetch(rp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			if((mask & zskip) == 0){
+			if((mask << dist) == 0){
 				return _MCFCRT_NULLPTR;
 			}
 			shift = (unsigned)__builtin_ctzl(mask);

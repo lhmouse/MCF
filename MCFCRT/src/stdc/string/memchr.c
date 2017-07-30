@@ -34,7 +34,8 @@ void *memchr(const void *s, int c, size_t n){
 				return _MCFCRT_NULLPTR;
 			}
 			shift = (unsigned)__builtin_ctzl(mask);
-			return (char *)rp - 32 + shift;
+			rp -= 32 - shift;
+			return (char *)rp;
 		}
 		skip = (uint32_t)-1;
 	}

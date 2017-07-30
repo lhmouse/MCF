@@ -30,10 +30,8 @@ char *strchr(const char *s, int c){
 		__builtin_prefetch(rp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = (unsigned)__builtin_ctzl(mask);
-			if(*(rp - 32 + shift) == 0){
-				return _MCFCRT_NULLPTR;
-			}
-			return (char *)rp - 32 + shift;
+			rp -= 32 - shift;
+			return (*rp == 0) ? _MCFCRT_NULLPTR : (char *)rp;
 		}
 		skip = (uint32_t)-1;
 	}

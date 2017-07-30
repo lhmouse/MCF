@@ -28,7 +28,8 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 		__builtin_prefetch(rp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			shift = (unsigned)__builtin_ctzl(mask);	\
-			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp - 32 + shift - erp));	\
+			rp -= 32 - shift;	\
+			ewp = _MCFCRT_rep_movsw(ewp, erp, (size_t)(rp - erp));	\
 			*ewp = 0;	\
 			return ewp;	\
 		}	\

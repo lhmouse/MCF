@@ -16,13 +16,12 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 	// 每个字内的字节的权限必然一致。
 	register char *wp = s1;
 	register const char *arp = (const char *)((uintptr_t)s2 & (uintptr_t)-32);
-	const char *erp = s2;
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
 	unsigned shift = (unsigned)((const char *)s2 - arp);
 	uint32_t skip = (uint32_t)-1 << shift;
 //=============================================================================
-#define LOOP_BODY(wp_full_)	\
+#define LOOP_BODY(wp_part_, wp_full_)	\
 	{	\
 		__m128i xw[2];	\
 		uint32_t mask;	\
@@ -34,24 +33,25 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			shift = (unsigned)__builtin_ctzl(mask);	\
-			arp -= 32 - shift;	\
-			wp = _MCFCRT_rep_movsb(wp, erp, (size_t)(arp - erp));	\
+			wp = (wp_part_);	\
 			*wp = 0;	\
 			return wp;	\
 		}	\
 		wp = (wp_full_);	\
-		erp = arp;	\
 		skip = (uint32_t)-1;	\
 	}
 //=============================================================================
-	LOOP_BODY(_MCFCRT_rep_movsb(wp, erp, (size_t)(arp - erp)));
+	LOOP_BODY(_MCFCRT_rep_movsb(wp, s2, (size_t)(arp - 32 + shift - s2)),
+	          _MCFCRT_rep_movsb(wp, s2, (size_t)(arp - s2)));
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
-			LOOP_BODY(__MCFCRT_xmmstore_2(wp, xw, _mm_store_si128));
+			LOOP_BODY(_MCFCRT_rep_movsb(wp, arp - 32, shift),
+			          __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128));
 		}
 	} else {
 		for(;;){
-			LOOP_BODY(__MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
+			LOOP_BODY(_MCFCRT_rep_movsb(wp, arp - 32, shift),
+			          __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
 		}
 	}
 }

@@ -34,8 +34,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 				return _MCFCRT_NULLPTR;
 			}
 			shift = (unsigned)__builtin_ctzl(mask);
-			arp -= 32 - shift;
-			return (wchar_t *)arp;
+			return (wchar_t *)arp - 32 + shift;
 		}
 		skip = (uint32_t)-1;
 	}

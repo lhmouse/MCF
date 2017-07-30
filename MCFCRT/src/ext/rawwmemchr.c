@@ -23,8 +23,7 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 		__builtin_prefetch(arp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = (unsigned)__builtin_ctzl(mask);
-			arp -= 32 - shift;
-			return (wchar_t *)arp;
+			return (wchar_t *)arp - 32 + shift;
 		}
 		skip = (uint32_t)-1;
 	}

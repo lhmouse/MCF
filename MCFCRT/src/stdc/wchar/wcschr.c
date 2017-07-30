@@ -30,8 +30,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		__builtin_prefetch(arp + 64, 0, 0);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			shift = (unsigned)__builtin_ctzl(mask);
-			arp -= 32 - shift;
-			return (*arp == 0) ? _MCFCRT_NULLPTR : (wchar_t *)arp;
+			return (*(arp - 32 + shift) == 0) ? _MCFCRT_NULLPTR : (wchar_t *)(arp - 32 + shift);
 		}
 		skip = (uint32_t)-1;
 	}

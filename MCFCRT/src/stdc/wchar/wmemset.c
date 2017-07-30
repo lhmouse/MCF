@@ -3,28 +3,23 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include <intrin.h>
+#include "../../ext/rep_stos.h"
 
 #undef wmemset
 
 wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n){
 	register wchar_t *wp = s;
-	wchar_t *const wend = wp + n;
+	uintptr_t word;
+	word = (uint16_t)c;
 #ifdef _WIN64
-	size_t nq = (size_t)(wend - wp) / 4;
-	uint64_t q = (uint16_t)c;
-	q += (q << 16);
-	q += (q << 32);
-	__stosq((void *)wp, q, nq);
-	wp += nq * 4;
+	word += word << 16;
+	word += word << 32;
+	wp = (wchar_t *)_MCFCRT_rep_stosq((uint64_t *)wp, (uint64_t)word, n / 4);
+	wp = (wchar_t *)_MCFCRT_rep_stosw((uint16_t *)wp, (uint16_t)word, n % 4);
 #else
-	size_t nd = (size_t)(wend - wp) / 2;
-	uint32_t d = (uint16_t)c;
-	d += (d << 16);
-	__stosd((void *)wp, d, nd);
-	wp += nd * 2;
+	word += word << 16;
+	wp = (wchar_t *)_MCFCRT_rep_stosd((uint32_t *)wp, (uint32_t)word, n / 2);
+	wp = (wchar_t *)_MCFCRT_rep_stosw((uint16_t *)wp, (uint16_t)word, n % 2);
 #endif
-	size_t nw = (size_t)(wend - wp);
-	__stosw((void *)wp, (uint16_t)c, nw);
 	return s;
 }

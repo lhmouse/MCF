@@ -9,9 +9,6 @@
 #undef wmemchr
 
 wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
-	if(_MCFCRT_EXPECT_NOT(n == 0)){
-		return _MCFCRT_NULLPTR;
-	}
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
@@ -21,6 +18,9 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	unsigned shift = (unsigned)((const uint16_t *)s - arp);
 	uint32_t skip = (uint32_t)-1 << shift;
 	for(;;){
+		if(_MCFCRT_EXPECT_NOT(arp >= (const uint16_t *)s + n)){
+			return _MCFCRT_NULLPTR;
+		}
 		__m128i xw[4];
 		uint32_t mask;
 		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);

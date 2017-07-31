@@ -15,27 +15,32 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	register const uint16_t *arp = (const uint16_t *)((uintptr_t)s & (uintptr_t)-64);
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
-	unsigned shift = (unsigned)((const uint16_t *)s - arp);
-	uint32_t skip = (uint32_t)-1 << shift;
+//=============================================================================
+#define LOOP_BODY(skip_)	\
+	{	\
+		if(_MCFCRT_EXPECT_NOT(arp >= (const uint16_t *)s + n)){	\
+			return _MCFCRT_NULLPTR;	\
+		}	\
+		__m128i xw[4];	\
+		uint32_t mask;	\
+		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
+		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16);	\
+		mask &= (skip_);	\
+		ptrdiff_t dist = arp - ((const uint16_t *)s + n);	\
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
+		mask |= ~((uint32_t)-1 >> dist);	\
+		__builtin_prefetch(arp + 64, 0, 0);	\
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+			if((mask << dist) == 0){	\
+				return _MCFCRT_NULLPTR;	\
+			}	\
+			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
+			return (wchar_t *)arp - 32 + shift;	\
+		}	\
+	}
+//=============================================================================
+	LOOP_BODY((uint32_t)-1 << ((const uint16_t *)s - arp))
 	for(;;){
-		if(_MCFCRT_EXPECT_NOT(arp >= (const uint16_t *)s + n)){
-			return _MCFCRT_NULLPTR;
-		}
-		__m128i xw[4];
-		uint32_t mask;
-		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);
-		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16) & skip;
-		ptrdiff_t dist = arp - ((const uint16_t *)s + n);
-		dist &= ~dist >> (sizeof(dist) * 8 - 1);
-		mask |= ~((uint32_t)-1 >> dist);
-		__builtin_prefetch(arp + 64, 0, 0);
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			if((mask << dist) == 0){
-				return _MCFCRT_NULLPTR;
-			}
-			shift = (unsigned)__builtin_ctzl(mask);
-			return (wchar_t *)arp - 32 + shift;
-		}
-		skip = (uint32_t)-1;
+		LOOP_BODY((uint32_t)-1)
 	}
 }

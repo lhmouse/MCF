@@ -15,27 +15,32 @@ void *memchr(const void *s, int c, size_t n){
 	register const unsigned char *arp = (const unsigned char *)((uintptr_t)s & (uintptr_t)-32);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
-	unsigned shift = (unsigned)((const unsigned char *)s - arp);
-	uint32_t skip = (uint32_t)-1 << shift;
+//=============================================================================
+#define LOOP_BODY(skip_)	\
+	{	\
+		if(_MCFCRT_EXPECT_NOT(arp >= (const unsigned char *)s + n)){	\
+			return _MCFCRT_NULLPTR;	\
+		}	\
+		__m128i xw[2];	\
+		uint32_t mask;	\
+		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
+		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8);	\
+		mask &= (skip_);	\
+		ptrdiff_t dist = arp - ((const unsigned char *)s + n);	\
+		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
+		mask |= ~((uint32_t)-1 >> dist);	\
+		__builtin_prefetch(arp + 64, 0, 0);	\
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+			if((mask << dist) == 0){	\
+				return _MCFCRT_NULLPTR;	\
+			}	\
+			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
+			return (char *)arp - 32 + shift;	\
+		}	\
+	}
+//=============================================================================
+	LOOP_BODY((uint32_t)-1 << ((const unsigned char *)s - arp))
 	for(;;){
-		if(_MCFCRT_EXPECT_NOT(arp >= (const unsigned char *)s + n)){
-			return _MCFCRT_NULLPTR;
-		}
-		__m128i xw[2];
-		uint32_t mask;
-		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);
-		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8) & skip;
-		ptrdiff_t dist = arp - ((const unsigned char *)s + n);
-		dist &= ~dist >> (sizeof(dist) * 8 - 1);
-		mask |= ~((uint32_t)-1 >> dist);
-		__builtin_prefetch(arp + 64, 0, 0);
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){
-			if((mask << dist) == 0){
-				return _MCFCRT_NULLPTR;
-			}
-			shift = (unsigned)__builtin_ctzl(mask);
-			return (char *)arp - 32 + shift;
-		}
-		skip = (uint32_t)-1;
+		LOOP_BODY((uint32_t)-1)
 	}
 }

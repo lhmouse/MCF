@@ -15,36 +15,37 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	register const wchar_t *arp = (const wchar_t *)((uintptr_t)s2 & (uintptr_t)-64);
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
-	unsigned shift = (unsigned)((const wchar_t *)s2 - arp);
-	uint32_t skip = (uint32_t)-1 << shift;
 //=============================================================================
-#define LOOP_BODY(wp_part_, wp_full_)	\
+#define LOOP_BODY(skip_, wp_part_, wp_full_)	\
 	{	\
 		__m128i xw[4];	\
 		uint32_t mask;	\
 		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
-		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16) & skip;	\
+		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16);	\
+		mask &= (skip_);	\
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			shift = (unsigned)__builtin_ctzl(mask);	\
+			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
 			wp = (wp_part_);	\
 			*wp = 0;	\
 			return wp;	\
 		}	\
 		wp = (wp_full_);	\
-		skip = (uint32_t)-1;	\
 	}
 //=============================================================================
-	LOOP_BODY(_MCFCRT_rep_movsw(wp, s2, (size_t)(arp - 32 + shift - s2)),
+	LOOP_BODY((uint32_t)-1 << ((const wchar_t *)s2 - arp),
+	          _MCFCRT_rep_movsw(wp, s2, (size_t)(arp - 32 + shift - s2)),
 	          _MCFCRT_rep_movsw(wp, s2, (size_t)(arp - s2)));
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
-			LOOP_BODY(_MCFCRT_rep_movsw(wp, arp - 32, shift),
+			LOOP_BODY((uint32_t)-1,
+			          _MCFCRT_rep_movsw(wp, arp - 32, shift),
 			          __MCFCRT_xmmstore_4(wp, xw, _mm_store_si128));
 		}
 	} else {
 		for(;;){
-			LOOP_BODY(_MCFCRT_rep_movsw(wp, arp - 32, shift),
+			LOOP_BODY((uint32_t)-1,
+			          _MCFCRT_rep_movsw(wp, arp - 32, shift),
 			          __MCFCRT_xmmstore_4(wp, xw, _mm_storeu_si128));
 		}
 	}

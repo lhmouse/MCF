@@ -32,7 +32,10 @@ char *strchr(const char *s, int c){
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			return (*(arp - 32 + shift) == 0) ? _MCFCRT_NULLPTR : (char *)(arp - 32 + shift);	\
+			if(*(arp - 32 + shift) == 0){	\
+				return _MCFCRT_NULLPTR;	\
+			}	\
+			return (char *)(arp - 32 + shift);	\
 		}	\
 	}
 //=============================================================================

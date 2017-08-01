@@ -48,7 +48,7 @@ wchar_t *_MCFCRT_itow0d(wchar_t *buffer, intptr_t value, unsigned min_digits){
 		*buffer = L'-';
 		end = Really_itow_u(buffer + 1, (uintptr_t)-value, min_digits, L"0123456789", 10);
 	} else {
-		end = Really_itow_u(buffer    , (uintptr_t) value, min_digits, L"0123456789", 10);
+		end = Really_itow_u(buffer + 0, (uintptr_t) value, min_digits, L"0123456789", 10);
 	}
 	return end;
 }

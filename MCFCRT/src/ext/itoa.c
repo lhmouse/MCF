@@ -48,7 +48,7 @@ char *_MCFCRT_itoa0d(char *buffer, intptr_t value, unsigned min_digits){
 		*buffer = '-';
 		end = Really_itoa_u(buffer + 1, (uintptr_t)-value, min_digits, "0123456789", 10);
 	} else {
-		end = Really_itoa_u(buffer    , (uintptr_t) value, min_digits, "0123456789", 10);
+		end = Really_itoa_u(buffer + 0, (uintptr_t) value, min_digits, "0123456789", 10);
 	}
 	return end;
 }

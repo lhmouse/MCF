@@ -67,7 +67,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 #undef __MCFCRT_SSE3_FULL_
 		}
 	}
-	_MCFCRT_rep_movsb(__wp, __rp, (size_t)(__wend - __wp));
+	_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, __wp, __rp, (size_t)(__wend - __wp));
 }
 
 __attribute__((__always_inline__))

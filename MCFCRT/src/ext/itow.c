@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "itow.h"
-#include "../env/inline_mem.h"
+#include "rep_movs.h"
 
 __attribute__((__always_inline__))
 static inline wchar_t *Really_itow_u(wchar_t *restrict buffer, uintptr_t value, unsigned min_digits, const wchar_t *restrict table, unsigned radix){
@@ -27,7 +27,7 @@ static inline wchar_t *Really_itow_u(wchar_t *restrict buffer, uintptr_t value, 
 		*(end - digits_written) = digit;
 	}
 	// Copy it to the correct location.
-	return _MCFCRT_inline_mempcpy_fwd(buffer, end - digits_written, digits_written * sizeof(wchar_t));
+	return _MCFCRT_rep_movsw(_MCFCRT_NULLPTR, buffer, (const uint16_t *)end - digits_written, digits_written);
 }
 
 wchar_t *_MCFCRT_itow_d(wchar_t *buffer, intptr_t value){

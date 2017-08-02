@@ -19,8 +19,9 @@ _MCFCRT_EXTERN_C_BEGIN
 		_MCFCRT_STD size_t __unused;	\
 		__asm__ (	\
 			__mnemonic_ " \n"	\
-			: "=m"(*__p), "+D"(__p), "=c"(__unused)	\
+			: "=o"(*__p), "+D"(__p), "=c"(__unused)	\
 			: "a"(__c), "c"(__n)	\
+			: "memory"	\
 		);	\
 		return __p;	\
 	}

@@ -20,8 +20,9 @@ _MCFCRT_EXTERN_C_BEGIN
 		_MCFCRT_STD size_t __unused;	\
 		__asm__ (	\
 			__mnemonic_ " \n"	\
-			: "=m"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)	\
-			: "m"(*__p2), "c"(__n)	\
+			: "=o"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)	\
+			: "o"(*__p2), "c"(__n)	\
+			: "memory"	\
 		);	\
 		if(__es2){	\
 			*__es2 = (__type_ *)__p2;	\

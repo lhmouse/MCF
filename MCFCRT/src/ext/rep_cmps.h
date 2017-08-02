@@ -21,7 +21,8 @@ _MCFCRT_EXTERN_C_BEGIN
 		__asm__ (	\
 			__mnemonic_ " \n"	\
 			: "+S"(__p1), "+D"(__p2), "=@ccz"(__z), "=@ccb"(__b)	\
-			: "m"(*__p1), "m"(*__p2), "c"(__n)	\
+			: "o"(*__p1), "o"(*__p2), "c"(__n)	\
+			: "memory"	\
 		);	\
 		if(__es1){	\
 			*__es1 = (__type_ *)(__p1 + __z - 1);	\

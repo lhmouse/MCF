@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "wtoi.h"
-#include "repnz_scas.h"
+#include "rep_scas.h"
 
 __attribute__((__always_inline__))
 static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits, uintptr_t bound, const wchar_t *restrict dual_table, unsigned radix){
@@ -15,7 +15,7 @@ static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, u
 		const wchar_t digit = buffer[digits_read];
 		// Search for this digit in the table. Handle lower and upper cases universally.
 		uint16_t *digit_in_table;
-		if(_MCFCRT_repnz_scasw(&digit_in_table, dual_table, digit, radix * 2) != 0){
+		if(_MCFCRT_repnz_scasw(&digit_in_table, (const uint16_t *)dual_table, (uint16_t)digit, radix * 2) != 0){
 			break;
 		}
 		const unsigned digit_value = (unsigned)((const wchar_t *)digit_in_table - dual_table) / 2;

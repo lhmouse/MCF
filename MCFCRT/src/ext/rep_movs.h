@@ -13,63 +13,27 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-__MCFCRT_REP_MOVS_INLINE_OR_EXTERN void *_MCFCRT_rep_movsb(void **_MCFCRT_RESTRICT __es2, void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint8_t *__p1 = (_MCFCRT_STD uint8_t *)__s1;
-	const _MCFCRT_STD uint8_t *__p2 = (const _MCFCRT_STD uint8_t *)__s2;
-	_MCFCRT_STD size_t __unused;
-	__asm__ (
-		"rep movsb \n"
-		: "=m"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-		: "m"(*__p2), "c"(__n)
-	);
-	if(__es2){
-		*__es2 = (_MCFCRT_STD uint8_t *)__p2;
+#define __MCFCRT_REP_MOVS_DEFINE(__name_, __mnemonic_, __type_)	\
+	__type_ *__name_(__type_ **_MCFCRT_RESTRICT __es2, __type_ *__s1, const __type_ *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
+		__type_ *__p1 = (__type_ *)__s1;	\
+		const __type_ *__p2 = (const __type_ *)__s2;	\
+		_MCFCRT_STD size_t __unused;	\
+		__asm__ (	\
+			__mnemonic_ " \n"	\
+			: "=m"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)	\
+			: "m"(*__p2), "c"(__n)	\
+		);	\
+		if(__es2){	\
+			*__es2 = (__type_ *)__p2;	\
+		}	\
+		return __p1;	\
 	}
-	return __p1;
-}
-__MCFCRT_REP_MOVS_INLINE_OR_EXTERN _MCFCRT_STD uint16_t *_MCFCRT_rep_movsw(_MCFCRT_STD uint16_t **_MCFCRT_RESTRICT __es2, _MCFCRT_STD uint16_t *__s1, const _MCFCRT_STD uint16_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint16_t *__p1 = __s1;
-	const _MCFCRT_STD uint16_t *__p2 = __s2;
-	_MCFCRT_STD size_t __unused;
-	__asm__ (
-		"rep movsw \n"
-		: "=m"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-		: "m"(*__p2), "c"(__n)
-	);
-	if(__es2){
-		*__es2 = (_MCFCRT_STD uint16_t *)__p2;
-	}
-	return __p1;
-}
-__MCFCRT_REP_MOVS_INLINE_OR_EXTERN _MCFCRT_STD uint32_t *_MCFCRT_rep_movsd(_MCFCRT_STD uint32_t **_MCFCRT_RESTRICT __es2, _MCFCRT_STD uint32_t *__s1, const _MCFCRT_STD uint32_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint32_t *__p1 = __s1;
-	const _MCFCRT_STD uint32_t *__p2 = __s2;
-	_MCFCRT_STD size_t __unused;
-	__asm__ (
-		"rep movsd \n"
-		: "=m"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-		: "m"(*__p2), "c"(__n)
-	);
-	if(__es2){
-		*__es2 = (_MCFCRT_STD uint32_t *)__p2;
-	}
-	return __p1;
-}
+
+__MCFCRT_REP_MOVS_INLINE_OR_EXTERN __MCFCRT_REP_MOVS_DEFINE(_MCFCRT_rep_movsb, "rep movsb", _MCFCRT_STD  uint8_t)
+__MCFCRT_REP_MOVS_INLINE_OR_EXTERN __MCFCRT_REP_MOVS_DEFINE(_MCFCRT_rep_movsw, "rep movsw", _MCFCRT_STD uint16_t)
+__MCFCRT_REP_MOVS_INLINE_OR_EXTERN __MCFCRT_REP_MOVS_DEFINE(_MCFCRT_rep_movsd, "rep movsd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-__MCFCRT_REP_MOVS_INLINE_OR_EXTERN _MCFCRT_STD uint64_t *_MCFCRT_rep_movsq(_MCFCRT_STD uint64_t **_MCFCRT_RESTRICT __es2, _MCFCRT_STD uint64_t *__s1, const _MCFCRT_STD uint64_t *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint64_t *__p1 = __s1;
-	const _MCFCRT_STD uint64_t *__p2 = __s2;
-	_MCFCRT_STD size_t __unused;
-	__asm__ (
-		"rep movsq \n"
-		: "=m"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-		: "m"(*__p2), "c"(__n)
-	);
-	if(__es2){
-		*__es2 = (_MCFCRT_STD uint64_t *)__p2;
-	}
-	return __p1;
-}
+__MCFCRT_REP_MOVS_INLINE_OR_EXTERN __MCFCRT_REP_MOVS_DEFINE(_MCFCRT_rep_movsq, "rep movsq", _MCFCRT_STD uint64_t)
 #endif
 
 _MCFCRT_EXTERN_C_END

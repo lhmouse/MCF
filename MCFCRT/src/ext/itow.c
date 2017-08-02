@@ -27,7 +27,7 @@ static inline wchar_t *Really_itow_u(wchar_t *restrict buffer, uintptr_t value, 
 		*(end - digits_written) = digit;
 	}
 	// Copy it to the correct location.
-	return _MCFCRT_rep_movsw(_MCFCRT_NULLPTR, buffer, (const uint16_t *)end - digits_written, digits_written);
+	return (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)buffer, (const uint16_t *)end - digits_written, digits_written);
 }
 
 wchar_t *_MCFCRT_itow_d(wchar_t *buffer, intptr_t value){

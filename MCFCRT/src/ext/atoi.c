@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "atoi.h"
-#include "repnz_scas.h"
+#include "rep_scas.h"
 
 __attribute__((__always_inline__))
 static inline char *Really_atoi_u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits, uintptr_t bound, const char *restrict dual_table, unsigned radix){
@@ -14,8 +14,8 @@ static inline char *Really_atoi_u(_MCFCRT_atoi_result *restrict result_out, uint
 	while(digits_read + 1 <= max_digits){
 		const char digit = buffer[digits_read];
 		// Search for this digit in the table. Handle lower and upper cases universally.
-		void *digit_in_table;
-		if(_MCFCRT_repnz_scasb(&digit_in_table, dual_table, digit, radix * 2) != 0){
+		uint8_t *digit_in_table;
+		if(_MCFCRT_repnz_scasb(&digit_in_table, (const uint8_t *)dual_table, (uint8_t)digit, radix * 2) != 0){
 			break;
 		}
 		const unsigned digit_value = (unsigned)((const char *)digit_in_table - dual_table) / 2;

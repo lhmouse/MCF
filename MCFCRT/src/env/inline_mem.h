@@ -19,34 +19,30 @@ static inline void *_MCFCRT_inline_mempcpy_fwd(void *__s1, const void *__s2, _MC
 	if(__builtin_constant_p(__n) ? (__n / 8) : true){
 		__asm__ (
 			"rep movsq \n"
-			: "=o"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-			: "o"(*__p2), "c"(__n / 8)
-			: "memory"
+			: "=o"(*(char (*)[])__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
+			: "o"(*(const char (*)[])__p2), "c"(__n / 8)
 		);
 	}
 	if(__builtin_constant_p(__n) ? (__n % 8) : true){
 		__asm__ (
 			"rep movsb \n"
-			: "=o"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-			: "o"(*__p2), "c"(__n % 8)
-			: "memory"
+			: "=o"(*(char (*)[])__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
+			: "o"(*(const char (*)[])__p2), "c"(__n % 8)
 		);
 	}
 #else
 	if(__builtin_constant_p(__n) ? (__n / 4) : true){
 		__asm__ (
 			"rep movsd \n"
-			: "=o"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-			: "o"(*__p2), "c"(__n / 4)
-			: "memory"
+			: "=o"(*(char (*)[])__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
+			: "o"(*(const char (*)[])__p2), "c"(__n / 4)
 		);
 	}
 	if(__builtin_constant_p(__n) ? (__n % 4) : true){
 		__asm__ (
 			"rep movsb \n"
-			: "=o"(*__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
-			: "o"(*__p2), "c"(__n % 4)
-			: "memory"
+			: "=o"(*(char (*)[])__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)
+			: "o"(*(const char (*)[])__p2), "c"(__n % 4)
 		);
 	}
 #endif
@@ -67,17 +63,15 @@ static inline void *_MCFCRT_inline_mempset_fwd(void *__s, int __c, _MCFCRT_STD s
 		__word += __word << 32;
 		__asm__ (
 			"rep stosq \n"
-			: "=o"(*__p), "+D"(__p), "=c"(__unused)
+			: "=o"(*(char (*)[])__p), "+D"(__p), "=c"(__unused)
 			: "a"(__word), "c"(__n / 8)
-			: "memory"
 		);
 	}
 	if(__builtin_constant_p(__n) ? (__n % 8) : true){
 		__asm__ (
 			"rep stosb \n"
-			: "=o"(*__p), "+D"(__p), "=c"(__unused)
+			: "=o"(*(char (*)[])__p), "+D"(__p), "=c"(__unused)
 			: "a"(__word), "c"(__n % 8)
-			: "memory"
 		);
 	}
 #else
@@ -86,17 +80,15 @@ static inline void *_MCFCRT_inline_mempset_fwd(void *__s, int __c, _MCFCRT_STD s
 		__word += __word << 16;
 		__asm__ (
 			"rep stosd \n"
-			: "=o"(*__p), "+D"(__p), "=c"(__unused)
+			: "=o"(*(char (*)[])__p), "+D"(__p), "=c"(__unused)
 			: "a"(__word), "c"(__n / 4)
-			: "memory"
 		);
 	}
 	if(__builtin_constant_p(__n) ? (__n % 4) : true){
 		__asm__ (
 			"rep stosb \n"
-			: "=o"(*__p), "+D"(__p), "=c"(__unused)
+			: "=o"(*(char (*)[])__p), "+D"(__p), "=c"(__unused)
 			: "a"(__word), "c"(__n % 4)
-			: "memory"
 		);
 	}
 #endif

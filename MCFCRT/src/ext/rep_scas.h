@@ -20,8 +20,7 @@ _MCFCRT_EXTERN_C_BEGIN
 		__asm__ (	\
 			__mnemonic_ " \n"	\
 			: "+D"(__p), "=@ccz"(__z), "=@ccb"(__b)	\
-			: "o"(*__p), "a"(__c), "c"(__n)	\
-			: "memory"	\
+			: "o"(*(const char (*)[])__p), "a"(__c), "c"(__n)	\
 		);	\
 		if(__es){	\
 			*__es = (__type_ *)(__p + __z - 1);	\

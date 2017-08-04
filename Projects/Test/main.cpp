@@ -38,14 +38,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2e[-1] = 'c';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "memchr"_nsv;
+		const auto fname = "strcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<Char * (*)(const Char *, Char, std::size_t)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 10; ++i){
-				r = (std::ptrdiff_t)(*pf)(s2, 'c', (std::size_t)(s2e - s2));
+				r = (std::ptrdiff_t)(*pf)(s2, s1, (std::size_t)(s2e - s2));
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);
@@ -61,7 +61,6 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-
 /*
 	wchar_t str[64];
 	wchar_t *eptr;

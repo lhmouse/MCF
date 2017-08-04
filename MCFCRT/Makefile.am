@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = no-exeext foreign subdir-objects
 AM_CPPFLAGS = -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter -Winvalid-pch	\
 	-Wwrite-strings -Wconversion -Wsign-conversion -Wdouble-promotion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2	\
-	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -masm=intel -ffreestanding
+	-pipe -mfpmath=both -march=core2 -mno-stack-arg-probe -masm=intel -ffreestanding
 AM_CFLAGS = -include __pch.h -std=c11 -Wstrict-prototypes
 AM_CXXFLAGS = -include __pch.hpp -std=c++17 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt
 

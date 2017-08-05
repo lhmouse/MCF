@@ -4,15 +4,11 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include "../../ext/rawwmemchr.h"
 #include "../string/_sse3.h"
 
 #undef wcschr
 
 wchar_t *wcschr(const wchar_t *s, wchar_t c){
-	if(_MCFCRT_EXPECT_NOT((uint16_t)c == 0)){
-		return _MCFCRT_rawwmemchr(s, 0);
-	}
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
@@ -32,7 +28,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			if(*(arp - 32 + shift) == 0){	\
+			if(*(arp - 32 + shift) != (uint16_t)c){	\
 				return _MCFCRT_NULLPTR;	\
 			}	\
 			return (wchar_t *)(arp - 32 + shift);	\

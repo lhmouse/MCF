@@ -9,8 +9,8 @@
 #  error This processor architecture is not supported.
 #endif
 
-#if !defined(__SSE3__)
-#  error SSE3 is required to use MCFCRT. Check your `-march=` command-line option.
+#if !defined(__SSSE3__)
+#  error SSSE3 (triple S) is required to use MCFCRT. Check your `-march=` command-line option.
 #endif
 
 #ifdef __STDC_VERSION__

@@ -31,7 +31,6 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 		mask |= ~((uint32_t)-1 >> dist);	\
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
 			wp = (wp_part_);	\
 			*wp = 0;	\
 			return wp;	\
@@ -40,18 +39,18 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 	}
 //=============================================================================
 	LOOP_BODY((uint32_t)-1 << ((const wchar_t *)s2 - arp),
-	          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - 32 + shift - s2)),
+	          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2)),
 	          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - s2)));
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
 			LOOP_BODY((uint32_t)-1,
-			          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, shift),
+			          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
 			          __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128));
 		}
 	} else {
 		for(;;){
 			LOOP_BODY((uint32_t)-1,
-			          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, shift),
+			          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
 			          __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
 		}
 	}

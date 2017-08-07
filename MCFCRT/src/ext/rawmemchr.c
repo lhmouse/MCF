@@ -23,8 +23,8 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 		mask &= (skip_);	\
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			return (char *)arp - 32 + shift;	\
+			const char *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
+			return (char *)rp;	\
 		}	\
 	}
 //=============================================================================

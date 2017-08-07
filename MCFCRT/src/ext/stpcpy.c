@@ -25,7 +25,6 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 		mask &= (skip_);	\
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
 			wp = (wp_part_);	\
 			*wp = 0;	\
 			return wp;	\
@@ -34,18 +33,18 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 	}
 //=============================================================================
 	LOOP_BODY((uint32_t)-1 << ((const char *)s2 - arp),
-	          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - 32 + shift - s2)),
+	          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2)),
 	          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - s2)));
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
 			LOOP_BODY((uint32_t)-1,
-			          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, shift),
+			          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
 			          __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128));
 		}
 	} else {
 		for(;;){
 			LOOP_BODY((uint32_t)-1,
-			          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, shift),
+			          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
 			          __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
 		}
 	}

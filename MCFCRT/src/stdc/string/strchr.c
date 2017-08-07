@@ -27,11 +27,11 @@ char *strchr(const char *s, int c){
 		mask &= (skip_);	\
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			if(*(arp - 32 + shift) != (uint8_t)c){	\
+			const char *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
+			if(*rp != (char)c){	\
 				return _MCFCRT_NULLPTR;	\
 			}	\
-			return (char *)(arp - 32 + shift);	\
+			return (char *)rp;	\
 		}	\
 	}
 //=============================================================================

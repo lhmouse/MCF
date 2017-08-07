@@ -27,11 +27,11 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		mask &= (skip_);	\
 		__builtin_prefetch(arp + 64, 0, 0);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			if(*(arp - 32 + shift) != (uint16_t)c){	\
+			const wchar_t *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
+			if(*rp != (wchar_t)c){	\
 				return _MCFCRT_NULLPTR;	\
 			}	\
-			return (wchar_t *)(arp - 32 + shift);	\
+			return (wchar_t *)rp;	\
 		}	\
 	}
 //=============================================================================

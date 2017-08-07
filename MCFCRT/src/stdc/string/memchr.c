@@ -34,8 +34,8 @@ void *memchr(const void *s, int c, size_t n){
 			if((mask << dist) == 0){	\
 				return _MCFCRT_NULLPTR;	\
 			}	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			return (unsigned char *)arp - 32 + shift;	\
+			const unsigned char *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
+			return (unsigned char *)rp;	\
 		}	\
 	}
 //=============================================================================

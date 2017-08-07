@@ -34,8 +34,8 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 			if((mask << dist) == 0){	\
 				return _MCFCRT_NULLPTR;	\
 			}	\
-			unsigned shift = (unsigned)__builtin_ctzl(mask);	\
-			return (wchar_t *)arp - 32 + shift;	\
+			const wchar_t *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
+			return (wchar_t *)rp;	\
 		}	\
 	}
 //=============================================================================

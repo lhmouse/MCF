@@ -43,14 +43,13 @@ char *_MCFCRT_itoa_X(char *buffer, uintptr_t value){
 	return _MCFCRT_itoa0X(buffer, value, 0);
 }
 char *_MCFCRT_itoa0d(char *buffer, intptr_t value, unsigned min_digits){
-	char *end;
+	char *begin = buffer;
+	uintptr_t abs = (uintptr_t)value;
 	if(value < 0){
-		*buffer = '-';
-		end = Really_itoa_u(buffer + 1, (uintptr_t)-value, min_digits, "0123456789", 10);
-	} else {
-		end = Really_itoa_u(buffer + 0, (uintptr_t) value, min_digits, "0123456789", 10);
+		*(begin++) = '-';
+		abs = -abs;
 	}
-	return end;
+	return Really_itoa_u(begin, abs, min_digits, "0123456789", 10);
 }
 char *_MCFCRT_itoa0u(char *buffer, uintptr_t value, unsigned min_digits){
 	return Really_itoa_u(buffer, value, min_digits, "0123456789"      , 10);

@@ -43,14 +43,13 @@ wchar_t *_MCFCRT_itow_X(wchar_t *buffer, uintptr_t value){
 	return _MCFCRT_itow0X(buffer, value, 0);
 }
 wchar_t *_MCFCRT_itow0d(wchar_t *buffer, intptr_t value, unsigned min_digits){
-	wchar_t *end;
+	wchar_t *begin = buffer;
+	uintptr_t abs = (uintptr_t)value;
 	if(value < 0){
-		*buffer = L'-';
-		end = Really_itow_u(buffer + 1, (uintptr_t)-value, min_digits, L"0123456789", 10);
-	} else {
-		end = Really_itow_u(buffer + 0, (uintptr_t) value, min_digits, L"0123456789", 10);
+		*(begin++) = L'-';
+		abs = -abs;
 	}
-	return end;
+	return Really_itow_u(begin, abs, min_digits, L"0123456789", 10);
 }
 wchar_t *_MCFCRT_itow0u(wchar_t *buffer, uintptr_t value, unsigned min_digits){
 	return Really_itow_u(buffer, value, min_digits, L"0123456789"      , 10);

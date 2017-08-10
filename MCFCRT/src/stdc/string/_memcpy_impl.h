@@ -14,9 +14,9 @@ _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	register unsigned char *__wp = (unsigned char *)__s1;
+	unsigned char *__wp = (unsigned char *)__s1;
 	unsigned char *const __wend = __wp + __n;
-	register const unsigned char *__rp = (const unsigned char *)__s2;
+	const unsigned char *__rp = (const unsigned char *)__s2;
 	if(_MCFCRT_EXPECT_NOT((size_t)(__wend - __wp) >= 256)){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wp == __wend){
@@ -73,8 +73,8 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	unsigned char *const __wbegin = (unsigned char *)__s1;
-	register unsigned char *__wp = __wbegin + __n;
-	register const unsigned char *__rp = (const unsigned char *)__s2 + __n;
+	unsigned char *__wp = __wbegin + __n;
+	const unsigned char *__rp = (const unsigned char *)__s2 + __n;
 	if(_MCFCRT_EXPECT_NOT((size_t)(__wp - __wbegin) >= 256)){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wbegin == __wp){

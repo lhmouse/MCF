@@ -18,7 +18,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 	unsigned char *const __wend = __wp + __n;
 	const unsigned char *__rp = (const unsigned char *)__s2;
 	if(_MCFCRT_EXPECT_NOT((size_t)(__wend - __wp) >= 256)){
-		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
+		while(((_MCFCRT_STD uintptr_t)__wp & ~(_MCFCRT_STD uintptr_t)-16) != 0){
 			if(__wp == __wend){
 				return;
 			}
@@ -49,14 +49,14 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 					} while(__wend - __wp >= 128);	\
 				}	\
 			}
-			if(_MCFCRT_EXPECT(__t < 0x1000)){
-				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
+			if(_MCFCRT_EXPECT(__t < 0x2000)){
+				if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
 					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
 				} else {
 					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_lddqu_si128)
 				}
 			} else {
-				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
+				if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
 					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_load_si128)
 				} else {
 					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_lddqu_si128)
@@ -76,7 +76,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 	unsigned char *__wp = __wbegin + __n;
 	const unsigned char *__rp = (const unsigned char *)__s2 + __n;
 	if(_MCFCRT_EXPECT_NOT((size_t)(__wp - __wbegin) >= 256)){
-		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
+		while(((_MCFCRT_STD uintptr_t)__wp & ~(_MCFCRT_STD uintptr_t)-16) != 0){
 			if(__wbegin == __wp){
 				return;
 			}
@@ -107,14 +107,14 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 					} while(__wp - __wbegin >= 128);	\
 				}	\
 			}
-			if(_MCFCRT_EXPECT(__t < 0x1000)){
-				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
+			if(_MCFCRT_EXPECT(__t < 0x2000)){
+				if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
 					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
 				} else {
 					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_lddqu_si128)
 				}
 			} else {
-				if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
+				if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
 					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_load_si128)
 				} else {
 					__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_lddqu_si128)

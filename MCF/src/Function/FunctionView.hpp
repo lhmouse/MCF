@@ -20,7 +20,7 @@ class IntrusivePtr;
 
 template<typename PrototypeT>
 class FunctionView {
-	static_assert((sizeof(PrototypeT *), false), "Class template FunctionView instantiated with a non-function template type parameter.");
+	static_assert((sizeof(PrototypeT *), false), "Class template FunctionView instantiated with a non-function type template parameter.");
 };
 
 template<typename ReturnT, typename ...ParamsT>

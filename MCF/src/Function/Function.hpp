@@ -17,7 +17,7 @@ namespace MCF {
 
 template<typename PrototypeT>
 class Function {
-	static_assert((sizeof(PrototypeT *), false), "Class template Function instantiated with a non-function template type parameter.");
+	static_assert((sizeof(PrototypeT *), false), "Class template Function instantiated with a non-function type template parameter.");
 };
 
 template<typename ReturnT, typename ...ParamsT>

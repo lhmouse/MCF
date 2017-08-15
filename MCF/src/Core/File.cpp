@@ -175,11 +175,19 @@ File::File(const WideStringView &wsvPath, std::uint32_t u32Flags){
 			ustrName.MaximumLength = sizeof(kDosDevicePath);
 			ustrName.Buffer        = (PWSTR)kDosDevicePath;
 
+			::ACCESS_MASK dwDesiredAccess = 0;
+			if(u32Flags & kToRead){
+				dwDesiredAccess |= FILE_LIST_DIRECTORY | FILE_READ_EA;
+			}
+			if(u32Flags & kToWrite){
+				dwDesiredAccess |= FILE_LIST_DIRECTORY | FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY | FILE_READ_EA;
+			}
+
 			::OBJECT_ATTRIBUTES vObjectAttributes;
 			InitializeObjectAttributes(&vObjectAttributes, &ustrName, 0, nullptr, nullptr);
 
 			HANDLE hTemp;
-			const auto lStatus = ::NtOpenDirectoryObject(&hTemp, 0x0F, &vObjectAttributes);
+			const auto lStatus = ::NtOpenDirectoryObject(&hTemp, dwDesiredAccess, &vObjectAttributes);
 			if(!NT_SUCCESS(lStatus)){
 				MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtOpenDirectoryObject() 失败。"));
 			}

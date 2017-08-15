@@ -4,7 +4,7 @@
 
 #include "wcpcpy.h"
 #include "../env/expect.h"
-#include "../stdc/string/_sse3.h"
+#include "../stdc/string/_sse2.h"
 #include "rep_movs.h"
 
 wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){

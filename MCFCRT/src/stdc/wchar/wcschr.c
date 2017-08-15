@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include "../string/_sse3.h"
+#include "../string/_sse2.h"
 
 #undef wcschr
 

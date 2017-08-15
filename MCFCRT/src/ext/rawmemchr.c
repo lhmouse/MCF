@@ -4,7 +4,7 @@
 
 #include "rawmemchr.h"
 #include "../env/expect.h"
-#include "../stdc/string/_sse3.h"
+#include "../stdc/string/_sse2.h"
 
 void *_MCFCRT_rawmemchr(const void *s, int c){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。

@@ -33,18 +33,18 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const auto s2  = (Char *)((char *)p2.Get() + 4);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
 	Fill(s2, s2e, 'b');
-	s2e[-3] = 'a';
+	s2e[-3] = 'c';
 	s2e[-2] = 0;
 	s2e[-1] = 'c';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "memcpy"_nsv;
+		const auto fname = "memcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<Char * (*)(Char *, const Char *, std::size_t)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(unsigned i = 0; i < 10; ++i){
+			for(unsigned i = 0; i < 30; ++i){
 				r = (std::ptrdiff_t)(*pf)(s2, s1, (std::size_t)(s2e - s2));
 			}
 			const auto t2 = GetHiResMonoClock();

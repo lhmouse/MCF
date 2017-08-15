@@ -2,11 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_STDC_STRING_SSE3_H_
-#define __MCFCRT_STDC_STRING_SSE3_H_
+#ifndef __MCFCRT_STDC_STRING_SSE2_H_
+#define __MCFCRT_STDC_STRING_SSE2_H_
 
 #include "../../env/_crtdef.h"
-#include <pmmintrin.h>
+#include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 

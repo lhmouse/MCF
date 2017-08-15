@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include "_sse3.h"
+#include "_sse2.h"
 
 #undef memchr
 

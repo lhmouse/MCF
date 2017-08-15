@@ -4,7 +4,7 @@
 
 #include "rawwmemchr.h"
 #include "../env/expect.h"
-#include "../stdc/string/_sse3.h"
+#include "../stdc/string/_sse2.h"
 
 wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。

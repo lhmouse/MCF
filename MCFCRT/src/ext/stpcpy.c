@@ -4,7 +4,7 @@
 
 #include "stpcpy.h"
 #include "../env/expect.h"
-#include "../stdc/string/_sse3.h"
+#include "../stdc/string/_sse2.h"
 #include "rep_movs.h"
 
 char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){

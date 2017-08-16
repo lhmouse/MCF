@@ -21,7 +21,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8);	\
 		mask &= (skip_);	\
-		__builtin_prefetch(arp + 64, 0, 0);	\
+		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			const char *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
 			return (char *)rp;	\

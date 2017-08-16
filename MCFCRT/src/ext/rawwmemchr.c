@@ -21,7 +21,7 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16);	\
 		mask &= (skip_);	\
-		__builtin_prefetch(arp + 64, 0, 0);	\
+		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			const wchar_t *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
 			return (wchar_t *)rp;	\

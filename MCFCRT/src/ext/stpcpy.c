@@ -23,7 +23,7 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8);	\
 		mask &= (skip_);	\
-		__builtin_prefetch(arp + 64, 0, 0);	\
+		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			wp = (wp_part_);	\
 			*wp = 0;	\

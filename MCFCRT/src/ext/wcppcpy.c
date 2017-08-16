@@ -29,7 +29,7 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 		ptrdiff_t dist = arp - (s2 + (es1 - s1) - 1);	\
 		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 		mask |= ~((uint32_t)-1 >> dist);	\
-		__builtin_prefetch(arp + 64, 0, 0);	\
+		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			wp = (wp_part_);	\
 			*wp = 0;	\

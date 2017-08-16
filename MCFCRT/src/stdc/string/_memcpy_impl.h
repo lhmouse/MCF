@@ -36,12 +36,12 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 			{	\
 				switch(__t % 8){	\
 					do {	\
-						_mm_prefetch(__rp + 256, _MM_HINT_NTA);	\
-						_mm_prefetch(__rp + 320, _MM_HINT_NTA);	\
+						_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
 				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+						_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
 				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
@@ -94,12 +94,12 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 			{	\
 				switch(__t % 8){	\
 					do {	\
-						_mm_prefetch(__rp - 384, _MM_HINT_NTA);	\
-						_mm_prefetch(__rp - 320, _MM_HINT_NTA);	\
+						_mm_prefetch(__rp - 1024 - 64, _MM_HINT_NTA);	\
 				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+						_mm_prefetch(__rp - 1024 - 64, _MM_HINT_NTA);	\
 				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\

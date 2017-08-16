@@ -11,55 +11,61 @@
 namespace MCF {
 
 template<typename Ty, typename Tx>
-void BCopy(Ty &dst, const Tx &src) noexcept {
+inline void BCopy(Ty &y, const Tx &x) noexcept {
 	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 	static_assert(!std::is_empty<Tx>::value,  "Tx shall not be empty.");
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
-	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
+	static_assert(sizeof(y) == sizeof(x), "Source and destination sizes do not match.");
 
-	std::memcpy(&dst, &src, sizeof(dst));
+	const auto py = reinterpret_cast<char (&)[sizeof(y)]>(y);
+	const auto px = reinterpret_cast<const char (&)[sizeof(x)]>(x);
+	std::memcpy(py, px, sizeof(*py));
 }
 
 template<typename Ty>
-void BFill(Ty &dst, bool bVal) noexcept {
+inline void BFill(Ty &y, bool bVal) noexcept {
 	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 
-	std::memset(&dst, -bVal, sizeof(dst));
+	const auto py = reinterpret_cast<char (&)[sizeof(y)]>(y);
+	std::memset(py, -bVal, sizeof(*py));
+}
+
+template<typename Ty>
+inline void BZero(Ty &y) noexcept {
+	BFill(y, false);
 }
 
 template<typename Ty, typename Tx>
-int BComp(const Ty &dst, const Tx &src) noexcept {
+inline int BComp(const Ty &y, const Tx &x) noexcept {
 	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 	static_assert(!std::is_empty<Tx>::value,  "Tx shall not be empty.");
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
-	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
+	static_assert(sizeof(y) == sizeof(x), "Source and destination sizes do not match.");
 
-	return std::memcmp(&dst, &src, sizeof(src));
+	const auto py = reinterpret_cast<const char (&)[sizeof(y)]>(y);
+	const auto px = reinterpret_cast<const char (&)[sizeof(x)]>(x);
+	return std::memcmp(py, px, sizeof(*py));
 }
 
 template<typename Ty, typename Tx>
-void BSwap(Ty &dst, Tx &src) noexcept {
+inline void BSwap(Ty &y, Tx &x) noexcept {
 	static_assert(!std::is_empty<Ty>::value,  "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 	static_assert(!std::is_empty<Tx>::value,  "Tx shall not be empty.");
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
-	static_assert(sizeof(dst) == sizeof(src), "Source and destination sizes do not match.");
+	static_assert(sizeof(y) == sizeof(x), "Source and destination sizes do not match.");
 
-	for(std::size_t uIndex = 0; uIndex < sizeof(dst); ++uIndex){
-		auto &chd = reinterpret_cast<char (&)[sizeof(dst)]>(dst)[uIndex];
-		auto &chs = reinterpret_cast<char (&)[sizeof(src)]>(src)[uIndex];
-		const char cht = chd;
-		chd = chs;
-		chs = cht;
+	const auto py = reinterpret_cast<char (&)[sizeof(y)]>(y);
+	const auto px = reinterpret_cast<char (&)[sizeof(x)]>(x);
+#pragma GCC ivdep
+	for(std::size_t i = 0; i < sizeof(*py); ++i){
+		const char t = py[i];
+		py[i] = px[i];
+		px[i] = t;
 	}
-}
-
-template<typename Ty>
-void BZero(Ty &dst) noexcept {
-	BFill(dst, false);
 }
 
 }

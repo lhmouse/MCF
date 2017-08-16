@@ -12,6 +12,9 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	unsigned char *__wp = (unsigned char *)__s1;
@@ -37,15 +40,15 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 				switch(__t % 8){	\
 					do {	\
 						_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 						_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 					} while(__wend - __wp >= 128);	\
 				}	\
 			}
@@ -95,15 +98,15 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 				switch(__t % 8){	\
 					do {	\
 						_mm_prefetch(__rp - 1024 - 64, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 						_mm_prefetch(__rp - 1024 - 64, _MM_HINT_NTA);	\
-				__attribute__((__fallthrough__)); case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				__attribute__((__fallthrough__)); case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 					} while(__wp - __wbegin >= 128);	\
 				}	\
 			}
@@ -137,6 +140,8 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 		*(volatile unsigned char *)__wp = *(const unsigned char *)__rp;
 	}
 }
+
+#pragma GCC diagnostic pop
 
 _MCFCRT_EXTERN_C_END
 

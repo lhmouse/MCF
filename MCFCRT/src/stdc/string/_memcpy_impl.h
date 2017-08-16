@@ -97,12 +97,12 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 			{	\
 				switch(__t % 8){	\
 					do {	\
-						_mm_prefetch(__rp - 1024 - 64, _MM_HINT_NTA);	\
+						_mm_prefetch(__rp - 64 - 1024, _MM_HINT_NTA);	\
 				default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-						_mm_prefetch(__rp - 1024 - 64, _MM_HINT_NTA);	\
+						_mm_prefetch(__rp - 64 - 1024, _MM_HINT_NTA);	\
 				case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 				case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\

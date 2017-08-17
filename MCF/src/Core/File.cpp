@@ -7,7 +7,6 @@
 #include "String.hpp"
 #include "BinaryOperations.hpp"
 #include "Defer.hpp"
-#include "MinMax.hpp"
 #include <MCFCRT/env/mcfwin.h>
 #include <ntdef.h>
 #include <ntstatus.h>
@@ -312,6 +311,13 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
 
+	ULONG ulBytesToRead;
+	if(uBytesToRead <= ULONG_MAX){
+		ulBytesToRead = static_cast<ULONG>(uBytesToRead);
+	} else {
+		ulBytesToRead = ULONG_MAX;
+	}
+
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
 		MCF_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
@@ -321,7 +327,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, nullptr, nullptr, &vIoStatus, pBuffer, static_cast<ULONG>(Min(uBytesToRead, static_cast<ULONG>(-1))), &liOffset, nullptr);
+	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, nullptr, nullptr, &vIoStatus, pBuffer, ulBytesToRead, &liOffset, nullptr);
 	if((lStatus != STATUS_END_OF_FILE) && !NT_SUCCESS(lStatus)){
 		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtReadFile() 失败。"));
 	}
@@ -332,6 +338,13 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
 
+	ULONG ulBytesToWrite;
+	if(uBytesToWrite <= ULONG_MAX){
+		ulBytesToWrite = static_cast<ULONG>(uBytesToWrite);
+	} else {
+		ulBytesToWrite = ULONG_MAX;
+	}
+
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
 		MCF_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
@@ -341,7 +354,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, nullptr, nullptr, &vIoStatus, pBuffer, static_cast<ULONG>(Min(uBytesToWrite, static_cast<ULONG>(-1))), &liOffset, nullptr);
+	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, nullptr, nullptr, &vIoStatus, pBuffer, ulBytesToWrite, &liOffset, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtWriteFile() 失败。"));
 	}

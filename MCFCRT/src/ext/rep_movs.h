@@ -15,8 +15,8 @@ _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_MOVS_DEFINE(__name_, __mnemonic_, __type_)	\
 	__type_ *__name_(__type_ **_MCFCRT_RESTRICT __es2, __type_ *__s1, const __type_ *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
-		__type_ *__p1 = (__type_ *)__s1;	\
-		const __type_ *__p2 = (const __type_ *)__s2;	\
+		__type_ *__p1 = __s1;	\
+		const __type_ *__p2 = __s2;	\
 		_MCFCRT_STD size_t __unused;	\
 		__asm__ (	\
 			__mnemonic_ " \n"	\

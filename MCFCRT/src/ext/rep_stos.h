@@ -15,7 +15,7 @@ _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_STOS_DEFINE(__name_, __mnemonic_, __type_)	\
 	__type_ *__name_(__type_ *_MCFCRT_RESTRICT __s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
-		__type_ *__p = (__type_ *)__s;	\
+		__type_ *__p = __s;	\
 		_MCFCRT_STD size_t __unused;	\
 		__asm__ (	\
 			__mnemonic_ " \n"	\

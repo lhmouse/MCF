@@ -90,6 +90,9 @@ public:
 	~Vector(){
 		Clear();
 		Allocator()(static_cast<void *>(x_pStorage));
+#ifndef NDEBUG
+		__builtin_memset(&x_pStorage, 0xEF, sizeof(x_pStorage));
+#endif
 	}
 
 private:

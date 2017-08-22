@@ -16,11 +16,12 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 	// 每个字内的字节的权限必然一致。
 	register char *wp = s1;
 	register const char *arp = (const char *)((uintptr_t)s2 & (uintptr_t)-32);
+	__m128i xz[1];
+	__MCFCRT_xmmsetz(xz);
+
 	__m128i xw[2];
 	uint32_t mask;
 	ptrdiff_t dist;
-	__m128i xz[1];
-	__MCFCRT_xmmsetz(xz);
 //=============================================================================
 #define LOOP_BODY(skip_, wp_part_, wp_full_)	\
 	{	\

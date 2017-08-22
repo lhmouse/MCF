@@ -11,10 +11,11 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	register const wchar_t *arp = (const wchar_t *)((uintptr_t)s & (uintptr_t)-64);
-	__m128i xw[4];
-	uint32_t mask;
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
+
+	__m128i xw[4];
+	uint32_t mask;
 //=============================================================================
 #define LOOP_BODY(skip_)	\
 	{	\

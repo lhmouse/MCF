@@ -13,10 +13,11 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	// 每个字内的字节的权限必然一致。
 	register wchar_t *wp = s1;
 	register const wchar_t *arp = (const wchar_t *)((uintptr_t)s2 & (uintptr_t)-64);
-	__m128i xw[4];
-	uint32_t mask;
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
+
+	__m128i xw[4];
+	uint32_t mask;
 //=============================================================================
 #define LOOP_BODY(skip_, wp_part_, wp_full_)	\
 	{	\

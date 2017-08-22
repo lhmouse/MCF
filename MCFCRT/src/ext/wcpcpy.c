@@ -32,7 +32,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	//
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << ((const wchar_t *)s2 - arp);
+	mask &= (uint32_t)-1 << (((const wchar_t *)s2 - arp) & 0x1F);
 	BREAK_OPEN
 	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2));
 	BREAK_CLOSE

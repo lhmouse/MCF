@@ -39,7 +39,7 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 	//
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << ((const char *)s2 - arp);
+	mask &= (uint32_t)-1 << (((const char *)s2 - arp) & 0x1F);
 	BREAK_OPEN
 	wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2));
 	BREAK_CLOSE

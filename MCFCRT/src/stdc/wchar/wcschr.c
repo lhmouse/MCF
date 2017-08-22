@@ -31,7 +31,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	}
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << ((const wchar_t *)s - arp);
+	mask &= (uint32_t)-1 << (((const wchar_t *)s - arp) & 0x1F);
 	END
 	for(;;){
 		BEGIN

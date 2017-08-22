@@ -31,7 +31,7 @@ char *strchr(const char *s, int c){
 	}
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << ((const char *)s - arp);
+	mask &= (uint32_t)-1 << (((const char *)s - arp) & 0x1F);
 	END
 	for(;;){
 		BEGIN

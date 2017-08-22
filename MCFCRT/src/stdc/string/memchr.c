@@ -36,7 +36,7 @@ void *memchr(const void *s, int c, size_t n){
 	}
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << ((const unsigned char *)s - arp);
+	mask &= (uint32_t)-1 << (((const unsigned char *)s - arp) & 0x1F);
 	END
 	for(;;){
 		BEGIN

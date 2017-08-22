@@ -39,7 +39,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	}
 //	s2e[-3] = 'a';
 //	s2e[-2] = 0;
-	s2e[-1] = 'a';
+	s2e[-1] = 'c';
 
 	const auto test = [&](WideStringView name){
 		const auto fname = "memcmp"_nsv;
@@ -67,7 +67,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MCFCRT-2"_wsv);
 /*
 	static struct { char a[31]; char s[100]; } s1 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
-	static struct { char a[ 1]; char s[100]; } s2 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYW" };
+	static struct { char a[ 1]; char s[100]; } s2 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
 	static volatile auto fp = __builtin_memcmp;
 	std::printf("%d\n", fp(s1.s, s2.s, 62));
 */

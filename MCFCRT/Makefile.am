@@ -38,8 +38,7 @@ noinst_HEADERS = \
 	src/stdc/math/_sse2.h	\
 	src/stdc/math/_sse3.h	\
 	src/stdc/string/_memcpy_impl.h	\
-	src/stdc/string/_sse2.h	\
-	src/stdc/string/_ssse3.h
+	src/stdc/string/_sse2.h
 
 pkginclude_HEADERS = \
 	src/mcfcrt.h	\

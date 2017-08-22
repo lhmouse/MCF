@@ -6,15 +6,8 @@
 #define __MCFCRT_ENV_OFFSET_OF_H_
 
 #include "_crtdef.h"
-#include "_make_constant.h"
 
-#ifdef __cplusplus
-#  define __MCFCRT_ADDRESS_OF(__lval_)         (const_cast<char *>(reinterpret_cast<const volatile char (&)[1]>(__lval_)))
-#else
-#  define __MCFCRT_ADDRESS_OF(__lval_)         ((char *)&(__lval_))
-#endif
-
-#define _MCFCRT_OFFSET_OF(__s_, __m_)          (__MCFCRT_MAKE_CONSTANT((_MCFCRT_STD size_t)(__MCFCRT_ADDRESS_OF(((__s_ *)(char *)1)->__m_) - (char *)1)))
+#define _MCFCRT_OFFSET_OF(__s_, __m_)          (__builtin_offsetof(__s_, __m_))
 // 成员指针转换成聚合指针。
 #define _MCFCRT_DOWN_CAST(__s_, __m_, __p_)    ((__s_ *)((char *)(__p_) - _MCFCRT_OFFSET_OF(__s_, __m_)))
 

@@ -21,31 +21,35 @@ using Char = char;
 constexpr std::size_t kSize = 0x10000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-
+/*
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const auto s1  = (Char *)((char *)p1.Get() + 2);
+	const auto s1b  = (Char *)((char *)p1.Get() + 2);
 	const auto s1e = (Char *)((char *)p1.Get() + kSize);
-	Fill(s1, s1e, 'b');
-	s1e[-3] = 'a';
-	s1e[-2] = 0;
-	s1e[-1] = 'c';
-	const auto s2  = (Char *)((char *)p2.Get() + 4);
+	for(auto p = s1b; p != s1e; ++p){
+		*p = (Char)((p - s1b) | 1);
+	}
+//	s1e[-3] = 'a';
+//	s1e[-2] = 0;
+//	s1e[-1] = 'c';
+	const auto s2b  = (Char *)((char *)p2.Get() + 4);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
-	Fill(s2, s2e, 'b');
-	s2e[-3] = 'c';
-	s2e[-2] = 0;
+	for(auto p = s2b; p != s2e; ++p){
+		*p = (Char)((p - s2b) | 1);
+	}
+//	s2e[-3] = 'a';
+//	s2e[-2] = 0;
 	s2e[-1] = 'd';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "memchr"_nsv;
+		const auto fname = "memcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<const Char * (*)(const Char *, Char, std::size_t)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 30; ++i){
-				r = (std::ptrdiff_t)(*pf)(s2, 'd', (std::size_t)(s2e - s2));
+				r = (std::ptrdiff_t)(*pf)(s2b, s1b, (std::size_t)(s2e - s2b));
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);
@@ -61,33 +65,11 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-/*
-	wchar_t str[64];
-	wchar_t *eptr;
-
-	std::memset(str, 'z', sizeof(str));
-	eptr = ::_MCFCRT_wcppcpy(str, str + 30, L"hello world!");
-	std::printf("str = %ls\n", str);
-	if(eptr != str + 12)
-		std::abort();
-
-	std::memset(str, 'z', sizeof(str));
-	eptr = ::_MCFCRT_wcppcpy(str, str + 30, L"hello world! hello world!");
-	std::printf("str = %ls\n", str);
-	if(eptr != str + 25)
-		std::abort();
-
-	std::memset(str, 'z', sizeof(str));
-	eptr = ::_MCFCRT_wcppcpy(str, str + 30, L"hello world! hello world! hello world!");
-	std::printf("str = %ls\n", str);
-	if(eptr != str + 29)
-		std::abort();
-
-	std::memset(str, 'z', sizeof(str));
-	eptr = ::_MCFCRT_wcppcpy(str, str + 30, L"hello world! hello world! hello world! hello world!");
-	std::printf("str = %ls\n", str);
-	if(eptr != str + 29)
-		std::abort();
 */
+	static const char s1[] = "_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
+	static const char s2[] = "__0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static volatile auto fp = __builtin_memcmp;
+	std::printf("%d\n", fp(s1 + 1, s2 + 2, 62));
+
 	return 0;
 }

@@ -2,11 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_STDC_STRING_SSE2_H_
-#define __MCFCRT_STDC_STRING_SSE2_H_
+#ifndef __MCFCRT_STDC_STRING_SSSE3_H_
+#define __MCFCRT_STDC_STRING_SSSE3_H_
 
 #include "../../env/_crtdef.h"
-#include <emmintrin.h>
+#include <tmmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 
@@ -146,26 +146,6 @@ static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpor_411w(const __m128i *__lhs, 
 	for(unsigned __i = 0; __i < 2; ++__i){
 		const __m128i __t0 = _mm_or_si128(__comp(__lhs[__i * 2 + 0], __rhs[0]), __comp(__lhs[__i * 2 + 0], __third[0]));
 		const __m128i __t1 = _mm_or_si128(__comp(__lhs[__i * 2 + 1], __rhs[0]), __comp(__lhs[__i * 2 + 1], __third[0]));
-		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(_mm_packs_epi16(__t0, __t1)) << __i * 16;
-	}
-	return __mask;
-}
-
-__attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpor_221b(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third, __m128i (*__comp)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint32_t __mask = 0;
-	for(unsigned __i = 0; __i < 2; ++__i){
-		const __m128i __t = _mm_or_si128(__comp(__lhs[__i], __rhs[__i]), __comp(__lhs[__i], __third[0]));
-		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << __i * 16;
-	}
-	return __mask;
-}
-__attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpor_441w(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third, __m128i (*__comp)(__m128i, __m128i)) _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint32_t __mask = 0;
-	for(unsigned __i = 0; __i < 2; ++__i){
-		const __m128i __t0 = _mm_or_si128(__comp(__lhs[__i * 2 + 0], __rhs[__i * 2 + 0]), __comp(__lhs[__i * 2 + 0], __third[0]));
-		const __m128i __t1 = _mm_or_si128(__comp(__lhs[__i * 2 + 1], __rhs[__i * 2 + 1]), __comp(__lhs[__i * 2 + 1], __third[0]));
 		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(_mm_packs_epi16(__t0, __t1)) << __i * 16;
 	}
 	return __mask;

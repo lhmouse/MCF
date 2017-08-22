@@ -23,10 +23,11 @@ void *memchr(const void *s, int c, size_t n){
 		}	\
 		__m128i xw[2];	\
 		uint32_t mask;	\
+		ptrdiff_t dist;	\
 		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8);	\
 		mask &= (skip_);	\
-		ptrdiff_t dist = arp - ((const unsigned char *)s + n);	\
+		dist = arp - ((const unsigned char *)s + n);	\
 		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 		mask |= ~((uint32_t)-1 >> dist);	\
 		_mm_prefetch(arp + 256, _MM_HINT_T1);	\

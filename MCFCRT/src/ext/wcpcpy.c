@@ -19,33 +19,42 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	__m128i xw[4];
 	uint32_t mask;
 //=============================================================================
-#define LOOP_BODY(skip_, wp_part_, wp_full_)	\
-	{	\
-		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
-		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16);	\
-		mask &= (skip_);	\
-		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			wp = (wp_part_);	\
-			goto end;	\
-		}	\
-		wp = (wp_full_);	\
+#define BEGIN	\
+	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
+	mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16);
+#define BREAK_OPEN	\
+	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
+	if(_MCFCRT_EXPECT_NOT(mask != 0)){
+#define BREAK_CLOSE	\
+		goto end;	\
 	}
+#define END	\
+	//
 //=============================================================================
-	LOOP_BODY((uint32_t)-1 << ((const wchar_t *)s2 - arp),
-	          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2)),
-	          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - s2)));
+	BEGIN
+	mask &= (uint32_t)-1 << ((const wchar_t *)s2 - arp);
+	BREAK_OPEN
+	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2));
+	BREAK_CLOSE
+	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - s2));
+	END
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
-			LOOP_BODY((uint32_t)-1,
-			          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
-			          __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128));
+			BEGIN
+			BREAK_OPEN
+			wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
+			BREAK_CLOSE
+			wp = __MCFCRT_xmmstore_4(wp, xw, _mm_store_si128);
+			END
 		}
 	} else {
 		for(;;){
-			LOOP_BODY((uint32_t)-1,
-			          (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
-			          __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
+			BEGIN
+			BREAK_OPEN
+			wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
+			BREAK_CLOSE
+			wp = __MCFCRT_xmmstore_4(wp, xw, _mm_storeu_si128);
+			END
 		}
 	}
 end:

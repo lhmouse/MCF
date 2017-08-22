@@ -19,33 +19,42 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 	__m128i xw[2];
 	uint32_t mask;
 //=============================================================================
-#define LOOP_BODY(skip_, wp_part_, wp_full_)	\
-	{	\
-		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
-		mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8);	\
-		mask &= (skip_);	\
-		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			wp = (wp_part_);	\
-			goto end;	\
-		}	\
-		wp = (wp_full_);	\
+#define BEGIN	\
+	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
+	mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8);
+#define BREAK_OPEN	\
+	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
+	if(_MCFCRT_EXPECT_NOT(mask != 0)){
+#define BREAK_CLOSE	\
+		goto end;	\
 	}
+#define END	\
+	//
 //=============================================================================
-	LOOP_BODY((uint32_t)-1 << ((const char *)s2 - arp),
-	          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2)),
-	          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - s2)));
+	BEGIN
+	mask &= (uint32_t)-1 << ((const char *)s2 - arp);
+	BREAK_OPEN
+	wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2));
+	BREAK_CLOSE
+	wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - s2));
+	END
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
-			LOOP_BODY((uint32_t)-1,
-			          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
-			          __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128));
+			BEGIN
+			BREAK_OPEN
+			wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
+			BREAK_CLOSE
+			wp = __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128);
+			END
 		}
 	} else {
 		for(;;){
-			LOOP_BODY((uint32_t)-1,
-			          (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask)),
-			          __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
+			BEGIN
+			BREAK_OPEN
+			wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
+			BREAK_CLOSE
+			wp = __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128);
+			END
 		}
 	}
 end:

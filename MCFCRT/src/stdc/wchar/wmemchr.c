@@ -20,26 +20,27 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	uint32_t mask;
 	ptrdiff_t dist;
 //=============================================================================
-#define LOOP_BODY(skip_)	\
-	{	\
-		if(_MCFCRT_EXPECT_NOT(arp >= (const uint16_t *)s + n)){	\
-			goto end_null;	\
-		}	\
-		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
-		mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16);	\
-		mask &= (skip_);	\
-		dist = arp - ((const uint16_t *)s + n);	\
-		dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
-		mask |= ~((uint32_t)-1 >> dist);	\
-		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
-		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			goto end;	\
-		}	\
+#define BEGIN	\
+	if(_MCFCRT_EXPECT_NOT(arp >= (const uint16_t *)s + n)){	\
+		goto end_null;	\
+	}	\
+	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
+	mask = __MCFCRT_xmmcmp_41w(xw, xc, _mm_cmpeq_epi16);
+#define END	\
+	dist = arp - ((const uint16_t *)s + n);	\
+	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
+	mask |= ~((uint32_t)-1 >> dist);	\
+	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
+	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+		goto end;	\
 	}
 //=============================================================================
-	LOOP_BODY((uint32_t)-1 << ((const uint16_t *)s - arp))
+	BEGIN
+	mask &= (uint32_t)-1 << ((const uint16_t *)s - arp);
+	END
 	for(;;){
-		LOOP_BODY((uint32_t)-1)
+		BEGIN
+		END
 	}
 end:
 	if((mask << dist) != 0){

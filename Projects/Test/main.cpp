@@ -66,10 +66,11 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
 /*
-	static struct { char a[31]; char s[100]; } s1 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
-	static struct { char a[ 1]; char s[100]; } s2 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
-	static volatile auto fp = __builtin_memcmp;
-	std::printf("%d\n", fp(s1.s, s2.s, 62));
+	static struct { wchar_t a[31]; wchar_t s[100]; } s1 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+	static struct { wchar_t a[ 1]; wchar_t s[100]; } s2 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
+	const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>("wmemcmp"_nsv);
+	std::printf("%d\n", pf(s1.s, s2.s, 62));
 */
 	return 0;
 }

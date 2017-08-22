@@ -13,21 +13,20 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	// 每个字内的字节的权限必然一致。
 	register wchar_t *wp = s1;
 	register const wchar_t *arp = (const wchar_t *)((uintptr_t)s2 & (uintptr_t)-64);
+	__m128i xw[4];
+	uint32_t mask;
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
 //=============================================================================
 #define LOOP_BODY(skip_, wp_part_, wp_full_)	\
 	{	\
-		__m128i xw[4];	\
-		uint32_t mask;	\
 		arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16);	\
 		mask &= (skip_);	\
 		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 			wp = (wp_part_);	\
-			*wp = 0;	\
-			return wp;	\
+			goto end;	\
 		}	\
 		wp = (wp_full_);	\
 	}
@@ -48,4 +47,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 			          __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128));
 		}
 	}
+end:
+	*wp = 0;
+	return wp;
 }

@@ -13,17 +13,17 @@ void *memchr(const void *s, int c, size_t n){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	register const unsigned char *arp = (const unsigned char *)((uintptr_t)s & (uintptr_t)-32);
+	__m128i xw[2];
+	uint32_t mask;
+	ptrdiff_t dist;
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
 //=============================================================================
 #define LOOP_BODY(skip_)	\
 	{	\
 		if(_MCFCRT_EXPECT_NOT(arp >= (const unsigned char *)s + n)){	\
-			return _MCFCRT_NULLPTR;	\
+			goto end_null;	\
 		}	\
-		__m128i xw[2];	\
-		uint32_t mask;	\
-		ptrdiff_t dist;	\
 		arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8);	\
 		mask &= (skip_);	\
@@ -32,11 +32,7 @@ void *memchr(const void *s, int c, size_t n){
 		mask |= ~((uint32_t)-1 >> dist);	\
 		_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-			if((mask << dist) == 0){	\
-				return _MCFCRT_NULLPTR;	\
-			}	\
-			const unsigned char *const rp = arp - 32 + (unsigned)__builtin_ctzl(mask);	\
-			return (unsigned char *)rp;	\
+			goto end;	\
 		}	\
 	}
 //=============================================================================
@@ -44,4 +40,11 @@ void *memchr(const void *s, int c, size_t n){
 	for(;;){
 		LOOP_BODY((uint32_t)-1)
 	}
+end:
+	if((mask << dist) != 0){
+		arp = arp - 32 + (unsigned)__builtin_ctzl(mask);
+		return (unsigned char *)arp;
+	}
+end_null:
+	return _MCFCRT_NULLPTR;
 }

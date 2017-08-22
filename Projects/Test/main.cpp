@@ -21,7 +21,7 @@ using Char = char;
 constexpr std::size_t kSize = 0x10000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-/*
+
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b  = (Char *)((char *)p1.Get() + 2);
@@ -39,7 +39,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	}
 //	s2e[-3] = 'a';
 //	s2e[-2] = 0;
-	s2e[-1] = 'd';
+	s2e[-1] = 'a';
 
 	const auto test = [&](WideStringView name){
 		const auto fname = "memcmp"_nsv;
@@ -65,11 +65,11 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-*/
-	static const char s1[] = "_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
-	static const char s2[] = "__0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+/*
+	static struct { char a[31]; char s[100]; } s1 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+	static struct { char a[ 1]; char s[100]; } s2 = { "",  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYW" };
 	static volatile auto fp = __builtin_memcmp;
-	std::printf("%d\n", fp(s1 + 1, s2 + 2, 62));
-
+	std::printf("%d\n", fp(s1.s, s2.s, 62));
+*/
 	return 0;
 }

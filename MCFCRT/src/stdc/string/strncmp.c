@@ -13,8 +13,8 @@ int strncmp(const char *s1, const char *s2, size_t n){
 	// 如果 arp1 和 arp2 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register const unsigned char *arp1 = (const unsigned char *)((uintptr_t)s1 & (uintptr_t)-32);
-	register const unsigned char *arp2 = (const unsigned char *)((uintptr_t)s2 & (uintptr_t)-32);
+	register const unsigned char *arp1 __asm__("si") = (const unsigned char *)((uintptr_t)s1 & (uintptr_t)-32);
+	register const unsigned char *arp2 __asm__("di") = (const unsigned char *)((uintptr_t)s2 & (uintptr_t)-32);
 	const unsigned align = (unsigned)(32 - ((const unsigned char *)s1 - arp1) + ((const unsigned char *)s2 - arp2));
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);

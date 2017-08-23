@@ -44,24 +44,23 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2));
 	BREAK_CLOSE
 	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)s2, (size_t)(arp - s2));
-	END
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
+			END
 			BEGIN
 			BREAK_OPEN
 			wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
 			BREAK_CLOSE
 			wp = __MCFCRT_xmmstore_4(wp, xw, _mm_store_si128);
-			END
 		}
 	} else {
 		for(;;){
+			END
 			BEGIN
 			BREAK_OPEN
 			wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
 			BREAK_CLOSE
 			wp = __MCFCRT_xmmstore_4(wp, xw, _mm_storeu_si128);
-			END
 		}
 	}
 end:

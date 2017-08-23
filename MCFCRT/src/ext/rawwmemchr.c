@@ -28,10 +28,9 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 //=============================================================================
 	BEGIN
 	mask &= (uint32_t)-1 << (((const wchar_t *)s - arp) & 0x1F);
-	END
 	for(;;){
-		BEGIN
 		END
+		BEGIN
 	}
 end:
 	arp = arp - 32 + (unsigned)__builtin_ctzl(mask);

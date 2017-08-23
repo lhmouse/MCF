@@ -56,8 +56,8 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	case (k_):	\
 		NEXT(0, k_)	\
 		mask &= (uint32_t)-1 << (((const unsigned char *)s1 - arp1) & 0x1F);	\
-		END	\
 		for(;;){	\
+			END	\
 			BEGIN	\
 			NEXT(2, k_)	\
 			END	\
@@ -66,7 +66,6 @@ int memcmp(const void *s1, const void *s2, size_t n){
 			END	\
 			BEGIN	\
 			NEXT(0, k_)	\
-			END	\
 		}
 	// 两个位于区间 [0,31] 的数相减，结果位于区间 ［-31,31]；加上 32，结果位于区间 [1,63]。
 	           CASE(001)  CASE(002)  CASE(003)  CASE(004)  CASE(005)  CASE(006)  CASE(007)

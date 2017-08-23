@@ -152,7 +152,7 @@ static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpor_411w(const __m128i *__lhs, 
 }
 
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpnand_221b(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third) _MCFCRT_NOEXCEPT {
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpandn_221b(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
 		const __m128i __t = _mm_andnot_si128(_mm_cmpeq_epi8(__lhs[__i], __third[0]), _mm_cmpeq_epi8(__lhs[__i], __rhs[__i]));
@@ -161,7 +161,7 @@ static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpnand_221b(const __m128i *__lhs
 	return __mask;
 }
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpnand_441w(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third) _MCFCRT_NOEXCEPT {
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpandn_441w(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
 		const __m128i __t0 = _mm_andnot_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[__i * 2 + 0]));

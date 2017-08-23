@@ -37,24 +37,23 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 	wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - 32 + (unsigned)__builtin_ctzl(mask) - s2));
 	BREAK_CLOSE
 	wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)s2, (size_t)(arp - s2));
-	END
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
 		for(;;){
+			END
 			BEGIN
 			BREAK_OPEN
 			wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
 			BREAK_CLOSE
 			wp = __MCFCRT_xmmstore_2(wp, xw, _mm_store_si128);
-			END
 		}
 	} else {
 		for(;;){
+			END
 			BEGIN
 			BREAK_OPEN
 			wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)arp - 32, (unsigned)__builtin_ctzl(mask));
 			BREAK_CLOSE
 			wp = __MCFCRT_xmmstore_2(wp, xw, _mm_storeu_si128);
-			END
 		}
 	}
 end:

@@ -37,10 +37,9 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 //=============================================================================
 	BEGIN
 	mask &= (uint32_t)-1 << (((const uint16_t *)s - arp) & 0x1F);
-	END
 	for(;;){
-		BEGIN
 		END
+		BEGIN
 	}
 end:
 	if((mask << dist) != 0){

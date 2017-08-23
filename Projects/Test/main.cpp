@@ -4,6 +4,7 @@
 #include <MCF/Core/DynamicLinkLibrary.hpp>
 #include <MCF/Core/String.hpp>
 #include <MCF/Core/CopyMoveFill.hpp>
+#include <MCF/Core/MinMax.hpp>
 
 using namespace MCF;
 
@@ -21,35 +22,29 @@ using Char = char;
 constexpr std::size_t kSize = 0x10000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-/*
+
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b  = (Char *)((char *)p1.Get() + 2);
 	const auto s1e = (Char *)((char *)p1.Get() + kSize);
-	for(auto p = s1b; p != s1e; ++p){
-		*p = (Char)((p - s1b) | 1);
-	}
-//	s1e[-3] = 'a';
-//	s1e[-2] = 0;
-//	s1e[-1] = 'c';
 	const auto s2b  = (Char *)((char *)p2.Get() + 4);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
-	for(auto p = s2b; p != s2e; ++p){
-		*p = (Char)((p - s2b) | 1);
+	const auto len = (std::size_t)Min(s1e - s1b, s2e - s2b);
+	for(std::size_t i = 0; i < len; ++i){
+		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
-//	s2e[-3] = 'a';
-//	s2e[-2] = 0;
-	s2e[-1] = 'c';
+	s1b[len - 2] = s2b[len - 2] = 0;
+	s2b[len - 3] = '\x0F';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "memcmp"_nsv;
+		const auto fname = "strcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 30; ++i){
-				r = (std::ptrdiff_t)(*pf)(s2b, s1b, (std::size_t)(s2e - s2b));
+				r = (std::ptrdiff_t)(*pf)(s2b, s1b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);
@@ -65,12 +60,12 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-*/
-	static struct { wchar_t a[21]; wchar_t s[200]; } s1 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
-	static struct { wchar_t a[ 1]; wchar_t s[200]; } s2 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+/*
+	static struct { char a[21]; char s[200]; } s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
+	static struct { char a[ 1]; char s[200]; } s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XaZ" };
 	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
-	const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>("wmemcmp"_nsv);
-	std::printf("%d\n", pf(s1.s, s2.s, 124));
-
+	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("strncmp"_nsv);
+	std::printf("%d\n", pf(s1.s, s2.s, 62));
+*/
 	return 0;
 }

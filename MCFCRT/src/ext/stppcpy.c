@@ -30,7 +30,6 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 	mask = __MCFCRT_xmmcmp_21b(xw, xz);
 #define BREAK_OPEN	\
 	mask |= ~((uint32_t)-1 >> dist);	\
-	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){
 #define BREAK_CLOSE	\
 		goto end;	\

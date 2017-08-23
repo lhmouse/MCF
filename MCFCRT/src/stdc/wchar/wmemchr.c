@@ -30,7 +30,6 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	mask = __MCFCRT_xmmcmp_41w(xw, xc);
 #define END	\
 	mask |= ~((uint32_t)-1 >> dist);	\
-	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}

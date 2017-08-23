@@ -47,8 +47,6 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	mask = ~__MCFCRT_xmmcmpandn_441w(xw, xc, xz);
 #define END	\
 	mask |= ~((uint32_t)-1 >> dist);	\
-	_mm_prefetch(arp1 + 256, _MM_HINT_T1);	\
-	_mm_prefetch(arp2 + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}

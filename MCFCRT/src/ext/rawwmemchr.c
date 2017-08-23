@@ -21,7 +21,6 @@ wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
 	mask = __MCFCRT_xmmcmp_41w(xw, xc);
 #define END	\
-	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}

@@ -30,7 +30,6 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 	mask = __MCFCRT_xmmcmp_41w(xw, xz);
 #define BREAK_OPEN	\
 	mask |= ~((uint32_t)-1 >> dist);	\
-	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){
 #define BREAK_CLOSE	\
 		goto end;	\

@@ -30,7 +30,6 @@ void *memchr(const void *s, int c, size_t n){
 	mask = __MCFCRT_xmmcmp_21b(xw, xc);
 #define END	\
 	mask |= ~((uint32_t)-1 >> dist);	\
-	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}

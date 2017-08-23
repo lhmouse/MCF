@@ -28,16 +28,13 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		goto end_equal;	\
 	}	\
 	arp1 = __MCFCRT_xmmload_2(xw, arp1, _mm_load_si128);
-#define NEXT(align_)	\
-	for(unsigned i = 0; i < 4; ++i){	\
-		s2v[i] = s2v[i + 2];	\
-	}	\
+#define NEXT(offset_, align_)	\
 	if(_MCFCRT_EXPECT(!s2z)){	\
-		arp2 = __MCFCRT_xmmload_2(s2v + 4, arp2, _mm_load_si128);	\
+		arp2 = __MCFCRT_xmmload_2(s2v + ((offset_) + 4) % 6, arp2, _mm_load_si128);	\
 		s2z = arp2 >= (const unsigned char *)s2 + n;	\
 	}	\
 	for(unsigned i = 0; i < 2; ++i){	\
-		xc[i] = _mm_alignr_epi8(s2v[(align_) / 16 + i + 1], s2v[(align_) / 16 + i], (align_) % 16);	\
+		xc[i] = _mm_alignr_epi8(s2v[((offset_) + (align_) / 16 + i + 1) % 6], s2v[((offset_) + (align_) / 16 + i) % 6], (align_) % 16);	\
 	}	\
 	mask = ~__MCFCRT_xmmcmp_22b(xw, xc, _mm_cmpeq_epi8);
 #define END	\
@@ -54,15 +51,21 @@ int memcmp(const void *s1, const void *s2, size_t n){
 #define CASE(k_)	\
 	case (k_):	\
 		BEGIN	\
-		__MCFCRT_xmmsetz_2(s2v + 2);	\
-		arp2 = __MCFCRT_xmmload_2(s2v + 4, arp2, _mm_load_si128);	\
+		__MCFCRT_xmmsetz_2(s2v);	\
+		arp2 = __MCFCRT_xmmload_2(s2v + 2, arp2, _mm_load_si128);	\
 		s2z = arp2 >= (const unsigned char *)s2 + n;	\
-		NEXT(k_)	\
+		NEXT(0, k_)	\
 		mask &= (uint32_t)-1 << (((const unsigned char *)s1 - arp1) & 0x1F);	\
 		END	\
 		for(;;){	\
 			BEGIN	\
-			NEXT(k_)	\
+			NEXT(2, k_)	\
+			END	\
+			BEGIN	\
+			NEXT(4, k_)	\
+			END	\
+			BEGIN	\
+			NEXT(0, k_)	\
 			END	\
 		}
 	// 两个位于区间 [0,31] 的数相减，结果位于区间 ［-31,31]；加上 32，结果位于区间 [1,63]。

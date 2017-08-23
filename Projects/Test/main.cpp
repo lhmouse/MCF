@@ -21,7 +21,7 @@ using Char = char;
 constexpr std::size_t kSize = 0x10000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-
+/*
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b  = (Char *)((char *)p1.Get() + 2);
@@ -65,12 +65,12 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-/*
-	static struct { wchar_t a[31]; wchar_t s[100]; } s1 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
-	static struct { wchar_t a[ 1]; wchar_t s[100]; } s2 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+*/
+	static struct { wchar_t a[21]; wchar_t s[200]; } s1 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+	static struct { wchar_t a[ 1]; wchar_t s[200]; } s2 = { L"", L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" };
 	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
 	const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>("wmemcmp"_nsv);
-	std::printf("%d\n", pf(s1.s, s2.s, 62));
-*/
+	std::printf("%d\n", pf(s1.s, s2.s, 124));
+
 	return 0;
 }

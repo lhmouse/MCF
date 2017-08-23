@@ -17,7 +17,7 @@ struct PageDeleter {
 	}
 };
 
-using Char = char;
+using Char = wchar_t;
 
 constexpr std::size_t kSize = 0x10000000;
 
@@ -34,10 +34,10 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
 	s1b[len - 2] = s2b[len - 2] = 0;
-	s2b[len - 3] = '\x0F';
+//	s2b[len - 3] = '\x0F';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strcmp"_nsv;
+		const auto fname = "wcscmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);

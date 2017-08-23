@@ -47,13 +47,13 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		goto end;	\
 	}
 //=============================================================================
+	BEGIN
+	__MCFCRT_xmmsetz_4(s2v);
+	arp2 = __MCFCRT_xmmload_4(s2v + 4, arp2, _mm_load_si128);
+	s2z = arp2 >= (const wchar_t *)s2 + n;
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
-		BEGIN	\
-		__MCFCRT_xmmsetz_4(s2v);	\
-		arp2 = __MCFCRT_xmmload_4(s2v + 4, arp2, _mm_load_si128);	\
-		s2z = arp2 >= (const wchar_t *)s2 + n;	\
 		NEXT(0, k_)	\
 		mask &= (uint32_t)-1 << (((const wchar_t *)s1 - arp1) & 0x1F);	\
 		for(;;){	\

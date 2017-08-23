@@ -81,7 +81,9 @@ end:
 	arp1 = arp1 - 32 + (unsigned)__builtin_ctzl(mask);
 	arp2 = arp1 - (const unsigned char *)s1 + (const unsigned char *)s2;
 	if(*arp1 == *arp2){
-		return 0;
+		goto end_equal;
 	}
 	return (*arp1 < *arp2) ? -1 : 1;
+end_equal:
+	return 0;
 }

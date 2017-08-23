@@ -36,7 +36,7 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	for(unsigned i = 0; i < 4; ++i){	\
 		xc[i] = _mm_alignr_epi8(s2v[((offset_) + (align_) / 8 + i + 1) % 12], s2v[((offset_) + (align_) / 8 + i) % 12], (align_) % 8 * 2);	\
 	}	\
-	mask = ~__MCFCRT_xmmcmp_44w(xw, xc, _mm_cmpeq_epi16);
+	mask = ~__MCFCRT_xmmcmp_44w(xw, xc);
 #define END	\
 	dist = arp1 - ((const wchar_t *)s1 + n);	\
 	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\

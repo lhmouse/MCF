@@ -23,7 +23,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
-	mask = __MCFCRT_xmmcmpor_411w(xw, xc, xz, _mm_cmpeq_epi16);
+	mask = __MCFCRT_xmmcmpor_411w(xw, xc, xz);
 #define END	\
 	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\

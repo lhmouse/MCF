@@ -25,7 +25,7 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
-	mask = __MCFCRT_xmmcmp_21b(xw, xz, _mm_cmpeq_epi8);
+	mask = __MCFCRT_xmmcmp_21b(xw, xz);
 #define BREAK_OPEN	\
 	dist = arp - (s2 + (es1 - s1) - 1);	\
 	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\

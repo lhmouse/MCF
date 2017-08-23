@@ -19,7 +19,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
-	mask = __MCFCRT_xmmcmp_21b(xw, xc, _mm_cmpeq_epi8);
+	mask = __MCFCRT_xmmcmp_21b(xw, xc);
 #define END	\
 	_mm_prefetch(arp + 256, _MM_HINT_T1);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\

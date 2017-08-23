@@ -25,7 +25,7 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
-	mask = __MCFCRT_xmmcmp_41w(xw, xz, _mm_cmpeq_epi16);
+	mask = __MCFCRT_xmmcmp_41w(xw, xz);
 #define BREAK_OPEN	\
 	dist = arp - (s2 + (es1 - s1) - 1);	\
 	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\

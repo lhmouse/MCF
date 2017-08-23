@@ -36,7 +36,7 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	for(unsigned i = 0; i < 2; ++i){	\
 		xc[i] = _mm_alignr_epi8(s2v[((offset_) + (align_) / 16 + i + 1) % 6], s2v[((offset_) + (align_) / 16 + i) % 6], (align_) % 16);	\
 	}	\
-	mask = ~__MCFCRT_xmmcmp_22b(xw, xc, _mm_cmpeq_epi8);
+	mask = ~__MCFCRT_xmmcmp_22b(xw, xc);
 #define END	\
 	dist = arp1 - ((const unsigned char *)s1 + n);	\
 	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\

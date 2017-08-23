@@ -31,6 +31,8 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	}	\
 	arp1 = __MCFCRT_xmmload_4(xw, arp1, _mm_load_si128);
 #define NEXT(offset_, align_)	\
+	dist = arp1 - ((const wchar_t *)s1 + n);	\
+	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 	if(_MCFCRT_EXPECT(!s2z)){	\
 		arp2 = __MCFCRT_xmmload_4(s2v + ((offset_) + 8) % 12, arp2, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(s2v + ((offset_) + 8) % 12, xz);	\
@@ -44,8 +46,6 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	}	\
 	mask = ~__MCFCRT_xmmcmpandn_441w(xw, xc, xz);
 #define END	\
-	dist = arp1 - ((const wchar_t *)s1 + n);	\
-	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 	mask |= ~((uint32_t)-1 >> dist);	\
 	_mm_prefetch(arp1 + 256, _MM_HINT_T1);	\
 	_mm_prefetch(arp2 + 256, _MM_HINT_T1);	\

@@ -36,10 +36,7 @@ int strncmp(const char *s1, const char *s2, size_t n){
 	if(_MCFCRT_EXPECT(!s2z)){	\
 		arp2 = __MCFCRT_xmmload_2(s2v + ((offset_) + 4) % 6, arp2, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_21b(s2v + ((offset_) + 4) % 6, xz);	\
-		s2z = mask != 0;	\
-		if(_MCFCRT_EXPECT(!s2z)){	\
-			s2z = arp2 >= (const unsigned char *)s2 + n;	\
-		}	\
+		s2z = (mask != 0) || (arp2 >= (const unsigned char *)s2 + n);	\
 	}	\
 	for(unsigned i = 0; i < 2; ++i){	\
 		xc[i] = _mm_alignr_epi8(s2v[((offset_) + (align_) / 16 + i + 1) % 6], s2v[((offset_) + (align_) / 16 + i) % 6], (align_) % 16);	\

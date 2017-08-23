@@ -36,10 +36,7 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	if(_MCFCRT_EXPECT(!s2z)){	\
 		arp2 = __MCFCRT_xmmload_4(s2v + ((offset_) + 8) % 12, arp2, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(s2v + ((offset_) + 8) % 12, xz);	\
-		s2z = mask != 0;	\
-		if(_MCFCRT_EXPECT(!s2z)){	\
-			s2z = arp2 >= (const wchar_t *)s2 + n;	\
-		}	\
+		s2z = (mask != 0) || (arp2 >= (const wchar_t *)s2 + n);	\
 	}	\
 	for(unsigned i = 0; i < 4; ++i){	\
 		xc[i] = _mm_alignr_epi8(s2v[((offset_) + (align_) / 8 + i + 1) % 12], s2v[((offset_) + (align_) / 8 + i) % 12], (align_) % 8 * 2);	\

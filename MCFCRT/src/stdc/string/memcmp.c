@@ -47,13 +47,13 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		goto end;	\
 	}
 //=============================================================================
+	BEGIN
+	__MCFCRT_xmmsetz_2(s2v);
+	arp2 = __MCFCRT_xmmload_2(s2v + 2, arp2, _mm_load_si128);
+	s2z = arp2 >= (const unsigned char *)s2 + n;
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
-		BEGIN	\
-		__MCFCRT_xmmsetz_2(s2v);	\
-		arp2 = __MCFCRT_xmmload_2(s2v + 2, arp2, _mm_load_si128);	\
-		s2z = arp2 >= (const unsigned char *)s2 + n;	\
 		NEXT(0, k_)	\
 		mask &= (uint32_t)-1 << (((const unsigned char *)s1 - arp1) & 0x1F);	\
 		END	\

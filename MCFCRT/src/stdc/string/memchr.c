@@ -25,10 +25,10 @@ void *memchr(const void *s, int c, size_t n){
 		goto end_null;	\
 	}	\
 	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
-	dist = arp - ((const unsigned char *)s + n);	\
-	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 	mask = __MCFCRT_xmmcmp_21b(xw, xc);
 #define END	\
+	dist = arp - ((const unsigned char *)s + n);	\
+	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 	mask |= ~((uint32_t)-1 >> dist);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\

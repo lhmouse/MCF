@@ -29,8 +29,6 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	}	\
 	arp1 = __MCFCRT_xmmload_2(xw, arp1, _mm_load_si128);
 #define NEXT(offset_, align_)	\
-	dist = arp1 - ((const unsigned char *)s1 + n);	\
-	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 	if(_MCFCRT_EXPECT(!s2z)){	\
 		arp2 = __MCFCRT_xmmload_2(s2v + ((offset_) + 4) % 6, arp2, _mm_load_si128);	\
 		s2z = arp2 >= (const unsigned char *)s2 + n;	\
@@ -40,6 +38,8 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	}	\
 	mask = ~__MCFCRT_xmmcmp_22b(xw, xc);
 #define END	\
+	dist = arp1 - ((const unsigned char *)s1 + n);	\
+	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
 	mask |= ~((uint32_t)-1 >> dist);	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\

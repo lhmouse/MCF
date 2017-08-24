@@ -12,7 +12,7 @@ char *strchr(const char *s, int c){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register const char *arp = (const char *)((uintptr_t)s & (uintptr_t)-32);
+	register const unsigned char *arp = (const unsigned char *)((uintptr_t)s & (uintptr_t)-32);
 	__m128i xc[1];
 	__MCFCRT_xmmsetb(xc, (uint8_t)c);
 	__m128i xz[1];
@@ -31,7 +31,7 @@ char *strchr(const char *s, int c){
 	}
 //=============================================================================
 	BEGIN
-	dist = (const char *)s - (arp - 32);
+	dist = (const unsigned char *)s - (arp - 32);
 	mask &= (uint32_t)-1 << dist;
 	for(;;){
 		END
@@ -39,7 +39,7 @@ char *strchr(const char *s, int c){
 	}
 end:
 	arp = arp - 32 + (unsigned)__builtin_ctzl(mask);
-	if(*arp == (char)c){
+	if(*arp == (unsigned char)c){
 		return (char *)arp;
 	}
 	return _MCFCRT_NULLPTR;

@@ -10,7 +10,7 @@
 #endif
 
 #if !defined(__SSSE3__)
-#  error SSSE3 (triple S) is required to use MCFCRT. Check your `-march=` command-line option.
+#  error SSSE3 (triple S) is required to use MCFCRT. Check your `-march=` command line option.
 #endif
 
 #ifdef __STDC_VERSION__

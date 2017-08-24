@@ -3,6 +3,7 @@
 #include <MCF/Core/Clocks.hpp>
 #include <MCF/Core/DynamicLinkLibrary.hpp>
 #include <MCF/Core/String.hpp>
+#include <MCF/Core/LastError.hpp>
 #include <MCF/Core/CopyMoveFill.hpp>
 #include <MCF/Core/MinMax.hpp>
 
@@ -17,39 +18,39 @@ struct PageDeleter {
 	}
 };
 
-using Char = char;
+using Char = wchar_t;
 
-constexpr std::size_t kSize = 0x10000;
+constexpr std::size_t kSize = 0x1000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const auto s1b  = (Char *)((char *)p1.Get() + 2);
+	const auto s1b = (Char *)((char *)p1.Get() + 2);
 	const auto s1e = (Char *)((char *)p1.Get() + kSize);
-	const auto s2b  = (Char *)((char *)p2.Get() + 4);
+	const auto s2b = (Char *)((char *)p2.Get() + 4);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
 	const auto len = (std::size_t)Min(s1e - s1b, s2e - s2b);
 	for(std::size_t i = 0; i < len; ++i){
 		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
+	s1e[-3] = '\x0F';
 	s1b[len - 2] = s2b[len - 2] = 0;
-	s2b[len - 3] = '\x0F';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strcmp"_nsv;
+		const auto fname = "wmemcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(std::uint64_t i = 0; i < 1000000; ++i){
+			for(std::uint64_t i = 0; i < 1000; ++i){
 				r = (std::ptrdiff_t)(*pf)(s1b, s2b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);
 		} catch(Exception &e){
-			std::printf("%-10s.%s : error %lu\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), e.GetErrorCode());
+			std::printf("%-10s.%s : error %lu : %s\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), e.GetErrorCode(), AnsiString(GetWin32ErrorDescription(e.GetErrorCode())).GetStr());
 		}
 	};
 

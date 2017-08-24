@@ -89,9 +89,9 @@ __attribute__((__always_inline__))
 static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_41w(const __m128i *__lhs, __m128i *__rhs) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
-		const __m128i __t0 = _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[0]);
-		const __m128i __t1 = _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[0]);
-		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(_mm_packs_epi16(__t0, __t1)) << __i * 16;
+		const __m128i __t = _mm_packs_epi16(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[0]),
+		                                    _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[0]));
+		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << __i * 16;
 	}
 	return __mask;
 }
@@ -109,9 +109,9 @@ __attribute__((__always_inline__))
 static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_44w(const __m128i *__lhs, const __m128i *__rhs) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
-		const __m128i __t0 = _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[__i * 2 + 0]);
-		const __m128i __t1 = _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[__i * 2 + 1]);
-		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(_mm_packs_epi16(__t0, __t1)) << __i * 16;
+		const __m128i __t = _mm_packs_epi16(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[__i * 2 + 0]),
+		                                    _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[__i * 2 + 1]));
+		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << __i * 16;
 	}
 	return __mask;
 }
@@ -129,9 +129,9 @@ __attribute__((__always_inline__))
 static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpor_411w(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
-		const __m128i __t0 = _mm_or_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[0]));
-		const __m128i __t1 = _mm_or_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 1], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[0]));
-		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(_mm_packs_epi16(__t0, __t1)) << __i * 16;
+		const __m128i __t = _mm_packs_epi16(_mm_or_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[0])),
+		                                    _mm_or_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 1], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[0])));
+		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << __i * 16;
 	}
 	return __mask;
 }
@@ -149,9 +149,9 @@ __attribute__((__always_inline__))
 static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmpandn_441w(const __m128i *__lhs, const __m128i *__rhs, const __m128i *__third) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
-		const __m128i __t0 = _mm_andnot_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[__i * 2 + 0]));
-		const __m128i __t1 = _mm_andnot_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 1], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[__i * 2 + 1]));
-		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(_mm_packs_epi16(__t0, __t1)) << __i * 16;
+		const __m128i __t = _mm_packs_epi16(_mm_andnot_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[__i * 2 + 0])),
+		                                    _mm_andnot_si128(_mm_cmpeq_epi16(__lhs[__i * 2 + 1], __third[0]), _mm_cmpeq_epi16(__lhs[__i * 2 + 1], __rhs[__i * 2 + 1])));
+		__mask += (_MCFCRT_STD uint32_t)_mm_movemask_epi8(__t) << __i * 16;
 	}
 	return __mask;
 }

@@ -54,7 +54,8 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 #define CASE(k_)	\
 	case (k_):	\
 		NEXT(0, k_)	\
-		mask &= (uint32_t)-1 << (((const wchar_t *)s1 - arp1) & 0x1F);	\
+		dist = (const wchar_t *)s1 - (arp1 - 32);	\
+		mask &= (uint32_t)-1 << dist;	\
 		for(;;){	\
 			END	\
 			BEGIN	\

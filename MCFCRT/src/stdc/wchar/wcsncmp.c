@@ -53,16 +53,15 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	__MCFCRT_xmmsetz_4(s2v);
 	arp2 = __MCFCRT_xmmload_4(s2v + 4, arp2, _mm_load_si128);
 	mask = __MCFCRT_xmmcmp_41w(s2v + 4, xz);
-	mask &= (uint32_t)-1 << (((const wchar_t *)s2 - arp2) & 0x1F);
-	s2z = mask != 0;
-	if(_MCFCRT_EXPECT(!s2z)){
-		s2z = arp2 >= (const wchar_t *)s2 + n;
-	}
+	dist = (const wchar_t *)s2 - (arp2 - 32);
+	mask &= (uint32_t)-1 << dist;
+	s2z = (mask != 0) || (arp2 >= (const wchar_t *)s2 + n);
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
 		NEXT(0, k_)	\
-		mask &= (uint32_t)-1 << (((const wchar_t *)s1 - arp1) & 0x1F);	\
+		dist = (const wchar_t *)s1 - (arp1 - 32);	\
+		mask &= (uint32_t)-1 << dist;	\
 		for(;;){	\
 			END	\
 			BEGIN	\

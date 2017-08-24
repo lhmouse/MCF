@@ -12,7 +12,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register const uint16_t *arp = (const uint16_t *)((uintptr_t)s & (uintptr_t)-64);
+	register const wchar_t *arp = (const wchar_t *)((uintptr_t)s & (uintptr_t)-64);
 	__m128i xc[1];
 	__MCFCRT_xmmsetw(xc, (uint16_t)c);
 
@@ -21,7 +21,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
-	if(_MCFCRT_EXPECT_NOT(arp >= (const uint16_t *)s + n)){	\
+	if(_MCFCRT_EXPECT_NOT(arp >= (const wchar_t *)s + n)){	\
 		goto end_null;	\
 	}	\
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
@@ -36,7 +36,8 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	}
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << (((const uint16_t *)s - arp) & 0x1F);
+	dist = (const wchar_t *)s - (arp - 32);
+	mask &= (uint32_t)-1 << dist;
 	for(;;){
 		END
 		BEGIN

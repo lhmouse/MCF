@@ -53,16 +53,15 @@ int strncmp(const char *s1, const char *s2, size_t n){
 	__MCFCRT_xmmsetz_2(s2v);
 	arp2 = __MCFCRT_xmmload_2(s2v + 2, arp2, _mm_load_si128);
 	mask = __MCFCRT_xmmcmp_21b(s2v + 2, xz);
-	mask &= (uint32_t)-1 << (((const unsigned char *)s2 - arp2) & 0x1F);
-	s2z = mask != 0;
-	if(_MCFCRT_EXPECT(!s2z)){
-		s2z = arp2 >= (const unsigned char *)s2 + n;
-	}
+	dist = (const unsigned char *)s2 - (arp2 - 32);
+	mask &= (uint32_t)-1 << dist;
+	s2z = (mask != 0) || (arp2 >= (const unsigned char *)s2 + n);
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
 		NEXT(0, k_)	\
-		mask &= (uint32_t)-1 << (((const unsigned char *)s1 - arp1) & 0x1F);	\
+		dist = (const unsigned char *)s1 - (arp1 - 32);	\
+		mask &= (uint32_t)-1 << dist;	\
 		for(;;){	\
 			END	\
 			BEGIN	\

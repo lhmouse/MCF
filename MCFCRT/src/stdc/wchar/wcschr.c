@@ -20,6 +20,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 
 	__m128i xw[4];
 	uint32_t mask;
+	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
@@ -30,7 +31,8 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	}
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << (((const wchar_t *)s - arp) & 0x1F);
+	dist = (const wchar_t *)s - (arp - 32);
+	mask &= (uint32_t)-1 << dist;
 	for(;;){
 		END
 		BEGIN

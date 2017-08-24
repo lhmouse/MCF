@@ -23,6 +23,7 @@ int strcmp(const char *s1, const char *s2){
 	bool s2z;
 	__m128i xw[2], xc[2];
 	uint32_t mask;
+	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
 	arp1 = __MCFCRT_xmmload_2(xw, arp1, _mm_load_si128);
@@ -45,13 +46,15 @@ int strcmp(const char *s1, const char *s2){
 	__MCFCRT_xmmsetz_2(s2v);
 	arp2 = __MCFCRT_xmmload_2(s2v + 2, arp2, _mm_load_si128);
 	mask = __MCFCRT_xmmcmp_21b(s2v + 2, xz);
-	mask &= (uint32_t)-1 << (((const unsigned char *)s2 - arp2) & 0x1F);
+	dist = (const unsigned char *)s2 - (arp2 - 32);
+	mask &= (uint32_t)-1 << dist;
 	s2z = mask != 0;
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
 		NEXT(0, k_)	\
-		mask &= (uint32_t)-1 << (((const unsigned char *)s1 - arp1) & 0x1F);	\
+		dist = (const unsigned char *)s1 - (arp1 - 32);	\
+		mask &= (uint32_t)-1 << dist;	\
 		for(;;){	\
 			END	\
 			BEGIN	\

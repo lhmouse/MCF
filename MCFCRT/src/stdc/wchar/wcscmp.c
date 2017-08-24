@@ -23,6 +23,7 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 	bool s2z;
 	__m128i xw[4], xc[4];
 	uint32_t mask;
+	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
 	arp1 = __MCFCRT_xmmload_4(xw, arp1, _mm_load_si128);
@@ -45,13 +46,15 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 	__MCFCRT_xmmsetz_4(s2v);
 	arp2 = __MCFCRT_xmmload_4(s2v + 4, arp2, _mm_load_si128);
 	mask = __MCFCRT_xmmcmp_41w(s2v + 4, xz);
-	mask &= (uint32_t)-1 << (((const wchar_t *)s2 - arp2) & 0x1F);
+	dist = (const wchar_t *)s2 - (arp2 - 32);
+	mask &= (uint32_t)-1 << dist;
 	s2z = mask != 0;
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
 		NEXT(0, k_)	\
-		mask &= (uint32_t)-1 << (((const wchar_t *)s1 - arp1) & 0x1F);	\
+		dist = (const wchar_t *)s1 - (arp1 - 32);	\
+		mask &= (uint32_t)-1 << dist;	\
 		for(;;){	\
 			END	\
 			BEGIN	\

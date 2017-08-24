@@ -25,12 +25,8 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	uint32_t mask;
 	ptrdiff_t dist;
 //=============================================================================
-#define BEGIN	\
-	if(_MCFCRT_EXPECT_NOT(arp1 >= (const wchar_t *)s1 + n)){	\
-		goto end_equal;	\
-	}	\
-	arp1 = __MCFCRT_xmmload_4(xw, arp1, _mm_load_si128);
-#define NEXT(offset_, align_)	\
+#define BEGIN(offset_, align_)	\
+	arp1 = __MCFCRT_xmmload_4(xw, arp1, _mm_load_si128);	\
 	if(_MCFCRT_EXPECT(!s2z)){	\
 		arp2 = __MCFCRT_xmmload_4(s2v + ((offset_) + 8) % 12, arp2, _mm_load_si128);	\
 		mask = __MCFCRT_xmmcmp_41w(s2v + ((offset_) + 8) % 12, xz);	\
@@ -42,14 +38,16 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	mask = ~__MCFCRT_xmmcmpandn_441w(xw, xc, xz);
 #define END	\
 	dist = arp1 - ((const wchar_t *)s1 + n);	\
-	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+	if(_MCFCRT_EXPECT_NOT(dist >= 0)){	\
 		goto end_trunc;	\
 	}	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}
 //=============================================================================
-	BEGIN
+	if(_MCFCRT_EXPECT_NOT(n == 0)){
+		goto end_equal;
+	}
 	__MCFCRT_xmmsetz_4(s2v);
 	arp2 = __MCFCRT_xmmload_4(s2v + 4, arp2, _mm_load_si128);
 	mask = __MCFCRT_xmmcmp_41w(s2v + 4, xz);
@@ -59,19 +57,16 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	switch(align){
 #define CASE(k_)	\
 	case (k_):	\
-		NEXT(0, k_)	\
+		BEGIN(0, k_)	\
 		dist = (const wchar_t *)s1 - (arp1 - 32);	\
 		mask &= (uint32_t)-1 << dist;	\
 		for(;;){	\
 			END	\
-			BEGIN	\
-			NEXT(4, k_)	\
+			BEGIN(4, k_)	\
 			END	\
-			BEGIN	\
-			NEXT(8, k_)	\
+			BEGIN(8, k_)	\
 			END	\
-			BEGIN	\
-			NEXT(0, k_)	\
+			BEGIN(0, k_)	\
 		}
 	// 两个位于区间 [0,31] 的数相减，结果位于区间 ［-31,31]；加上 32，结果位于区间 [1,63]。
 	           CASE(001)  CASE(002)  CASE(003)  CASE(004)  CASE(005)  CASE(006)  CASE(007)

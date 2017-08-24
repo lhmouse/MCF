@@ -17,9 +17,9 @@ struct PageDeleter {
 	}
 };
 
-using Char = wchar_t;
+using Char = char;
 
-constexpr std::size_t kSize = 0x10000000;
+constexpr std::size_t kSize = 0x10000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 
@@ -34,17 +34,17 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
 	s1b[len - 2] = s2b[len - 2] = 0;
-//	s2b[len - 3] = '\x0F';
+	s2b[len - 3] = '\x0F';
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcscmp"_nsv;
+		const auto fname = "strcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(unsigned i = 0; i < 30; ++i){
-				r = (std::ptrdiff_t)(*pf)(s2b, s1b, len);
+			for(std::uint64_t i = 0; i < 1000000; ++i){
+				r = (std::ptrdiff_t)(*pf)(s1b, s2b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

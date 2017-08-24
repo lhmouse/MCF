@@ -77,21 +77,6 @@ static inline void *__MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m1
 }
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_xmmchs_2b(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT_NOEXCEPT {
-	const __m128i __mask = _mm_set1_epi8((char)0x80);
-	for(unsigned __i = 0; __i < 2; ++__i){
-		__words[__i] = _mm_xor_si128(__words[__i], __mask);
-	}
-}
-__attribute__((__always_inline__))
-static inline void __MCFCRT_xmmchs_4w(__m128i *_MCFCRT_RESTRICT __words) _MCFCRT_NOEXCEPT {
-	const __m128i __mask = _mm_set1_epi16((short)0x8000);
-	for(unsigned __i = 0; __i < 4; ++__i){
-		__words[__i] = _mm_xor_si128(__words[__i], __mask);
-	}
-}
-
-__attribute__((__always_inline__))
 static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_21b(const __m128i *__lhs, __m128i *__rhs) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){

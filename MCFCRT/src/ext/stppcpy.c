@@ -22,14 +22,14 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 
 	__m128i xw[2];
 	uint32_t mask;
-	ptrdiff_t dist;
+	ptrdiff_t wdist;
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
 	mask = __MCFCRT_xmmcmp_21b(xw, xz);
 #define END	\
-	dist = arp - (s2 + (es1 - 1 - s1));	\
-	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+	wdist = arp - (s2 + (es1 - 1 - s1));	\
+	if(_MCFCRT_EXPECT_NOT(wdist > 0)){	\
 		goto end_trunc;	\
 	}	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
@@ -37,8 +37,8 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 	}
 //=============================================================================
 	BEGIN
-	dist = (const char *)s2 - (arp - 32);
-	mask &= (uint32_t)-1 << dist;
+	wdist = (const char *)s2 - (arp - 32);
+	mask &= (uint32_t)-1 << wdist;
 	END
 	wp = (char *)_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, (uint8_t *)wp, (const uint8_t *)rp, (size_t)(arp - rp));
 	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
@@ -57,7 +57,7 @@ char *_MCFCRT_stppcpy(char *s1, char *es1, const char *restrict s2){
 		}
 	}
 end_trunc:
-	mask |= ~((uint32_t)-1 >> dist);
+	mask |= ~((uint32_t)-1 >> wdist);
 end:
 	_MCFCRT_ASSERT(mask != 0);
 	arp = arp - 32 + (unsigned)__builtin_ctzl(mask);

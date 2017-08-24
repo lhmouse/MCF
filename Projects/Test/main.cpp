@@ -20,16 +20,16 @@ struct PageDeleter {
 
 using Char = char;
 
-constexpr std::size_t kSize = 0x1000000;
+constexpr std::size_t size = 0x10000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-/*
-	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+
+	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b = (Char *)((char *)p1.Get() + 4);
-	const auto s1e = (Char *)((char *)p1.Get() + kSize);
+	const auto s1e = (Char *)((char *)p1.Get() + size);
 	const auto s2b = (Char *)((char *)p2.Get() + 2);
-	const auto s2e = (Char *)((char *)p2.Get() + kSize);
+	const auto s2e = (Char *)((char *)p2.Get() + size);
 	const auto len = (std::size_t)Min(s1e - s1b, s2e - s2b);
 	for(std::size_t i = 0; i < len; ++i){
 		s1b[i] = s2b[i] = (Char)(i | 1);
@@ -44,7 +44,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(std::uint64_t i = 0; i < 1000; ++i){
+			for(std::uint64_t i = 0; i < 100000; ++i){
 				r = (std::ptrdiff_t)(*pf)(s1b, s2b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
@@ -61,7 +61,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-*/
+
 /*
 	static struct { char a[21]; char s[200]; } s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
 	static struct { char a[ 1]; char s[200]; } s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XaZ" };
@@ -69,27 +69,28 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("strncmp"_nsv);
 	std::printf("%d\n", pf(s1.s, s2.s, 62));
 */
-
-	wchar_t dstb[100], srcb[100];
-	wchar_t *const dst = dstb + 1;
-	wchar_t *const src = srcb + 3;
-	const std::size_t max_len = 80;
-	for(std::size_t i = 0; i < 90; ++i){
+/*
+	static constexpr std::size_t buff_len = 2000;
+	static wchar_t dstb[buff_len], srcb[buff_len];
+	for(std::size_t i = 0; i < buff_len / 2 - 10; ++i){
 		std::memset(dstb, 'z', sizeof(dstb));
 		std::memset(srcb, 'a', sizeof(srcb));
+		wchar_t *const dst = dstb + i + 1;
+		wchar_t *const src = srcb + i + 2;
 		src[i] = 0;
+		constexpr std::size_t max_len = buff_len * 2 / 5;
 		const auto epd = ::_MCFCRT_wcppcpy(dst, dst + max_len, src);
-		std::printf("i = %u\n", i);
-		std::printf("  src = %s$\n", (char *)src);
-		std::printf("  dst = %s$\n", (char *)dst);
+		std::printf("i = %zu\n", i);
+//		std::printf("  src = %s$\n", (char *)src);
+//		std::printf("  dst = %s$\n", (char *)dst);
 		const int cmp = std::wcscmp(src, dst);
 		const std::size_t len = (std::size_t)(epd - dst);
-		const wchar_t end = dst[i + 1];
-		std::printf("  cmp = %d, len = %zd, end = %c\n", cmp, len, end);
+		const int end = dst[i + 1];
+		std::printf("  cmp = %d, len = %zd, end = %x\n", cmp, len, end);
 		if((len != std::min(i, max_len - 1)) || (end != dstb[0])){
 			std::abort();
 		}
 	}
-
+*/
 	return 0;
 }

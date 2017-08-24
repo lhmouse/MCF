@@ -8,7 +8,7 @@
 #undef memset
 
 void *memset(void *s, int c, size_t n){
-	register unsigned char *wp = s;
+	register unsigned char *wp __asm__("di") = s;
 	uintptr_t word;
 	word = (uint8_t)c;
 #ifdef _WIN64

@@ -11,8 +11,8 @@ char *_MCFCRT_stpcpy(char *restrict s1, const char *restrict s2){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	register char *wp = s1;
-	register const char *arp = (const char *)((uintptr_t)s2 & (uintptr_t)-32);
+	register char *wp __asm__("di") = s1;
+	register const char *arp __asm__("si") = (const char *)((uintptr_t)s2 & (uintptr_t)-32);
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
 

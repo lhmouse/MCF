@@ -28,8 +28,9 @@ void *memchr(const void *s, int c, size_t n){
 	mask = __MCFCRT_xmmcmp_21b(xw, xc);
 #define END	\
 	dist = arp - ((const unsigned char *)s + n);	\
-	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
-	mask |= ~((uint32_t)-1 >> dist);	\
+	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+		goto end_trunc;	\
+	}	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}
@@ -40,6 +41,8 @@ void *memchr(const void *s, int c, size_t n){
 		END
 		BEGIN
 	}
+end_trunc:
+	mask |= ~((uint32_t)-1 >> dist);
 end:
 	if((mask << dist) != 0){
 		arp = arp - 32 + (unsigned)__builtin_ctzl(mask);

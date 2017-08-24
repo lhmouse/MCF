@@ -27,9 +27,10 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
 	mask = __MCFCRT_xmmcmp_41w(xw, xc);
 #define END	\
-	dist = arp - ((const uint16_t *)s + n);	\
-	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
-	mask |= ~((uint32_t)-1 >> dist);	\
+	dist = arp - ((const wchar_t *)s + n);	\
+	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+		goto end_trunc;	\
+	}	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}
@@ -40,6 +41,8 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 		END
 		BEGIN
 	}
+end_trunc:
+	mask |= ~((uint32_t)-1 >> dist);
 end:
 	if((mask << dist) != 0){
 		arp = arp - 32 + (unsigned)__builtin_ctzl(mask);

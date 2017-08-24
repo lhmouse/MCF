@@ -39,8 +39,9 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	mask = ~__MCFCRT_xmmcmp_44w(xw, xc);
 #define END	\
 	dist = arp1 - ((const wchar_t *)s1 + n);	\
-	dist &= ~dist >> (sizeof(dist) * 8 - 1);	\
-	mask |= ~((uint32_t)-1 >> dist);	\
+	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+		goto end_trunc;	\
+	}	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}
@@ -77,6 +78,8 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	default:
 		__builtin_trap();
 	}
+end_trunc:
+	mask |= ~((uint32_t)-1 >> dist);
 end:
 	if((mask << dist) != 0){
 		arp1 = arp1 - 32 + (unsigned)__builtin_ctzl(mask);

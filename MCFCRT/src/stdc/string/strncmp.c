@@ -88,6 +88,7 @@ int strncmp(const char *s1, const char *s2, size_t n){
 end_trunc:
 	mask |= ~((uint32_t)-1 >> dist);
 end:
+	__asm__ volatile ("" : "+c"(dist));
 	if((mask << dist) != 0){
 		arp1 = arp1 - 32 + (unsigned)__builtin_ctzl(mask);
 		arp2 = arp1 - (const unsigned char *)s1 + (const unsigned char *)s2;

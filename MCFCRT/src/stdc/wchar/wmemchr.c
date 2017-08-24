@@ -45,6 +45,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 end_trunc:
 	mask |= ~((uint32_t)-1 >> dist);
 end:
+	__asm__ volatile ("" : "+c"(dist));
 	if((mask << dist) != 0){
 		arp = arp - 32 + (unsigned)__builtin_ctzl(mask);
 		return (wchar_t *)arp;

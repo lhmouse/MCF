@@ -45,6 +45,7 @@ void *memchr(const void *s, int c, size_t n){
 end_trunc:
 	mask |= ~((uint32_t)-1 >> dist);
 end:
+	__asm__ volatile ("" : "+c"(dist));
 	if((mask << dist) != 0){
 		arp = arp - 32 + (unsigned)__builtin_ctzl(mask);
 		return (unsigned char *)arp;

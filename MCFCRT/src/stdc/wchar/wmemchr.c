@@ -21,20 +21,21 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
-	if(_MCFCRT_EXPECT_NOT(arp >= (const wchar_t *)s + n)){	\
-		goto end_null;	\
-	}	\
 	arp = __MCFCRT_xmmload_4(xw, arp, _mm_load_si128);	\
 	mask = __MCFCRT_xmmcmp_41w(xw, xc);
 #define END	\
 	dist = arp - ((const wchar_t *)s + n);	\
-	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+	if(_MCFCRT_EXPECT_NOT(dist >= 0)){	\
 		goto end_trunc;	\
 	}	\
+	dist = 0;	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}
 //=============================================================================
+	if(_MCFCRT_EXPECT_NOT(n == 0)){
+		goto end_null;
+	}
 	BEGIN
 	dist = (const wchar_t *)s - (arp - 32);
 	mask &= (uint32_t)-1 << dist;

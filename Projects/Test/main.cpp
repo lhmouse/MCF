@@ -18,27 +18,27 @@ struct PageDeleter {
 	}
 };
 
-using Char = wchar_t;
+using Char = char;
 
 constexpr std::size_t kSize = 0x1000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-
+/*
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const auto s1b = (Char *)((char *)p1.Get() + 2);
+	const auto s1b = (Char *)((char *)p1.Get() + 4);
 	const auto s1e = (Char *)((char *)p1.Get() + kSize);
-	const auto s2b = (Char *)((char *)p2.Get() + 4);
+	const auto s2b = (Char *)((char *)p2.Get() + 2);
 	const auto s2e = (Char *)((char *)p2.Get() + kSize);
 	const auto len = (std::size_t)Min(s1e - s1b, s2e - s2b);
 	for(std::size_t i = 0; i < len; ++i){
 		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
-	s1e[-3] = '\x0F';
-	s1b[len - 2] = s2b[len - 2] = 0;
+	s1e[-2] = '\x0F';
+	s1b[len - 1] = s2b[len - 1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wmemcmp"_nsv;
+		const auto fname = "strcpy"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
@@ -61,6 +61,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
+*/
 /*
 	static struct { char a[21]; char s[200]; } s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
 	static struct { char a[ 1]; char s[200]; } s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XaZ" };
@@ -68,5 +69,27 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("strncmp"_nsv);
 	std::printf("%d\n", pf(s1.s, s2.s, 62));
 */
+
+	wchar_t dstb[100], srcb[100];
+	wchar_t *const dst = dstb + 1;
+	wchar_t *const src = srcb + 3;
+	const std::size_t max_len = 80;
+	for(std::size_t i = 0; i < 90; ++i){
+		std::memset(dstb, 'z', sizeof(dstb));
+		std::memset(srcb, 'a', sizeof(srcb));
+		src[i] = 0;
+		const auto epd = ::_MCFCRT_wcppcpy(dst, dst + max_len, src);
+		std::printf("i = %u\n", i);
+		std::printf("  src = %s$\n", (char *)src);
+		std::printf("  dst = %s$\n", (char *)dst);
+		const int cmp = std::wcscmp(src, dst);
+		const std::size_t len = (std::size_t)(epd - dst);
+		const wchar_t end = dst[i + 1];
+		std::printf("  cmp = %d, len = %zd, end = %c\n", cmp, len, end);
+		if((len != std::min(i, max_len - 1)) || (end != dstb[0])){
+			std::abort();
+		}
+	}
+
 	return 0;
 }

@@ -21,20 +21,21 @@ void *memchr(const void *s, int c, size_t n){
 	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
-	if(_MCFCRT_EXPECT_NOT(arp >= (const unsigned char *)s + n)){	\
-		goto end_null;	\
-	}	\
 	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
 	mask = __MCFCRT_xmmcmp_21b(xw, xc);
 #define END	\
 	dist = arp - ((const unsigned char *)s + n);	\
-	if(_MCFCRT_EXPECT_NOT(dist > 0)){	\
+	if(_MCFCRT_EXPECT_NOT(dist >= 0)){	\
 		goto end_trunc;	\
 	}	\
+	dist = 0;	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}
 //=============================================================================
+	if(_MCFCRT_EXPECT_NOT(n == 0)){
+		goto end_null;
+	}
 	BEGIN
 	dist = (const unsigned char *)s - (arp - 32);
 	mask &= (uint32_t)-1 << dist;

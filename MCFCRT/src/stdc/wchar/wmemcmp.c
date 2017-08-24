@@ -38,6 +38,7 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	if(_MCFCRT_EXPECT_NOT(dist >= 0)){	\
 		goto end_trunc;	\
 	}	\
+	dist = 0;	\
 	if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 		goto end;	\
 	}

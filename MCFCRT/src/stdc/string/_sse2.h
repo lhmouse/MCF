@@ -77,7 +77,7 @@ static inline void *__MCFCRT_xmmstore_4(void *_MCFCRT_RESTRICT __dst, const __m1
 }
 
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_21b(const __m128i *__lhs, __m128i *__rhs) _MCFCRT_NOEXCEPT {
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_21b(const __m128i *__lhs, const __m128i *__rhs) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
 		const __m128i __t = _mm_cmpeq_epi8(__lhs[__i], __rhs[0]);
@@ -86,7 +86,7 @@ static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_21b(const __m128i *__lhs, __m
 	return __mask;
 }
 __attribute__((__always_inline__))
-static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_41w(const __m128i *__lhs, __m128i *__rhs) _MCFCRT_NOEXCEPT {
+static inline _MCFCRT_STD uint32_t __MCFCRT_xmmcmp_41w(const __m128i *__lhs, const __m128i *__rhs) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __mask = 0;
 	for(unsigned __i = 0; __i < 2; ++__i){
 		const __m128i __t = _mm_packs_epi16(_mm_cmpeq_epi16(__lhs[__i * 2 + 0], __rhs[0]),

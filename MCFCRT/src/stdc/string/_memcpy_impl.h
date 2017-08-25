@@ -17,8 +17,8 @@ _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	unsigned char *__wp = (unsigned char *)__s1;
-	const unsigned char *__rp = (const unsigned char *)__s2;
+	register unsigned char *__wp __asm__("di") = (unsigned char *)__s1;
+	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
 	_MCFCRT_STD size_t __total = __n;
 	_MCFCRT_STD size_t __rem;
 	__rem = __total / 16;
@@ -70,8 +70,8 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 
 __attribute__((__always_inline__))
 static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	unsigned char *__wp = (unsigned char *)__s1 + __n;
-	const unsigned char *__rp = (const unsigned char *)__s2 + __n;
+	register unsigned char *__wp __asm__("di") = (unsigned char *)__s1;
+	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
 	_MCFCRT_STD size_t __total = __n;
 	_MCFCRT_STD size_t __rem;
 	__rem = __total / 16;

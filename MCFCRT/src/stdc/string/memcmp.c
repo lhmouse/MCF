@@ -9,9 +9,6 @@
 
 #undef memcmp
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-
 static inline uintptr_t bswap_ptr(uintptr_t w){
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return _Generic(w,
@@ -25,8 +22,7 @@ static inline uintptr_t bswap_ptr(uintptr_t w){
 static int memcmp_small(const void *s1, const void *s2, size_t n){
 	const unsigned char *rp1 = s1;
 	const unsigned char *rp2 = s2;
-	size_t rem;
-	rem = n / sizeof(uintptr_t);
+	size_t rem = n / sizeof(uintptr_t);
 	if(_MCFCRT_EXPECT_NOT(rem != 0)){
 		switch(rem % 8){
 			uintptr_t w, c;
@@ -45,20 +41,20 @@ static int memcmp_small(const void *s1, const void *s2, size_t n){
 					goto diff_wc;	\
 				}
 //=============================================================================
-		default: STEP
-		case 7:  STEP
-		case 6:  STEP
-		case 5:  STEP
-		case 4:  STEP
-		case 3:  STEP
-		case 2:  STEP
-		case 1:  STEP
+		__attribute__((__fallthrough__)); default: STEP
+		__attribute__((__fallthrough__)); case 7:  STEP
+		__attribute__((__fallthrough__)); case 6:  STEP
+		__attribute__((__fallthrough__)); case 5:  STEP
+		__attribute__((__fallthrough__)); case 4:  STEP
+		__attribute__((__fallthrough__)); case 3:  STEP
+		__attribute__((__fallthrough__)); case 2:  STEP
+		__attribute__((__fallthrough__)); case 1:  STEP
 //=============================================================================
 #undef STEP
 			} while(_MCFCRT_EXPECT(rem != 0));
 		}
 	}
-	rem = rem * sizeof(uintptr_t) + n % sizeof(uintptr_t);
+	rem = (size_t)((const unsigned char *)s1 + n - rp1);
 	while(_MCFCRT_EXPECT(rem != 0)){
 		if(*rp1 != *rp2){
 			return (*rp1 < *rp2) ? -1 : 1;
@@ -69,8 +65,6 @@ static int memcmp_small(const void *s1, const void *s2, size_t n){
 	}
 	return 0;
 }
-
-#pragma GCC diagnostic pop
 
 __attribute__((__noinline__))
 static int memcmp_large(const void *s1, const void *s2, size_t n){

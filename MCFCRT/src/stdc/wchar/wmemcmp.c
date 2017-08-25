@@ -58,7 +58,7 @@ static int wmemcmp_small(const wchar_t *s1, const wchar_t *s2, size_t n){
 			} while(_MCFCRT_EXPECT(rem != 0));
 		}
 	}
-	rem = n % (sizeof(uintptr_t) / sizeof(wchar_t));
+	rem = rem * (sizeof(uintptr_t) / sizeof(wchar_t)) + n % (sizeof(uintptr_t) / sizeof(wchar_t));
 	while(_MCFCRT_EXPECT(rem != 0)){
 		if(*rp1 != *rp2){
 			return (*rp1 < *rp2) ? -1 : 1;

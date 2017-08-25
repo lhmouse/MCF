@@ -64,7 +64,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 #undef __MCFCRT_SSE3_STEP_
 #undef __MCFCRT_SSE3_FULL_
 	}
-	__rem = __total % 16;
+	__rem = __rem * 16 + __total % 16;
 	_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, __wp, __rp, __rem);
 }
 
@@ -117,7 +117,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 #undef __MCFCRT_SSE3_STEP_
 #undef __MCFCRT_SSE3_FULL_
 	}
-	__rem = __total % 16;
+	__rem = __rem * 16 + __total % 16;
 	while(__rem != 0){
 		*(volatile unsigned char *)(--__wp) = *(--__rp);
 		--__rem;

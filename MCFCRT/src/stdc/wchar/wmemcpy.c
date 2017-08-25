@@ -2,15 +2,12 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#include "../string/_memcpy_impl.h"
-#include "../../env/inline_mem.h"
+#include "../../env/_crtdef.h"
 
 #undef wmemcpy
 
+extern void *memcpy(void *restrict s1, const void *restrict s2, size_t n);
+
 wchar_t *wmemcpy(wchar_t *restrict s1, const wchar_t *restrict s2, size_t n){
-#ifndef NDEBUG
-	_MCFCRT_inline_mempset_fwd(s1, 0xEF, sizeof(wchar_t) * n);
-#endif
-	__MCFCRT_memcpy_impl_fwd(s1, s2, sizeof(wchar_t) * n);
-	return s1;
+	return memcpy(s1, s2, n * sizeof(wchar_t));
 }

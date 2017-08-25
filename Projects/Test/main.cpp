@@ -22,7 +22,7 @@ using Char = char;
 constexpr std::size_t size = 0x10000000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-
+/*
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b = (Char *)((char *)p1.Get() + 4);
@@ -62,7 +62,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-
+*/
 /*
 	static struct { char a[21]; char s[200]; } s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
 	static struct { char a[ 1]; char s[200]; } s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XaZ" };
@@ -70,28 +70,26 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("strncmp"_nsv);
 	std::printf("%d\n", pf(s1.s, s2.s, 62));
 */
-/*
-	static constexpr std::size_t buff_len = 2000;
-	static wchar_t dstb[buff_len], srcb[buff_len];
+
+	static constexpr std::size_t buff_len = 10000;
+	static char dstb[buff_len], srcb[buff_len];
+	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
+	const auto pf = dll.RequireProcAddress<void * (*)(void *, const void *, std::size_t)>("memmove"_nsv);
 	for(std::size_t i = 0; i < buff_len / 2 - 10; ++i){
 		std::memset(dstb, 'z', sizeof(dstb));
 		std::memset(srcb, 'a', sizeof(srcb));
-		wchar_t *const dst = dstb + i + 1;
-		wchar_t *const src = srcb + i + 2;
-		src[i] = 0;
-		constexpr std::size_t max_len = buff_len * 2 / 5;
-		const auto epd = ::_MCFCRT_wcppcpy(dst, dst + max_len, src);
-		std::printf("i = %zu\n", i);
-//		std::printf("  src = %s$\n", (char *)src);
-//		std::printf("  dst = %s$\n", (char *)dst);
-		const int cmp = std::wcscmp(src, dst);
-		const std::size_t len = (std::size_t)(epd - dst);
-		const int end = dst[i + 1];
-		std::printf("  cmp = %d, len = %zd, end = %x\n", cmp, len, end);
-		if((len != std::min(i, max_len - 1)) || (end != dstb[0])){
-			std::abort();
+		char *const dst = dstb + i + 1;
+		char *const src = srcb + i + 2;
+		pf(dst, src, i);
+		if(std::memcmp(dst, src, i) != 0){
+			abort();
+		}
+		std::memset(srcb, 'k', sizeof(srcb));
+		pf(src, dst, i);
+		if(std::memcmp(src, dst, i) != 0){
+			abort();
 		}
 	}
-*/
+
 	return 0;
 }

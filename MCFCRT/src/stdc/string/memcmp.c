@@ -58,7 +58,7 @@ static int memcmp_small(const void *s1, const void *s2, size_t n){
 			} while(_MCFCRT_EXPECT(rem != 0));
 		}
 	}
-	rem = n % sizeof(uintptr_t);
+	rem = rem * sizeof(uintptr_t) + n % sizeof(uintptr_t);
 	while(_MCFCRT_EXPECT(rem != 0)){
 		if(*rp1 != *rp2){
 			return (*rp1 < *rp2) ? -1 : 1;

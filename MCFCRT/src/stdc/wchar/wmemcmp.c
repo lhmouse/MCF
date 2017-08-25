@@ -9,7 +9,71 @@
 
 #undef wmemcmp
 
-int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
+static inline uintptr_t wswap_ptr(uintptr_t w){
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return _Generic(w,
+		uint32_t: __builtin_bswap32(((w << 8) & 0xFF00FF00        ) | ((w & 0xFF00FF00        ) >> 8)),
+		uint64_t: __builtin_bswap64(((w << 8) & 0xFF00FF00FF00FF00) | ((w & 0xFF00FF00FF00FF00) >> 8)));
+#else
+	return w;
+#endif
+}
+
+static int wmemcmp_small(const wchar_t *s1, const wchar_t *s2, size_t n){
+	const wchar_t *rp1 = s1;
+	const wchar_t *rp2 = s2;
+	size_t rem;
+	rem = n / (sizeof(uintptr_t) / sizeof(wchar_t));
+	if(_MCFCRT_EXPECT_NOT(rem != 0)){
+		switch(rem % 8){
+			uintptr_t w, c;
+		diff_wc:
+			w = wswap_ptr(w);
+			c = wswap_ptr(c);
+			return (w < c) ? -1 : 1;
+			do {
+#define STEP	\
+				__builtin_memcpy(&w, rp1, sizeof(w));	\
+				__builtin_memcpy(&c, rp2, sizeof(c));	\
+				rp1 += sizeof(w) / sizeof(wchar_t);	\
+				rp2 += sizeof(c) / sizeof(wchar_t);	\
+				--rem;	\
+				if(_MCFCRT_EXPECT_NOT(w != c)){	\
+					goto diff_wc;	\
+				}
+//=============================================================================
+		default: STEP
+		case 7:  STEP
+		case 6:  STEP
+		case 5:  STEP
+		case 4:  STEP
+		case 3:  STEP
+		case 2:  STEP
+		case 1:  STEP
+//=============================================================================
+#undef STEP
+			} while(_MCFCRT_EXPECT(rem != 0));
+		}
+	}
+	rem = n % (sizeof(uintptr_t) / sizeof(wchar_t));
+	while(_MCFCRT_EXPECT(rem != 0)){
+		if(*rp1 != *rp2){
+			return (*rp1 < *rp2) ? -1 : 1;
+		}
+		++rp1;
+		++rp2;
+		--rem;
+	}
+	return 0;
+}
+
+#pragma GCC diagnostic pop
+
+__attribute__((__noinline__))
+static int wmemcmp_large(const wchar_t *s1, const wchar_t *s2, size_t n){
 	// 如果 arp1 和 arp2 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
@@ -86,4 +150,12 @@ end:
 	}
 end_equal:
 	return 0;
+}
+
+int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
+	if(_MCFCRT_EXPECT(n <= 256)){
+		return wmemcmp_small(s1, s2, n);
+	} else {
+		return wmemcmp_large(s1, s2, n);
+	}
 }

@@ -52,10 +52,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 #undef FULL
 	}
 	rem = (size_t)((const unsigned char *)s1 + n - wp);
-	while(rem != 0){
-		*(volatile unsigned char *)(wp++) = *(rp++);
-		--rem;
-	}
+	__MCFCRT_memcpy_small_fwd(wp, rp, rem);
 }
 
 void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
@@ -104,8 +101,5 @@ void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
 #undef FULL
 	}
 	rem = (size_t)((const unsigned char *)s1 + n - wp);
-	while(rem != 0){
-		*(volatile unsigned char *)(--wp) = *(--rp);
-		--rem;
-	}
+	__MCFCRT_memcpy_small_bwd(wp - rem, rp - rem, rem);
 }

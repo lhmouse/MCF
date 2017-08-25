@@ -14,6 +14,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		while(((uintptr_t)wp & ~(uintptr_t)-16) != 0){
 			*(volatile unsigned char *)(wp++) = *(rp++);
 		}
+		rem = (size_t)(((const unsigned char *)s1 + n) - wp) / 16;
 #define STEP(store_, load_)	\
 		store_((float *)wp, load_((const float *)rp));	\
 		wp += 16;	\
@@ -51,11 +52,30 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 #undef STEP
 #undef FULL
 	}
-	rem = (size_t)((const unsigned char *)s1 + n - wp);
-	__MCFCRT_memcpy_small_fwd(wp, rp, rem);
+	rem = (size_t)(((const unsigned char *)s1 + n) - wp);
+	if(_MCFCRT_EXPECT(rem != 0)){
+		switch(rem % 8){
+			do {
+#define STEP	\
+				*(volatile unsigned char *)(wp++) = *(rp++);	\
+				--rem;
+//=============================================================================
+		__attribute__((__fallthrough__)); default: STEP
+		__attribute__((__fallthrough__)); case 7:  STEP
+		__attribute__((__fallthrough__)); case 6:  STEP
+		__attribute__((__fallthrough__)); case 5:  STEP
+		__attribute__((__fallthrough__)); case 4:  STEP
+		__attribute__((__fallthrough__)); case 3:  STEP
+		__attribute__((__fallthrough__)); case 2:  STEP
+		__attribute__((__fallthrough__)); case 1:  STEP
+//=============================================================================
+#undef STEP
+			} while(_MCFCRT_EXPECT_NOT(rem != 0));
+		}
+	}
 }
 
-void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
+void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 	register unsigned char *wp __asm__("di") = (unsigned char *)s1;
 	register const unsigned char *rp __asm__("si") = (const unsigned char *)s2;
 	size_t rem = n / 16;
@@ -63,6 +83,7 @@ void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
 		while(((uintptr_t)wp & ~(uintptr_t)-16) != 0){
 			*(volatile unsigned char *)(--wp) = *(--rp);
 		}
+		rem = (size_t)(wp - ((const unsigned char *)s1 - n)) / 16;
 #define STEP(store_, load_)	\
 		wp -= 16;	\
 		rp -= 16;	\
@@ -100,6 +121,25 @@ void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
 #undef STEP
 #undef FULL
 	}
-	rem = (size_t)((const unsigned char *)s1 + n - wp);
-	__MCFCRT_memcpy_small_bwd(wp - rem, rp - rem, rem);
+	rem = (size_t)(wp - ((const unsigned char *)s1 - n));
+	if(_MCFCRT_EXPECT(rem != 0)){
+		switch(rem % 8){
+			do {
+#define STEP	\
+				*(volatile unsigned char *)(--wp) = *(--rp);	\
+				--rem;
+//=============================================================================
+		__attribute__((__fallthrough__)); default: STEP
+		__attribute__((__fallthrough__)); case 7:  STEP
+		__attribute__((__fallthrough__)); case 6:  STEP
+		__attribute__((__fallthrough__)); case 5:  STEP
+		__attribute__((__fallthrough__)); case 4:  STEP
+		__attribute__((__fallthrough__)); case 3:  STEP
+		__attribute__((__fallthrough__)); case 2:  STEP
+		__attribute__((__fallthrough__)); case 1:  STEP
+//=============================================================================
+#undef STEP
+			} while(_MCFCRT_EXPECT_NOT(rem != 0));
+		}
+	}
 }

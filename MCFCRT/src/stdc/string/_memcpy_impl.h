@@ -42,7 +42,7 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 			} while(_MCFCRT_EXPECT(__rem != 0));
 		}
 	}
-	__rem = (_MCFCRT_STD size_t)((const unsigned char *)__s1 + __n - __wp);
+	__rem = (_MCFCRT_STD size_t)(((const unsigned char *)__s1 + __n) - __wp);
 	if(_MCFCRT_EXPECT(__rem != 0)){
 		switch(__rem % 8){
 			do {
@@ -67,9 +67,9 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 
 void __MCFCRT_memcpy_large_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT;
 
-static inline void __MCFCRT_memcpy_small_bwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	unsigned char *__wp = (unsigned char *)__s1 + __n;
-	const unsigned char *__rp = (const unsigned char *)__s2 + __n;
+static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1, const void *__s2) _MCFCRT_NOEXCEPT {
+	unsigned char *__wp = (unsigned char *)__s1;
+	const unsigned char *__rp = (const unsigned char *)__s2;
 	size_t __rem = __n / sizeof(_MCFCRT_STD uintptr_t);
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
 		switch(__rem % 8){
@@ -95,7 +95,7 @@ static inline void __MCFCRT_memcpy_small_bwd(void *__s1, const void *__s2, _MCFC
 			} while(_MCFCRT_EXPECT(__rem != 0));
 		}
 	}
-	__rem = (_MCFCRT_STD size_t)(__wp - (const unsigned char *)__s1);
+	__rem = (_MCFCRT_STD size_t)(__wp - ((const unsigned char *)__s1 - __n));
 	if(_MCFCRT_EXPECT(__rem != 0)){
 		switch(__rem % 8){
 			do {
@@ -118,7 +118,7 @@ static inline void __MCFCRT_memcpy_small_bwd(void *__s1, const void *__s2, _MCFC
 	}
 }
 
-void __MCFCRT_memcpy_large_bwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT;
+void __MCFCRT_memcpy_large_bwd(_MCFCRT_STD size_t __n, void *__s1, const void *__s2) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

@@ -91,5 +91,12 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 		}
 	}
 */
+/*
+	static char buff[1000];
+	for(unsigned i = 0; i < sizeof(buff); ++i){
+		(volatile char &)buff[i] = (char)i;
+	}
+	std::memmove(buff + 1, buff, sizeof(buff) - 1);
+*/
 	return 0;
 }

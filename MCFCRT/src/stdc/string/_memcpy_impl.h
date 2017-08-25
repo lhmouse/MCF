@@ -30,28 +30,25 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
 #define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-			{	\
-				__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
-				__wp += 16;	\
-				__rp += 16;	\
-			}
+			__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
+			__wp += 16;	\
+			__rp += 16;
 #define __MCFCRT_SSE3_FULL_(__store_, __load_)	\
-			{	\
-				switch(__t % 8){	\
-					do {	\
-						_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
-				default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-						_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
-				case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-					} while(__wend - __wp >= 128);	\
-				}	\
+			switch(__t % 8){	\
+				do {	\
+					_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
+			default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+					_mm_prefetch(__rp + 1024, _MM_HINT_NTA);	\
+			case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				} while(__wend - __wp >= 128);	\
 			}
+//=============================================================================
 			if(_MCFCRT_EXPECT(__t < 0x2000)){
 				if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
 					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
@@ -66,6 +63,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 				}
 				_mm_sfence();
 			}
+//=============================================================================
 #undef __MCFCRT_SSE3_STEP_
 #undef __MCFCRT_SSE3_FULL_
 		}
@@ -88,28 +86,25 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 		_MCFCRT_STD size_t __t;
 		if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
 #define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-			{	\
-				__wp -= 16;	\
-				__rp -= 16;	\
-				__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
-			}
+			__wp -= 16;	\
+			__rp -= 16;	\
+			__store_((__m128i *)__wp, __load_((const __m128i *)__rp));
 #define __MCFCRT_SSE3_FULL_(__store_, __load_)	\
-			{	\
-				switch(__t % 8){	\
-					do {	\
-						_mm_prefetch(__rp - 64 - 1024, _MM_HINT_NTA);	\
-				default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-						_mm_prefetch(__rp - 64 - 1024, _MM_HINT_NTA);	\
-				case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-					} while(__wp - __wbegin >= 128);	\
-				}	\
+			switch(__t % 8){	\
+				do {	\
+					_mm_prefetch(__rp - 64 - 1024, _MM_HINT_NTA);	\
+			default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+					_mm_prefetch(__rp - 64 - 1024, _MM_HINT_NTA);	\
+			case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+			case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
+				} while(__wp - __wbegin >= 128);	\
 			}
+//=============================================================================
 			if(_MCFCRT_EXPECT(__t < 0x2000)){
 				if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
 					__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
@@ -124,6 +119,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 				}
 				_mm_sfence();
 			}
+//=============================================================================
 #undef __MCFCRT_SSE3_STEP_
 #undef __MCFCRT_SSE3_FULL_
 		}

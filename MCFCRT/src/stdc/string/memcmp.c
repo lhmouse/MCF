@@ -15,8 +15,8 @@
 static inline uintptr_t bswap_ptr(uintptr_t w){
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return _Generic(w,
-		uint32_t: __builtin_bswap32(w),
-		uint64_t: __builtin_bswap64(w));
+		uint32_t: __builtin_bswap32((uint32_t)w),
+		uint64_t: __builtin_bswap64((uint64_t)w));
 #else
 	return w;
 #endif

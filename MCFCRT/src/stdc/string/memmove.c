@@ -9,9 +9,17 @@
 
 void *memmove(void *s1, const void *s2, size_t n){
 	if(_MCFCRT_EXPECT((uintptr_t)((const unsigned char *)s2 + n) - (uintptr_t)(unsigned char *)s1 >= n)){
-		__MCFCRT_memcpy_impl_fwd(s1, s2, n);
+		if(_MCFCRT_EXPECT(__MCFCRT_memcpy_is_small_enough(n))){
+			__MCFCRT_memcpy_small_fwd(s1, s2, n);
+		} else {
+			__MCFCRT_memcpy_small_fwd(s1, s2, n);
+		}
 	} else {
-		__MCFCRT_memcpy_impl_bkwd(s1, s2, n);
+		if(_MCFCRT_EXPECT(__MCFCRT_memcpy_is_small_enough(n))){
+			__MCFCRT_memcpy_large_bwd(s1, s2, n);
+		} else {
+			__MCFCRT_memcpy_large_bwd(s1, s2, n);
+		}
 	}
 	return s1;
 }

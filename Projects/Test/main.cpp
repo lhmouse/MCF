@@ -19,10 +19,10 @@ struct PageDeleter {
 };
 
 using Char = char;
-constexpr std::size_t size = 0x10000000;
+constexpr std::size_t size = 0x10;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-/*
+
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b = (Char *)((char *)p1.Get() + 4);
@@ -45,7 +45,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 			const auto pf = dll.RequireProcAddress<Char * (*)(Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(std::uint64_t i = 0; i < 100; ++i){
+			for(std::uint64_t i = 0; i < 100000000; ++i){
 				r = (std::ptrdiff_t)(*pf)(s1b, s2b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
@@ -62,7 +62,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-*/
+
 /*
 	static struct { char a[21]; char s[200]; } s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
 	static struct { char a[ 1]; char s[200]; } s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XaZ" };
@@ -70,7 +70,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("strncmp"_nsv);
 	std::printf("%d\n", pf(s1.s, s2.s, 62));
 */
-
+/*
 	static constexpr std::size_t buff_len = 10000;
 	static char dstb[buff_len], srcb[buff_len];
 	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
@@ -90,6 +90,6 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 			abort();
 		}
 	}
-
+*/
 	return 0;
 }

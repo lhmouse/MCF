@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2032, LH_Mouse. All wrongs reserved.
 
 #include "_memcpy_impl.h"
+#include "../../env/expect.h"
 #include "../../env/inline_mem.h"
 
 #undef memcpy
@@ -11,6 +12,10 @@ void *memcpy(void *restrict s1, const void *restrict s2, size_t n){
 #ifndef NDEBUG
 	_MCFCRT_inline_mempset_fwd(s1, 0xEF, n);
 #endif
-	__MCFCRT_memcpy_impl_fwd(s1, s2, n);
+	if(_MCFCRT_EXPECT(__MCFCRT_memcpy_is_small_enough(n))){
+		__MCFCRT_memcpy_small_fwd(s1, s2, n);
+	} else {
+		__MCFCRT_memcpy_large_fwd(s1, s2, n);
+	}
 	return s1;
 }

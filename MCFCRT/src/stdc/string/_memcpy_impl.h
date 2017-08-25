@@ -7,124 +7,118 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include "../../ext/rep_movs.h"
-#include <pmmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-
-__attribute__((__always_inline__))
-static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	register unsigned char *__wp __asm__("di") = (unsigned char *)__s1;
-	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
-	_MCFCRT_STD size_t __total = __n;
-	_MCFCRT_STD size_t __rem;
-	__rem = __total / 16;
-	if(_MCFCRT_EXPECT_NOT(__rem >= 4)){
-		while(((_MCFCRT_STD uintptr_t)__wp & ~(_MCFCRT_STD uintptr_t)-16) != 0){
-			*(volatile unsigned char *)(__wp++) = *(__rp++);
-			--__total;
-		}
-#define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
-		__wp += 16;	\
-		__rp += 16;	\
-		--__rem;
-#define __MCFCRT_SSE3_FULL_(__store_, __load_)	\
-		switch(__rem % 8){	\
-			do {	\
-		default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-			} while(_MCFCRT_EXPECT(__rem != 0));	\
-		}
-//=============================================================================
-		if(_MCFCRT_EXPECT(__total < 0x4000)){
-			if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
-				__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
-			} else {
-				__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_lddqu_si128)
-			}
-		} else {
-			if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
-				__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_load_si128)
-			} else {
-				__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_lddqu_si128)
-			}
-			_mm_sfence();
-		}
-//=============================================================================
-#undef __MCFCRT_SSE3_STEP_
-#undef __MCFCRT_SSE3_FULL_
-	}
-	__rem = __rem * 16 + __total % 16;
-	_MCFCRT_rep_movsb(_MCFCRT_NULLPTR, __wp, __rp, __rem);
+_MCFCRT_CONSTEXPR bool __MCFCRT_memcpy_is_small_enough(_MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	return __n <= 256;
 }
 
-__attribute__((__always_inline__))
-static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	register unsigned char *__wp __asm__("di") = (unsigned char *)__s1;
-	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
-	_MCFCRT_STD size_t __total = __n;
-	_MCFCRT_STD size_t __rem;
-	__rem = __total / 16;
-	if(_MCFCRT_EXPECT_NOT(__rem >= 4)){
-		while(((_MCFCRT_STD uintptr_t)__wp & ~(_MCFCRT_STD uintptr_t)-16) != 0){
-			*(volatile unsigned char *)(--__wp) = *(--__rp);
-			--__total;
-		}
-#define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		__wp -= 16;	\
-		__rp -= 16;	\
-		__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
-		--__rem;
-#define __MCFCRT_SSE3_FULL_(__store_, __load_)	\
-		switch(__rem % 8){	\
-			do {	\
-		default: __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 7:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 6:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 5:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 4:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-		case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-			} while(_MCFCRT_EXPECT(__rem != 0));	\
-		}
+static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	unsigned char *__wp = (unsigned char *)__s1;
+	const unsigned char *__rp = (const unsigned char *)__s2;
+	size_t __rem = __n / sizeof(_MCFCRT_STD uintptr_t);
+	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
+		switch(__rem % 8){
+			_MCFCRT_STD uintptr_t __w;
+			do {
+#define __MCFCRT_STEP_	\
+				__builtin_memcpy(&__w, __rp, sizeof(__w));	\
+				__builtin_memcpy(__wp, &__w, sizeof(__w));	\
+				__wp += sizeof(__w);	\
+				__rp += sizeof(__w);	\
+				--__rem;
 //=============================================================================
-		if(_MCFCRT_EXPECT(__total < 0x4000)){
-			if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
-				__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_load_si128)
-			} else {
-				__MCFCRT_SSE3_FULL_(_mm_store_si128, _mm_lddqu_si128)
-			}
-		} else {
-			if(((_MCFCRT_STD uintptr_t)__rp & ~(_MCFCRT_STD uintptr_t)-16) == 0){
-				__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_load_si128)
-			} else {
-				__MCFCRT_SSE3_FULL_(_mm_stream_si128, _mm_lddqu_si128)
-			}
-			_mm_sfence();
-		}
+		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
 //=============================================================================
-#undef __MCFCRT_SSE3_STEP_
-#undef __MCFCRT_SSE3_FULL_
+#undef __MCFCRT_STEP_
+			} while(_MCFCRT_EXPECT(__rem != 0));
+		}
 	}
-	__rem = __rem * 16 + __total % 16;
-	while(__rem != 0){
-		*(volatile unsigned char *)(--__wp) = *(--__rp);
-		--__rem;
+	__rem = (_MCFCRT_STD size_t)((const unsigned char *)__s1 + __n - __wp);
+	if(_MCFCRT_EXPECT(__rem != 0)){
+		switch(__rem % 8){
+			do {
+#define __MCFCRT_STEP_	\
+				*(volatile unsigned char *)(__wp++) = *(__rp++);	\
+				--__rem;
+//=============================================================================
+		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+//=============================================================================
+#undef __MCFCRT_STEP_
+			} while(_MCFCRT_EXPECT_NOT(__rem != 0));
+		}
 	}
 }
 
-#pragma GCC diagnostic pop
+void __MCFCRT_memcpy_large_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT;
+
+static inline void __MCFCRT_memcpy_small_bwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+	unsigned char *__wp = (unsigned char *)__s1 + __n;
+	const unsigned char *__rp = (const unsigned char *)__s2 + __n;
+	size_t __rem = __n / sizeof(_MCFCRT_STD uintptr_t);
+	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
+		switch(__rem % 8){
+			_MCFCRT_STD uintptr_t __w;
+			do {
+#define __MCFCRT_STEP_	\
+				__wp -= sizeof(__w);	\
+				__rp -= sizeof(__w);	\
+				__builtin_memcpy(&__w, __rp, sizeof(__w));	\
+				__builtin_memcpy(__wp, &__w, sizeof(__w));	\
+				--__rem;
+//=============================================================================
+		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+//=============================================================================
+#undef __MCFCRT_STEP_
+			} while(_MCFCRT_EXPECT(__rem != 0));
+		}
+	}
+	__rem = (_MCFCRT_STD size_t)(__wp - (const unsigned char *)__s1);
+	if(_MCFCRT_EXPECT(__rem != 0)){
+		switch(__rem % 8){
+			do {
+#define __MCFCRT_STEP_	\
+				*(volatile unsigned char *)(--__wp) = *(--__rp);	\
+				--__rem;
+//=============================================================================
+		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
+		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+//=============================================================================
+#undef __MCFCRT_STEP_
+			} while(_MCFCRT_EXPECT_NOT(__rem != 0));
+		}
+	}
+}
+
+void __MCFCRT_memcpy_large_bwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

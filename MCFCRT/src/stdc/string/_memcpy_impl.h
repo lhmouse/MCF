@@ -28,7 +28,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 			*(volatile unsigned char *)(__wp++) = *(__rp++);
 		}
 		_MCFCRT_STD size_t __t;
-		if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
+		if(_MCFCRT_EXPECT_NOT((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0)){
 #define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			__store_((__m128i *)__wp, __load_((const __m128i *)__rp));	\
 			__wp += 16;	\
@@ -46,7 +46,7 @@ static inline void __MCFCRT_memcpy_impl_fwd(void *__s1, const void *__s2, _MCFCR
 			case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				} while(__wend - __wp >= 128);	\
+				} while((_MCFCRT_STD size_t)(__wend - __wp) >= 128);	\
 			}
 //=============================================================================
 			if(_MCFCRT_EXPECT(__t < 0x2000)){
@@ -84,7 +84,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 			*(volatile unsigned char *)(--__wp) = *(--__rp);
 		}
 		_MCFCRT_STD size_t __t;
-		if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
+		if(_MCFCRT_EXPECT_NOT((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0)){
 #define __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			__wp -= 16;	\
 			__rp -= 16;	\
@@ -102,7 +102,7 @@ static inline void __MCFCRT_memcpy_impl_bkwd(void *__s1, const void *__s2, _MCFC
 			case 3:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			case 2:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
 			case 1:  __MCFCRT_SSE3_STEP_(__store_, __load_)	\
-				} while(__wp - __wbegin >= 128);	\
+				} while((_MCFCRT_STD size_t)(__wp - __wbegin) >= 128);	\
 			}
 //=============================================================================
 			if(_MCFCRT_EXPECT(__t < 0x2000)){

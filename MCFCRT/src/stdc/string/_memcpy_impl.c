@@ -34,7 +34,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 			} while(_MCFCRT_EXPECT(rem != 0));	\
 		}
 //=============================================================================
-		if(_MCFCRT_EXPECT(n < 8192)){
+		if(_MCFCRT_EXPECT(n < 0x40000)){
 			if(((uintptr_t)rp & ~(uintptr_t)-16) == 0){
 				FULL(_mm_store_si128, _mm_load_si128)
 			} else {
@@ -86,7 +86,7 @@ void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
 			} while(_MCFCRT_EXPECT(rem != 0));	\
 		}
 //=============================================================================
-		if(_MCFCRT_EXPECT(n < 8192)){
+		if(_MCFCRT_EXPECT(n < 0x40000)){
 			if(((uintptr_t)rp & ~(uintptr_t)-16) == 0){
 				FULL(_mm_store_si128, _mm_load_si128)
 			} else {

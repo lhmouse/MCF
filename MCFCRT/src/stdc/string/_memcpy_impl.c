@@ -5,7 +5,6 @@
 #include "_memcpy_impl.h"
 #include "../../env/expect.h"
 #include "_sse2.h"
-#include <pmmintrin.h>
 
 void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 	register unsigned char *wp __asm__("di") = (unsigned char *)s1;
@@ -16,7 +15,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 			*(volatile unsigned char *)(wp++) = *(rp++);
 		}
 #define STEP(store_, load_)	\
-		store_((__m128i *)wp, load_((const __m128i *)rp));	\
+		store_((float *)wp, load_((const float *)rp));	\
 		wp += 16;	\
 		rp += 16;	\
 		--rem;
@@ -36,15 +35,15 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 //=============================================================================
 		if(_MCFCRT_EXPECT(n < 0x40000)){
 			if(((uintptr_t)rp & ~(uintptr_t)-16) == 0){
-				FULL(_mm_store_si128, _mm_load_si128)
+				FULL(_mm_store_ps, _mm_load_ps)
 			} else {
-				FULL(_mm_store_si128, _mm_lddqu_si128)
+				FULL(_mm_store_ps, _mm_loadu_ps)
 			}
 		} else {
 			if(((uintptr_t)rp & ~(uintptr_t)-16) == 0){
-				FULL(_mm_stream_si128, _mm_load_si128)
+				FULL(_mm_stream_ps, _mm_load_ps)
 			} else {
-				FULL(_mm_stream_si128, _mm_lddqu_si128)
+				FULL(_mm_stream_ps, _mm_loadu_ps)
 			}
 			_mm_sfence();
 		}
@@ -70,7 +69,7 @@ void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
 #define STEP(store_, load_)	\
 		wp -= 16;	\
 		rp -= 16;	\
-		store_((__m128i *)wp, load_((const __m128i *)rp));	\
+		store_((float *)wp, load_((const float *)rp));	\
 		--rem;
 #define FULL(store_, load_)	\
 		switch(rem % 8){	\
@@ -88,15 +87,15 @@ void __MCFCRT_memcpy_large_bwd(void *s1, const void *s2, size_t n){
 //=============================================================================
 		if(_MCFCRT_EXPECT(n < 0x40000)){
 			if(((uintptr_t)rp & ~(uintptr_t)-16) == 0){
-				FULL(_mm_store_si128, _mm_load_si128)
+				FULL(_mm_store_ps, _mm_load_ps)
 			} else {
-				FULL(_mm_store_si128, _mm_lddqu_si128)
+				FULL(_mm_store_ps, _mm_loadu_ps)
 			}
 		} else {
 			if(((uintptr_t)rp & ~(uintptr_t)-16) == 0){
-				FULL(_mm_stream_si128, _mm_load_si128)
+				FULL(_mm_stream_ps, _mm_load_ps)
 			} else {
-				FULL(_mm_stream_si128, _mm_lddqu_si128)
+				FULL(_mm_stream_ps, _mm_loadu_ps)
 			}
 			_mm_sfence();
 		}

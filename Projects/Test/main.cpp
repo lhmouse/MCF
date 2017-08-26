@@ -19,7 +19,7 @@ struct PageDeleter {
 };
 
 using Char = char;
-constexpr std::size_t size = 0x20;
+constexpr std::size_t size = 0x10000000 + 4;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 
@@ -45,7 +45,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 			const auto pf = dll.RequireProcAddress<Char * (*)(Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(std::uint64_t i = 0; i < 100000000; ++i){
+			for(std::uint64_t i = 0; i < 100; ++i){
 				r = (std::ptrdiff_t)(*pf)(s1b, s2b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
@@ -96,7 +96,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	for(unsigned i = 0; i < sizeof(buff); ++i){
 		(volatile char &)buff[i] = (char)i;
 	}
-	std::memmove(buff + 1, buff, sizeof(buff) - 1);
+	std::memmove(buff + 1, buff + 2, sizeof(buff) - 2);
 */
 	return 0;
 }

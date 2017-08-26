@@ -18,7 +18,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		rp += off;
 	}
 	size_t rem = (n - off) / 16;
-	if(_MCFCRT_EXPECT_NOT(rem != 0)){
+	if(_MCFCRT_EXPECT(rem != 0)){
 		const size_t nt = !!(n >> 18) << 4;
 		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
 		switch(rem % 8 + nt + ur){
@@ -117,7 +117,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		rp -= off;
 	}
 	size_t rem = (n - off) / 16;
-	if(_MCFCRT_EXPECT_NOT(rem != 0)){
+	if(_MCFCRT_EXPECT(rem != 0)){
 		const size_t nt = !!(n >> 18) << 4;
 		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
 		switch(rem % 8 + nt + ur){

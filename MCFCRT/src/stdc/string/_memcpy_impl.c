@@ -23,9 +23,9 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		const size_t nt = !!(n >> 18) << 4;
 		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
 		switch(rem % 8 + nt + ur){
-#define STEP(case_, store_, load_)	\
+#define STEP(k_, store_, load_)	\
 				__attribute__((__fallthrough__));	\
-		case_:	\
+		case (k_):	\
 				store_((__m128i *)wp, load_((const __m128i *)rp));	\
 				wp += 16;	\
 				rp += 16;	\
@@ -34,53 +34,53 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 			break;
 		// temporal, aligned read
 			do {
-		STEP(case 000, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 007, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 006, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 005, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 004, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 003, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 002, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 001, _mm_store_si128 , _mm_load_si128 )
+		STEP(000, _mm_store_si128 , _mm_load_si128 )
+		STEP(007, _mm_store_si128 , _mm_load_si128 )
+		STEP(006, _mm_store_si128 , _mm_load_si128 )
+		STEP(005, _mm_store_si128 , _mm_load_si128 )
+		STEP(004, _mm_store_si128 , _mm_load_si128 )
+		STEP(003, _mm_store_si128 , _mm_load_si128 )
+		STEP(002, _mm_store_si128 , _mm_load_si128 )
+		STEP(001, _mm_store_si128 , _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// temporal, unaligned read
 			do {
-		STEP(case 010, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 017, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 016, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 015, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 014, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 013, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 012, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 011, _mm_store_si128 , _mm_loadu_si128)
+		STEP(010, _mm_store_si128 , _mm_loadu_si128)
+		STEP(017, _mm_store_si128 , _mm_loadu_si128)
+		STEP(016, _mm_store_si128 , _mm_loadu_si128)
+		STEP(015, _mm_store_si128 , _mm_loadu_si128)
+		STEP(014, _mm_store_si128 , _mm_loadu_si128)
+		STEP(013, _mm_store_si128 , _mm_loadu_si128)
+		STEP(012, _mm_store_si128 , _mm_loadu_si128)
+		STEP(011, _mm_store_si128 , _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, aligned read
 			do {
-		STEP(case 020, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 027, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 026, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 025, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 024, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 023, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 022, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 021, _mm_stream_si128, _mm_load_si128 )
+		STEP(020, _mm_stream_si128, _mm_load_si128 )
+		STEP(027, _mm_stream_si128, _mm_load_si128 )
+		STEP(026, _mm_stream_si128, _mm_load_si128 )
+		STEP(025, _mm_stream_si128, _mm_load_si128 )
+		STEP(024, _mm_stream_si128, _mm_load_si128 )
+		STEP(023, _mm_stream_si128, _mm_load_si128 )
+		STEP(022, _mm_stream_si128, _mm_load_si128 )
+		STEP(021, _mm_stream_si128, _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, unaligned read
 			do {
-		STEP(case 030, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 037, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 036, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 035, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 034, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 033, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 032, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 031, _mm_stream_si128, _mm_loadu_si128)
+		STEP(030, _mm_stream_si128, _mm_loadu_si128)
+		STEP(037, _mm_stream_si128, _mm_loadu_si128)
+		STEP(036, _mm_stream_si128, _mm_loadu_si128)
+		STEP(035, _mm_stream_si128, _mm_loadu_si128)
+		STEP(034, _mm_stream_si128, _mm_loadu_si128)
+		STEP(033, _mm_stream_si128, _mm_loadu_si128)
+		STEP(032, _mm_stream_si128, _mm_loadu_si128)
+		STEP(031, _mm_stream_si128, _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 #undef STEP
@@ -123,9 +123,9 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		const size_t nt = !!(n >> 18) << 4;
 		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
 		switch(rem % 8 + nt + ur){
-#define STEP(case_, store_, load_)	\
+#define STEP(k_, store_, load_)	\
 				__attribute__((__fallthrough__));	\
-		case_:	\
+		case (k_):	\
 				wp -= 16;	\
 				rp -= 16;	\
 				store_((__m128i *)wp, load_((const __m128i *)rp));	\
@@ -134,53 +134,53 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 			break;
 		// temporal, aligned read
 			do {
-		STEP(case 000, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 007, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 006, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 005, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 004, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 003, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 002, _mm_store_si128 , _mm_load_si128 )
-		STEP(case 001, _mm_store_si128 , _mm_load_si128 )
+		STEP(000, _mm_store_si128 , _mm_load_si128 )
+		STEP(007, _mm_store_si128 , _mm_load_si128 )
+		STEP(006, _mm_store_si128 , _mm_load_si128 )
+		STEP(005, _mm_store_si128 , _mm_load_si128 )
+		STEP(004, _mm_store_si128 , _mm_load_si128 )
+		STEP(003, _mm_store_si128 , _mm_load_si128 )
+		STEP(002, _mm_store_si128 , _mm_load_si128 )
+		STEP(001, _mm_store_si128 , _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// temporal, unaligned read
 			do {
-		STEP(case 010, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 017, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 016, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 015, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 014, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 013, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 012, _mm_store_si128 , _mm_loadu_si128)
-		STEP(case 011, _mm_store_si128 , _mm_loadu_si128)
+		STEP(010, _mm_store_si128 , _mm_loadu_si128)
+		STEP(017, _mm_store_si128 , _mm_loadu_si128)
+		STEP(016, _mm_store_si128 , _mm_loadu_si128)
+		STEP(015, _mm_store_si128 , _mm_loadu_si128)
+		STEP(014, _mm_store_si128 , _mm_loadu_si128)
+		STEP(013, _mm_store_si128 , _mm_loadu_si128)
+		STEP(012, _mm_store_si128 , _mm_loadu_si128)
+		STEP(011, _mm_store_si128 , _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, aligned read
 			do {
-		STEP(case 020, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 027, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 026, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 025, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 024, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 023, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 022, _mm_stream_si128, _mm_load_si128 )
-		STEP(case 021, _mm_stream_si128, _mm_load_si128 )
+		STEP(020, _mm_stream_si128, _mm_load_si128 )
+		STEP(027, _mm_stream_si128, _mm_load_si128 )
+		STEP(026, _mm_stream_si128, _mm_load_si128 )
+		STEP(025, _mm_stream_si128, _mm_load_si128 )
+		STEP(024, _mm_stream_si128, _mm_load_si128 )
+		STEP(023, _mm_stream_si128, _mm_load_si128 )
+		STEP(022, _mm_stream_si128, _mm_load_si128 )
+		STEP(021, _mm_stream_si128, _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, unaligned read
 			do {
-		STEP(case 030, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 037, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 036, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 035, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 034, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 033, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 032, _mm_stream_si128, _mm_loadu_si128)
-		STEP(case 031, _mm_stream_si128, _mm_loadu_si128)
+		STEP(030, _mm_stream_si128, _mm_loadu_si128)
+		STEP(037, _mm_stream_si128, _mm_loadu_si128)
+		STEP(036, _mm_stream_si128, _mm_loadu_si128)
+		STEP(035, _mm_stream_si128, _mm_loadu_si128)
+		STEP(034, _mm_stream_si128, _mm_loadu_si128)
+		STEP(033, _mm_stream_si128, _mm_loadu_si128)
+		STEP(032, _mm_stream_si128, _mm_loadu_si128)
+		STEP(031, _mm_stream_si128, _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 #undef STEP

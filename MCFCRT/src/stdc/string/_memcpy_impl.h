@@ -21,23 +21,23 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 	_MCFCRT_STD size_t __rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
 		switch(__rem % 8){
-#define __MCFCRT_STEP_(__case_)	\
+#define __MCFCRT_STEP_(__k_)	\
 				__attribute__((__fallthrough__));	\
-		__case_:	\
+		case (__k_):	\
 				_mm_storel_epi64((__m128i *)__wp, _mm_loadl_epi64((const __m128i *)__rp));	\
 				__wp += 8;	\
 				__rp += 8;	\
 				--__rem;
 //=============================================================================
 			do {
-		__MCFCRT_STEP_(case 0)
-		__MCFCRT_STEP_(case 7)
-		__MCFCRT_STEP_(case 6)
-		__MCFCRT_STEP_(case 5)
-		__MCFCRT_STEP_(case 4)
-		__MCFCRT_STEP_(case 3)
-		__MCFCRT_STEP_(case 2)
-		__MCFCRT_STEP_(case 1)
+		__MCFCRT_STEP_(0)
+		__MCFCRT_STEP_(7)
+		__MCFCRT_STEP_(6)
+		__MCFCRT_STEP_(5)
+		__MCFCRT_STEP_(4)
+		__MCFCRT_STEP_(3)
+		__MCFCRT_STEP_(2)
+		__MCFCRT_STEP_(1)
 			} while(_MCFCRT_EXPECT(__rem != 0));
 //=============================================================================
 #undef __MCFCRT_STEP_
@@ -79,23 +79,23 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 	__rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
 		switch(__rem % 8){
-#define __MCFCRT_STEP_(__case_)	\
+#define __MCFCRT_STEP_(__k_)	\
 				__attribute__((__fallthrough__));	\
-		__case_:	\
+		case (__k_):	\
 				__wp -= 8;	\
 				__rp -= 8;	\
 				_mm_storel_epi64((__m128i *)__wp, _mm_loadl_epi64((const __m128i *)__rp));	\
 				--__rem;
 //=============================================================================
 			do {
-		__MCFCRT_STEP_(case 0)
-		__MCFCRT_STEP_(case 7)
-		__MCFCRT_STEP_(case 6)
-		__MCFCRT_STEP_(case 5)
-		__MCFCRT_STEP_(case 4)
-		__MCFCRT_STEP_(case 3)
-		__MCFCRT_STEP_(case 2)
-		__MCFCRT_STEP_(case 1)
+		__MCFCRT_STEP_(0)
+		__MCFCRT_STEP_(7)
+		__MCFCRT_STEP_(6)
+		__MCFCRT_STEP_(5)
+		__MCFCRT_STEP_(4)
+		__MCFCRT_STEP_(3)
+		__MCFCRT_STEP_(2)
+		__MCFCRT_STEP_(1)
 			} while(_MCFCRT_EXPECT(__rem != 0));
 //=============================================================================
 #undef __MCFCRT_STEP_

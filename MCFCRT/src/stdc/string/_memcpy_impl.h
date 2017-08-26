@@ -22,21 +22,23 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 		switch(__rem % 8){
 			_MCFCRT_STD uintptr_t __w;
 			do {
-#define __MCFCRT_STEP_	\
+#define __MCFCRT_STEP_(__l_)	\
+				__attribute__((__fallthrough__));	\
+		__l_:	\
 				__builtin_memcpy(&__w, __rp, sizeof(__w));	\
 				__builtin_memcpy(__wp, &__w, sizeof(__w));	\
 				__wp += sizeof(__w);	\
 				__rp += sizeof(__w);	\
 				--__rem;
 //=============================================================================
-		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+		__MCFCRT_STEP_(default)
+		__MCFCRT_STEP_(case  7)
+		__MCFCRT_STEP_(case  6)
+		__MCFCRT_STEP_(case  5)
+		__MCFCRT_STEP_(case  4)
+		__MCFCRT_STEP_(case  3)
+		__MCFCRT_STEP_(case  2)
+		__MCFCRT_STEP_(case  1)
 //=============================================================================
 #undef __MCFCRT_STEP_
 			} while(_MCFCRT_EXPECT(__rem != 0));
@@ -46,18 +48,20 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 	if(_MCFCRT_EXPECT(__rem != 0)){
 		switch(__rem % 8){
 			do {
-#define __MCFCRT_STEP_	\
+#define __MCFCRT_STEP_(__l_)	\
+				__attribute__((__fallthrough__));	\
+		__l_:	\
 				*(volatile unsigned char *)(__wp++) = *(__rp++);	\
 				--__rem;
 //=============================================================================
-		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+		__MCFCRT_STEP_(default)
+		__MCFCRT_STEP_(case  7)
+		__MCFCRT_STEP_(case  6)
+		__MCFCRT_STEP_(case  5)
+		__MCFCRT_STEP_(case  4)
+		__MCFCRT_STEP_(case  3)
+		__MCFCRT_STEP_(case  2)
+		__MCFCRT_STEP_(case  1)
 //=============================================================================
 #undef __MCFCRT_STEP_
 			} while(_MCFCRT_EXPECT_NOT(__rem != 0));
@@ -74,18 +78,20 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 	if(_MCFCRT_EXPECT(__rem != 0)){
 		switch(__rem % 8){
 			do {
-#define __MCFCRT_STEP_	\
+#define __MCFCRT_STEP_(__l_)	\
+				__attribute__((__fallthrough__));	\
+		__l_:	\
 				*(volatile unsigned char *)(--__wp) = *(--__rp);	\
 				--__rem;
 //=============================================================================
-		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+		__MCFCRT_STEP_(default)
+		__MCFCRT_STEP_(case  7)
+		__MCFCRT_STEP_(case  6)
+		__MCFCRT_STEP_(case  5)
+		__MCFCRT_STEP_(case  4)
+		__MCFCRT_STEP_(case  3)
+		__MCFCRT_STEP_(case  2)
+		__MCFCRT_STEP_(case  1)
 //=============================================================================
 #undef __MCFCRT_STEP_
 			} while(_MCFCRT_EXPECT_NOT(__rem != 0));
@@ -96,21 +102,23 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 		switch(__rem % 8){
 			_MCFCRT_STD uintptr_t __w;
 			do {
-#define __MCFCRT_STEP_	\
+#define __MCFCRT_STEP_(__l_)	\
+				__attribute__((__fallthrough__));	\
+		__l_:	\
 				__wp -= sizeof(__w);	\
 				__rp -= sizeof(__w);	\
 				__builtin_memcpy(&__w, __rp, sizeof(__w));	\
 				__builtin_memcpy(__wp, &__w, sizeof(__w));	\
 				--__rem;
 //=============================================================================
-		__attribute__((__fallthrough__)); default: __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 7:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 6:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 5:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 4:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 3:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 2:  __MCFCRT_STEP_
-		__attribute__((__fallthrough__)); case 1:  __MCFCRT_STEP_
+		__MCFCRT_STEP_(default)
+		__MCFCRT_STEP_(case  7)
+		__MCFCRT_STEP_(case  6)
+		__MCFCRT_STEP_(case  5)
+		__MCFCRT_STEP_(case  4)
+		__MCFCRT_STEP_(case  3)
+		__MCFCRT_STEP_(case  2)
+		__MCFCRT_STEP_(case  1)
 //=============================================================================
 #undef __MCFCRT_STEP_
 			} while(_MCFCRT_EXPECT(__rem != 0));

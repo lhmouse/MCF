@@ -21,26 +21,26 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 	_MCFCRT_STD size_t __rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
 		switch(__rem % 8){
-			do {
-#define __MCFCRT_STEP_(__l_)	\
+#define __MCFCRT_STEP_(__case_)	\
 				__attribute__((__fallthrough__));	\
-		__l_:	\
+		__case_:	\
 				_mm_storel_epi64((__m128i *)__wp, _mm_loadl_epi64((const __m128i *)__rp));	\
 				__wp += 8;	\
 				__rp += 8;	\
 				--__rem;
 //=============================================================================
-		__MCFCRT_STEP_(default)
-		__MCFCRT_STEP_(case  7)
-		__MCFCRT_STEP_(case  6)
-		__MCFCRT_STEP_(case  5)
-		__MCFCRT_STEP_(case  4)
-		__MCFCRT_STEP_(case  3)
-		__MCFCRT_STEP_(case  2)
-		__MCFCRT_STEP_(case  1)
+			do {
+		__MCFCRT_STEP_(case 0)
+		__MCFCRT_STEP_(case 7)
+		__MCFCRT_STEP_(case 6)
+		__MCFCRT_STEP_(case 5)
+		__MCFCRT_STEP_(case 4)
+		__MCFCRT_STEP_(case 3)
+		__MCFCRT_STEP_(case 2)
+		__MCFCRT_STEP_(case 1)
+			} while(_MCFCRT_EXPECT(__rem != 0));
 //=============================================================================
 #undef __MCFCRT_STEP_
-			} while(_MCFCRT_EXPECT(__rem != 0));
 		}
 	}
 	__rem = __n % 8;
@@ -79,26 +79,26 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 	__rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
 		switch(__rem % 8){
-			do {
-#define __MCFCRT_STEP_(__l_)	\
+#define __MCFCRT_STEP_(__case_)	\
 				__attribute__((__fallthrough__));	\
-		__l_:	\
+		__case_:	\
 				__wp -= 8;	\
 				__rp -= 8;	\
 				_mm_storel_epi64((__m128i *)__wp, _mm_loadl_epi64((const __m128i *)__rp));	\
 				--__rem;
 //=============================================================================
-		__MCFCRT_STEP_(default)
-		__MCFCRT_STEP_(case  7)
-		__MCFCRT_STEP_(case  6)
-		__MCFCRT_STEP_(case  5)
-		__MCFCRT_STEP_(case  4)
-		__MCFCRT_STEP_(case  3)
-		__MCFCRT_STEP_(case  2)
-		__MCFCRT_STEP_(case  1)
+			do {
+		__MCFCRT_STEP_(case 0)
+		__MCFCRT_STEP_(case 7)
+		__MCFCRT_STEP_(case 6)
+		__MCFCRT_STEP_(case 5)
+		__MCFCRT_STEP_(case 4)
+		__MCFCRT_STEP_(case 3)
+		__MCFCRT_STEP_(case 2)
+		__MCFCRT_STEP_(case 1)
+			} while(_MCFCRT_EXPECT(__rem != 0));
 //=============================================================================
 #undef __MCFCRT_STEP_
-			} while(_MCFCRT_EXPECT(__rem != 0));
 		}
 	}
 }

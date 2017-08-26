@@ -30,10 +30,9 @@ static int memcmp_small(const void *s1, const void *s2, size_t n){
 			w = bswap_ptr(w);
 			c = bswap_ptr(c);
 			return (w < c) ? -1 : 1;
-			do {
-#define STEP(l_)	\
+#define STEP(case_)	\
 				__attribute__((__fallthrough__));	\
-		l_:	\
+		case_:	\
 				__builtin_memcpy(&w, rp1, sizeof(w));	\
 				__builtin_memcpy(&c, rp2, sizeof(c));	\
 				rp1 += sizeof(w);	\
@@ -43,17 +42,18 @@ static int memcmp_small(const void *s1, const void *s2, size_t n){
 					goto diff_wc;	\
 				}
 //=============================================================================
-		STEP(default)
-		STEP(case  7)
-		STEP(case  6)
-		STEP(case  5)
-		STEP(case  4)
-		STEP(case  3)
-		STEP(case  2)
-		STEP(case  1)
+			do {
+		STEP(case 0)
+		STEP(case 7)
+		STEP(case 6)
+		STEP(case 5)
+		STEP(case 4)
+		STEP(case 3)
+		STEP(case 2)
+		STEP(case 1)
+			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 #undef STEP
-			} while(_MCFCRT_EXPECT(rem != 0));
 		}
 	}
 	rem = n % sizeof(uintptr_t);

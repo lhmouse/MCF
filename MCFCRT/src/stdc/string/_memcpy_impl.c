@@ -30,6 +30,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 				rp += 16;	\
 				--rem;
 //=============================================================================
+			break;
 			do {
 		STEP(case 000, _mm_store_si128 , _mm_load_si128 )
 		STEP(case 007, _mm_store_si128 , _mm_load_si128 )
@@ -41,6 +42,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(case 001, _mm_store_si128 , _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
+			break;
 			do {
 		STEP(case 010, _mm_store_si128 , _mm_loadu_si128)
 		STEP(case 017, _mm_store_si128 , _mm_loadu_si128)
@@ -52,6 +54,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(case 011, _mm_store_si128 , _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
+			break;
 			do {
 		STEP(case 020, _mm_stream_si128, _mm_load_si128 )
 		STEP(case 027, _mm_stream_si128, _mm_load_si128 )
@@ -63,6 +66,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(case 021, _mm_stream_si128, _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
+			break;
 			do {
 		STEP(case 030, _mm_stream_si128, _mm_loadu_si128)
 		STEP(case 037, _mm_stream_si128, _mm_loadu_si128)
@@ -121,6 +125,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 				store_((__m128i *)wp, load_((const __m128i *)rp));	\
 				--rem;
 //=============================================================================
+			break;
 			do {
 		STEP(case 000, _mm_store_si128 , _mm_load_si128 )
 		STEP(case 007, _mm_store_si128 , _mm_load_si128 )
@@ -132,6 +137,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(case 001, _mm_store_si128 , _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
+			break;
 			do {
 		STEP(case 010, _mm_store_si128 , _mm_loadu_si128)
 		STEP(case 017, _mm_store_si128 , _mm_loadu_si128)
@@ -143,6 +149,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(case 011, _mm_store_si128 , _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
+			break;
 			do {
 		STEP(case 020, _mm_stream_si128, _mm_load_si128 )
 		STEP(case 027, _mm_stream_si128, _mm_load_si128 )
@@ -154,6 +161,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(case 021, _mm_stream_si128, _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
+			break;
 			do {
 		STEP(case 030, _mm_stream_si128, _mm_loadu_si128)
 		STEP(case 037, _mm_stream_si128, _mm_loadu_si128)

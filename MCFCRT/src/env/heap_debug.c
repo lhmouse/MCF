@@ -73,10 +73,11 @@ static void CheckForMemoryLeaks(void){
 	uintptr_t uCount = 0;
 	const BlockHeader *pHeader = (BlockHeader *)_MCFCRT_AvlFront(&s_avlBlocks);
 	while(pHeader){
-		if(uCount < 9999){
+		++uCount;
+		if(uCount <= 9999){
 			wchar_t *pwcWrite = awcLine;
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"*** Memory leak ");
-			pwcWrite = _MCFCRT_itow0u(pwcWrite, uCount + 1, 4);
+			pwcWrite = _MCFCRT_itow0u(pwcWrite, uCount, 4);
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L": address = 0x");
 			pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)((char *)pHeader + sizeof(BlockHeader)), sizeof(void *) * 2);
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L", size = 0x");
@@ -88,7 +89,6 @@ static void CheckForMemoryLeaks(void){
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L" ***");
 			_MCFCRT_WriteStandardErrorText(awcLine, (size_t)(pwcWrite - awcLine), true);
 		}
-		++uCount;
 		pHeader = (BlockHeader *)_MCFCRT_AvlNext((_MCFCRT_AvlNodeHeader *)pHeader);
 	}
 	if(uCount > 9999){

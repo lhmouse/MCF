@@ -15,7 +15,7 @@ static inline long double fpu_acos(long double x){
 	if(exam == __MCFCRT_kFpuExamineNaN){
 		return x;
 	}
-	return __MCFCRT_fpatan(__MCFCRT_fsqrt(__MCFCRT_fld1() - x * x), x);
+	return __MCFCRT_fpatan(__MCFCRT_fsqrt(__MCFCRT_fld1() - __MCFCRT_fsquare(x)), x);
 }
 
 float acosf(float x){

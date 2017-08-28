@@ -19,10 +19,11 @@ struct PageDeleter {
 };
 
 using Char = char;
-constexpr std::size_t size = 0x10000 + 4;
+
+constexpr std::size_t size = 0x1000;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-/*
+
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const auto s1b = (Char *)((char *)p1.Get() + 4);
@@ -33,19 +34,17 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	for(std::size_t i = 0; i < len; ++i){
 		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
-	s1b[len - 2] = (Char)0xAABB;
-	s1b[len - 1] = (Char)0x2211;
-	s2b[len - 2] = (Char)0xBBAA;
-	s2b[len - 1] = (Char)0x1122;
+	s1e[-2] = '\x0F';
+	s1b[len - 1] = s2b[len - 1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "memcpy"_nsv;
+		const auto fname = "strcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<Char * (*)(Char *, const Char *, std::size_t)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);
 			std::ptrdiff_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(std::uint64_t i = 0; i < 100000; ++i){
+			for(std::uint64_t i = 0; i < 1000000; ++i){
 				r = (std::ptrdiff_t)(*pf)(s1b, s2b, len);
 			}
 			const auto t2 = GetHiResMonoClock();
@@ -62,48 +61,36 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	test("MSVCR120"_wsv);
 	test("UCRTBASE"_wsv);
 	test("MCFCRT-2"_wsv);
-*/
+
 /*
-	static struct { char a[21]; char s[200]; } s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
-	static struct { char a[ 1]; char s[200]; } s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XaZ" };
+	static struct { char a[21]; char s[200]; } __attribute__((__aligned__(64))) s1 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
+	static struct { char a[ 1]; char s[200]; } __attribute__((__aligned__(64))) s2 = { "", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW\0XYZ" };
 	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
-	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("strncmp"_nsv);
+	const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *, std::size_t)>("memcmp"_nsv);
 	std::printf("%d\n", pf(s1.s, s2.s, 62));
 */
 /*
-	static constexpr std::size_t buff_len = 10000;
-	static char dstb[buff_len], srcb[buff_len];
-	const DynamicLinkLibrary dll(L"MCFCRT-2"_wsv);
-	const auto pf = dll.RequireProcAddress<void * (*)(void *, const void *, std::size_t)>("memmove"_nsv);
+	static constexpr std::size_t buff_len = 2000;
+	static wchar_t dstb[buff_len], srcb[buff_len];
 	for(std::size_t i = 0; i < buff_len / 2 - 10; ++i){
 		std::memset(dstb, 'z', sizeof(dstb));
 		std::memset(srcb, 'a', sizeof(srcb));
-		char *const dst = dstb + i + 1;
-		char *const src = srcb + i + 2;
-		pf(dst, src, i);
-		if(std::memcmp(dst, src, i) != 0){
-			abort();
-		}
-		std::memset(srcb, 'k', sizeof(srcb));
-		pf(src, dst, i);
-		if(std::memcmp(src, dst, i) != 0){
-			abort();
+		wchar_t *const dst = dstb + i + 1;
+		wchar_t *const src = srcb + i + 2;
+		src[i] = 0;
+		constexpr std::size_t max_len = buff_len * 2 / 5;
+		const auto epd = ::_MCFCRT_wcppcpy(dst, dst + max_len, src);
+		std::printf("i = %zu\n", i);
+//		std::printf("  src = %s$\n", (char *)src);
+//		std::printf("  dst = %s$\n", (char *)dst);
+		const int cmp = std::wcscmp(src, dst);
+		const std::size_t len = (std::size_t)(epd - dst);
+		const int end = dst[i + 1];
+		std::printf("  cmp = %d, len = %zd, end = %x\n", cmp, len, end);
+		if((len != std::min(i, max_len - 1)) || (end != dstb[0])){
+			std::abort();
 		}
 	}
 */
-/*
-	static char buff[1000];
-	for(unsigned i = 0; i < sizeof(buff); ++i){
-		(volatile char &)buff[i] = (char)i;
-	}
-	std::memmove(buff + 1, buff + 2, sizeof(buff) - 2);
-*/
-	__attribute__((__aligned__(32))) char str[100];
-	__attribute__((__aligned__(32))) const char src[100] = "1234567890abcdefg";
-	auto wp = str;
-	for(unsigned i = 0; i < 10; ++i){
-		wp = ::_MCFCRT_stppcpy(wp, str + 64, src);
-		std::printf("str = (%zu) %s\n", std::strlen(str), str);
-	}
 	return 0;
 }

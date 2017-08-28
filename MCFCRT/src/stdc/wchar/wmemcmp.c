@@ -149,7 +149,7 @@ end_equal:
 }
 
 int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
-	if(_MCFCRT_EXPECT(n <= 256)){
+	if(_MCFCRT_EXPECT(n <= sizeof(void *) * 64)){
 		return wmemcmp_small(s1, s2, n);
 	} else {
 		return wmemcmp_large(s1, s2, n);

@@ -12,7 +12,7 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 _MCFCRT_CONSTEXPR bool __MCFCRT_memcpy_is_small_enough(_MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	return __n < 256;
+	return __n < sizeof(void *) * 64;
 }
 
 static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {

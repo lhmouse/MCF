@@ -149,7 +149,7 @@ end_equal:
 }
 
 int memcmp(const void *s1, const void *s2, size_t n){
-	if(_MCFCRT_EXPECT(n <= 256)){
+	if(_MCFCRT_EXPECT(n <= sizeof(void *) * 64)){
 		return memcmp_small(s1, s2, n);
 	} else {
 		return memcmp_large(s1, s2, n);

@@ -13,7 +13,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	register wchar_t *wp __asm__("di") = s1;
-	register const wchar_t *rp __asm__("si") = s2;
+	register const wchar_t *rp __asm__("bx") = s2;
 	const wchar_t *arp = (const wchar_t *)((uintptr_t)s2 & (uintptr_t)-64);
 	__m128i xz[1];
 	__MCFCRT_xmmsetz(xz);
@@ -51,9 +51,15 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 		}
 	}
 end:
+//	__asm__ volatile ("" : "+c"(dist));
 	_MCFCRT_ASSERT(mask != 0);
-	arp = arp - 32 + (unsigned)__builtin_ctzl(mask);
-	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)rp, (size_t)(arp - rp));
+//	if((mask << dist) != 0){
+		arp = arp - 32 + (unsigned)__builtin_ctzl(mask);
+		wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)rp, (size_t)(arp - rp));
+		goto end_term;
+//	}
+//	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)rp, (size_t)(32 - dist));
+end_term:
 	*wp = 0;
 	return wp;
 }

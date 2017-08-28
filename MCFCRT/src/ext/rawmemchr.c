@@ -16,6 +16,7 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 
 	__m128i xw[2];
 	uint32_t mask;
+	ptrdiff_t dist;
 //=============================================================================
 #define BEGIN	\
 	arp = __MCFCRT_xmmload_2(xw, arp, _mm_load_si128);	\
@@ -26,7 +27,8 @@ void *_MCFCRT_rawmemchr(const void *s, int c){
 	}
 //=============================================================================
 	BEGIN
-	mask &= (uint32_t)-1 << (((const char *)s - arp) & 0x1F);
+	dist = (const char *)s - (arp - 32);
+	mask &= (uint32_t)-1 << dist;
 	for(;;){
 		END
 		BEGIN

@@ -22,7 +22,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 	if(_MCFCRT_EXPECT(rem != 0)){
 		const size_t nt = !!(n >> 20) << 4;
 		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
-		switch(rem % 8 + nt + ur){
+		switch((rem - 1) % 8 + nt + ur){
 #define STEP(k_, store_, load_)	\
 				__attribute__((__fallthrough__));	\
 		case (k_):	\
@@ -34,7 +34,6 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 			break;
 		// temporal, aligned read
 			do {
-		STEP(000, _mm_store_si128 , _mm_load_si128 )
 		STEP(007, _mm_store_si128 , _mm_load_si128 )
 		STEP(006, _mm_store_si128 , _mm_load_si128 )
 		STEP(005, _mm_store_si128 , _mm_load_si128 )
@@ -42,12 +41,12 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(003, _mm_store_si128 , _mm_load_si128 )
 		STEP(002, _mm_store_si128 , _mm_load_si128 )
 		STEP(001, _mm_store_si128 , _mm_load_si128 )
+		STEP(000, _mm_store_si128 , _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// temporal, unaligned read
 			do {
-		STEP(010, _mm_store_si128 , _mm_loadu_si128)
 		STEP(017, _mm_store_si128 , _mm_loadu_si128)
 		STEP(016, _mm_store_si128 , _mm_loadu_si128)
 		STEP(015, _mm_store_si128 , _mm_loadu_si128)
@@ -55,12 +54,12 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(013, _mm_store_si128 , _mm_loadu_si128)
 		STEP(012, _mm_store_si128 , _mm_loadu_si128)
 		STEP(011, _mm_store_si128 , _mm_loadu_si128)
+		STEP(010, _mm_store_si128 , _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, aligned read
 			do {
-		STEP(020, _mm_stream_si128, _mm_load_si128 )
 		STEP(027, _mm_stream_si128, _mm_load_si128 )
 		STEP(026, _mm_stream_si128, _mm_load_si128 )
 		STEP(025, _mm_stream_si128, _mm_load_si128 )
@@ -68,12 +67,12 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(023, _mm_stream_si128, _mm_load_si128 )
 		STEP(022, _mm_stream_si128, _mm_load_si128 )
 		STEP(021, _mm_stream_si128, _mm_load_si128 )
+		STEP(020, _mm_stream_si128, _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, unaligned read
 			do {
-		STEP(030, _mm_stream_si128, _mm_loadu_si128)
 		STEP(037, _mm_stream_si128, _mm_loadu_si128)
 		STEP(036, _mm_stream_si128, _mm_loadu_si128)
 		STEP(035, _mm_stream_si128, _mm_loadu_si128)
@@ -81,6 +80,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 		STEP(033, _mm_stream_si128, _mm_loadu_si128)
 		STEP(032, _mm_stream_si128, _mm_loadu_si128)
 		STEP(031, _mm_stream_si128, _mm_loadu_si128)
+		STEP(030, _mm_stream_si128, _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 #undef STEP
@@ -122,7 +122,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 	if(_MCFCRT_EXPECT(rem != 0)){
 		const size_t nt = !!(n >> 20) << 4;
 		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
-		switch(rem % 8 + nt + ur){
+		switch((rem - 1) % 8 + nt + ur){
 #define STEP(k_, store_, load_)	\
 				__attribute__((__fallthrough__));	\
 		case (k_):	\
@@ -134,7 +134,6 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 			break;
 		// temporal, aligned read
 			do {
-		STEP(000, _mm_store_si128 , _mm_load_si128 )
 		STEP(007, _mm_store_si128 , _mm_load_si128 )
 		STEP(006, _mm_store_si128 , _mm_load_si128 )
 		STEP(005, _mm_store_si128 , _mm_load_si128 )
@@ -142,12 +141,12 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(003, _mm_store_si128 , _mm_load_si128 )
 		STEP(002, _mm_store_si128 , _mm_load_si128 )
 		STEP(001, _mm_store_si128 , _mm_load_si128 )
+		STEP(000, _mm_store_si128 , _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// temporal, unaligned read
 			do {
-		STEP(010, _mm_store_si128 , _mm_loadu_si128)
 		STEP(017, _mm_store_si128 , _mm_loadu_si128)
 		STEP(016, _mm_store_si128 , _mm_loadu_si128)
 		STEP(015, _mm_store_si128 , _mm_loadu_si128)
@@ -155,12 +154,12 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(013, _mm_store_si128 , _mm_loadu_si128)
 		STEP(012, _mm_store_si128 , _mm_loadu_si128)
 		STEP(011, _mm_store_si128 , _mm_loadu_si128)
+		STEP(010, _mm_store_si128 , _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, aligned read
 			do {
-		STEP(020, _mm_stream_si128, _mm_load_si128 )
 		STEP(027, _mm_stream_si128, _mm_load_si128 )
 		STEP(026, _mm_stream_si128, _mm_load_si128 )
 		STEP(025, _mm_stream_si128, _mm_load_si128 )
@@ -168,12 +167,12 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(023, _mm_stream_si128, _mm_load_si128 )
 		STEP(022, _mm_stream_si128, _mm_load_si128 )
 		STEP(021, _mm_stream_si128, _mm_load_si128 )
+		STEP(020, _mm_stream_si128, _mm_load_si128 )
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 			break;
 		// non-temporal, unaligned read
 			do {
-		STEP(030, _mm_stream_si128, _mm_loadu_si128)
 		STEP(037, _mm_stream_si128, _mm_loadu_si128)
 		STEP(036, _mm_stream_si128, _mm_loadu_si128)
 		STEP(035, _mm_stream_si128, _mm_loadu_si128)
@@ -181,6 +180,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 		STEP(033, _mm_stream_si128, _mm_loadu_si128)
 		STEP(032, _mm_stream_si128, _mm_loadu_si128)
 		STEP(031, _mm_stream_si128, _mm_loadu_si128)
+		STEP(030, _mm_stream_si128, _mm_loadu_si128)
 			} while(_MCFCRT_EXPECT(rem != 0));
 //=============================================================================
 #undef STEP

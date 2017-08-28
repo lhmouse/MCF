@@ -20,7 +20,7 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
 	_MCFCRT_STD size_t __rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
-		switch(__rem % 8){
+		switch((__rem - 1) % 8){
 #define __MCFCRT_STEP_(__k_)	\
 				__attribute__((__fallthrough__));	\
 		case (__k_):	\
@@ -30,7 +30,6 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 				--__rem;
 //=============================================================================
 			do {
-		__MCFCRT_STEP_(0)
 		__MCFCRT_STEP_(7)
 		__MCFCRT_STEP_(6)
 		__MCFCRT_STEP_(5)
@@ -38,6 +37,7 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 		__MCFCRT_STEP_(3)
 		__MCFCRT_STEP_(2)
 		__MCFCRT_STEP_(1)
+		__MCFCRT_STEP_(0)
 			} while(_MCFCRT_EXPECT(__rem != 0));
 //=============================================================================
 #undef __MCFCRT_STEP_
@@ -78,7 +78,7 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 #undef __MCFCRT_STEP_
 	__rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
-		switch(__rem % 8){
+		switch((__rem - 1) % 8){
 #define __MCFCRT_STEP_(__k_)	\
 				__attribute__((__fallthrough__));	\
 		case (__k_):	\
@@ -88,7 +88,6 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 				--__rem;
 //=============================================================================
 			do {
-		__MCFCRT_STEP_(0)
 		__MCFCRT_STEP_(7)
 		__MCFCRT_STEP_(6)
 		__MCFCRT_STEP_(5)
@@ -96,6 +95,7 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 		__MCFCRT_STEP_(3)
 		__MCFCRT_STEP_(2)
 		__MCFCRT_STEP_(1)
+		__MCFCRT_STEP_(0)
 			} while(_MCFCRT_EXPECT(__rem != 0));
 //=============================================================================
 #undef __MCFCRT_STEP_

@@ -33,12 +33,12 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		case (k_):	\
 				__builtin_memcpy(&w, rp1, sizeof(w));	\
 				__builtin_memcpy(&c, rp2, sizeof(c));	\
-				rp1 += sizeof(w) / sizeof(wchar_t);	\
-				rp2 += sizeof(c) / sizeof(wchar_t);	\
 				--rem;	\
 				if(_MCFCRT_EXPECT_NOT(w != c)){	\
 					goto diff_wc;	\
-				}
+				}	\
+				rp1 += sizeof(w) / sizeof(wchar_t);	\
+				rp2 += sizeof(c) / sizeof(wchar_t);
 //=============================================================================
 			do {
 		STEP(037)  STEP(036)  STEP(035)  STEP(034)  STEP(033)  STEP(032)  STEP(031)  STEP(030)

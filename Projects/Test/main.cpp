@@ -20,7 +20,7 @@ struct PageDeleter {
 
 using Char = char;
 
-constexpr std::size_t size = 0x1000;
+constexpr std::size_t size = 0x100;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 

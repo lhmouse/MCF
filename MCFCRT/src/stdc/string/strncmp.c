@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
 #include "_sse2.h"
-#include <tmmintrin.h>
+#include "_ssse3.h"
 
 #undef strncmp
 
@@ -25,16 +25,17 @@ int strncmp(const char *s1, const char *s2, size_t n){
 	uint32_t mask;
 	ptrdiff_t dist;
 //=============================================================================
-#define BEGIN(offset_, align_)	\
+#define BEGIN	\
 	arp1 = __MCFCRT_xmmload_2(xw, arp1, _mm_load_si128);	\
+	for(unsigned i = 0; i < 4; i += 2){	\
+	__MCFCRT_xmmload_2(s2v + i, s2v + i + 2, _mm_load_si128);	\
+	}	\
 	if(_MCFCRT_EXPECT(!s2z)){	\
-		arp2 = __MCFCRT_xmmload_2(s2v + ((offset_) + 4) % 6, arp2, _mm_load_si128);	\
-		mask = __MCFCRT_xmmcmp_21b(s2v + ((offset_) + 4) % 6, xz);	\
+		arp2 = __MCFCRT_xmmload_2(s2v + 4, arp2, _mm_load_si128);	\
+		mask = __MCFCRT_xmmcmp_21b(s2v + 4, xz);	\
 		s2z = (mask != 0) || (arp2 >= (const unsigned char *)s2 + n);	\
 	}	\
-	for(unsigned i = 0; i < 2; ++i){	\
-		xc[i] = _mm_alignr_epi8(s2v[((offset_) + (align_) / 16 + i + 1) % 6], s2v[((offset_) + (align_) / 16 + i) % 6], (align_) % 16);	\
-	}	\
+	__MCFCRT_xmmalign_2(xc, s2v, align);	\
 	mask = ~__MCFCRT_xmmcmpandn_221b(xw, xc, xz);
 #define END	\
 	dist = arp1 - ((const unsigned char *)s1 + n);	\
@@ -49,37 +50,18 @@ int strncmp(const char *s1, const char *s2, size_t n){
 	if(_MCFCRT_EXPECT_NOT(n == 0)){
 		goto end_equal;
 	}
-	__MCFCRT_xmmsetz_2(s2v);
-	arp2 = __MCFCRT_xmmload_2(s2v + 2, arp2, _mm_load_si128);
-	mask = __MCFCRT_xmmcmp_21b(s2v + 2, xz);
+	__MCFCRT_xmmsetz_2(s2v + 2);
+	arp2 = __MCFCRT_xmmload_2(s2v + 4, arp2, _mm_load_si128);
+	mask = __MCFCRT_xmmcmp_21b(s2v + 4, xz);
 	dist = (const unsigned char *)s2 - (arp2 - 32);
 	mask &= (uint32_t)-1 << dist;
 	s2z = (mask != 0) || (arp2 >= (const unsigned char *)s2 + n);
-	switch(align){
-#define CASE(k_)	\
-	case (k_):	\
-		BEGIN(0, k_)	\
-		dist = (const unsigned char *)s1 - (arp1 - 32);	\
-		mask &= (uint32_t)-1 << dist;	\
-		for(;;){	\
-			END	\
-			BEGIN(2, k_)	\
-			END	\
-			BEGIN(4, k_)	\
-			END	\
-			BEGIN(0, k_)	\
-		}
-	// 两个位于区间 [0,31] 的数相减，结果位于区间 ［-31,31]；加上 32，结果位于区间 [1,63]。
-	           CASE(001)  CASE(002)  CASE(003)  CASE(004)  CASE(005)  CASE(006)  CASE(007)
-	CASE(010)  CASE(011)  CASE(012)  CASE(013)  CASE(014)  CASE(015)  CASE(016)  CASE(017)
-	CASE(020)  CASE(021)  CASE(022)  CASE(023)  CASE(024)  CASE(025)  CASE(026)  CASE(027)
-	CASE(030)  CASE(031)  CASE(032)  CASE(033)  CASE(034)  CASE(035)  CASE(036)  CASE(037)
-	CASE(040)  CASE(041)  CASE(042)  CASE(043)  CASE(044)  CASE(045)  CASE(046)  CASE(047)
-	CASE(050)  CASE(051)  CASE(052)  CASE(053)  CASE(054)  CASE(055)  CASE(056)  CASE(057)
-	CASE(060)  CASE(061)  CASE(062)  CASE(063)  CASE(064)  CASE(065)  CASE(066)  CASE(067)
-	CASE(070)  CASE(071)  CASE(072)  CASE(073)  CASE(074)  CASE(075)  CASE(076)  CASE(077)
-	default:
-		__builtin_trap();
+	BEGIN
+	dist = (const unsigned char *)s1 - (arp1 - 32);
+	mask &= (uint32_t)-1 << dist;
+	for(;;){
+		END
+		BEGIN
 	}
 end_trunc:
 	mask |= ~((uint32_t)-1 >> dist);

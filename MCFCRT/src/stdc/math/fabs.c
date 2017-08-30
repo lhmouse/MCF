@@ -14,7 +14,7 @@ float fabsf(float x){
 #ifdef _WIN64
 	static const uint32_t mmask = (1ull << 31) - 1;
 	__asm__ (
-		"movss xmm1, dword ptr[%2] \n"
+		"movss xmm1, %2 \n"
 		"andps xmm0, xmm1 \n"
 		: "=Yz"(ret)
 		: "0"(x), "m"(mmask)
@@ -30,7 +30,7 @@ double fabs(double x){
 #ifdef _WIN64
 	static const uint64_t mmask = (1ull << 63) - 1;
 	__asm__ (
-		"movsd xmm1, qword ptr[%2] \n"
+		"movsd xmm1, %2 \n"
 		"andpd xmm0, xmm1 \n"
 		: "=Yz"(ret)
 		: "0"(x), "m"(mmask)

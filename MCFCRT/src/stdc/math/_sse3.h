@@ -11,7 +11,7 @@ _MCFCRT_EXTERN_C_BEGIN
 
 static inline void __MCFCRT_fisttp(int *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
-		"fisttp dword ptr[%0] \n"
+		"fisttp %0 \n"
 		: "=m"(*__p)
 		: "t"(__x)
 		: "st"
@@ -19,7 +19,7 @@ static inline void __MCFCRT_fisttp(int *__p, long double __x) _MCFCRT_NOEXCEPT {
 }
 static inline void __MCFCRT_fisttpl(long *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
-		"fisttp dword ptr[%0] \n"
+		"fisttp %0 \n"
 		: "=m"(*__p)
 		: "t"(__x)
 		: "st"
@@ -27,7 +27,7 @@ static inline void __MCFCRT_fisttpl(long *__p, long double __x) _MCFCRT_NOEXCEPT
 }
 static inline void __MCFCRT_fisttpll(long long *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
-		"fisttp qword ptr[%0] \n"
+		"fisttp %0 \n"
 		: "=m"(*__p)
 		: "t"(__x)
 		: "st"

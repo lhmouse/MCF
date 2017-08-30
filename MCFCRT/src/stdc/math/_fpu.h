@@ -87,7 +87,7 @@ static inline long double __MCFCRT_fchs(long double __x) _MCFCRT_NOEXCEPT {
 
 static inline void __MCFCRT_fistp(int *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
-		"fistp dword ptr[%0] \n"
+		"fistp %0 \n"
 		: "=m"(*__p)
 		: "t"(__x)
 		: "st"
@@ -95,7 +95,7 @@ static inline void __MCFCRT_fistp(int *__p, long double __x) _MCFCRT_NOEXCEPT {
 }
 static inline void __MCFCRT_fistpl(long *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
-		"fistp dword ptr[%0] \n"
+		"fistp %0 \n"
 		: "=m"(*__p)
 		: "t"(__x)
 		: "st"
@@ -103,7 +103,7 @@ static inline void __MCFCRT_fistpl(long *__p, long double __x) _MCFCRT_NOEXCEPT 
 }
 static inline void __MCFCRT_fistpll(long long *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
-		"fistp qword ptr[%0] \n"
+		"fistp %0 \n"
 		: "=m"(*__p)
 		: "t"(__x)
 		: "st"
@@ -123,15 +123,15 @@ static inline long double __MCFCRT_ftrunc(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	_MCFCRT_STD uint16_t __fcw;
 	__asm__ (
-		"fstcw word ptr[%1] \n"
-		"movzx ecx, word ptr[%1] \n"
+		"fstcw %1 \n"
+		"movzx ecx, %1 \n"
 		"mov edx, ecx \n"
 		"or edx, 0x0C00 \n"
-		"mov word ptr[%1], dx \n"
-		"fldcw word ptr[%1] \n"
+		"mov %1, dx \n"
+		"fldcw %1 \n"
 		"frndint \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
+		"mov %1, cx \n"
+		"fldcw %1 \n"
 		: "=&t"(__ret), "=m"(__fcw)
 		: "0"(__x)
 		: "cx", "dx"
@@ -142,16 +142,16 @@ static inline long double __MCFCRT_fceil(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	_MCFCRT_STD uint16_t __fcw;
 	__asm__ (
-		"fstcw word ptr[%1] \n"
-		"movzx ecx, word ptr[%1] \n"
+		"fstcw %1 \n"
+		"movzx ecx, %1 \n"
 		"mov edx, ecx \n"
 		"and edx, 0xF3FF \n"
 		"or edx, 0x0800 \n"
-		"mov word ptr[%1], dx \n"
-		"fldcw word ptr[%1] \n"
+		"mov %1, dx \n"
+		"fldcw %1 \n"
 		"frndint \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
+		"mov %1, cx \n"
+		"fldcw %1 \n"
 		: "=&t"(__ret), "=m"(__fcw)
 		: "0"(__x)
 		: "cx", "dx"
@@ -162,16 +162,16 @@ static inline long double __MCFCRT_ffloor(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	_MCFCRT_STD uint16_t __fcw;
 	__asm__ (
-		"fstcw word ptr[%1] \n"
-		"movzx ecx, word ptr[%1] \n"
+		"fstcw %1 \n"
+		"movzx ecx, %1 \n"
 		"mov edx, ecx \n"
 		"and edx, 0xF3FF \n"
 		"or edx, 0x0400 \n"
-		"mov word ptr[%1], dx \n"
-		"fldcw word ptr[%1] \n"
+		"mov %1, dx \n"
+		"fldcw %1 \n"
 		"frndint \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
+		"mov %1, cx \n"
+		"fldcw %1 \n"
 		: "=&t"(__ret), "=m"(__fcw)
 		: "0"(__x)
 		: "cx", "dx"

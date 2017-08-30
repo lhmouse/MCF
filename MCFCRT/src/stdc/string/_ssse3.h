@@ -10,7 +10,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-__attribute__((__selectany__))
+__attribute__((__selectany__, __aligned__(64)))
 #ifdef __cplusplus
 extern
 #endif

@@ -35,20 +35,11 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	mask &= (uint32_t)-1 << dist;
 	END
 	wp = (wchar_t *)_MCFCRT_rep_movsw(_MCFCRT_NULLPTR, (uint16_t *)wp, (const uint16_t *)rp, (size_t)(arp - rp));
-	if(((uintptr_t)wp & ~(uintptr_t)-16) == 0){
-		for(;;){
-			rp = arp;
-			BEGIN
-			END
-			wp = __MCFCRT_xmmstore_4(wp, xw, _mm_store_si128);
-		}
-	} else {
-		for(;;){
-			rp = arp;
-			BEGIN
-			END
-			wp = __MCFCRT_xmmstore_4(wp, xw, _mm_storeu_si128);
-		}
+	for(;;){
+		rp = arp;
+		BEGIN
+		END
+		wp = __MCFCRT_xmmstore_4(wp, xw, _mm_storeu_si128);
 	}
 end:
 //	__asm__ volatile ("" : "+c"(dist));

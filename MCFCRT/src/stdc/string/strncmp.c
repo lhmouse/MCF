@@ -28,7 +28,7 @@ int strncmp(const char *s1, const char *s2, size_t n){
 #define BEGIN	\
 	arp1 = __MCFCRT_xmmload_2(xw, arp1, _mm_load_si128);	\
 	for(unsigned i = 0; i < 4; i += 2){	\
-	__MCFCRT_xmmload_2(s2v + i, s2v + i + 2, _mm_load_si128);	\
+		__MCFCRT_xmmload_2(s2v + i, s2v + i + 2, _mm_load_si128);	\
 	}	\
 	if(_MCFCRT_EXPECT(!s2z)){	\
 		arp2 = __MCFCRT_xmmload_2(s2v + 4, arp2, _mm_load_si128);	\

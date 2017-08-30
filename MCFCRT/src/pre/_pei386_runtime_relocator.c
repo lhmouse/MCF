@@ -125,8 +125,8 @@ static void RealRelocateV2(const DWORD *pdwTable, const DWORD *pdwTableEnd){
 	}
 }
 
-extern DWORD __RUNTIME_PSEUDO_RELOC_LIST__;
-extern DWORD __RUNTIME_PSEUDO_RELOC_LIST_END__;
+extern const DWORD __RUNTIME_PSEUDO_RELOC_LIST__[];
+extern const DWORD __RUNTIME_PSEUDO_RELOC_LIST_END__[];
 
 void _pei386_runtime_relocator(void){
 	static bool s_bRelocated = false;
@@ -136,8 +136,8 @@ void _pei386_runtime_relocator(void){
 	}
 	s_bRelocated = true;
 
-	const DWORD *const pdwBegin = &__RUNTIME_PSEUDO_RELOC_LIST__;
-	const DWORD *const pdwEnd   = &__RUNTIME_PSEUDO_RELOC_LIST_END__;
+	const DWORD *const pdwBegin = __RUNTIME_PSEUDO_RELOC_LIST__;
+	const DWORD *const pdwEnd   = __RUNTIME_PSEUDO_RELOC_LIST_END__;
 	const size_t uDwordCount    = (size_t)(pdwEnd - pdwBegin);
 
 	const DWORD *pdwTable = _MCFCRT_NULLPTR;

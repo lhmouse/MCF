@@ -34,11 +34,11 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	for(std::size_t i = 0; i < len; ++i){
 		s1b[i] = s2b[i] = (Char)(i | 1);
 	}
-	s1e[-2] = '\xFF';
+	s1e[-2] = (Char)0x1234;
 	s1b[len - 1] = s2b[len - 1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcsncmp"_nsv;
+		const auto fname = "wcscmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const Char *, const Char *, std::size_t)>(fname);

@@ -7,120 +7,121 @@
 #include "../env/bail.h"
 #include "../ext/alloca.h"
 
-static size_t GetAllSections(const void **ppSectionTable){
-	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	if(pImageBase->e_magic != IMAGE_DOS_SIGNATURE){
+static size_t get_all_sections(const IMAGE_SECTION_HEADER **sections_ret){
+	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
+	if(img_base->e_magic != IMAGE_DOS_SIGNATURE){
 		return 0;
 	}
-	const IMAGE_NT_HEADERS *const pNtHeaders = (const IMAGE_NT_HEADERS *)((char *)pImageBase + pImageBase->e_lfanew);
-	if(pNtHeaders->Signature != IMAGE_NT_SIGNATURE){
+	const IMAGE_NT_HEADERS *const nt_hdr = (const IMAGE_NT_HEADERS *)((char *)img_base + img_base->e_lfanew);
+	if(nt_hdr->Signature != IMAGE_NT_SIGNATURE){
 		return 0;
 	}
-	*ppSectionTable = (const char *)&pNtHeaders->OptionalHeader + pNtHeaders->FileHeader.SizeOfOptionalHeader;
-	return pNtHeaders->FileHeader.NumberOfSections;
+	*sections_ret = (const IMAGE_SECTION_HEADER *)((const char *)&(nt_hdr->OptionalHeader) + nt_hdr->FileHeader.SizeOfOptionalHeader);
+	return nt_hdr->FileHeader.NumberOfSections;
 }
 
-typedef struct tagUnprotectedSection {
-	void *pBase;
-	size_t uSize;
-	DWORD dwOldProtect;
-} UnprotectedSection;
+static inline DWORD get_protect_new(DWORD protect_old){
+	switch(protect_old & 0xFF){
+	case PAGE_EXECUTE:
+	case PAGE_EXECUTE_READ:
+	case PAGE_EXECUTE_READWRITE:
+		return PAGE_EXECUTE_READWRITE;
+	case PAGE_EXECUTE_WRITECOPY:
+		return PAGE_EXECUTE_WRITECOPY;
+	case PAGE_NOACCESS:
+		return PAGE_NOACCESS;
+	case PAGE_READONLY:
+	case PAGE_READWRITE:
+		return PAGE_READWRITE;
+	case PAGE_WRITECOPY:
+		return PAGE_WRITECOPY;
+	default:
+		return PAGE_NOACCESS;
+	}
+}
 
-static void UnprotectAllSections(UnprotectedSection *restrict pUnprotectedSections, const void *restrict pSectionTable, size_t uSectionCount){
-	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	for(size_t uIndex = 0; uIndex < uSectionCount; ++uIndex){
-		UnprotectedSection *const pUnprotected = pUnprotectedSections + uIndex;
-		const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pSectionTable + uIndex;
-		void *const pBase = (char *)pImageBase + pHeader->VirtualAddress;
-		const size_t uSize = pHeader->Misc.VirtualSize;
+typedef struct tag_unprotect_result {
+	void *base;
+	size_t size;
+	DWORD protect_old;
+} unprotect_result;
 
-		MEMORY_BASIC_INFORMATION vMemInfo;
-		if(VirtualQuery(pBase, &vMemInfo, sizeof(vMemInfo)) < sizeof(vMemInfo)){
+static void unprotect_sections(unprotect_result *restrict results, const IMAGE_SECTION_HEADER *sections, size_t count){
+	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
+	for(size_t i = 0; i < count; ++i){
+		void *const base = (char *)img_base + sections[i].VirtualAddress;
+		const size_t size = sections[i].Misc.VirtualSize;
+
+		MEMORY_BASIC_INFORMATION info;
+		if(VirtualQuery(base, &info, sizeof(info)) < sizeof(info)){
 			_MCFCRT_Bail(L"VirtualQuery() 失败。");
 		}
-		const DWORD dwOldProtect = vMemInfo.Protect;
-		DWORD dwNewProtect;
-		switch(dwOldProtect & 0xFF){
-		case PAGE_EXECUTE:
-		case PAGE_EXECUTE_READ:
-		case PAGE_EXECUTE_READWRITE:
-			dwNewProtect = PAGE_EXECUTE_READWRITE;
-			break;
-		case PAGE_EXECUTE_WRITECOPY:
-			dwNewProtect = PAGE_EXECUTE_WRITECOPY;
-			break;
-		case PAGE_NOACCESS:
-			dwNewProtect = PAGE_NOACCESS;
-			break;
-		case PAGE_READONLY:
-		case PAGE_READWRITE:
-			dwNewProtect = PAGE_READWRITE;
-			break;
-		case PAGE_WRITECOPY:
-			dwNewProtect = PAGE_WRITECOPY;
-			break;
-		default:
-			dwNewProtect = PAGE_NOACCESS;
-			break;
+		DWORD protect_old = info.Protect;
+		DWORD protect_new = get_protect_new(protect_old);
+		if(protect_new == protect_old){
+			results[i].base = _MCFCRT_NULLPTR;
+			continue;
 		}
-		if(dwOldProtect == dwNewProtect){
-			pUnprotected->pBase = _MCFCRT_NULLPTR;
-			pUnprotected->uSize = 0;
-		} else {
-			if(!VirtualProtect(pBase, uSize, dwNewProtect, &(pUnprotected->dwOldProtect))){
-				_MCFCRT_Bail(L"VirtualProtect() 失败。");
-			}
-			pUnprotected->pBase = pBase;
-			pUnprotected->uSize = uSize;
+		if(!VirtualProtect(base, size, protect_new, &protect_old)){
+			_MCFCRT_Bail(L"VirtualProtect() 失败。");
 		}
+		results[i].base        = base;
+		results[i].size        = size;
+		results[i].protect_old = protect_old;
 	}
 }
-static void ReprotectAllSections(const UnprotectedSection *restrict pUnprotectedSections, size_t uSectionCount){
-	for(size_t uIndex = 0; uIndex < uSectionCount; ++uIndex){
-		const UnprotectedSection *const pUnprotected = pUnprotectedSections + uIndex;
-		void *const pBase = pUnprotected->pBase;
-		const size_t uSize = pUnprotected->uSize;
 
-		if(pBase){
-			DWORD dwUnused;
-			if(!VirtualProtect(pBase, uSize, pUnprotected->dwOldProtect, &dwUnused)){
-				_MCFCRT_Bail(L"VirtualProtect() 失败。");
-			}
+static void reprotect_sections(const unprotect_result *restrict results, size_t count){
+	for(size_t i = 0; i < count; ++i){
+		void *const base = results[i].base;
+		const size_t size = results[i].size;
+
+		if(!base){
+			continue;
+		}
+		DWORD protect_old;
+		DWORD protect_new = results[i].protect_old;
+		if(!VirtualProtect(base, size, protect_new, &protect_old)){
+			_MCFCRT_Bail(L"VirtualProtect() 失败。");
 		}
 	}
 }
 
 #define WHY_DO_WE_NEED_INTEGER_PROMOTION(type_, ptr_, add_)      (*(type_ *)(ptr_) = (type_)(*(type_ *)(ptr_) + (type_)(add_)))
 
-static void RealRelocateV1(const DWORD *pdwTable, const DWORD *pdwTableEnd){
-	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	for(const DWORD *pdwBase = pdwTable; pdwBase < pdwTableEnd; pdwBase += 2){
-		const DWORD dwAddend = pdwBase[0];
-		void *const pTarget = (char *)pImageBase + pdwBase[1];
+static void really_relocate_v1(const DWORD *table, const DWORD *end){
+	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
+	for(const DWORD *cur = table; cur < end; cur += 2){
+		const DWORD add = cur[0];
+		void *const target = (char *)img_base + cur[1];
 
-		WHY_DO_WE_NEED_INTEGER_PROMOTION(DWORD, pTarget, dwAddend);
+		WHY_DO_WE_NEED_INTEGER_PROMOTION(DWORD, target, add);
 	}
 }
 
-static void RealRelocateV2(const DWORD *pdwTable, const DWORD *pdwTableEnd){
-	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	for(const DWORD *pdwBase = pdwTable; pdwBase < pdwTableEnd; pdwBase += 3){
-		const void *const pSymbol = (char *)pImageBase + pdwBase[0];
-		const ptrdiff_t nAddend = (char *)*(void **)pSymbol - (char *)pSymbol;
-		void *const pTarget = (char *)pImageBase + pdwBase[1];
-		const DWORD dwFlags = pdwBase[2];
+static void really_relocate_v2(const DWORD *table, const DWORD *end){
+	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
+	for(const DWORD *cur = table; cur < end; cur += 3){
+		const void *const symbol = (char *)img_base + cur[0];
+		const ptrdiff_t add = (char *)*(void **)symbol - (char *)symbol;
+		void *const target = (char *)img_base + cur[1];
+		const DWORD flags = cur[2];
 
-		const unsigned uBlockSize = dwFlags & 0xFF;
-		if(uBlockSize == 8){
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT8 , pTarget, nAddend);
-		} else if(uBlockSize == 16){
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT16, pTarget, nAddend);
-		} else if(uBlockSize == 32){
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT32, pTarget, nAddend);
-		} else if(uBlockSize == 64){
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT64, pTarget, nAddend);
-		} else {
-			_MCFCRT_Bail(L"RealRelocateV2() 失败：重定位块大小无效。");
+		switch(flags & 0xFF){
+		case 8:
+			WHY_DO_WE_NEED_INTEGER_PROMOTION( UINT8, target, add);
+			break;
+		case 16:
+			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT16, target, add);
+			break;
+		case 32:
+			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT32, target, add);
+			break;
+		case 64:
+			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT64, target, add);
+			break;
+		default:
+			_MCFCRT_Bail(L"really_relocate_v2() 失败：重定位块大小无效。");
 		}
 	}
 }
@@ -129,43 +130,42 @@ extern const DWORD __RUNTIME_PSEUDO_RELOC_LIST__[];
 extern const DWORD __RUNTIME_PSEUDO_RELOC_LIST_END__[];
 
 void _pei386_runtime_relocator(void){
-	static bool s_bRelocated = false;
+	static bool s_relocated = false;
 
-	if(s_bRelocated){
+	if(s_relocated){
 		return;
 	}
-	s_bRelocated = true;
+	s_relocated = true;
 
-	const DWORD *const pdwBegin = __RUNTIME_PSEUDO_RELOC_LIST__;
-	const DWORD *const pdwEnd   = __RUNTIME_PSEUDO_RELOC_LIST_END__;
-	const size_t uDwordCount    = (size_t)(pdwEnd - pdwBegin);
+	const DWORD *table = _MCFCRT_NULLPTR;
+	unsigned version = 0;
 
-	const DWORD *pdwTable = _MCFCRT_NULLPTR;
-	unsigned uVersion = 0;
-
-	if((uDwordCount >= 2) && ((pdwBegin[0] != 0) || (pdwBegin[1] != 0))){
-		pdwTable = pdwBegin;
-		uVersion = 0;
-	} else if(uDwordCount >= 3){
-		pdwTable = pdwBegin + 3;
-		uVersion = pdwBegin[2];
+	const DWORD *const begin = __RUNTIME_PSEUDO_RELOC_LIST__;
+	const DWORD *const end   = __RUNTIME_PSEUDO_RELOC_LIST_END__;
+	if((end - begin >= 2) && ((begin[0] != 0) || (begin[1] != 0))){
+		table = begin;
+		version = 0;
+	} else if(end - begin >= 3){
+		table = begin + 3;
+		version = begin[2];
 	}
-	if(!pdwTable){
+	if(!table){
 		return;
 	}
 
-	const void *pSectionTable = _MCFCRT_NULLPTR;
-	const size_t uSectionCount = GetAllSections(&pSectionTable);
-	UnprotectedSection *const pUnprotectedSections = _MCFCRT_ALLOCA(uSectionCount * sizeof(UnprotectedSection));
-	UnprotectAllSections(pUnprotectedSections, pSectionTable, uSectionCount);
-	{
-		if(uVersion == 0){
-			RealRelocateV1(pdwTable, pdwEnd);
-		} else if(uVersion == 1){
-			RealRelocateV2(pdwTable, pdwEnd);
-		} else {
-			_MCFCRT_Bail(L"_pei386_runtime_relocator() 失败：无法识别的重定位表。");
-		}
+	const IMAGE_SECTION_HEADER *sections;
+	const size_t count = get_all_sections(&sections);
+	unprotect_result *const results = _MCFCRT_ALLOCA(count * sizeof(unprotect_result));
+	unprotect_sections(results, sections, count);
+	switch(version){
+	case 0:
+		really_relocate_v1(table, end);
+		break;
+	case 1:
+		really_relocate_v2(table, end);
+		break;
+	default:
+		_MCFCRT_Bail(L"_pei386_runtime_relocator() 失败：无法识别的重定位表。");
 	}
-	ReprotectAllSections(pUnprotectedSections, uSectionCount);
+	reprotect_sections(results, count);
 }

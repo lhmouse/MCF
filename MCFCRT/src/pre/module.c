@@ -12,7 +12,8 @@ extern void __MCFCRT_libsupcxx_cleanup(void);
 
 typedef void (*Pvfv)(void);
 
-extern const Pvfv __CTOR_LIST__[], __DTOR_LIST__[];
+extern const Pvfv __CTOR_LIST__[];
+extern const Pvfv __DTOR_LIST__[];
 
 static void RunGlobalConstructors(void){
 	const Pvfv *ppfnBegin, *ppfnEnd;

@@ -7,12 +7,16 @@
 
 #include "_crtdef.h"
 
+#ifndef __MCFCRT_CLOCKS_INLINE_OR_EXTERN
+#  define __MCFCRT_CLOCKS_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
+
 _MCFCRT_EXTERN_C_BEGIN
 
-static inline _MCFCRT_STD uint32_t _MCFCRT_ReadTimeStampCounter32(void) _MCFCRT_NOEXCEPT {
+__MCFCRT_CLOCKS_INLINE_OR_EXTERN _MCFCRT_STD uint32_t _MCFCRT_ReadTimeStampCounter32(void) _MCFCRT_NOEXCEPT {
 	return (_MCFCRT_STD uint32_t)__builtin_ia32_rdtsc();
 }
-static inline _MCFCRT_STD uint64_t _MCFCRT_ReadTimeStampCounter64(void) _MCFCRT_NOEXCEPT {
+__MCFCRT_CLOCKS_INLINE_OR_EXTERN _MCFCRT_STD uint64_t _MCFCRT_ReadTimeStampCounter64(void) _MCFCRT_NOEXCEPT {
 	return __builtin_ia32_rdtsc();
 }
 

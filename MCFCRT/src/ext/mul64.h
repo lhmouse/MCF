@@ -13,13 +13,13 @@ static inline _MCFCRT_STD int64_t __MCFCRT_imul64_nonconstexpr(_MCFCRT_STD int32
 	_MCFCRT_STD int64_t __product;
 	__asm__(
 #ifdef _WIN64
-		"imul rcx \n"
+		"imul %2 \n"
 		: "=a"(__product)
-		: "a"((_MCFCRT_STD int64_t)__a), "c"((_MCFCRT_STD int64_t)__b)
+		: "a"((_MCFCRT_STD int64_t)__a), "rm"((_MCFCRT_STD int64_t)__b)
 #else
-		"imul ecx \n"
+		"imul %2 \n"
 		: "=A"(__product)
-		: "a"((_MCFCRT_STD int32_t)__a), "c"((_MCFCRT_STD int32_t)__b)
+		: "a"((_MCFCRT_STD int32_t)__a), "rm"((_MCFCRT_STD int32_t)__b)
 #endif
 	);
 	return __product;
@@ -34,13 +34,13 @@ static inline _MCFCRT_STD uint64_t __MCFCRT_umul64_nonconstexpr(_MCFCRT_STD uint
 	_MCFCRT_STD uint64_t __product;
 	__asm__(
 #ifdef _WIN64
-		"mul rcx \n"
+		"mul %2 \n"
 		: "=a"(__product)
-		: "a"((_MCFCRT_STD uint64_t)__a), "c"((_MCFCRT_STD uint64_t)__b)
+		: "a"((_MCFCRT_STD uint64_t)__a), "rm"((_MCFCRT_STD uint64_t)__b)
 #else
-		"mul ecx \n"
+		"mul %2 \n"
 		: "=A"(__product)
-		: "a"((_MCFCRT_STD uint32_t)__a), "c"((_MCFCRT_STD uint32_t)__b)
+		: "a"((_MCFCRT_STD uint32_t)__a), "rm"((_MCFCRT_STD uint32_t)__b)
 #endif
 	);
 	return __product;

@@ -7,10 +7,6 @@
 
 #include "../env/_crtdef.h"
 
-#ifndef __MCFCRT_REP_CMPS_INLINE_OR_EXTERN
-#  define __MCFCRT_REP_CMPS_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
-#endif
-
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_CMPS_DEFINE(__name_, __mnemonic_, __type_)	\
@@ -32,18 +28,18 @@ _MCFCRT_EXTERN_C_BEGIN
 		return __z ? 0 : (__b ? -1 : 1);	\
 	}
 
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsb,  "repz cmpsb", _MCFCRT_STD  uint8_t)
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsw,  "repz cmpsw", _MCFCRT_STD uint16_t)
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsd,  "repz cmpsd", _MCFCRT_STD uint32_t)
+static inline __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsb,  "repz cmpsb", _MCFCRT_STD  uint8_t)
+static inline __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsw,  "repz cmpsw", _MCFCRT_STD uint16_t)
+static inline __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsd,  "repz cmpsd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsq,  "repz cmpsq", _MCFCRT_STD uint64_t)
+static inline __MCFCRT_REP_CMPS_DEFINE( _MCFCRT_repz_cmpsq,  "repz cmpsq", _MCFCRT_STD uint64_t)
 #endif
 
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsb, "repnz cmpsb", _MCFCRT_STD  uint8_t)
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsw, "repnz cmpsw", _MCFCRT_STD uint16_t)
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsd, "repnz cmpsd", _MCFCRT_STD uint32_t)
+static inline __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsb, "repnz cmpsb", _MCFCRT_STD  uint8_t)
+static inline __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsw, "repnz cmpsw", _MCFCRT_STD uint16_t)
+static inline __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsd, "repnz cmpsd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-__MCFCRT_REP_CMPS_INLINE_OR_EXTERN __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsq, "repnz cmpsq", _MCFCRT_STD uint64_t)
+static inline __MCFCRT_REP_CMPS_DEFINE(_MCFCRT_repnz_cmpsq, "repnz cmpsq", _MCFCRT_STD uint64_t)
 #endif
 
 _MCFCRT_EXTERN_C_END

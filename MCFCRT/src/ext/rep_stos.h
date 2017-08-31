@@ -7,10 +7,6 @@
 
 #include "../env/_crtdef.h"
 
-#ifndef __MCFCRT_REP_STOS_INLINE_OR_EXTERN
-#  define __MCFCRT_REP_STOS_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
-#endif
-
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_STOS_DEFINE(__name_, __mnemonic_, __type_)	\
@@ -25,11 +21,11 @@ _MCFCRT_EXTERN_C_BEGIN
 		return __p;	\
 	}
 
-__MCFCRT_REP_STOS_INLINE_OR_EXTERN __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosb, "rep stosb", _MCFCRT_STD  uint8_t)
-__MCFCRT_REP_STOS_INLINE_OR_EXTERN __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosw, "rep stosw", _MCFCRT_STD uint16_t)
-__MCFCRT_REP_STOS_INLINE_OR_EXTERN __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosd, "rep stosd", _MCFCRT_STD uint32_t)
+static inline __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosb, "rep stosb", _MCFCRT_STD  uint8_t)
+static inline __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosw, "rep stosw", _MCFCRT_STD uint16_t)
+static inline __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosd, "rep stosd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-__MCFCRT_REP_STOS_INLINE_OR_EXTERN __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosq, "rep stosq", _MCFCRT_STD uint64_t)
+static inline __MCFCRT_REP_STOS_DEFINE(_MCFCRT_rep_stosq, "rep stosq", _MCFCRT_STD uint64_t)
 #endif
 
 _MCFCRT_EXTERN_C_END

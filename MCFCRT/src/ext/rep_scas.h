@@ -7,10 +7,6 @@
 
 #include "../env/_crtdef.h"
 
-#ifndef __MCFCRT_REP_SCAS_INLINE_OR_EXTERN
-#  define __MCFCRT_REP_SCAS_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
-#endif
-
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_SCAS_DEFINE(__name_, __mnemonic_, __type_)	\
@@ -28,18 +24,18 @@ _MCFCRT_EXTERN_C_BEGIN
 		return __z ? 0 : (__b ? -1 : 1);	\
 	}
 
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasb,  "repz scasb", _MCFCRT_STD  uint8_t)
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasw,  "repz scasw", _MCFCRT_STD uint16_t)
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasd,  "repz scasd", _MCFCRT_STD uint32_t)
+static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasb,  "repz scasb", _MCFCRT_STD  uint8_t)
+static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasw,  "repz scasw", _MCFCRT_STD uint16_t)
+static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasd,  "repz scasd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasq,  "repz scasq", _MCFCRT_STD uint64_t)
+static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasq,  "repz scasq", _MCFCRT_STD uint64_t)
 #endif
 
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasb, "repnz scasb", _MCFCRT_STD  uint8_t)
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasw, "repnz scasw", _MCFCRT_STD uint16_t)
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasd, "repnz scasd", _MCFCRT_STD uint32_t)
+static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasb, "repnz scasb", _MCFCRT_STD  uint8_t)
+static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasw, "repnz scasw", _MCFCRT_STD uint16_t)
+static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasd, "repnz scasd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-__MCFCRT_REP_SCAS_INLINE_OR_EXTERN __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasq, "repnz scasq", _MCFCRT_STD uint64_t)
+static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasq, "repnz scasq", _MCFCRT_STD uint64_t)
 #endif
 
 _MCFCRT_EXTERN_C_END

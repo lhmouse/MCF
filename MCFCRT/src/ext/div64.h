@@ -14,13 +14,13 @@ static inline _MCFCRT_STD int32_t __MCFCRT_idiv64_nonconstexpr(_MCFCRT_STD int32
 	__asm__ (
 #ifdef _WIN64
 		"cqo \n"
-		"idiv rcx \n"
+		"idiv %3 \n"
 		: "=a"(__quo), "=d"(__rem)
-		: "a"(__a), "c"((_MCFCRT_STD int64_t)__b)
+		: "a"(__a), "rm"((_MCFCRT_STD int64_t)__b)
 #else
-		"idiv ecx \n"
+		"idiv %3 \n"
 		: "=a"(__quo), "=d"(__rem)
-		: "A"(__a), "c"(__b)
+		: "A"(__a), "rm"(__b)
 #endif
 	);
 	if(__rem_ret){
@@ -43,13 +43,13 @@ static inline _MCFCRT_STD uint32_t __MCFCRT_udiv64_nonconstexpr(_MCFCRT_STD uint
 	__asm__ (
 #ifdef _WIN64
 		"xor rdx, rdx \n"
-		"div rcx \n"
+		"div %3 \n"
 		: "=a"(__quo), "=d"(__rem)
-		: "a"(__a), "c"((_MCFCRT_STD int64_t)__b)
+		: "a"(__a), "rm"((_MCFCRT_STD int64_t)__b)
 #else
-		"div ecx \n"
+		"div %3 \n"
 		: "=a"(__quo), "=d"(__rem)
-		: "A"(__a), "c"(__b)
+		: "A"(__a), "rm"(__b)
 #endif
 	);
 	if(__rem_ret){

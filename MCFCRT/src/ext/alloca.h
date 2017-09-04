@@ -9,11 +9,12 @@
 
 #define _MCFCRT_ALLOCA(__size_)	\
 	(__extension__({	\
-		const _MCFCRT_STD size_t __size = __size_;	\
+		const _MCFCRT_STD size_t __size = (__size_);	\
 		void *const __ptr = __builtin_alloca(__size);	\
 		for(_MCFCRT_STD size_t __offset = 0xFF0; __offset < __size; __offset += 0x1000){	\
-			((volatile int *)__ptr)[(__size - __offset) / sizeof(int)] = 0;	\
+			*((volatile char *)__ptr + __size - __offset) = 0;	\
 		}	\
+		*(volatile char *)__ptr = 0;	\
 		__ptr;	\
 	}))
 

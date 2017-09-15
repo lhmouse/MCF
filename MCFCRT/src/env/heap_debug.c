@@ -159,7 +159,7 @@ bool __MCFCRT_HeapDebugValidateAndUnregister(size_t *restrict puSize, void **res
 
 	_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pStorage);
 	// Leave the header alone in order to enable the unregistration to be reverted.
-	// Zero out the trailer so the storage can be passed to `HeapReAlloc()` with the `HEAP_ZERO_MEMORY` option without causing confusion .
+	// Zero out the trailer so the storage can be passed to `HeapReAlloc()` with the `HEAP_ZERO_MEMORY` option without causing confusion.
 	_MCFCRT_inline_mempset_fwd(pTrailer, 0, sizeof(*pTrailer));
 
 	*ppStorage = pStorage;

@@ -131,7 +131,6 @@ pkginclude_Streams_HEADERS = \
 	src/Streams/BufferInputStream.hpp	\
 	src/Streams/BufferOutputStream.hpp	\
 	src/Streams/Crc32OutputStream.hpp	\
-	src/Streams/Crc64OutputStream.hpp	\
 	src/Streams/FileInputStream.hpp	\
 	src/Streams/FileOutputStream.hpp	\
 	src/Streams/Fnv1a32OutputStream.hpp	\
@@ -186,7 +185,6 @@ mcf_sources = \
 	src/Streams/BufferInputStream.cpp	\
 	src/Streams/BufferOutputStream.cpp	\
 	src/Streams/Crc32OutputStream.cpp	\
-	src/Streams/Crc64OutputStream.cpp	\
 	src/Streams/FileInputStream.cpp	\
 	src/Streams/FileOutputStream.cpp	\
 	src/Streams/Fnv1a32OutputStream.cpp	\

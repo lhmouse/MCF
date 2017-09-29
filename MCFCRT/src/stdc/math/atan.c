@@ -15,7 +15,7 @@ static inline long double fpu_atan(long double x){
 	if(exam == __MCFCRT_kFpuExamineNaN){
 		return x;
 	}
-	return __MCFCRT_fpatan(x, __MCFCRT_fld1());
+	return __MCFCRT_fpatan(x, 1);
 }
 
 float atanf(float x){

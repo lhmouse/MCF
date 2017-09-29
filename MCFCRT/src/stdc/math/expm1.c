@@ -20,7 +20,7 @@ static inline long double fpu_expm1(long double x){
 	}
 	if(exam == __MCFCRT_kFpuExamineInfinity){
 		if(sign){
-			return __MCFCRT_fchs(__MCFCRT_fld1());
+			return __MCFCRT_fchs(1);
 		}
 		return x;
 	}
@@ -30,7 +30,7 @@ static inline long double fpu_expm1(long double x){
 	if(i == 0){
 		return __MCFCRT_f2xm1(m);
 	}
-	return __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1()) - __MCFCRT_fld1();
+	return __MCFCRT_fscale(1, i) * (__MCFCRT_f2xm1(m) + 1) - 1;
 }
 
 float expm1f(float x){

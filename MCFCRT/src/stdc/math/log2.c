@@ -15,7 +15,7 @@ static inline long double fpu_log2(long double x){
 	if(exam == __MCFCRT_kFpuExamineNaN){
 		return x;
 	}
-	return __MCFCRT_fyl2x(__MCFCRT_fld1(), x);
+	return __MCFCRT_fyl2x(1, x);
 }
 
 float log2f(float x){

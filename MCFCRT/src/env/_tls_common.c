@@ -79,7 +79,7 @@ typedef struct tagTlsObject {
 } TlsObject;
 
 static inline int TlsObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObjSelf, intptr_t nKeyOther){
-	const TlsObjectKey *const pIndexSelf = &((const TlsObject *)pObjSelf)->vObjectKey;
+	const TlsObjectKey *const pIndexSelf = &(((const TlsObject *)pObjSelf)->vObjectKey);
 	const TlsObjectKey *const pIndexOther = (const TlsObjectKey *)nKeyOther;
 	if(pIndexSelf->pKey != pIndexOther->pKey){
 		return (pIndexSelf->pKey < pIndexOther->pKey) ? -1 : 1;

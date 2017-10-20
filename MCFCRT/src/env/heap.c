@@ -31,6 +31,10 @@ static _MCFCRT_Mutex g_vMutex = { 0 };
 #endif
 
 void *__MCFCRT_HeapAlloc(size_t uNewSize, bool bFillsWithZero, const void *pRetAddrOuter){
+#ifdef __MCFCRT_HEAP_DEBUG
+	SetLastError(0xDEADBEEF);
+#endif
+
 	_MCFCRT_WaitForMutexForever(&g_vMutex, HEAP_DEBUG_MUTEX_SPIN_COUNT);
 	DWORD dwFlags = 0;
 	dwFlags |= bFillsWithZero * (DWORD)HEAP_ZERO_MEMORY;
@@ -55,6 +59,10 @@ void *__MCFCRT_HeapAlloc(size_t uNewSize, bool bFillsWithZero, const void *pRetA
 	return pNewBlock;
 }
 void *__MCFCRT_HeapRealloc(void *pOldBlock, size_t uNewSize, bool bFillsWithZero, const void *pRetAddrOuter){
+#ifdef __MCFCRT_HEAP_DEBUG
+	SetLastError(0xDEADBEEF);
+#endif
+
 	_MCFCRT_WaitForMutexForever(&g_vMutex, HEAP_DEBUG_MUTEX_SPIN_COUNT);
 	size_t uOldSize;
 	void *pOldStorage;
@@ -90,6 +98,10 @@ void *__MCFCRT_HeapRealloc(void *pOldBlock, size_t uNewSize, bool bFillsWithZero
 	return pNewBlock;
 }
 void __MCFCRT_HeapFree(void *pOldBlock, const void *pRetAddrOuter){
+#ifdef __MCFCRT_HEAP_DEBUG
+	SetLastError(0xDEADBEEF);
+#endif
+
 	_MCFCRT_WaitForMutexForever(&g_vMutex, HEAP_DEBUG_MUTEX_SPIN_COUNT);
 	size_t uOldSize;
 	void *pOldStorage;

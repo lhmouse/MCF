@@ -99,7 +99,7 @@ typedef struct tagTlsThreadMap {
 	struct tagTlsObject *pFirst; // By thread
 } TlsThreadMap;
 
-_MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void){
+__MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void){
 	TlsThreadMap *const pThreadMap = _MCFCRT_malloc(sizeof(TlsThreadMap));
 	if(!pThreadMap){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -109,9 +109,9 @@ _MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void){
 	pThreadMap->pLast      = _MCFCRT_NULLPTR;
 	pThreadMap->pFirst     = _MCFCRT_NULLPTR;
 
-	return (_MCFCRT_TlsThreadMapHandle)pThreadMap;
+	return (__MCFCRT_TlsThreadMapHandle)pThreadMap;
 }
-void __MCFCRT_InternalTlsDestroyThreadMap(_MCFCRT_TlsThreadMapHandle hThreadMap){
+void __MCFCRT_InternalTlsDestroyThreadMap(__MCFCRT_TlsThreadMapHandle hThreadMap){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	if(!pThreadMap){
 		return;
@@ -147,7 +147,7 @@ void __MCFCRT_InternalTlsDestroyThreadMap(_MCFCRT_TlsThreadMapHandle hThreadMap)
 	_MCFCRT_free(pThreadMap);
 }
 
-bool __MCFCRT_InternalTlsGet(_MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
+bool __MCFCRT_InternalTlsGet(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	_MCFCRT_ASSERT(pThreadMap);
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
@@ -162,7 +162,7 @@ bool __MCFCRT_InternalTlsGet(_MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsK
 	*ppStorage = pObject->abyStorage;
 	return true;
 }
-bool __MCFCRT_InternalTlsRequire(_MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
+bool __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	_MCFCRT_ASSERT(pThreadMap);
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
@@ -243,7 +243,7 @@ static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
 	}
 }
 
-bool __MCFCRT_InternalAtThreadExit(_MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
+bool __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	_MCFCRT_ASSERT(pThreadMap);
 

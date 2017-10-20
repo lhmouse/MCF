@@ -22,18 +22,18 @@ extern _MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(_MCFCRT_TlsKeyHandle __h
 extern _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 
-typedef struct __MCFCRT_tagTlsThreadMapHandle { int __n; } *_MCFCRT_TlsThreadMapHandle;
+typedef struct __MCFCRT_tagTlsThreadMapHandle { int __n; } *__MCFCRT_TlsThreadMapHandle;
 
-extern _MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_InternalTlsDestroyThreadMap(_MCFCRT_TlsThreadMapHandle __hThreadMap) _MCFCRT_NOEXCEPT;
+extern __MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_InternalTlsDestroyThreadMap(__MCFCRT_TlsThreadMapHandle __hThreadMap) _MCFCRT_NOEXCEPT;
 
-extern bool __MCFCRT_InternalTlsGet(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_InternalTlsRequire(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InternalTlsGet(__MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
 
 // Thread exit callbacks are thread-local anyway...
 typedef void (*_MCFCRT_AtThreadExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
-extern bool __MCFCRT_InternalAtThreadExit(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_AtThreadExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_AtThreadExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

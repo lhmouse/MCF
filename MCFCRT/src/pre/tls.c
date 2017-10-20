@@ -31,7 +31,7 @@ void __MCFCRT_TlsCleanup(void){
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	_MCFCRT_ASSERT(dwTlsIndex != TLS_OUT_OF_INDEXES);
 
-	_MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
+	__MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
 	if(!hThreadMap){
 		return;
 	}
@@ -49,7 +49,7 @@ bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	*ppStorage = (void *)0xDEADBEEF;
 #endif
 
-	_MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
+	__MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
 	if(!hThreadMap){
 		return false;
 	}
@@ -63,7 +63,7 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	*ppStorage = (void *)0xDEADBEEF;
 #endif
 
-	_MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
+	__MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
 	if(!hThreadMap){
 		hThreadMap = __MCFCRT_InternalTlsCreateThreadMap();
 		if(!hThreadMap){
@@ -83,7 +83,7 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	_MCFCRT_ASSERT(dwTlsIndex != TLS_OUT_OF_INDEXES);
 
-	_MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
+	__MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
 	if(!hThreadMap){
 		hThreadMap = __MCFCRT_InternalTlsCreateThreadMap();
 		if(!hThreadMap){

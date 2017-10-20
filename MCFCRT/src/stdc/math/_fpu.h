@@ -251,7 +251,7 @@ static inline long double __MCFCRT_fcos_unsafe(long double __x) _MCFCRT_NOEXCEPT
 	);
 	return __ret;
 }
-static inline void __MCFCRT_fsincos_unsafe(long double *__sinx, long double *__cosx, long double __x) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_fsincos_unsafe(long double *_MCFCRT_RESTRICT __sinx, long double *_MCFCRT_RESTRICT __cosx, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
 		"fsincos \n"
 		: "=&t"(*__cosx), "=&u"(*__sinx)

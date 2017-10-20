@@ -73,7 +73,6 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	size_t uThunkSize = uSize + 8;
 	uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
 	if(uThunkSize < uSize){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return _MCFCRT_NULLPTR;
 	}
 
@@ -92,7 +91,6 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			pInfo = _MCFCRT_malloc(sizeof(ThunkInfo));
 			if(!pInfo){
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return _MCFCRT_NULLPTR;
 			}
 			size_t uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
@@ -103,7 +101,6 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			if(!pChunk){
 				_MCFCRT_free(pInfo);
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return _MCFCRT_NULLPTR;
 			}
 			pInfo->pChunk     = pChunk;
@@ -133,7 +130,6 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 					_MCFCRT_free(pInfo);
 				}
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return _MCFCRT_NULLPTR;
 			}
 			pSpare->pChunk     = pInfo->pChunk;

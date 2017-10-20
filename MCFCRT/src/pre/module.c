@@ -61,6 +61,6 @@ void __MCFCRT_ModuleUninit(void){
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){
-	__MCFCRT_AtExitElement vElement = { pfnProc, nContext };
+	const __MCFCRT_AtExitElement vElement = { pfnProc, nContext };
 	return __MCFCRT_AtExitQueuePush(&g_vAtExitQueue, &vElement);
 }

@@ -27,13 +27,13 @@ typedef struct __MCFCRT_tagTlsThreadMapHandle { int __n; } *_MCFCRT_TlsThreadMap
 extern _MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_InternalTlsDestroyThreadMap(_MCFCRT_TlsThreadMapHandle __hThreadMap) _MCFCRT_NOEXCEPT;
 
-extern void __MCFCRT_InternalTlsGet(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
-extern unsigned long __MCFCRT_InternalTlsRequire(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InternalTlsGet(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InternalTlsRequire(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_TlsKeyHandle __hTlsKey, void **_MCFCRT_RESTRICT __ppStorage) _MCFCRT_NOEXCEPT;
 
 // Thread exit callbacks are thread-local anyway...
 typedef void (*_MCFCRT_AtThreadExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
-extern unsigned long __MCFCRT_InternalAtThreadExit(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_AtThreadExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_InternalAtThreadExit(_MCFCRT_TlsThreadMapHandle __hThreadMap, _MCFCRT_AtThreadExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

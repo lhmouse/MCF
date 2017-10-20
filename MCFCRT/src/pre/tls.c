@@ -45,14 +45,15 @@ bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	_MCFCRT_ASSERT(dwTlsIndex != TLS_OUT_OF_INDEXES);
 
+#ifndef NDEBUG
+	*ppStorage = (void *)0xDEADBEEF;
+#endif
+
 	_MCFCRT_TlsThreadMapHandle hThreadMap = TlsGetValue(dwTlsIndex);
 	if(!hThreadMap){
-		// This function always succeeds.
-		*ppStorage = _MCFCRT_NULLPTR;
-		return true;
+		return false;
 	}
-	__MCFCRT_InternalTlsGet(hThreadMap, hTlsKey, ppStorage);
-	return true;
+	return __MCFCRT_InternalTlsGet(hThreadMap, hTlsKey, ppStorage);
 }
 bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	const DWORD dwTlsIndex = g_dwTlsIndex;
@@ -66,21 +67,16 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	if(!hThreadMap){
 		hThreadMap = __MCFCRT_InternalTlsCreateThreadMap();
 		if(!hThreadMap){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		if(!TlsSetValue(dwTlsIndex, hThreadMap)){
+			const DWORD dwErrorCode = GetLastError();
 			__MCFCRT_InternalTlsDestroyThreadMap(hThreadMap);
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			SetLastError(dwErrorCode);
 			return false;
 		}
 	}
-	const DWORD dwErrorCode = __MCFCRT_InternalTlsRequire(hThreadMap, hTlsKey, ppStorage);
-	if(dwErrorCode != 0){
-		SetLastError(dwErrorCode);
-		return false;
-	}
-	return true;
+	return __MCFCRT_InternalTlsRequire(hThreadMap, hTlsKey, ppStorage);
 }
 
 bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
@@ -91,19 +87,14 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	if(!hThreadMap){
 		hThreadMap = __MCFCRT_InternalTlsCreateThreadMap();
 		if(!hThreadMap){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		if(!TlsSetValue(dwTlsIndex, hThreadMap)){
+			const DWORD dwErrorCode = GetLastError();
 			__MCFCRT_InternalTlsDestroyThreadMap(hThreadMap);
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			SetLastError(dwErrorCode);
 			return false;
 		}
 	}
-	const DWORD dwErrorCode = __MCFCRT_InternalAtThreadExit(hThreadMap, pfnProc, nContext);
-	if(dwErrorCode != 0){
-		SetLastError(dwErrorCode);
-		return false;
-	}
-	return true;
+	return __MCFCRT_InternalAtThreadExit(hThreadMap, pfnProc, nContext);
 }

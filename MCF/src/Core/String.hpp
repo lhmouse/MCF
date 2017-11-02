@@ -963,27 +963,27 @@ using WideString         = String<Impl_StringTraits::Type::kWide>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_u8s(){
+extern inline const Utf8String &operator""_u8s(){
 	static const Utf8String s_u8sRet{ kCharsT... };
 	return s_u8sRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_u16s(){
+extern inline const Utf16String &operator""_u16s(){
 	static const Utf16String s_u16sRet{ kCharsT... };
 	return s_u16sRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_u32s(){
+extern inline const Utf32String &operator""_u32s(){
 	static const Utf32String s_u32sRet{ kCharsT... };
 	return s_u32sRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_ns(){
+extern inline const NarrowString &operator""_ns(){
 	static const NarrowString s_nsRet{ kCharsT... };
 	return s_nsRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_ws(){
+extern inline const WideString &operator""_ws(){
 	static const WideString s_wsRet{ kCharsT... };
 	return s_wsRet;
 }

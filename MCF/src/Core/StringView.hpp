@@ -379,27 +379,27 @@ using WideStringView         = StringView<Impl_StringTraits::Type::kWide>;
 // 注意 StringView 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
 template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_u8sv() noexcept {
+extern inline Utf8StringView operator""_u8sv() noexcept {
 	static constexpr char s_au8cData[] = { kCharsT..., '$' };
 	return Utf8StringView(s_au8cData, sizeof...(kCharsT));
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_u16sv() noexcept {
+extern inline Utf16StringView operator""_u16sv() noexcept {
 	static constexpr char16_t s_au16cData[] = { kCharsT..., '$' };
 	return Utf16StringView(s_au16cData, sizeof...(kCharsT));
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_u32sv() noexcept {
+extern inline Utf32StringView operator""_u32sv() noexcept {
 	static constexpr char32_t s_au32cData[] = { kCharsT..., '$' };
 	return Utf32StringView(s_au32cData, sizeof...(kCharsT));
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_nsv() noexcept {
+extern inline NarrowStringView operator""_nsv() noexcept {
 	static constexpr char s_achData[] = { kCharsT..., '$' };
 	return NarrowStringView(s_achData, sizeof...(kCharsT));
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_wsv() noexcept {
+extern inline WideStringView operator""_wsv() noexcept {
 	static constexpr wchar_t s_awcData[] = { kCharsT..., '$' };
 	return WideStringView(s_awcData, sizeof...(kCharsT));
 }

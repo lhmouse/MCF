@@ -94,9 +94,10 @@ static void CheckForMemoryLeaks(void){
 	if(uCount > 9999){
 		wchar_t *pwcWrite = awcLine;
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"*** ... ");
-		pwcWrite = _MCFCRT_itow_u(pwcWrite, uCount - 9999);
-		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, (uCount == 10000) ? L" more memory leak follows. ***"
-		                                                      : L" more memory leaks follow. ***");
+		const uintptr_t uCountRemaining = uCount - 9999;
+		pwcWrite = _MCFCRT_itow_u(pwcWrite, uCountRemaining);
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, (uCountRemaining == 1) ? L" more memory leak follows. ***"
+		                                                           : L" more memory leaks follow. ***");
 		_MCFCRT_WriteStandardErrorText(awcLine, (size_t)(pwcWrite - awcLine), true);
 	}
 	if(uCount != 0){

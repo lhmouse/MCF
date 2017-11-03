@@ -174,6 +174,9 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_lock(mtx_t *__mutex) _MCFCR
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RESTRICT __mutex, const struct timespec *_MCFCRT_RESTRICT __timeout) _MCFCRT_NOEXCEPT  {
+	if(!(__mutex->__mask & mtx_timed)){
+		return thrd_error;
+	}
 	if(__mutex->__mask & mtx_recursive){
 		const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 		const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__mutex->__owner), __ATOMIC_RELAXED);

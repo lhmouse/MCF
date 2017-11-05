@@ -7,7 +7,7 @@
 #include "avl_tree.h"
 #include "heap.h"
 #include "inline_mem.h"
-#include "mcfwin.h"
+#include <winerror.h>
 
 typedef struct tagTlsKey {
 	uintptr_t uCounter;
@@ -23,7 +23,6 @@ _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pf
 
 	TlsKey *const pKey = _MCFCRT_malloc(sizeof(TlsKey));
 	if(!pKey){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return _MCFCRT_NULLPTR;
 	}
 	pKey->uCounter       = __atomic_add_fetch(&s_uKeyCounter, 1, __ATOMIC_RELAXED);
@@ -102,7 +101,6 @@ typedef struct tagTlsThreadMap {
 __MCFCRT_TlsThreadMapHandle __MCFCRT_InternalTlsCreateThreadMap(void){
 	TlsThreadMap *const pThreadMap = _MCFCRT_malloc(sizeof(TlsThreadMap));
 	if(!pThreadMap){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return _MCFCRT_NULLPTR;
 	}
 	pThreadMap->avlObjects = _MCFCRT_NULLPTR;
@@ -147,7 +145,7 @@ void __MCFCRT_InternalTlsDestroyThreadMap(__MCFCRT_TlsThreadMapHandle hThreadMap
 	_MCFCRT_free(pThreadMap);
 }
 
-bool __MCFCRT_InternalTlsGet(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
+unsigned long __MCFCRT_InternalTlsGet(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	_MCFCRT_ASSERT(pThreadMap);
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
@@ -156,13 +154,12 @@ bool __MCFCRT_InternalTlsGet(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_Tls
 	const TlsObjectKey vObjectKey = { pKey, pKey->uCounter };
 	TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThreadMap->avlObjects), (intptr_t)&vObjectKey, &TlsObjectComparatorNodeKey);
 	if(!pObject){
-		SetLastError(ERROR_FILE_NOT_FOUND);
-		return false;
+		return ERROR_FILE_NOT_FOUND;
 	}
 	*ppStorage = pObject->abyStorage;
-	return true;
+	return 0;
 }
-bool __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
+unsigned long __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	_MCFCRT_ASSERT(pThreadMap);
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
@@ -177,13 +174,11 @@ bool __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT
 	if(!pObject){
 		const size_t uSizeToAlloc = sizeof(TlsObject) + pKey->uSize;
 		if(uSizeToAlloc < sizeof(TlsObject)){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return false;
+			return ERROR_NOT_ENOUGH_MEMORY;
 		}
 		pObject = _MCFCRT_malloc(uSizeToAlloc);
 		if(!pObject){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return false;
+			return ERROR_NOT_ENOUGH_MEMORY;
 		}
 #ifndef NDEBUG
 		_MCFCRT_inline_mempset_fwd(pObject, 0xAA, sizeof(TlsObject));
@@ -193,8 +188,7 @@ bool __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT
 			const unsigned long ulErrorCode = (*(pKey->pfnConstructor))(pKey->nContext, pObject->abyStorage);
 			if(ulErrorCode != 0){
 				_MCFCRT_free(pObject);
-				SetLastError(ulErrorCode);
-				return false;
+				return ulErrorCode;
 			}
 		}
 		pObject->pfnDestructor = pKey->pfnDestructor;
@@ -219,7 +213,7 @@ bool __MCFCRT_InternalTlsRequire(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT
 		_MCFCRT_AvlAttach(&(pThreadMap->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &TlsObjectComparatorNodes);
 	}
 	*ppStorage = pObject->abyStorage;
-	return true;
+	return 0;
 }
 
 #define CALLBACKS_PER_BLOCK   64u
@@ -243,7 +237,7 @@ static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
 	}
 }
 
-bool __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
+unsigned long __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
 	TlsThreadMap *const pThreadMap = (TlsThreadMap *)hThreadMap;
 	_MCFCRT_ASSERT(pThreadMap);
 
@@ -255,8 +249,7 @@ bool __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFC
 	if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
 		pObject = _MCFCRT_malloc(sizeof(TlsObject) + sizeof(AtExitBlock));
 		if(!pObject){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return false;
+			return ERROR_NOT_ENOUGH_MEMORY;
 		}
 #ifndef NDEBUG
 		_MCFCRT_inline_mempset_fwd(pObject, 0xAA, sizeof(TlsObject));
@@ -281,5 +274,5 @@ bool __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle hThreadMap, _MCFC
 	}
 	const AtExitElement vElement = { pfnProc, nContext };
 	pBlock->aCallbacks[(pBlock->uSize)++] = vElement;
-	return true;
+	return 0;
 }

@@ -573,7 +573,7 @@ bool _MCFCRT_WriteStandardOutputByte(unsigned char byData){
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	dwErrorCode = UnlockedReserve(So, 1, 0);
+	dwErrorCode = UnlockedReserve(So, 0, 1);
 	if(dwErrorCode != 0){
 		Unlock(So);
 		SetLastError(dwErrorCode);
@@ -604,7 +604,7 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *restrict pData, size_t uSize)
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	dwErrorCode = UnlockedReserve(So, uSize, 0);
+	dwErrorCode = UnlockedReserve(So, 0, uSize);
 	if(dwErrorCode != 0){
 		Unlock(So);
 		SetLastError(dwErrorCode);
@@ -757,7 +757,7 @@ bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	dwErrorCode = UnlockedReserve(Se, 1, 0);
+	dwErrorCode = UnlockedReserve(Se, 0, 1);
 	if(dwErrorCode != 0){
 		Unlock(Se);
 		SetLastError(dwErrorCode);
@@ -788,7 +788,7 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	dwErrorCode = UnlockedReserve(Se, uSize, 0);
+	dwErrorCode = UnlockedReserve(Se, 0, uSize);
 	if(dwErrorCode != 0){
 		Unlock(Se);
 		SetLastError(dwErrorCode);

@@ -248,7 +248,7 @@ static void UnlockedReset(Stream *restrict pStream, HANDLE hFile, bool bBuffered
 	pStream->hFile = _MCFCRT_NULLPTR;
 	pStream->bConsole = false;
 	pStream->bEchoing = false;
-	// Normalize INVALID_HANDLE_VALUE to NULL.
+	// Normalize `INVALID_HANDLE_VALUE` to `NULL`.
 	if((hFile != INVALID_HANDLE_VALUE) && (hFile != _MCFCRT_NULLPTR)){
 		pStream->hFile = hFile;
 		DWORD dwConsoleMode;

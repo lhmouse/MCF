@@ -3,7 +3,13 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "dll.h"
+#include "module.h"
+#include "tls.h"
 #include "../mcfcrt.h"
+#include "../env/xassert.h"
+#include "../env/standard_streams.h"
+#include "../env/crt_module.h"
+#include "../env/bail.h"
 #include "../env/_seh_top.h"
 #include "../env/_fpu.h"
 

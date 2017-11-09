@@ -18,7 +18,7 @@
 	};
 */
 
-const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszCommandLine){
+const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *restrict puArgc, const wchar_t *restrict pwszCommandLine){
 	const size_t uCommandLineSize = (wcslen(pwszCommandLine) + 1) * sizeof(wchar_t);
 	const size_t uPrefixSize = ((uCommandLineSize - 1) / alignof(_MCFCRT_ArgItem) + 1) * alignof(_MCFCRT_ArgItem);
 	if(uPrefixSize < uCommandLineSize){
@@ -162,11 +162,12 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 	return pArgv;
 }
 
-const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *puArgc){
+const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *restrict puArgc){
 	return _MCFCRT_AllocArgv(puArgc, GetCommandLineW());
 }
 void _MCFCRT_FreeArgv(const _MCFCRT_ArgItem *pArgItems){
-	if(pArgItems){
-		_MCFCRT_free((void *)(pArgItems[-1].__pwszStr));
+	if(!pArgItems){
+		return;
 	}
+	_MCFCRT_free((void *)(pArgItems[-1].__pwszStr));
 }

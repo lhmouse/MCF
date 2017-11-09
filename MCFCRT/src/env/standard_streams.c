@@ -5,6 +5,7 @@
 #include "standard_streams.h"
 #include "../ext/utf.h"
 #include "mutex.h"
+#include "heap.h"
 #include "mcfwin.h"
 
 static_assert(sizeof (wchar_t) == sizeof (char16_t), "What?");
@@ -74,7 +75,7 @@ static DWORD UnlockedReserve(Stream *restrict pStream, size_t uTextSizeAdd, size
 			uCapacityNew &= (size_t)-0x10;
 			uCapacityNew |= uMinimumSizeToReserve;
 			uCapacityNew |= 0x400;
-			pbyBufferNew = HeapAlloc(GetProcessHeap(), 0, uCapacityNew);
+			pbyBufferNew = _MCFCRT_malloc(uCapacityNew);
 			if(!pbyBufferNew){
 				return ERROR_NOT_ENOUGH_MEMORY;
 			}
@@ -86,7 +87,7 @@ static DWORD UnlockedReserve(Stream *restrict pStream, size_t uTextSizeAdd, size
 			memmove(pbyBufferNew + uTextSizeToReserve, pbyBufferOld + pStream->uBinaryBegin, uBinarySize);
 		}
 		if(pbyBufferNew != pbyBufferOld){
-			HeapFree(GetProcessHeap(), 0, pbyBufferOld);
+			_MCFCRT_free(pbyBufferOld);
 			pStream->pbyBuffer = pbyBufferNew;
 			pStream->uCapacity = uCapacityNew;
 		}
@@ -237,7 +238,7 @@ static DWORD UnlockedFlush(Stream *restrict pStream, bool bHard){
 static void UnlockedReset(Stream *restrict pStream, HANDLE hFile, bool bBuffered){
 	// Errors are ignored.
 	UnlockedFlush(pStream, true);
-	HeapFree(GetProcessHeap(), 0, pStream->pbyBuffer);
+	_MCFCRT_free(pStream->pbyBuffer);
 	pStream->pbyBuffer = _MCFCRT_NULLPTR;
 	pStream->uCapacity = 0;
 	pStream->uBinaryBegin = 0;

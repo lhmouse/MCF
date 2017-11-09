@@ -7,10 +7,10 @@
 #include <ntdef.h>
 #include <winnt.h>
 
-unsigned long _MCFCRT_GetLastWin32Error(void){
+unsigned long _MCFCRT_GetLastError(void){
 	return GetLastError();
 }
-void _MCFCRT_SetLastWin32Error(unsigned long ulErrorCode){
+void _MCFCRT_SetLastError(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
 
@@ -24,44 +24,35 @@ static inline bool IsLineBreak(wchar_t wcChar){
 	return (wcChar == 0) || (wcChar == L'\n') || (wcChar == L'\r');
 }
 
-size_t _MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){
-	static const wchar_t kUnknownErrorCode[]   = L"<未知错误码>";
-	static const wchar_t kUnicodeUnavailable[] = L"<Unicode 错误码描述不可用>";
-
+bool _MCFCRT_GetErrorDescription(const wchar_t **restrict ppwszText, size_t *restrict puLength, unsigned long ulErrorCode){
 	void *pBaseAddress;
 	RtlPcToFileHeader((void *)(intptr_t)&GetLastError, &pBaseAddress); // 获得 kernel32.dll 的基地址。
-
 	MESSAGE_RESOURCE_ENTRY *pEntry;
 	NTSTATUS lStatus = RtlFindMessage(pBaseAddress, 0x0B, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), ulErrorCode, &pEntry);
 	if(!NT_SUCCESS(lStatus)){
-		*ppwszStr = kUnknownErrorCode;
-		return sizeof(kUnknownErrorCode) / sizeof(wchar_t) - 1;
+		static const wchar_t kUnknownErrorCode[]   = L"<未知错误码>";
+		*ppwszText = kUnknownErrorCode;
+		*puLength = sizeof(kUnknownErrorCode) / sizeof(wchar_t) - 1;
+		return false;
 	}
 	if(pEntry->Flags != 0x0001){
-		*ppwszStr = kUnicodeUnavailable;
-		return sizeof(kUnicodeUnavailable) / sizeof(wchar_t) - 1;
+		static const wchar_t kUnicodeUnavailable[] = L"<Unicode 错误码描述不可用>";
+		*ppwszText = kUnicodeUnavailable;
+		*puLength = sizeof(kUnicodeUnavailable) / sizeof(wchar_t) - 1;
+		return false;
 	}
-	const wchar_t *const pwcText = (void *)pEntry->Text;
-	const wchar_t *pwcEnd = pwcText + (pEntry->Length - offsetof(MESSAGE_RESOURCE_ENTRY, Text)) / sizeof(wchar_t);
-	for(;;){
-		if(pwcText == pwcEnd){
-			break;
-		}
-		if(!IsLineBreak(pwcEnd[-1])){
-			break;
-		}
-		--pwcEnd;
+	const wchar_t *const pwcBegin = (const wchar_t *)pEntry->Text;
+	// Strip trailing line break characters.
+	const wchar_t *pwcLineEnd = (const wchar_t *)((const unsigned char *)pEntry + pEntry->Length);
+	while((pwcBegin < pwcLineEnd) && IsLineBreak(pwcLineEnd[-1])){
+		--pwcLineEnd;
 	}
-	const wchar_t *pwcBegin = pwcEnd;
-	for(;;){
-		if(pwcText == pwcBegin){
-			break;
-		}
-		if(IsLineBreak(pwcBegin[-1])){
-			break;
-		}
-		--pwcBegin;
+	// Strip everything before the last line.
+	const wchar_t *pwcLineBegin = pwcLineEnd;
+	while((pwcBegin < pwcLineBegin) && !IsLineBreak(pwcLineBegin[-1])){
+		--pwcLineBegin;
 	}
-	*ppwszStr = pwcBegin;
-	return (size_t)(pwcEnd - pwcBegin);
+	*ppwszText = pwcBegin;
+	*puLength = (size_t)(pwcLineEnd - pwcBegin);
+	return true;
 }

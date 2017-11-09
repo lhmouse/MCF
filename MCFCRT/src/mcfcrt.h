@@ -47,7 +47,6 @@
 #  include "ext/wcpcpy.h"
 #  include "ext/wcppcpy.h"
 #  include "ext/utf.h"
-#  include "ext/thunk.h"
 // ------------------------------ pre ------------------------------
 #  include "pre/module.h"
 #  include "pre/exe.h"

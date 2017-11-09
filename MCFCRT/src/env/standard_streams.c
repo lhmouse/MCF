@@ -496,7 +496,7 @@ bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	dwErrorCode = UnlockedReserve(So, 2 * sizeof(char16_t), 0);
+	dwErrorCode = UnlockedReserve(So, 2 * sizeof(wchar_t), 0);
 	if(dwErrorCode != 0){
 		Unlock(So);
 		SetLastError(dwErrorCode);
@@ -683,7 +683,7 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	dwErrorCode = UnlockedReserve(Se, 2 * sizeof(char16_t), 0);
+	dwErrorCode = UnlockedReserve(Se, 2 * sizeof(wchar_t), 0);
 	if(dwErrorCode != 0){
 		Unlock(Se);
 		SetLastError(dwErrorCode);

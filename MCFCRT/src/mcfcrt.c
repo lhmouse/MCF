@@ -2,7 +2,6 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#define __MCFCRT_NO_GENERAL_INCLUDES    1
 #include "mcfcrt.h"
 #include "env/xassert.h"
 #include "env/standard_streams.h"

@@ -9,7 +9,6 @@
 
 #ifndef __MCFCRT_NO_GENERAL_INCLUDES
 // ------------------------------ env ------------------------------
-#  include "env/argv.h"
 #  include "env/avl_tree.h"
 #  include "env/bail.h"
 #  include "env/clocks.h"

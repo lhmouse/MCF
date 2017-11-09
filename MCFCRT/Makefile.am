@@ -73,7 +73,6 @@ pkginclude_env_HEADERS = \
 	src/env/_atexit_queue.h	\
 	src/env/_make_constant.h	\
 	src/env/inline_mem.h	\
-	src/env/argv.h	\
 	src/env/avl_tree.h	\
 	src/env/bail.h	\
 	src/env/c11thread.h	\
@@ -132,7 +131,6 @@ mcfcrt_sources = \
 	src/env/_mopthread.c	\
 	src/env/_tls_common.c	\
 	src/env/xassert.c	\
-	src/env/argv.c	\
 	src/env/avl_tree.c	\
 	src/env/bail.c	\
 	src/env/c11thread.c	\

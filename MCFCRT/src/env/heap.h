@@ -38,11 +38,8 @@ static inline void *_MCFCRT_realloc(void *__ptr, _MCFCRT_STD size_t __size) _MCF
 __attribute__((__always_inline__, __malloc__))
 static inline void *_MCFCRT_calloc(_MCFCRT_STD size_t __nmemb, _MCFCRT_STD size_t __size) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD size_t __size_total = 0;
-	if((__nmemb != 0) && (__size != 0)){
-		if(__nmemb > SIZE_MAX / __size){
-			return _MCFCRT_NULLPTR;
-		}
-		__size_total = __nmemb * __size;
+	if((__nmemb != 0) && (__size != 0) && __builtin_mul_overflow(__nmemb, __size, &__size_total)){
+		return _MCFCRT_NULLPTR;
 	}
 	return __MCFCRT_HeapAlloc(__size_total, true,
 		__builtin_return_address(0));

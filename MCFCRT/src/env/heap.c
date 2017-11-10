@@ -125,7 +125,7 @@ void __MCFCRT_HeapFree(void *pOldBlock, const void *pRetAddrOuter){
 static volatile _MCFCRT_HeapCallback g_pfnHeapCallback = _MCFCRT_NULLPTR;
 
 _MCFCRT_HeapCallback _MCFCRT_GetHeapCallback(void){
-	return __atomic_load_n(&g_pfnHeapCallback, __ATOMIC_CONSUME);
+	return __atomic_load_n(&g_pfnHeapCallback, __ATOMIC_ACQUIRE);
 }
 _MCFCRT_HeapCallback _MCFCRT_SetHeapCallback(_MCFCRT_HeapCallback pfnNewCallback){
 	return __atomic_exchange_n(&g_pfnHeapCallback, pfnNewCallback, __ATOMIC_RELEASE);

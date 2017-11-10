@@ -87,15 +87,15 @@ static void reprotect_sections(const unprotect_result *restrict results, size_t 
 	}
 }
 
-#define WHY_DO_WE_NEED_INTEGER_PROMOTION(type_, ptr_, add_)      (*(type_ *)(ptr_) = (type_)(*(type_ *)(ptr_) + (type_)(add_)))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 
 static void really_relocate_v1(const DWORD *table, const DWORD *end){
 	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
 	for(const DWORD *cur = table; cur < end; cur += 2){
 		const DWORD add = cur[0];
 		void *const target = (char *)img_base + cur[1];
-
-		WHY_DO_WE_NEED_INTEGER_PROMOTION(DWORD, target, add);
+		*(DWORD *)target += add;
 	}
 }
 
@@ -109,22 +109,24 @@ static void really_relocate_v2(const DWORD *table, const DWORD *end){
 
 		switch(flags & 0xFF){
 		case 8:
-			WHY_DO_WE_NEED_INTEGER_PROMOTION( UINT8, target, add);
+			*(UINT8 *)target += (UINT8)add;
 			break;
 		case 16:
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT16, target, add);
+			*(UINT16 *)target += (UINT16)add;
 			break;
 		case 32:
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT32, target, add);
+			*(UINT32 *)target += (UINT32)add;
 			break;
 		case 64:
-			WHY_DO_WE_NEED_INTEGER_PROMOTION(UINT64, target, add);
+			*(UINT64 *)target += (UINT64)add;
 			break;
 		default:
 			_MCFCRT_Bail(L"really_relocate_v2() 失败：重定位块大小无效。");
 		}
 	}
 }
+
+#pragma GCC diagnostic pop
 
 extern const DWORD __RUNTIME_PSEUDO_RELOC_LIST__[];
 extern const DWORD __RUNTIME_PSEUDO_RELOC_LIST_END__[];

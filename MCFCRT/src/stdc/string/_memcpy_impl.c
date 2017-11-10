@@ -91,7 +91,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 	rem = (n - off) % 16;
 #define STEP(b_)	\
 	if(_MCFCRT_EXPECT(rem & (b_ / 8))){	\
-		*(volatile uint ## b_ ## _t *)wp = *(uint ## b_ ## _t *)rp;	\
+		*(volatile uint##b_##_t *)wp = *(uint##b_##_t *)rp;	\
 		wp += b_ / 8;	\
 		rp += b_ / 8;	\
 	}
@@ -195,7 +195,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 	if(_MCFCRT_EXPECT(rem & (b_ / 8))){	\
 		wp -= b_ / 8;	\
 		rp -= b_ / 8;	\
-		*(volatile uint ## b_ ## _t *)wp = *(uint ## b_ ## _t *)rp;	\
+		*(volatile uint##b_##_t *)wp = *(uint##b_##_t *)rp;	\
 	}
 //=============================================================================
 	STEP(64)

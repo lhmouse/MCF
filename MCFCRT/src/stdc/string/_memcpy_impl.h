@@ -46,7 +46,7 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 	__rem = __n % 8;
 #define __MCFCRT_STEP_(__b_)	\
 	if(_MCFCRT_EXPECT(__rem & (__b_ / 8))){	\
-		*(volatile _MCFCRT_STD uint ## __b_ ## _t *)__wp = *(_MCFCRT_STD uint ## __b_ ## _t *)__rp;	\
+		*(volatile _MCFCRT_STD uint##__b_##_t *)__wp = *(_MCFCRT_STD uint##__b_##_t *)__rp;	\
 		__wp += __b_ / 8;	\
 		__rp += __b_ / 8;	\
 	}
@@ -68,7 +68,7 @@ static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1,
 	if(_MCFCRT_EXPECT(__rem & (__b_ / 8))){	\
 		__wp -= __b_ / 8;	\
 		__rp -= __b_ / 8;	\
-		*(volatile _MCFCRT_STD uint ## __b_ ## _t *)__wp = *(_MCFCRT_STD uint ## __b_ ## _t *)__rp;	\
+		*(volatile _MCFCRT_STD uint##__b_##_t *)__wp = *(_MCFCRT_STD uint##__b_##_t *)__rp;	\
 	}
 //=============================================================================
 	__MCFCRT_STEP_(32)

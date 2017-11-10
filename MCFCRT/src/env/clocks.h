@@ -23,8 +23,8 @@ __MCFCRT_CLOCKS_INLINE_OR_EXTERN _MCFCRT_STD uint64_t _MCFCRT_ReadTimeStampCount
 extern _MCFCRT_STD uint64_t _MCFCRT_GetUtcClock(void) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD uint64_t _MCFCRT_GetLocalClock(void) _MCFCRT_NOEXCEPT;
 
-extern _MCFCRT_STD uint64_t _MCFCRT_GetUtcClockFromLocal(_MCFCRT_STD uint64_t __u64LocalClock) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD uint64_t _MCFCRT_GetLocalClockFromUtc(_MCFCRT_STD uint64_t __u64UtcClock) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetUtcClockFromLocal(_MCFCRT_STD uint64_t __local) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetLocalClockFromUtc(_MCFCRT_STD uint64_t __utc) _MCFCRT_NOEXCEPT;
 
 extern _MCFCRT_STD uint64_t _MCFCRT_GetFastMonoClock(void) _MCFCRT_NOEXCEPT;
 extern double _MCFCRT_GetHiResMonoClock(void) _MCFCRT_NOEXCEPT;

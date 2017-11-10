@@ -10,7 +10,7 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_SCAS_DEFINE(__name_, __mnemonic_, __type_)	\
-	int __name_(__type_ **_MCFCRT_RESTRICT __es, const __type_ *__s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
+	static inline __attribute__((__always_inline__)) int __name_(__type_ **_MCFCRT_RESTRICT __es, const __type_ *__s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
 		bool __z, __b;	\
 		const __type_ *__p = __s;	\
 		__asm__ (	\
@@ -24,18 +24,18 @@ _MCFCRT_EXTERN_C_BEGIN
 		return __z ? 0 : (__b ? -1 : 1);	\
 	}
 
-static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasb,  "repz scasb", _MCFCRT_STD  uint8_t)
-static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasw,  "repz scasw", _MCFCRT_STD uint16_t)
-static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasd,  "repz scasd", _MCFCRT_STD uint32_t)
+__MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasb,  "repz scasb", _MCFCRT_STD  uint8_t)
+__MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasw,  "repz scasw", _MCFCRT_STD uint16_t)
+__MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasd,  "repz scasd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-static inline __MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasq,  "repz scasq", _MCFCRT_STD uint64_t)
+__MCFCRT_REP_SCAS_DEFINE( _MCFCRT_repz_scasq,  "repz scasq", _MCFCRT_STD uint64_t)
 #endif
 
-static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasb, "repnz scasb", _MCFCRT_STD  uint8_t)
-static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasw, "repnz scasw", _MCFCRT_STD uint16_t)
-static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasd, "repnz scasd", _MCFCRT_STD uint32_t)
+__MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasb, "repnz scasb", _MCFCRT_STD  uint8_t)
+__MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasw, "repnz scasw", _MCFCRT_STD uint16_t)
+__MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasd, "repnz scasd", _MCFCRT_STD uint32_t)
 #ifdef _WIN64
-static inline __MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasq, "repnz scasq", _MCFCRT_STD uint64_t)
+__MCFCRT_REP_SCAS_DEFINE(_MCFCRT_repnz_scasq, "repnz scasq", _MCFCRT_STD uint64_t)
 #endif
 
 _MCFCRT_EXTERN_C_END

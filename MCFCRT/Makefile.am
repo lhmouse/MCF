@@ -87,7 +87,8 @@ pkginclude_env_HEADERS = \
 	src/env/once_flag.h	\
 	src/env/standard_streams.h	\
 	src/env/thread.h	\
-	src/env/crt_module.h
+	src/env/crt_module.h	\
+	src/env/endian.h
 
 pkginclude_extdir = ${pkgincludedir}/ext
 pkginclude_ext_HEADERS = \
@@ -145,6 +146,7 @@ mcfcrt_sources = \
 	src/env/standard_streams.c	\
 	src/env/thread.c	\
 	src/env/crt_module.c	\
+	src/env/endian.c	\
 	src/ext/itoa.c	\
 	src/ext/itow.c	\
 	src/ext/atoi.c	\

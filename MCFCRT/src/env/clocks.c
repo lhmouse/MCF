@@ -14,11 +14,11 @@ static uint64_t g_tz_bias;
 static double g_pc_freq_recip;
 
 static void FetchParametersOnce(void){
-	const _MCFCRT_OnceResult eResult = _MCFCRT_WaitForOnceFlagForever(&g_once);
-	if(eResult == _MCFCRT_kOnceResultFinished){
+	const _MCFCRT_OnceResult result = _MCFCRT_WaitForOnceFlagForever(&g_once);
+	if(result == _MCFCRT_kOnceResultFinished){
 		return;
 	}
-	_MCFCRT_ASSERT(eResult == _MCFCRT_kOnceResultInitial);
+	_MCFCRT_ASSERT(result == _MCFCRT_kOnceResultInitial);
 
 	TIME_ZONE_INFORMATION tz_info;
 	if(GetTimeZoneInformation(&tz_info) == TIME_ZONE_ID_INVALID){

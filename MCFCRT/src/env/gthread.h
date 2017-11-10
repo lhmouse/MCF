@@ -30,7 +30,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-_MCFCRT_CONSTEXPR int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
+_MCFCRT_CONSTEXPR __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
 	return 1;
 }
 

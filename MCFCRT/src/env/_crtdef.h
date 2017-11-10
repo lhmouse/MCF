@@ -77,12 +77,12 @@
 #  define  _MCFCRT_NULLPTR              nullptr
 #elif defined(__cplusplus)
 #  define  _MCFCRT_NOEXCEPT             throw()
-#  define  _MCFCRT_CONSTEXPR            static inline
+#  define  _MCFCRT_CONSTEXPR            //
 #  define  _MCFCRT_RESTRICT             __restrict__
 #  define  _MCFCRT_NULLPTR              ((__INTPTR_TYPE__)0)
 #else
 #  define  _MCFCRT_NOEXCEPT             //
-#  define  _MCFCRT_CONSTEXPR            static inline
+#  define  _MCFCRT_CONSTEXPR            //
 #  define  _MCFCRT_RESTRICT             restrict
 #  define  _MCFCRT_NULLPTR              ((void *)0)
 #endif

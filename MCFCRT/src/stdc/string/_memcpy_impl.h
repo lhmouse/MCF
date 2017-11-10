@@ -11,7 +11,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-_MCFCRT_CONSTEXPR bool __MCFCRT_memcpy_is_small_enough(_MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+_MCFCRT_CONSTEXPR static inline bool __MCFCRT_memcpy_is_small_enough(_MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	return __n < 128;
 }
 

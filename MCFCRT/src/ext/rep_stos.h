@@ -10,7 +10,8 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_STOS_DEFINE(__name_, __mnemonic_, __type_)	\
-	static inline __attribute__((__always_inline__)) __type_ *__name_(__type_ *_MCFCRT_RESTRICT __s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
+	__attribute__((__always_inline__))	\
+	static inline __type_ *__name_(__type_ *_MCFCRT_RESTRICT __s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
 		__type_ *__p = __s;	\
 		_MCFCRT_STD size_t __unused;	\
 		__asm__ (	\

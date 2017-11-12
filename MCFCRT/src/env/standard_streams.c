@@ -278,7 +278,7 @@ void __MCFCRT_StandardStreamsUninit(void){
 	UnlockedReset(Se, _MCFCRT_NULLPTR, false);
 }
 
-long _MCFCRT_ReadStandardInputChar32(void){
+long _MCFCRT_ReadStandardInputChar32(bool bDontRemove){
 	Lock(So);
 	UnlockedFlush(So, false);
 	Unlock(So);
@@ -310,11 +310,13 @@ long _MCFCRT_ReadStandardInputChar32(void){
 			return -1;
 		}
 	}
-	Si->uTextBegin = (size_t)((unsigned char *)pwcRead - Si->pbyBuffer);
+	if(!bDontRemove){
+		Si->uTextBegin = (size_t)((unsigned char *)pwcRead - Si->pbyBuffer);
+	}
 	Unlock(Si);
 	return (long)c32CodePoint;
 }
-size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, bool bStopAtEndOfLine){
+size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, bool bStopAtEndOfLine, bool bDontRemove){
 	Lock(So);
 	UnlockedFlush(So, false);
 	Unlock(So);
@@ -364,11 +366,13 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 			break;
 		}
 	}
-	Si->uTextBegin = (size_t)((unsigned char *)pwcRead - Si->pbyBuffer);
+	if(!bDontRemove){
+		Si->uTextBegin = (size_t)((unsigned char *)pwcRead - Si->pbyBuffer);
+	}
 	Unlock(Si);
 	return (size_t)(pwcWrite - pwcText);
 }
-int _MCFCRT_ReadStandardInputByte(void){
+int _MCFCRT_ReadStandardInputByte(bool bDontRemove){
 	Lock(So);
 	UnlockedFlush(So, false);
 	Unlock(So);
@@ -402,11 +406,13 @@ int _MCFCRT_ReadStandardInputByte(void){
 	}
 	const int nByteRead = *pbyRead;
 	pbyRead += 1;
-	Si->uBinaryBegin = (size_t)((unsigned char *)pbyRead - Si->pbyBuffer);
+	if(!bDontRemove){
+		Si->uBinaryBegin = (size_t)((unsigned char *)pbyRead - Si->pbyBuffer);
+	}
 	Unlock(Si);
 	return nByteRead;
 }
-size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
+size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize, bool bDontRemove){
 	Lock(So);
 	UnlockedFlush(So, false);
 	Unlock(So);
@@ -446,7 +452,9 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 	const size_t uBytesRead = (uSize < uBytesAvail) ? uSize : uBytesAvail;
 	memcpy(pData, pbyRead, uBytesRead);
 	pbyRead += uBytesRead;
-	Si->uBinaryBegin = (size_t)((unsigned char *)pbyRead - Si->pbyBuffer);
+	if(!bDontRemove){
+		Si->uBinaryBegin = (size_t)((unsigned char *)pbyRead - Si->pbyBuffer);
+	}
 	Unlock(Si);
 	return uBytesRead;
 }

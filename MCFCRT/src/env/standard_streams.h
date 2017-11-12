@@ -16,13 +16,16 @@ extern void __MCFCRT_StandardStreamsUninit(void) _MCFCRT_NOEXCEPT;
 // 2. When operating a console in binary format or a non-console in text format, data are converted between UTF-8 and UTF-16.
 // 3. When reading in text format, no function returns truncated code points. Invalid code points are replaced with U+FFFD.
 // 4. When writing in text format, strings passed to individual function calls must start and end in initial shift states. Truncated or invalid code points are replaced with U+FFFD.
-// 6. In all other cases, data are copied as-is. No integrity check is made.
+// 5. In all other cases, data are copied as-is. No integrity check is made.
+// 6. Reading or writing in text format makes the underlying stream switch to text mode. Reading or writing in binary format make the underlying stream switch to binary mode.
+//    Mode switching shall be considered heavyweight. When operating a non-console in binary mode, data can be made up of arbitrary bytes. However, if those data are not valid UTF-8
+//    and a switch to text mode takes place, data loss may occur. The loss is irrecoverable.
 
 // Standard Input
-extern long _MCFCRT_ReadStandardInputChar32(void) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputText(wchar_t *_MCFCRT_RESTRICT __pwcText, _MCFCRT_STD size_t __uLength, bool __bStopAtEndOfLine) _MCFCRT_NOEXCEPT;
-extern int _MCFCRT_ReadStandardInputByte(void) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputBinary(void *_MCFCRT_RESTRICT __pData, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
+extern long _MCFCRT_ReadStandardInputChar32(bool __bDontRemove) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputText(wchar_t *_MCFCRT_RESTRICT __pwcText, _MCFCRT_STD size_t __uLength, bool __bStopAtEndOfLine, bool __bDontRemove) _MCFCRT_NOEXCEPT;
+extern int _MCFCRT_ReadStandardInputByte(bool __bDontRemove) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputBinary(void *_MCFCRT_RESTRICT __pData, _MCFCRT_STD size_t __uSize, bool __bDontRemove) _MCFCRT_NOEXCEPT;
 
 extern bool _MCFCRT_IsStandardInputEchoing(void) _MCFCRT_NOEXCEPT;
 extern int _MCFCRT_SetStandardInputEchoing(bool __bEchoing) _MCFCRT_NOEXCEPT; // Returns the previous state or -1 in case of failure.

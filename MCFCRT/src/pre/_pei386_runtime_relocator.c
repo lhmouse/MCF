@@ -7,7 +7,7 @@
 #include "../env/bail.h"
 #include "../ext/alloca.h"
 
-static size_t get_all_sections(const IMAGE_SECTION_HEADER **sections_ret){
+static size_t GetAllSections(const IMAGE_SECTION_HEADER **sections_ret){
 	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
 	if(img_base->e_magic != IMAGE_DOS_SIGNATURE){
 		return 0;
@@ -20,33 +20,13 @@ static size_t get_all_sections(const IMAGE_SECTION_HEADER **sections_ret){
 	return nt_hdr->FileHeader.NumberOfSections;
 }
 
-static inline DWORD get_protect_new(DWORD protect_old){
-	switch(protect_old & 0xFF){
-	case PAGE_EXECUTE:
-	case PAGE_EXECUTE_READ:
-	case PAGE_EXECUTE_READWRITE:
-		return PAGE_EXECUTE_READWRITE;
-	case PAGE_EXECUTE_WRITECOPY:
-		return PAGE_EXECUTE_WRITECOPY;
-	case PAGE_NOACCESS:
-		return PAGE_NOACCESS;
-	case PAGE_READONLY:
-	case PAGE_READWRITE:
-		return PAGE_READWRITE;
-	case PAGE_WRITECOPY:
-		return PAGE_WRITECOPY;
-	default:
-		return PAGE_NOACCESS;
-	}
-}
-
-typedef struct tag_unprotect_result {
+typedef struct tagUnprotectResult {
 	void *base;
 	size_t size;
 	DWORD protect_old;
-} unprotect_result;
+} UnprotectResult;
 
-static void unprotect_sections(unprotect_result *restrict results, const IMAGE_SECTION_HEADER *sections, size_t count){
+static void UnprotectSections(UnprotectResult *restrict results, const IMAGE_SECTION_HEADER *sections, size_t count){
 	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
 	for(size_t i = 0; i < count; ++i){
 		void *const base = (char *)img_base + sections[i].VirtualAddress;
@@ -56,8 +36,31 @@ static void unprotect_sections(unprotect_result *restrict results, const IMAGE_S
 		if(VirtualQuery(base, &info, sizeof(info)) < sizeof(info)){
 			_MCFCRT_Bail(L"VirtualQuery() 失败。");
 		}
-		DWORD protect_old = info.Protect;
-		DWORD protect_new = get_protect_new(protect_old);
+		DWORD protect_old = info.Protect & 0xFF;
+		DWORD protect_new;
+		switch(protect_old){
+		case PAGE_EXECUTE:
+		case PAGE_EXECUTE_READ:
+		case PAGE_EXECUTE_READWRITE:
+			protect_new = PAGE_EXECUTE_READWRITE;
+			break;
+		case PAGE_EXECUTE_WRITECOPY:
+			protect_new = PAGE_EXECUTE_WRITECOPY;
+			break;
+		case PAGE_NOACCESS:
+			protect_new = PAGE_NOACCESS;
+			break;
+		case PAGE_READONLY:
+		case PAGE_READWRITE:
+			protect_new = PAGE_READWRITE;
+			break;
+		case PAGE_WRITECOPY:
+			protect_new = PAGE_WRITECOPY;
+			break;
+		default:
+			protect_new = PAGE_NOACCESS;
+			break;
+		}
 		if(protect_new == protect_old){
 			results[i].base = _MCFCRT_NULLPTR;
 			continue;
@@ -71,7 +74,7 @@ static void unprotect_sections(unprotect_result *restrict results, const IMAGE_S
 	}
 }
 
-static void reprotect_sections(const unprotect_result *restrict results, size_t count){
+static void ReprotectSections(const UnprotectResult *restrict results, size_t count){
 	for(size_t i = 0; i < count; ++i){
 		void *const base = results[i].base;
 		const size_t size = results[i].size;
@@ -90,7 +93,7 @@ static void reprotect_sections(const unprotect_result *restrict results, size_t 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-static void really_relocate_v1(const DWORD *table, const DWORD *end){
+static void ReallyRelocate_v1(const DWORD *table, const DWORD *end){
 	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
 	for(const DWORD *cur = table; cur < end; cur += 2){
 		const DWORD add = cur[0];
@@ -99,7 +102,7 @@ static void really_relocate_v1(const DWORD *table, const DWORD *end){
 	}
 }
 
-static void really_relocate_v2(const DWORD *table, const DWORD *end){
+static void ReallyRelocate_v2(const DWORD *table, const DWORD *end){
 	const IMAGE_DOS_HEADER *const img_base = _MCFCRT_GetModuleBase();
 	for(const DWORD *cur = table; cur < end; cur += 3){
 		const void *const symbol = (char *)img_base + cur[0];
@@ -121,7 +124,7 @@ static void really_relocate_v2(const DWORD *table, const DWORD *end){
 			*(UINT64 *)target += (UINT64)add;
 			break;
 		default:
-			_MCFCRT_Bail(L"really_relocate_v2() 失败：重定位块大小无效。");
+			_MCFCRT_Bail(L"ReallyRelocate_v2() 失败：重定位块大小无效。");
 		}
 	}
 }
@@ -156,18 +159,18 @@ void _pei386_runtime_relocator(void){
 	}
 
 	const IMAGE_SECTION_HEADER *sections;
-	const size_t count = get_all_sections(&sections);
-	unprotect_result *const results = _MCFCRT_ALLOCA(count * sizeof(unprotect_result));
-	unprotect_sections(results, sections, count);
+	const size_t count = GetAllSections(&sections);
+	UnprotectResult *const results = _MCFCRT_ALLOCA(count * sizeof(UnprotectResult));
+	UnprotectSections(results, sections, count);
 	switch(version){
 	case 0:
-		really_relocate_v1(table, end);
+		ReallyRelocate_v1(table, end);
 		break;
 	case 1:
-		really_relocate_v2(table, end);
+		ReallyRelocate_v2(table, end);
 		break;
 	default:
 		_MCFCRT_Bail(L"_pei386_runtime_relocator() 失败：无法识别的重定位表。");
 	}
-	reprotect_sections(results, count);
+	ReprotectSections(results, count);
 }

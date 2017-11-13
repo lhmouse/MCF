@@ -15,7 +15,7 @@ typedef struct __MCFCRT_tag_jmp_buf {
 
 // See <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59039> for the purpose of this wrapper.
 __attribute__((__noreturn__))
-extern void __MCFCRT_longjmp_wrapper(_MCFCRT_jmp_buf __env) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_longjmp_wrapper(void **__env) _MCFCRT_NOEXCEPT;
 
 #define _MCFCRT_SETJMP(__env_)    (__builtin_setjmp((void **)(__env_)))
 #define _MCFCRT_LONGJMP(__env_)   (__MCFCRT_longjmp_wrapper((void **)(__env_)))

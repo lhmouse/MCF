@@ -5,6 +5,6 @@
 #include "xsetjmp.h"
 
 __attribute__((__noreturn__))
-void __MCFCRT_longjmp_wrapper(_MCFCRT_jmp_buf env){
+void __MCFCRT_longjmp_wrapper(void **env){
 	__builtin_longjmp(env, 1);
 }

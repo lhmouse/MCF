@@ -279,9 +279,7 @@ void __MCFCRT_StandardStreamsUninit(void){
 }
 
 long _MCFCRT_ReadStandardInputChar32(bool bDontRemove){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Si->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -317,9 +315,7 @@ long _MCFCRT_ReadStandardInputChar32(bool bDontRemove){
 	return (long)c32CodePoint;
 }
 size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, bool bStopAtEndOfLine, bool bDontRemove){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Si->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -373,9 +369,7 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 	return (size_t)(pwcWrite - pwcText);
 }
 int _MCFCRT_ReadStandardInputByte(bool bDontRemove){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Si->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -413,9 +407,7 @@ int _MCFCRT_ReadStandardInputByte(bool bDontRemove){
 	return nByteRead;
 }
 size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize, bool bDontRemove){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Si->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -675,9 +667,7 @@ int _MCFCRT_SetStandardOutputBuffered(bool bBuffered){
 }
 
 bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Se->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -705,9 +695,7 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 	return true;
 }
 bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLength, bool bEndOfLine){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Se->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -749,9 +737,7 @@ bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLen
 	return true;
 }
 bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Se->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -780,9 +766,7 @@ bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
 	return true;
 }
 bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
-	Lock(So);
-	UnlockedFlush(So, false);
-	Unlock(So);
+	_MCFCRT_FlushStandardOutput(false);
 
 	if(!(Se->hFile)){
 		SetLastError(ERROR_INVALID_HANDLE);

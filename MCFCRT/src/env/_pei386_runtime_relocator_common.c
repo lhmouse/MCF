@@ -63,20 +63,18 @@ static void UnprotectSections(UnprotectedSection *restrict pUnprotectResults, HM
 			dwNewProtect = dwOldProtect;
 			break;
 		}
-		if(dwNewProtect != dwOldProtect){
-			// Unprotect it.
-			if(!VirtualProtect(pVirtualBase, uVirtualSize, dwNewProtect, &dwOldProtect)){
-				_MCFCRT_Bail(L"VirtualProtect() 失败。");
-			}
-			pResult->pVirtualBase = pVirtualBase;
-			pResult->uVirtualSize = uVirtualSize;
-			pResult->dwOldProtect = dwOldProtect;
-		} else {
+		if(dwNewProtect == dwOldProtect){
 			// Nothing to do.
 			pResult->pVirtualBase = _MCFCRT_NULLPTR;
-			pResult->uVirtualSize = 0;
-			pResult->dwOldProtect = 0xDEADBEEF;
+			continue;
 		}
+		// Unprotect it.
+		if(!VirtualProtect(pVirtualBase, uVirtualSize, dwNewProtect, &dwOldProtect)){
+			_MCFCRT_Bail(L"VirtualProtect() 失败。");
+		}
+		pResult->pVirtualBase = pVirtualBase;
+		pResult->uVirtualSize = uVirtualSize;
+		pResult->dwOldProtect = dwOldProtect;
 	}
 }
 static void ReprotectSections(const UnprotectedSection *restrict pUnprotectResults, unsigned uSectionCount){
@@ -85,14 +83,14 @@ static void ReprotectSections(const UnprotectedSection *restrict pUnprotectResul
 		void *const pVirtualBase = pResult->pVirtualBase;
 		const size_t uVirtualSize = pResult->uVirtualSize;
 
-		if(pVirtualBase){
-			// Reprotect it.
-			DWORD dwIgnored;
-			if(!VirtualProtect(pVirtualBase, uVirtualSize, pResult->dwOldProtect, &dwIgnored)){
-				_MCFCRT_Bail(L"VirtualProtect() 失败。");
-			}
-		} else {
+		if(!pVirtualBase){
 			// This section was not unprotected. Nothing to do.
+			continue;
+		}
+		// Reprotect it.
+		DWORD dwIgnored;
+		if(!VirtualProtect(pVirtualBase, uVirtualSize, pResult->dwOldProtect, &dwIgnored)){
+			_MCFCRT_Bail(L"VirtualProtect() 失败。");
 		}
 	}
 }

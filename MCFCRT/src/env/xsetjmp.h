@@ -13,6 +13,7 @@ typedef struct __MCFCRT_tag_jmp_buf {
 	_MCFCRT_STD uintptr_t __a[5];
 } _MCFCRT_jmp_buf[1];
 
+// See <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59039> for the purpose of this wrapper.
 __attribute__((__noreturn__))
 extern void __MCFCRT_longjmp_wrapper(_MCFCRT_jmp_buf __env) _MCFCRT_NOEXCEPT;
 

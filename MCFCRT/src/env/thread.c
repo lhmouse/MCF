@@ -4,6 +4,7 @@
 
 #include "thread.h"
 #include "_nt_timeout.h"
+#include "_seh_top.h"
 #include "xassert.h"
 #include "mcfwin.h"
 #include <ntdef.h>
@@ -56,6 +57,18 @@ _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThre
 void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
+}
+
+unsigned long _MCFCRT_WrapThreadProcWithSehTop(_MCFCRT_WrappedThreadProc pfnThreadProc, void *pParam){
+	unsigned long ulExitCode;
+
+	__MCFCRT_SEH_TOP_BEGIN
+	{
+		ulExitCode = (*pfnThreadProc)(pParam);
+	}
+	__MCFCRT_SEH_TOP_END
+
+	return ulExitCode;
 }
 
 void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){

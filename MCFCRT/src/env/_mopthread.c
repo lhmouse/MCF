@@ -7,7 +7,6 @@
 #include "avl_tree.h"
 #include "mcfwin.h"
 #include "heap.h"
-#include "_seh_top.h"
 #include "condition_variable.h"
 #include "inline_mem.h"
 #include "bail.h"
@@ -180,17 +179,17 @@ void __MCFCRT_MopthreadUninit(void){
 	DetachInitialThread();
 }
 
-__MCFCRT_C_STDCALL __attribute__((__noreturn__))
-static unsigned long MopthreadProcNative(void *pParam){
+static unsigned long MopthreadProc(void *pParam){
 	MopthreadControl *const restrict pControl = pParam;
-	_MCFCRT_ASSERT(pControl);
-
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		(*(pControl->pfnProc))(pControl->abyParams);
-	}
-	__MCFCRT_SEH_TOP_END
-
+	_MCFCRT_DEBUG_CHECK(pControl);
+	(*(pControl->pfnProc))(pControl->abyParams);
+	return 0;
+}
+__MCFCRT_C_STDCALL __attribute__((__noreturn__))
+static unsigned long NativeMopthreadProc(void *pParam){
+	MopthreadControl *const restrict pControl = pParam;
+	_MCFCRT_DEBUG_CHECK(pControl);
+	_MCFCRT_WrapThreadProcWithSehTop(&MopthreadProc, pControl);
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	SignalMutexAndExitThread(&g_mtxControl, pControl, _MCFCRT_NULLPTR, 0);
 }
@@ -221,7 +220,7 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 	_MCFCRT_InitializeConditionVariable(&(pControl->condTermination));
 
 	uintptr_t uTid;
-	const _MCFCRT_ThreadHandle hThread = _MCFCRT_CreateNativeThread(&MopthreadProcNative, pControl, true, &uTid);
+	const _MCFCRT_ThreadHandle hThread = _MCFCRT_CreateNativeThread(&NativeMopthreadProc, pControl, true, &uTid);
 	if(!hThread){
 		_MCFCRT_free(pControl);
 		return 0;

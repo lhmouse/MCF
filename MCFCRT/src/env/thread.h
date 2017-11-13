@@ -16,6 +16,10 @@ typedef struct __MCFCRT_tagThreadHandle { int __n; } *_MCFCRT_ThreadHandle;
 extern _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc __pfnThreadProc, void *__pParam, bool __bSuspended, _MCFCRT_STD uintptr_t *_MCFCRT_RESTRICT __puThreadId) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
+typedef unsigned long (*_MCFCRT_WrappedThreadProc)(void *__pParam);
+
+extern unsigned long _MCFCRT_WrapThreadProcWithSehTop(_MCFCRT_WrappedThreadProc __pfnThreadProc, void *__pParam) _MCFCRT_NOEXCEPT;
+
 extern void _MCFCRT_Sleep(_MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
 // _MCFCRT_AlertableSleep() returns true if the current thread has been woken up by APC and false if the current thread has timed out.
 extern bool _MCFCRT_AlertableSleep(_MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;

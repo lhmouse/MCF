@@ -59,6 +59,7 @@ void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
 }
 
+__attribute__((__force_align_arg_pointer__))
 unsigned long _MCFCRT_WrapThreadProcWithSehTop(_MCFCRT_WrappedThreadProc pfnThreadProc, void *pParam){
 	unsigned long ulExitCode;
 

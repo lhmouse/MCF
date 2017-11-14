@@ -120,9 +120,9 @@ typedef struct tagRelocationElement_v2 {
 static void ReallyRelocate_v2(HMODULE hModule, const RelocationElement_v2 *pTable, size_t uSize){
 	for(size_t uIndex = 0; uIndex < uSize; ++uIndex){
 		void *const pSymbol = (char *)hModule + pTable[uIndex].dwSymbolRva;
-		const INT64 n64Offset = (char *)*(void **)pSymbol - (char *)pSymbol;
+		const INT_PTR n64Offset = (char *)*(void **)pSymbol - (char *)pSymbol;
 		void *const pTarget = (char *)hModule + pTable[uIndex].dwTargetRva;
-		switch(pTable[uIndex].dwFlags){
+		switch(pTable[uIndex].dwFlags & 0xFF){
 		case 8:
 			*(UINT8 *)pTarget += (UINT8)n64Offset;
 			break;

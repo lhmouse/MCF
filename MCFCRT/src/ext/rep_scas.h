@@ -7,11 +7,14 @@
 
 #include "../env/_crtdef.h"
 
+#ifndef __MCFCRT_REP_SCAS_INLINE_OR_EXTERN
+#  define __MCFCRT_REP_SCAS_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
+
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_SCAS_DEFINE(__name_, __mnemonic_, __type_)	\
-	__attribute__((__always_inline__))	\
-	static inline int __name_(__type_ **_MCFCRT_RESTRICT __es, const __type_ *__s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
+	__MCFCRT_REP_SCAS_INLINE_OR_EXTERN int __name_(__type_ **_MCFCRT_RESTRICT __es, const __type_ *__s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
 		bool __z, __b;	\
 		const __type_ *__p = __s;	\
 		__asm__ (	\

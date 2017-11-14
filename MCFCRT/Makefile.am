@@ -165,6 +165,10 @@ mcfcrt_sources = \
 	src/ext/wcppcpy.c	\
 	src/ext/rawmemchr.c	\
 	src/ext/rawwmemchr.c	\
+	src/ext/rep_movs.c	\
+	src/ext/rep_stos.c	\
+	src/ext/rep_cmps.c	\
+	src/ext/rep_scas.c	\
 	src/stdc/math/acos.c	\
 	src/stdc/math/asin.c	\
 	src/stdc/math/atan.c	\

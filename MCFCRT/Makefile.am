@@ -99,8 +99,6 @@ pkginclude_ext_HEADERS = \
 	src/ext/itow.h	\
 	src/ext/atoi.h	\
 	src/ext/wtoi.h	\
-	src/ext/mul64.h	\
-	src/ext/div64.h	\
 	src/ext/random.h	\
 	src/ext/stpcpy.h	\
 	src/ext/stppcpy.h	\
@@ -155,8 +153,6 @@ mcfcrt_sources = \
 	src/ext/itow.c	\
 	src/ext/atoi.c	\
 	src/ext/wtoi.c	\
-	src/ext/mul64.c	\
-	src/ext/div64.c	\
 	src/ext/random.c	\
 	src/ext/stpcpy.c	\
 	src/ext/stppcpy.c	\

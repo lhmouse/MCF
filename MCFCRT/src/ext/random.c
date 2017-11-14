@@ -6,16 +6,22 @@
 #include "../env/clocks.h"
 
 uint32_t _MCFCRT_GetRandomUint32(void){
-	static volatile uint64_t s_u64SeedNew = 0;
-	uint64_t u64SeedOld, u64SeedNew;
-	u64SeedOld = __atomic_load_n(&s_u64SeedNew, __ATOMIC_RELAXED);
-	do {
-		u64SeedNew = (u64SeedOld ^ _MCFCRT_ReadTimeStampCounter32()) * 6364136223846793005u + 1442695040888963407u;
-	} while(!__atomic_compare_exchange_n(&s_u64SeedNew, &u64SeedOld, u64SeedNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
-	return (uint32_t)(u64SeedNew >> 32);
+	static volatile uint64_t s_seed;
+
+	uint64_t old_seed, new_seed;
+	{
+		old_seed = __atomic_load_n(&s_seed, __ATOMIC_RELAXED);
+		do {
+			new_seed = old_seed;
+			new_seed ^= _MCFCRT_ReadTimeStampCounter32();
+			new_seed *= 6364136223846793005u;
+			new_seed += 1442695040888963407u;
+		} while(!__atomic_compare_exchange_n(&s_seed, &old_seed, new_seed, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
+	}
+	return (uint32_t)(new_seed >> 32);
 }
 uint64_t _MCFCRT_GetRandomUint64(void){
-	return ((uint64_t)_MCFCRT_GetRandomUint32() << 32) | _MCFCRT_GetRandomUint32();
+	return ((uint64_t)_MCFCRT_GetRandomUint32() << 32) + _MCFCRT_GetRandomUint32();
 }
 double _MCFCRT_GetRandomDouble(void){
 	return (double)(int64_t)(_MCFCRT_GetRandomUint64() >> 1) / 0x1p63;

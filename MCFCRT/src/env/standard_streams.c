@@ -105,7 +105,11 @@ static DWORD UnlockedConvertBinaryToText(Stream *restrict pStream, bool bExhaust
 	const size_t uBytesAvail = pStream->uBinaryEnd - pStream->uBinaryBegin;
 	if(uBytesAvail > 0){
 		// Max(UTF-16:UTF-8) = Max(2:1, 2:2, 2:3, 4:4) = 2
-		DWORD dwErrorCode = UnlockedReserve(pStream, uBytesAvail * 2, 0);
+		size_t uTextSizeAdd;
+		if(__builtin_mul_overflow(uBytesAvail, 2, &uTextSizeAdd)){
+			return ERROR_NOT_ENOUGH_MEMORY;
+		}
+		DWORD dwErrorCode = UnlockedReserve(pStream, uTextSizeAdd, 0);
 		if(dwErrorCode != 0){
 			return dwErrorCode;
 		}
@@ -133,7 +137,11 @@ static DWORD UnlockedConvertTextToBinary(Stream *restrict pStream, bool bExhaust
 	const size_t uBytesAvail = pStream->uTextEnd - pStream->uTextBegin;
 	if(uBytesAvail > 0){
 		// Max(UTF-8:UTF-16) = Max(1:2, 2:2, 3:2, 4:4) = 1.5
-		DWORD dwErrorCode = UnlockedReserve(pStream, 0, uBytesAvail * 2);
+		size_t uBinarySizeAdd;
+		if(__builtin_mul_overflow(uBytesAvail, 2, &uBinarySizeAdd)){
+			return ERROR_NOT_ENOUGH_MEMORY;
+		}
+		DWORD dwErrorCode = UnlockedReserve(pStream, 0, uBinarySizeAdd);
 		if(dwErrorCode != 0){
 			return dwErrorCode;
 		}

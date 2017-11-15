@@ -8,7 +8,7 @@
 #undef wmemset
 
 wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n){
-	register wchar_t *wp __asm__("di") = s;
+	wchar_t *wp = s;
 	uintptr_t word;
 	word = (uint16_t)c;
 #ifdef _WIN64

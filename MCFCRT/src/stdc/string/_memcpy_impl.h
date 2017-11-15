@@ -16,8 +16,8 @@ _MCFCRT_CONSTEXPR static inline bool __MCFCRT_memcpy_is_small_enough(_MCFCRT_STD
 }
 
 static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	register unsigned char *__wp __asm__("cx") = (unsigned char *)__s1;
-	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
+	unsigned char *__wp = (unsigned char *)__s1;
+	const unsigned char *__rp = (const unsigned char *)__s2;
 	_MCFCRT_STD size_t __rem = __n / 8;
 	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
 		switch((__rem - 1) % 8){
@@ -61,8 +61,8 @@ static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFC
 void __MCFCRT_memcpy_large_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT;
 
 static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1, const void *__s2) _MCFCRT_NOEXCEPT {
-	register unsigned char *__wp __asm__("dx") = (unsigned char *)__s1;
-	register const unsigned char *__rp __asm__("si") = (const unsigned char *)__s2;
+	unsigned char *__wp = (unsigned char *)__s1;
+	const unsigned char *__rp = (const unsigned char *)__s2;
 	_MCFCRT_STD size_t __rem = __n % 8;
 #define __MCFCRT_STEP_(__b_)	\
 	if(_MCFCRT_EXPECT(__rem & (__b_ / 8))){	\

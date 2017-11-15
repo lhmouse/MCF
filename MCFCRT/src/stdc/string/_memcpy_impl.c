@@ -8,11 +8,10 @@
 void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 	_MCFCRT_ASSERT(n >= 16);
 
-	register unsigned char *wp __asm__("cx") = (unsigned char *)s1;
-	register const unsigned char *rp __asm__("si") = (const unsigned char *)s2;
+	unsigned char *wp = (unsigned char *)s1;
+	const unsigned char *rp = (const unsigned char *)s2;
 	const size_t off = -(uintptr_t)s1 & ~(uintptr_t)-16; // off = 16 - misalignment
 	__m128i mis_w;
-	__asm__ volatile ("" : "+S"(rp));
 	if(_MCFCRT_EXPECT(off != 0)){
 		mis_w = _mm_loadu_si128((const __m128i *)s2);
 		wp += off;
@@ -110,11 +109,10 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 	_MCFCRT_ASSERT(n >= 16);
 
-	register unsigned char *wp __asm__("dx") = (unsigned char *)s1;
-	register const unsigned char *rp __asm__("si") = (const unsigned char *)s2;
+	unsigned char *wp = (unsigned char *)s1;
+	const unsigned char *rp = (const unsigned char *)s2;
 	const size_t off = (uintptr_t)s1 & ~(uintptr_t)-16; // off = misalignment
 	__m128i mis_w;
-	__asm__ volatile ("" : "+S"(rp));
 	if(_MCFCRT_EXPECT(off != 0)){
 		mis_w = _mm_loadu_si128((const __m128i *)s2 - 1);
 		wp -= off;

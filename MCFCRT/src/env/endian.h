@@ -22,19 +22,19 @@ _MCFCRT_EXTERN_C_BEGIN
 	}
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
 __MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint16, _MCFCRT_store_be_uint16, _MCFCRT_STD uint16_t, __builtin_bswap16)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_STD uint64_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_STD uint32_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
 __MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint16, _MCFCRT_store_le_uint16, _MCFCRT_STD uint16_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_STD uint32_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_STD uint64_t,                  )
 #else
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_STD uint64_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_STD uint32_t,                  )
 __MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint16, _MCFCRT_store_be_uint16, _MCFCRT_STD uint16_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_STD uint32_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_STD uint64_t,                  )
 __MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint16, _MCFCRT_store_le_uint16, _MCFCRT_STD uint16_t, __builtin_bswap16)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
 #endif
 
 _MCFCRT_EXTERN_C_END

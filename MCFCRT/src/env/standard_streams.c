@@ -34,6 +34,10 @@ static void Lock(Stream *restrict pStream){
 static void Unlock(Stream *restrict pStream){
 	_MCFCRT_SignalMutex(&(pStream->vMutex));
 }
+static void UnlockAndSetLastError(Stream *restrict pStream, DWORD dwErrorCode){
+	Unlock(pStream);
+	SetLastError(dwErrorCode);
+}
 
 static DWORD UnlockedSetConsoleMode(Stream *restrict pStream, DWORD dwModeToRemove, DWORD dwModeToAdd){
 	if(pStream->bConsole){
@@ -292,8 +296,7 @@ long _MCFCRT_ReadStandardInputChar32(bool bDontRemove){
 	for(;;){
 		DWORD dwErrorCode = UnlockedConvertBinaryToText(Si, false);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return -1;
 		}
 		pwcRead = (void *)(Si->pbyBuffer + Si->uTextBegin);
@@ -303,8 +306,7 @@ long _MCFCRT_ReadStandardInputChar32(bool bDontRemove){
 		}
 		dwErrorCode = UnlockedPopulate(Si);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return -1;
 		}
 	}
@@ -328,8 +330,7 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 	for(;;){
 		DWORD dwErrorCode = UnlockedConvertBinaryToText(Si, false);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return 0;
 		}
 		pwcRead = (void *)(Si->pbyBuffer + Si->uTextBegin);
@@ -339,15 +340,13 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 		}
 		dwErrorCode = UnlockedPopulate(Si);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return 0;
 		}
 	}
 	wchar_t *pwcWrite = pwcText;
 	if(!_MCFCRT_UTF_SUCCESS(_MCFCRT_EncodeUtf16(&pwcWrite, pwcText + uLength, c32CodePoint, true))){
-		Unlock(Si);
-		SetLastError(ERROR_INSUFFICIENT_BUFFER);
+		UnlockAndSetLastError(Si, ERROR_INSUFFICIENT_BUFFER);
 		return 0;
 	}
 	for(;;){
@@ -382,8 +381,7 @@ int _MCFCRT_ReadStandardInputByte(bool bDontRemove){
 	for(;;){
 		DWORD dwErrorCode = UnlockedConvertTextToBinary(Si, false);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return -1;
 		}
 		pbyRead = (void *)(Si->pbyBuffer + Si->uBinaryBegin);
@@ -393,8 +391,7 @@ int _MCFCRT_ReadStandardInputByte(bool bDontRemove){
 		}
 		dwErrorCode = UnlockedPopulate(Si);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return -1;
 		}
 	}
@@ -420,8 +417,7 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize, bool 
 	for(;;){
 		DWORD dwErrorCode = UnlockedConvertTextToBinary(Si, false);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return 0;
 		}
 		pbyRead = (void *)(Si->pbyBuffer + Si->uBinaryBegin);
@@ -431,14 +427,12 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize, bool 
 		}
 		dwErrorCode = UnlockedPopulate(Si);
 		if(dwErrorCode != 0){
-			Unlock(Si);
-			SetLastError(dwErrorCode);
+			UnlockAndSetLastError(Si, dwErrorCode);
 			return 0;
 		}
 	}
 	if(uSize == 0){
-		Unlock(Si);
-		SetLastError(ERROR_INSUFFICIENT_BUFFER);
+		UnlockAndSetLastError(Si, ERROR_INSUFFICIENT_BUFFER);
 		return 0;
 	}
 	const size_t uBytesRead = (uSize < uBytesAvail) ? uSize : uBytesAvail;
@@ -474,8 +468,7 @@ int _MCFCRT_SetStandardInputEchoing(bool bEchoing){
 	DWORD dwErrorCode = bEchoing ? UnlockedSetConsoleMode(Si, 0, dwEchoMode)
 	                             : UnlockedSetConsoleMode(Si, dwEchoMode, 0);
 	if(dwErrorCode != 0){
-		Unlock(Si);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Si, dwErrorCode);
 		return -1;
 	}
 	Si->bEchoing = bEchoing;
@@ -492,14 +485,12 @@ bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 	Lock(So);
 	DWORD dwErrorCode = UnlockedConvertBinaryToText(So, true);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(So, 2 * sizeof(wchar_t), 0);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	bool bFlushNow = !(So->bBuffered);
@@ -523,14 +514,12 @@ bool _MCFCRT_WriteStandardOutputText(const wchar_t *restrict pwcText, size_t uLe
 	Lock(So);
 	DWORD dwErrorCode = UnlockedConvertBinaryToText(So, true);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(So, uLength * sizeof(wchar_t) + sizeof(wchar_t), 0);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	bool bFlushNow = !(So->bBuffered);
@@ -569,14 +558,12 @@ bool _MCFCRT_WriteStandardOutputByte(unsigned char byData){
 	Lock(So);
 	DWORD dwErrorCode = UnlockedConvertTextToBinary(So, true);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(So, 0, 1);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	bool bFlushNow = !(So->bBuffered);
@@ -600,14 +587,12 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *restrict pData, size_t uSize)
 	Lock(So);
 	DWORD dwErrorCode = UnlockedConvertTextToBinary(So, true);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(So, 0, uSize);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	bool bFlushNow = !(So->bBuffered);
@@ -631,8 +616,7 @@ bool _MCFCRT_FlushStandardOutput(bool bHard){
 	Lock(So);
 	DWORD dwErrorCode = UnlockedFlush(So, bHard);
 	if(dwErrorCode != 0){
-		Unlock(So);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(So, dwErrorCode);
 		return false;
 	}
 	Unlock(So);
@@ -677,14 +661,12 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 	Lock(Se);
 	DWORD dwErrorCode = UnlockedConvertBinaryToText(Se, true);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(Se, 2 * sizeof(wchar_t), 0);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	wchar_t *pwcWrite = (void *)(Se->pbyBuffer + Se->uTextEnd);
@@ -705,14 +687,12 @@ bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLen
 	Lock(Se);
 	DWORD dwErrorCode = UnlockedConvertBinaryToText(Se, true);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(Se, uLength * sizeof(wchar_t) + sizeof(wchar_t), 0);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	const wchar_t *pwcRead = pwcText;
@@ -747,14 +727,12 @@ bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
 	Lock(Se);
 	DWORD dwErrorCode = UnlockedConvertTextToBinary(Se, true);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(Se, 0, 1);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	unsigned char *pbyWrite = (void *)(Se->pbyBuffer + Se->uBinaryEnd);
@@ -776,14 +754,12 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
 	Lock(Se);
 	DWORD dwErrorCode = UnlockedConvertTextToBinary(Se, true);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	dwErrorCode = UnlockedReserve(Se, 0, uSize);
 	if(dwErrorCode != 0){
-		Unlock(Se);
-		SetLastError(dwErrorCode);
+		UnlockAndSetLastError(Se, dwErrorCode);
 		return false;
 	}
 	unsigned char *pbyWrite = (void *)(Se->pbyBuffer + Se->uBinaryEnd);

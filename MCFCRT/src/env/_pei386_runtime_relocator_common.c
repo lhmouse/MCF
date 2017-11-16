@@ -25,7 +25,7 @@ typedef struct tagUnprotectedSection {
 	DWORD dwOldProtect;
 } UnprotectedSection;
 
-static void UnprotectSections(UnprotectedSection *restrict pUnprotectResults, HMODULE hModule, const IMAGE_SECTION_HEADER *_MCFCRT_RESTRICT pSectionTable, unsigned uSectionCount){
+static void UnprotectSections(UnprotectedSection *restrict pUnprotectResults, HMODULE hModule, const IMAGE_SECTION_HEADER *restrict pSectionTable, unsigned uSectionCount){
 	for(unsigned uIndex = 0; uIndex < uSectionCount; ++uIndex){
 		UnprotectedSection *const pResult = pUnprotectResults + uIndex;
 		void *const pVirtualBase = (char *)hModule + pSectionTable[uIndex].VirtualAddress;

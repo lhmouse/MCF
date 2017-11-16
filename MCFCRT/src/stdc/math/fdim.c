@@ -9,16 +9,12 @@
 #undef fdim
 #undef fdiml
 
-static inline long double fpu_fdim(long double x, long double y){
-	return (x > y) ? (x - y) : __MCFCRT_fldz();
-}
-
 float fdimf(float x, float y){
-	return (float)fpu_fdim(x, y);
+	return (x > y) ? (x - y) : 0;
 }
 double fdim(double x, double y){
-	return (double)fpu_fdim(x, y);
+	return (x > y) ? (x - y) : 0;
 }
 long double fdiml(long double x, long double y){
-	return fpu_fdim(x, y);
+	return (x > y) ? (x - y) : 0;
 }

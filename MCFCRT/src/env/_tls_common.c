@@ -228,8 +228,8 @@ typedef struct tagAtExitBlock {
 	AtExitElement aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitBlock;
 
-static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
-	(void)nUnused;
+static void CrtAtThreadExitDestructor(intptr_t nContext, void *pStorage){
+	(void)nContext;
 
 	AtExitBlock *const pBlock = pStorage;
 	for(size_t uIndex = pBlock->uSize; uIndex != 0; --uIndex){
@@ -256,6 +256,8 @@ unsigned long __MCFCRT_InternalAtThreadExit(__MCFCRT_TlsThreadMapHandle hThreadM
 #endif
 		pBlock = (void *)pObject->abyStorage;
 		pBlock->uSize = 0;
+		pObject->pfnDestructor = &CrtAtThreadExitDestructor;
+		pObject->nContext      = 1;
 
 		TlsObject *const pPrev = pThreadMap->pLast;
 		TlsObject *const pNext = _MCFCRT_NULLPTR;

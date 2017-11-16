@@ -26,14 +26,14 @@ static inline long double fpu_fmax(long double x, long double y){
 
 float fmaxf(float x, float y){
 #ifdef _WIN64
-	return __MCFCRT_maxss(x, y);
+	return __MCFCRT_xmmmaxss(x, y);
 #else
 	return (float)fpu_fmax(x, y);
 #endif
 }
 double fmax(double x, double y){
 #ifdef _WIN64
-	return __MCFCRT_maxsd(x, y);
+	return __MCFCRT_xmmmaxsd(x, y);
 #else
 	return (double)fpu_fmax(x, y);
 #endif

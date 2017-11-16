@@ -12,14 +12,14 @@
 
 float sqrtf(float x){
 #ifdef _WIN64
-	return __MCFCRT_sqrtss(x);
+	return __MCFCRT_xmmsqrtss(x);
 #else
 	return (float)__MCFCRT_fsqrt(x);
 #endif
 }
 double sqrt(double x){
 #ifdef _WIN64
-	return __MCFCRT_sqrtsd(x);
+	return __MCFCRT_xmmsqrtsd(x);
 #else
 	return (double)__MCFCRT_fsqrt(x);
 #endif

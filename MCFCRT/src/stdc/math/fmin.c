@@ -26,14 +26,14 @@ static inline long double fpu_fmin(long double x, long double y){
 
 float fminf(float x, float y){
 #ifdef _WIN64
-	return __MCFCRT_minss(x, y);
+	return __MCFCRT_xmmminss(x, y);
 #else
 	return (float)fpu_fmin(x, y);
 #endif
 }
 double fmin(double x, double y){
 #ifdef _WIN64
-	return __MCFCRT_minsd(x, y);
+	return __MCFCRT_xmmminsd(x, y);
 #else
 	return (double)fpu_fmin(x, y);
 #endif

@@ -3,17 +3,33 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "_fpu.h"
+#include "_sse2.h"
 
 #undef fabsf
 #undef fabs
 #undef fabsl
 
 float fabsf(float x){
-	return __builtin_fabsf(x);
+	float ret;
+#ifdef _WIN64
+	ret = __MCFCRT_xmmabsss(x);
+#else
+	ret = (float)__MCFCRT_fabs(x);
+#endif
+	return ret;
 }
 double fabs(double x){
-	return __builtin_fabs(x);
+	double ret;
+#ifdef _WIN64
+	ret = __MCFCRT_xmmabssd(x);
+#else
+	ret = (double)__MCFCRT_fabs(x);
+#endif
+	return ret;
 }
 long double fabsl(long double x){
-	return __builtin_fabsl(x);
+	long double ret;
+	ret = __MCFCRT_fabs(x);
+	return ret;
 }

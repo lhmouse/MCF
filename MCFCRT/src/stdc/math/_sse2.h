@@ -50,39 +50,79 @@ static inline double __MCFCRT_xmmmaxsd(double __x, double __y) _MCFCRT_NOEXCEPT 
 static inline float __MCFCRT_xmmsqrtss(float __x) _MCFCRT_NOEXCEPT {
 	float __ret;
 	__asm__ (
-		"sqrtss %0, %0 \n"
+		"sqrtss %0, %1 \n"
 		: "=x"(__ret)
-		: "0"(__x)
+		: "x"(__x)
 	);
 	return __ret;
 }
 static inline double __MCFCRT_xmmsqrtsd(double __x) _MCFCRT_NOEXCEPT {
 	double __ret;
 	__asm__ (
-		"sqrtsd %0, %0 \n"
+		"sqrtsd %0, %1 \n"
 		: "=x"(__ret)
-		: "0"(__x)
+		: "x"(__x)
 	);
 	return __ret;
 }
 
 static inline bool __MCFCRT_xmmsignbitss(float __x) _MCFCRT_NOEXCEPT {
-	bool __ret;
+	int __mask;
 	__asm__ (
-		"movmskps eax, %1 \n"
-		"and eax, 1 \n"
-		: "=a"(__ret)
+		"movmskps %0, %1 \n"
+		: "=r"(__mask)
 		: "x"(__x)
+	);
+	return __mask & 1;
+}
+static inline bool __MCFCRT_xmmsignbitsd(double __x) _MCFCRT_NOEXCEPT {
+	int __mask;
+	__asm__ (
+		"movmskpd %0, %1 \n"
+		: "=r"(__mask)
+		: "x"(__x)
+	);
+	return __mask & 1;
+}
+
+static inline float __MCFCRT_xmmabsss(float __x) _MCFCRT_NOEXCEPT {
+	float __ret;
+	__asm__ (
+		"andnps %0, %2 \n"
+		: "=x"(__ret)
+		: "0"(-(float)0), "x"(__x)
 	);
 	return __ret;
 }
-static inline bool __MCFCRT_xmmsignbitsd(double __x) _MCFCRT_NOEXCEPT {
-	bool __ret;
+static inline double __MCFCRT_xmmabssd(double __x) _MCFCRT_NOEXCEPT {
+	double __ret;
 	__asm__ (
-		"movmskpd eax, %1 \n"
-		"and eax, 1 \n"
-		: "=a"(__ret)
-		: "x"(__x)
+		"andnpd %0, %2 \n"
+		: "=x"(__ret)
+		: "0"(-(double)0), "x"(__x)
+	);
+	return __ret;
+}
+
+static inline float __MCFCRT_xmmcopysignss(float __x, float __y) _MCFCRT_NOEXCEPT {
+	float __ret;
+	__asm__ (
+		"xorps %0, %1 \n"
+		"andps %0, %3 \n"
+		"xorps %0, %1 \n"
+		: "=&x"(__ret)
+		: "x"(__x), "0"(__y), "x"(-(float)0)
+	);
+	return __ret;
+}
+static inline double __MCFCRT_xmmcopysignsd(double __x, double __y) _MCFCRT_NOEXCEPT {
+	double __ret;
+	__asm__ (
+		"xorpd %0, %1 \n"
+		"andpd %0, %3 \n"
+		"xorpd %0, %1 \n"
+		: "=&x"(__ret)
+		: "x"(__x), "0"(__y), "x"(-(double)0)
 	);
 	return __ret;
 }

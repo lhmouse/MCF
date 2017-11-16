@@ -14,7 +14,7 @@ static inline long saturated_dec(long val){
 	ret &= ~(ret >> 31);
 	return ret;
 }
-static inline void break_down(__MCFCRT_x87Register *restrict lo, __MCFCRT_x87Register *restrict hi, long double x){
+static inline void break_down(__MCFCRT_X87Register *restrict lo, __MCFCRT_X87Register *restrict hi, long double x){
 	hi->__val = x;
 	const uint32_t mts_l = hi->__mts_l;
 	const long exp = hi->__exp;
@@ -60,7 +60,7 @@ static inline long double fpu_fma(long double x, long double y, long double z){
 	if(rexam == __MCFCRT_kFpuExamineInfinity){
 		return ret;
 	}
-	__MCFCRT_x87Register xlo, xhi, ylo, yhi;
+	__MCFCRT_X87Register xlo, xhi, ylo, yhi;
 	break_down(&xlo, &xhi, x);
 	break_down(&ylo, &yhi, y);
 	ret = z;

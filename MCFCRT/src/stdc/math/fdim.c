@@ -10,11 +10,11 @@
 #undef fdiml
 
 float fdimf(float x, float y){
-	return (x > y) ? (x - y) : 0;
+	return (x > y) ? (x - y) : +0.0f;
 }
 double fdim(double x, double y){
-	return (x > y) ? (x - y) : 0;
+	return (x > y) ? (x - y) : +0.0;
 }
 long double fdiml(long double x, long double y){
-	return (x > y) ? (x - y) : 0;
+	return (x > y) ? (x - y) : +0.0l;
 }

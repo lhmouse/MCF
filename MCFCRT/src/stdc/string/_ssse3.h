@@ -10,7 +10,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-__attribute__((__selectany__, __aligned__(64)))
+__attribute__((__selectany__, __aligned__(32)))
 extern const uint8_t __MCFCRT_xmmalign_masks[16][32];
 
 const uint8_t __MCFCRT_xmmalign_masks[16][32] = {

@@ -14,8 +14,7 @@ static inline long long fpu_llround(long double x){
 	bool sign;
 	__MCFCRT_fxam(&sign, x);
 	long long ret;
-	__MCFCRT_fisttpll(&ret, sign ? (x - 0.5l)
-	                             : (x + 0.5l));
+	__MCFCRT_fisttpll(&ret, sign ? (x - 0.5l) : (x + 0.5l));
 	return ret;
 }
 

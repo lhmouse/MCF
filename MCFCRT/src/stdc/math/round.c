@@ -15,8 +15,7 @@ static inline long double fpu_round(long double x){
 	if(exam == __MCFCRT_kFpuExamineNaN){
 		return x;
 	}
-	return sign ? __MCFCRT_ftrunc(x - 0.5l)
-	            : __MCFCRT_ftrunc(x + 0.5l);
+	return sign ? __MCFCRT_ftrunc(x - 0.5l) : __MCFCRT_ftrunc(x + 0.5l);
 }
 
 float roundf(float x){

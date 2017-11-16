@@ -3,46 +3,17 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_fpu.h"
 
 #undef fabsf
 #undef fabs
 #undef fabsl
 
 float fabsf(float x){
-	float ret;
-#ifdef _WIN64
-	static const uint32_t mmask = (1ull << 31) - 1;
-	__asm__ (
-		"movss xmm1, %2 \n"
-		"andps xmm0, xmm1 \n"
-		: "=Yz"(ret)
-		: "0"(x), "m"(mmask)
-		: "xmm1"
-	);
-#else
-	ret = (float)__MCFCRT_fabs(x);
-#endif
-	return ret;
+	return __builtin_fabsf(x);
 }
 double fabs(double x){
-	double ret;
-#ifdef _WIN64
-	static const uint64_t mmask = (1ull << 63) - 1;
-	__asm__ (
-		"movsd xmm1, %2 \n"
-		"andpd xmm0, xmm1 \n"
-		: "=Yz"(ret)
-		: "0"(x), "m"(mmask)
-		: "xmm1"
-	);
-#else
-	ret = (double)__MCFCRT_fabs(x);
-#endif
-	return ret;
+	return __builtin_fabs(x);
 }
 long double fabsl(long double x){
-	long double ret;
-	ret = __MCFCRT_fabs(x);
-	return ret;
+	return __builtin_fabsl(x);
 }

@@ -8,15 +8,20 @@
 #undef labs
 #undef llabs
 
+#define SET_SIGN_MASK(r_)    do { (r_) >>= (sizeof((r_)) * CHAR_BIT - 1); } while(false)
+
 int abs(int i){
-	const unsigned mask = (unsigned)(i >> (sizeof(int) * CHAR_BIT - 1));
-	return (int)(((unsigned)i ^ mask) - mask);
+	int m = i;
+	SET_SIGN_MASK(m);
+	return (i ^ m) - m;
 }
 long labs(long i){
-	const unsigned long mask = (unsigned long)(i >> (sizeof(long) * CHAR_BIT - 1));
-	return (long)(((unsigned long)i ^ mask) - mask);
+	long m = i;
+	SET_SIGN_MASK(m);
+	return (i ^ m) - m;
 }
 long long llabs(long long i){
-	const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * CHAR_BIT - 1));
-	return (long long)(((unsigned long long)i ^ mask) - mask);
+	long long m = i;
+	SET_SIGN_MASK(m);
+	return (i ^ m) - m;
 }

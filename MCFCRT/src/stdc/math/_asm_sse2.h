@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_STDC_MATH_SSE2_H_
-#define __MCFCRT_STDC_MATH_SSE2_H_
+#ifndef __MCFCRT_STDC_MATH_ASM_SSE2_H_
+#define __MCFCRT_STDC_MATH_ASM_SSE2_H_
 
 #include "../../env/_crtdef.h"
 

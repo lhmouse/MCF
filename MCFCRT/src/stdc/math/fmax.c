@@ -3,8 +3,8 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_fpu.h"
-#include "_sse2.h"
+#include "_asm_fpu.h"
+#include "_asm_sse2.h"
 
 #undef fmaxf
 #undef fmax

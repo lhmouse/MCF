@@ -32,8 +32,6 @@
 #  include "ext/wtoi.h"
 #  include "ext/itoa.h"
 #  include "ext/itow.h"
-#  include "ext/mul64.h"
-#  include "ext/div64.h"
 #  include "ext/random.h"
 #  include "ext/rawmemchr.h"
 #  include "ext/rawwmemchr.h"

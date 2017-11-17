@@ -35,9 +35,9 @@ __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
 noinst_HEADERS = \
-	src/stdc/math/_fpu.h	\
-	src/stdc/math/_sse2.h	\
-	src/stdc/math/_sse3.h	\
+	src/stdc/math/_asm_fpu.h	\
+	src/stdc/math/_asm_sse2.h	\
+	src/stdc/math/_asm_sse3.h	\
 	src/stdc/string/_memcpy_impl.h	\
 	src/stdc/string/_sse2.h	\
 	src/stdc/string/_ssse3.h

@@ -3,52 +3,20 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "sha256.h"
+#include <x86intrin.h>
 
 // https://en.wikipedia.org/wiki/SHA-2
-
-static inline void sbe64(void *ptr, uint64_t val){
-	uint64_t be;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	be = __builtin_bswap64(val);
-#else
-	be = val;
-#endif
-	memcpy(ptr, &be, sizeof(be));
-}
-static inline uint32_t lbe32(const void *ptr){
-	uint32_t be;
-	memcpy(&be, ptr, sizeof(be));
-	uint32_t val;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	val = __builtin_bswap32(be);
-#else
-	val = be;
-#endif
-	return val;
-}
-static inline void sbe32(void *ptr, uint32_t val){
-	uint32_t be;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	be = __builtin_bswap32(val);
-#else
-	be = val;
-#endif
-	memcpy(ptr, &be, sizeof(be));
-}
-static inline uint32_t ror32(uint32_t val, unsigned bits){
-	return (val >> bits) | (val << (32 - bits));
-}
 
 static void EatChunk(MCFBUILD_Sha256Context *restrict pContext, const unsigned char *restrict pbyChunk){
 	uint32_t s0, maj, t2, s1, ch, t1;
 
 	uint32_t w[64];
 	for(unsigned i = 0; i < 16; ++i){
-		w[i] = lbe32(pbyChunk + i * 4);
+		w[i] = __builtin_bswap32(((const uint32_t *)pbyChunk)[i]);
 	}
 	for(unsigned i = 16; i < 64; ++i){
-		s0 = ror32(w[i - 15],  7) ^ ror32(w[i - 15], 18) ^ (w[i - 15] >>  3);
-		s1 = ror32(w[i -  2], 17) ^ ror32(w[i -  2], 19) ^ (w[i -  2] >> 10);
+		s0 = __rord(w[i - 15],  7) ^ __rord(w[i - 15], 18) ^ (w[i - 15] >>  3);
+		s1 = __rord(w[i -  2], 17) ^ __rord(w[i -  2], 19) ^ (w[i -  2] >> 10);
 		w[i] = w[i - 16] + w[i - 7] + s0 + s1;
 	}
 
@@ -58,10 +26,10 @@ static void EatChunk(MCFBUILD_Sha256Context *restrict pContext, const unsigned c
 	}
 
 #define SHA256_STEP(i_, a_, b_, c_, d_, e_, f_, g_, h_, k_)	\
-	s0 = ror32(a_, 2) ^ ror32(a_, 13) ^ ror32(a_, 22);	\
+	s0 = __rord(a_, 2) ^ __rord(a_, 13) ^ __rord(a_, 22);	\
 	maj = (a_ & b_) | (c_ & (a_ ^ b_));	\
 	t2 = s0 + maj;	\
-	s1 = ror32(e_, 6) ^ ror32(e_, 11) ^ ror32(e_, 25);	\
+	s1 = __rord(e_, 6) ^ __rord(e_, 11) ^ __rord(e_, 25);	\
 	ch = g_ ^ (e_ & (f_ ^ g_));	\
 	t1 = h_ + s1 + ch + k_ + w[i_];	\
 	d_ += t1;	\
@@ -190,9 +158,9 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail - 8);
 		pContext->uChunkOffset = 56;
 	}
-	sbe64(pContext->au8Chunk + pContext->uChunkOffset, pContext->u64BitsTotal);
+	((uint64_t *)pContext->au8Chunk)[7] = __builtin_bswap64(pContext->u64BitsTotal);
 	EatChunk(pContext, pContext->au8Chunk);
 	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
-		sbe32((*pau8Result) + uIndex * 4, pContext->au32Regs[uIndex]);
+		((uint32_t *)pau8Result)[uIndex] = __builtin_bswap32(pContext->au32Regs[uIndex]);
 	}
 }

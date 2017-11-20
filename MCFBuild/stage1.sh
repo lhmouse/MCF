@@ -16,7 +16,7 @@ mkdir -p "${DEST}/include/mcfbuild/"
   -pipe -mfpmath=both -march=core2 -mtune=intel \
   -shared -Wl,--export-all-symbols,--exclude-libs,ALL \
   -Wl,--disable-stdcall-fixup,--enable-auto-image-base \
-  -O0 -g $(find . -name "*.c") \
+  -O0 -g3 $(find . -name "*.c") \
   -o "${DEST}/bin/mcfbuild-stage1.dll" \
   -Wl,--out-implib,"${DEST}/lib/libmcfbuild.dll.a"
 cp -Rp $(find . -name "*.h") \

@@ -14,7 +14,7 @@ MCFBUILD_EXTERN_C_BEGIN
 
 // Upon success, `MCFBUILD_FileGetContents()` allocates a buffer, stores a pointer to the buffer into `*ppData` and the size of the buffer into `*puSize`.
 // The buffer shall be freed with `MCFBUILD_FileFreeContents()`.
-extern bool MCFBUILD_FileGetContents(void **ppData, MCFBUILD_STD size_t *puSize, const wchar_t *pwcPath) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_FileGetContents(void *MCFBUILD_RESTRICT *MCFBUILD_RESTRICT ppData, MCFBUILD_STD size_t *puSize, const wchar_t *MCFBUILD_RESTRICT pwcPath) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_FileFreeContents(void *pData) MCFBUILD_NOEXCEPT;
 
 // Upon failure, the contents of the file are indeterminate.

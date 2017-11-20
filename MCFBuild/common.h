@@ -20,11 +20,13 @@
 #  define MCFBUILD_EXTERN_C_END         }
 #  define MCFBUILD_STD                  ::
 #  define MCFBUILD_NOEXCEPT             throw()
+#  define MCFBUILD_RESTRICT             __restrict__
 #else
 #  define MCFBUILD_EXTERN_C_BEGIN       //
 #  define MCFBUILD_EXTERN_C_END         //
 #  define MCFBUILD_STD                  //
 #  define MCFBUILD_NOEXCEPT             //
+#  define MCFBUILD_RESTRICT             restrict
 #endif
 
 #endif

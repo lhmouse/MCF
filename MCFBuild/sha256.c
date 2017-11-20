@@ -40,13 +40,15 @@ static inline uint32_t ror32(uint32_t val, unsigned bits){
 }
 
 static void EatChunk(MCFBUILD_Sha256Context *restrict pContext, const unsigned char *restrict pbyChunk){
+	uint32_t s0, maj, t2, s1, ch, t1;
+
 	uint32_t w[64];
 	for(unsigned i = 0; i < 16; ++i){
 		w[i] = lbe32(pbyChunk + i * 4);
 	}
 	for(unsigned i = 16; i < 64; ++i){
-		const uint32_t s0 = ror32(ror32(w[i - 15], 11) ^ w[i - 15],  7) ^ (w[i - 15] >>  3);
-		const uint32_t s1 = ror32(ror32(w[i -  2],  2) ^ w[i -  2], 17) ^ (w[i -  2] >> 10);
+		s0 = ror32(w[i - 15],  7) ^ ror32(w[i - 15], 18) ^ (w[i - 15] >>  3);
+		s1 = ror32(w[i -  2], 17) ^ ror32(w[i -  2], 19) ^ (w[i -  2] >> 10);
 		w[i] = w[i - 16] + w[i - 7] + s0 + s1;
 	}
 
@@ -55,15 +57,13 @@ static void EatChunk(MCFBUILD_Sha256Context *restrict pContext, const unsigned c
 		r[i] = pContext->au32Regs[i];
 	}
 
-	uint32_t S0, maj, t2, S1, ch, t1;
-
 #define SHA256_STEP(i_, a_, b_, c_, d_, e_, f_, g_, h_, k_)	\
-	S0 = ror32(ror32(ror32(a_, 9) ^ a_, 11) ^ a_, 2);	\
+	s0 = ror32(a_, 2) ^ ror32(a_, 13) ^ ror32(a_, 22);	\
 	maj = (a_ & b_) | (c_ & (a_ ^ b_));	\
-	t2 = S0 + maj;	\
-	S1 = ror32(ror32(ror32(e_, 14) ^ e_, 5) ^ e_, 6);	\
+	t2 = s0 + maj;	\
+	s1 = ror32(e_, 6) ^ ror32(e_, 11) ^ ror32(e_, 25);	\
 	ch = g_ ^ (e_ & (f_ ^ g_));	\
-	t1 = h_ + S1 + ch + k_ + w[i_];	\
+	t1 = h_ + s1 + ch + k_ + w[i_];	\
 	d_ += t1;	\
 	h_ = t1 + t2;
 

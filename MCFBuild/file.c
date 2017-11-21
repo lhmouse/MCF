@@ -51,13 +51,13 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 			return false;
 		}
 		if(dwBytesRead == 0){
-			// EOF? This should not happen.
+			// EOF encountered. Stop.
 			break;
 		}
 		dwBytesReadTotal += dwBytesRead;
 	}
 	CloseHandle(hFile);
-	// Return the buffer to our caller.
+	// Return this buffer to the caller.
 	*ppData = pData;
 	*puSize = dwBytesReadTotal;
 	return true;

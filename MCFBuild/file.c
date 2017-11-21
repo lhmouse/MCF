@@ -7,7 +7,7 @@
 
 bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size_t *puSize, const wchar_t *restrict pwcPath){
 	DWORD dwErrorCode;
-	HANDLE hFile = CreateFileW(pwcPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
@@ -67,7 +67,7 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 		SetLastError(ERROR_ARITHMETIC_OVERFLOW);
 		return false;
 	}
-	HANDLE hFile = CreateFileW(pwcPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_WRITE_DATA, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
@@ -100,7 +100,7 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 		SetLastError(ERROR_ARITHMETIC_OVERFLOW);
 		return false;
 	}
-	HANDLE hFile = CreateFileW(pwcPath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_APPEND_DATA, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}

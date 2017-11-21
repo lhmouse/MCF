@@ -12,13 +12,12 @@ static inline uint32_t rotr(uint32_t val, unsigned bits){
 }
 
 static inline void sha256_round(uint32_t *restrict r, int a, int b, int c, int d, int e, int f, int g, int h, uint32_t k, uint32_t x){
-	uint32_t S0, maj, t2, S1, ch, t1;
-	S0 = rotr(r[a], 2) ^ rotr(r[a], 13) ^ rotr(r[a], 22);
-	maj = (r[a] & r[b]) | (r[c] & (r[a] ^ r[b]));
-	t2 = S0 + maj;
-	S1 = rotr(r[e], 6) ^ rotr(r[e], 11) ^ rotr(r[e], 25);
-	ch = r[g] ^ (r[e] & (r[f] ^ r[g]));
-	t1 = r[h] + S1 + ch + k + x;
+	uint32_t S0 = rotr(r[a], 2) ^ rotr(r[a], 13) ^ rotr(r[a], 22);
+	uint32_t maj = (r[a] & r[b]) | (r[c] & (r[a] ^ r[b]));
+	uint32_t t2 = S0 + maj;
+	uint32_t S1 = rotr(r[e], 6) ^ rotr(r[e], 11) ^ rotr(r[e], 25);
+	uint32_t ch = r[g] ^ (r[e] & (r[f] ^ r[g]));
+	uint32_t t1 = r[h] + S1 + ch + k + x;
 	r[d] += t1;
 	r[h] = t1 + t2;
 }

@@ -5,7 +5,7 @@
 #include "random.h"
 #include "../env/clocks.h"
 
-uint32_t _MCFCRT_GetRandomUint32(void){
+uint32_t _MCFCRT_GetRandom_uint32(void){
 	static volatile uint64_t s_seed;
 
 	uint64_t old_seed, new_seed;
@@ -20,12 +20,12 @@ uint32_t _MCFCRT_GetRandomUint32(void){
 	}
 	return (uint32_t)(new_seed >> 32);
 }
-uint64_t _MCFCRT_GetRandomUint64(void){
-	return ((uint64_t)_MCFCRT_GetRandomUint32() << 32) + _MCFCRT_GetRandomUint32();
+uint64_t _MCFCRT_GetRandom_uint64(void){
+	return ((uint64_t)_MCFCRT_GetRandom_uint32() << 32) + _MCFCRT_GetRandom_uint32();
 }
-double _MCFCRT_GetRandomDouble(void){
-	return (double)(int64_t)(_MCFCRT_GetRandomUint64() >> 1) / 0x1p63;
+double _MCFCRT_GetRandom_double(void){
+	return (double)(int64_t)(_MCFCRT_GetRandom_uint64() >> 1) / 0x1p63;
 }
-long double _MCFCRT_GetRandomLongDouble(void){
-	return (long double)(int64_t)(_MCFCRT_GetRandomUint64() >> 1) / 0x1p63;
+long double _MCFCRT_GetRandom_long_double(void){
+	return (long double)(int64_t)(_MCFCRT_GetRandom_uint64() >> 1) / 0x1p63;
 }

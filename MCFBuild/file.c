@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "file.h"
+#include "sha256.h"
 #include <windows.h>
 
 bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size_t *puSize, const wchar_t *restrict pwcPath){
@@ -40,17 +41,17 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 		if(dwBytesReadTotal >= dwBytesToReadTotal){
 			break;
 		}
-		// If an error occurs, deallocate the buffer and bail out.
 		DWORD dwBytesRead;
 		if(!ReadFile(hFile, (char *)pData + dwBytesReadTotal, dwBytesToReadTotal - dwBytesReadTotal, &dwBytesRead, NULL)){
+			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
 			HeapFree(GetProcessHeap(), 0, pData);
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
 			return false;
 		}
-		// EOF? This should not happen.
 		if(dwBytesRead == 0){
+			// EOF? This should not happen.
 			break;
 		}
 		dwBytesReadTotal += dwBytesRead;
@@ -67,6 +68,38 @@ void MCFBUILD_FileFreeContents(void *pData){
 		return;
 	}
 	HeapFree(GetProcessHeap(), 0, pData);
+}
+bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *restrict pwcPath){
+	DWORD dwErrorCode;
+	// Open the file for reading. Fail if it does not exist.
+	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if(hFile == INVALID_HANDLE_VALUE){
+		return false;
+	}
+	// Create the SHA-256 context.
+	MCFBUILD_Sha256Context vContext;
+	MCFBUILD_Sha256Initialize(&vContext);
+	// Read data in a loop, until no more bytes are to be read.
+	for(;;){
+		unsigned char abyTemp[4096];
+		DWORD dwBytesRead;
+		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, NULL)){
+			// If an error occurs, bail out.
+			dwErrorCode = GetLastError();
+			CloseHandle(hFile);
+			SetLastError(dwErrorCode);
+			return false;
+		}
+		if(dwBytesRead == 0){
+			// EOF encountered. Stop.
+			break;
+		}
+		MCFBUILD_Sha256Update(&vContext, abyTemp, dwBytesRead);
+	}
+	CloseHandle(hFile);
+	// Write the result.
+	MCFBUILD_Sha256Finalize(pau8Result, &vContext);
+	return true;
 }
 
 bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t uSize){
@@ -88,16 +121,16 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 		if(dwBytesWrittenTotal >= dwBytesToWriteTotal){
 			break;
 		}
-		// If an error occurs, bail out.
 		DWORD dwBytesWritten;
 		if(!WriteFile(hFile, (const char *)pData + dwBytesWrittenTotal, dwBytesToWriteTotal - dwBytesWrittenTotal, &dwBytesWritten, NULL)){
+			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
 			return false;
 		}
-		// What the hell? This should not happen.
 		if(dwBytesWritten == 0){
+			// What the hell? This should not happen.
 			CloseHandle(hFile);
 			SetLastError(ERROR_BROKEN_PIPE);
 			return false;
@@ -135,16 +168,16 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 		if(dwBytesWrittenTotal >= dwBytesToWriteTotal){
 			break;
 		}
-		// If an error occurs, bail out.
 		DWORD dwBytesWritten;
 		if(!WriteFile(hFile, (const char *)pData + dwBytesWrittenTotal, dwBytesToWriteTotal - dwBytesWrittenTotal, &dwBytesWritten, NULL)){
+			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
 			return false;
 		}
-		// What the hell? This should not happen.
 		if(dwBytesWritten == 0){
+			// What the hell? This should not happen.
 			CloseHandle(hFile);
 			SetLastError(ERROR_BROKEN_PIPE);
 			return false;

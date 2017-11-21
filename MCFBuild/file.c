@@ -11,15 +11,15 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
-	LARGE_INTEGER ilFileSize;
-	if(!GetFileSizeEx(hFile, &ilFileSize)){
+	LARGE_INTEGER liFileSize;
+	if(!GetFileSizeEx(hFile, &liFileSize)){
 		dwErrorCode = GetLastError();
 		CloseHandle(hFile);
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	DWORD dwBytesToReadTotal = (DWORD)ilFileSize.QuadPart;
-	if((LONGLONG)dwBytesToReadTotal != ilFileSize.QuadPart){
+	DWORD dwBytesToReadTotal = (DWORD)liFileSize.QuadPart;
+	if((LONGLONG)dwBytesToReadTotal != liFileSize.QuadPart){
 		CloseHandle(hFile);
 		SetLastError(ERROR_ARITHMETIC_OVERFLOW);
 		return false;

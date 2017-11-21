@@ -32,7 +32,7 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 	}
 	DWORD dwBytesReadTotal = 0;
 	for(;;){
-		if(dwBytesToReadTotal <= dwBytesReadTotal){
+		if(dwBytesReadTotal >= dwBytesToReadTotal){
 			break;
 		}
 		DWORD dwBytesRead;
@@ -73,7 +73,7 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 	}
 	DWORD dwBytesWrittenTotal = 0;
 	for(;;){
-		if(dwBytesToWriteTotal <= dwBytesWrittenTotal){
+		if(dwBytesWrittenTotal >= dwBytesToWriteTotal){
 			break;
 		}
 		DWORD dwBytesWritten;
@@ -81,6 +81,11 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
+			return false;
+		}
+		if(dwBytesWritten == 0){
+			CloseHandle(hFile);
+			SetLastError(ERROR_BROKEN_PIPE);
 			return false;
 		}
 		dwBytesWrittenTotal += dwBytesWritten;
@@ -109,7 +114,7 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	}
 	DWORD dwBytesWrittenTotal = 0;
 	for(;;){
-		if(dwBytesToWriteTotal <= dwBytesWrittenTotal){
+		if(dwBytesWrittenTotal >= dwBytesToWriteTotal){
 			break;
 		}
 		DWORD dwBytesWritten;
@@ -117,6 +122,11 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
+			return false;
+		}
+		if(dwBytesWritten == 0){
+			CloseHandle(hFile);
+			SetLastError(ERROR_BROKEN_PIPE);
 			return false;
 		}
 		dwBytesWrittenTotal += dwBytesWritten;

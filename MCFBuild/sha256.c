@@ -8,111 +8,109 @@
 // https://en.wikipedia.org/wiki/SHA-2
 
 static inline uint32_t rotr(uint32_t val, unsigned bits){
-	return (val << -bits % 32) | (val >> bits % 32);
+	return (val << (32 - bits)) | (val >> bits);
 }
-
-static void EatChunk(MCFBUILD_Sha256Context *restrict pContext, const unsigned char *restrict pbyChunk){
-	uint32_t s0, maj, t2, s1, ch, t1;
-
+static inline void step(uint32_t *restrict r, int a, int b, int c, int d, int e, int f, int g, int h, uint32_t k, uint32_t x){
+	uint32_t S0, maj, t2, S1, ch, t1;
+	S0 = rotr(r[a], 2) ^ rotr(r[a], 13) ^ rotr(r[a], 22);
+	maj = (r[a] & r[b]) | (r[c] & (r[a] ^ r[b]));
+	t2 = S0 + maj;
+	S1 = rotr(r[e], 6) ^ rotr(r[e], 11) ^ rotr(r[e], 25);
+	ch = r[g] ^ (r[e] & (r[f] ^ r[g]));
+	t1 = r[h] + S1 + ch + k + x;
+	r[d] += t1;
+	r[h] = t1 + t2;
+}
+static void sha256_chunk(uint32_t *restrict regs, const unsigned char *restrict chunk){
 	uint32_t w[64];
 	for(unsigned i = 0; i < 16; ++i){
-		w[i] = MCFBUILD_load_be_uint32((const uint32_t *)pbyChunk + i);
+		w[i] = MCFBUILD_load_be_uint32((const uint32_t *)chunk + i);
 	}
 	for(unsigned i = 16; i < 64; ++i){
-		s0 = rotr(w[i - 15],  7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>  3);
-		s1 = rotr(w[i -  2], 17) ^ rotr(w[i -  2], 19) ^ (w[i -  2] >> 10);
+		uint32_t s0 = rotr(w[i - 15],  7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>  3);
+		uint32_t s1 = rotr(w[i -  2], 17) ^ rotr(w[i -  2], 19) ^ (w[i -  2] >> 10);
 		w[i] = w[i - 16] + w[i - 7] + s0 + s1;
 	}
 
 	uint32_t r[8];
 	for(unsigned i = 0; i < 8; ++i){
-		r[i] = pContext->au32Regs[i];
+		r[i] = regs[i];
 	}
 
-#define SHA256_STEP(i_, a_, b_, c_, d_, e_, f_, g_, h_, k_)	\
-	s0 = rotr(a_, 2) ^ rotr(a_, 13) ^ rotr(a_, 22);	\
-	maj = (a_ & b_) | (c_ & (a_ ^ b_));	\
-	t2 = s0 + maj;	\
-	s1 = rotr(e_, 6) ^ rotr(e_, 11) ^ rotr(e_, 25);	\
-	ch = g_ ^ (e_ & (f_ ^ g_));	\
-	t1 = h_ + s1 + ch + k_ + w[i_];	\
-	d_ += t1;	\
-	h_ = t1 + t2;
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0x428A2F98, w[ 0]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0x71374491, w[ 1]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0xB5C0FBCF, w[ 2]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0xE9B5DBA5, w[ 3]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0x3956C25B, w[ 4]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0x59F111F1, w[ 5]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0x923F82A4, w[ 6]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0xAB1C5ED5, w[ 7]);
 
-	SHA256_STEP( 0, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0x428A2F98)
-	SHA256_STEP( 1, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0x71374491)
-	SHA256_STEP( 2, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0xB5C0FBCF)
-	SHA256_STEP( 3, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0xE9B5DBA5)
-	SHA256_STEP( 4, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0x3956C25B)
-	SHA256_STEP( 5, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0x59F111F1)
-	SHA256_STEP( 6, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0x923F82A4)
-	SHA256_STEP( 7, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0xAB1C5ED5)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0xD807AA98, w[ 8]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0x12835B01, w[ 9]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0x243185BE, w[10]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0x550C7DC3, w[11]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0x72BE5D74, w[12]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0x80DEB1FE, w[13]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0x9BDC06A7, w[14]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0xC19BF174, w[15]);
 
-	SHA256_STEP( 8, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0xD807AA98)
-	SHA256_STEP( 9, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0x12835B01)
-	SHA256_STEP(10, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0x243185BE)
-	SHA256_STEP(11, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0x550C7DC3)
-	SHA256_STEP(12, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0x72BE5D74)
-	SHA256_STEP(13, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0x80DEB1FE)
-	SHA256_STEP(14, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0x9BDC06A7)
-	SHA256_STEP(15, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0xC19BF174)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0xE49B69C1, w[16]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0xEFBE4786, w[17]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0x0FC19DC6, w[18]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0x240CA1CC, w[19]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0x2DE92C6F, w[20]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0x4A7484AA, w[21]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0x5CB0A9DC, w[22]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0x76F988DA, w[23]);
 
-	SHA256_STEP(16, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0xE49B69C1)
-	SHA256_STEP(17, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0xEFBE4786)
-	SHA256_STEP(18, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0x0FC19DC6)
-	SHA256_STEP(19, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0x240CA1CC)
-	SHA256_STEP(20, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0x2DE92C6F)
-	SHA256_STEP(21, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0x4A7484AA)
-	SHA256_STEP(22, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0x5CB0A9DC)
-	SHA256_STEP(23, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0x76F988DA)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0x983E5152, w[24]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0xA831C66D, w[25]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0xB00327C8, w[26]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0xBF597FC7, w[27]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0xC6E00BF3, w[28]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0xD5A79147, w[29]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0x06CA6351, w[30]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0x14292967, w[31]);
 
-	SHA256_STEP(24, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0x983E5152)
-	SHA256_STEP(25, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0xA831C66D)
-	SHA256_STEP(26, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0xB00327C8)
-	SHA256_STEP(27, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0xBF597FC7)
-	SHA256_STEP(28, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0xC6E00BF3)
-	SHA256_STEP(29, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0xD5A79147)
-	SHA256_STEP(30, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0x06CA6351)
-	SHA256_STEP(31, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0x14292967)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0x27B70A85, w[32]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0x2E1B2138, w[33]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0x4D2C6DFC, w[34]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0x53380D13, w[35]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0x650A7354, w[36]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0x766A0ABB, w[37]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0x81C2C92E, w[38]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0x92722C85, w[39]);
 
-	SHA256_STEP(32, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0x27B70A85)
-	SHA256_STEP(33, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0x2E1B2138)
-	SHA256_STEP(34, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0x4D2C6DFC)
-	SHA256_STEP(35, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0x53380D13)
-	SHA256_STEP(36, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0x650A7354)
-	SHA256_STEP(37, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0x766A0ABB)
-	SHA256_STEP(38, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0x81C2C92E)
-	SHA256_STEP(39, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0x92722C85)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0xA2BFE8A1, w[40]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0xA81A664B, w[41]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0xC24B8B70, w[42]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0xC76C51A3, w[43]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0xD192E819, w[44]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0xD6990624, w[45]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0xF40E3585, w[46]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0x106AA070, w[47]);
 
-	SHA256_STEP(40, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0xA2BFE8A1)
-	SHA256_STEP(41, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0xA81A664B)
-	SHA256_STEP(42, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0xC24B8B70)
-	SHA256_STEP(43, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0xC76C51A3)
-	SHA256_STEP(44, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0xD192E819)
-	SHA256_STEP(45, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0xD6990624)
-	SHA256_STEP(46, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0xF40E3585)
-	SHA256_STEP(47, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0x106AA070)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0x19A4C116, w[48]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0x1E376C08, w[49]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0x2748774C, w[50]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0x34B0BCB5, w[51]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0x391C0CB3, w[52]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0x4ED8AA4A, w[53]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0x5B9CCA4F, w[54]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0x682E6FF3, w[55]);
 
-	SHA256_STEP(48, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0x19A4C116)
-	SHA256_STEP(49, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0x1E376C08)
-	SHA256_STEP(50, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0x2748774C)
-	SHA256_STEP(51, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0x34B0BCB5)
-	SHA256_STEP(52, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0x391C0CB3)
-	SHA256_STEP(53, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0x4ED8AA4A)
-	SHA256_STEP(54, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0x5B9CCA4F)
-	SHA256_STEP(55, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0x682E6FF3)
-
-	SHA256_STEP(56, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], 0x748F82EE)
-	SHA256_STEP(57, r[7], r[0], r[1], r[2], r[3], r[4], r[5], r[6], 0x78A5636F)
-	SHA256_STEP(58, r[6], r[7], r[0], r[1], r[2], r[3], r[4], r[5], 0x84C87814)
-	SHA256_STEP(59, r[5], r[6], r[7], r[0], r[1], r[2], r[3], r[4], 0x8CC70208)
-	SHA256_STEP(60, r[4], r[5], r[6], r[7], r[0], r[1], r[2], r[3], 0x90BEFFFA)
-	SHA256_STEP(61, r[3], r[4], r[5], r[6], r[7], r[0], r[1], r[2], 0xA4506CEB)
-	SHA256_STEP(62, r[2], r[3], r[4], r[5], r[6], r[7], r[0], r[1], 0xBEF9A3F7)
-	SHA256_STEP(63, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[0], 0xC67178F2)
+	step(r, 0, 1, 2, 3, 4, 5, 6, 7, 0x748F82EE, w[56]);
+	step(r, 7, 0, 1, 2, 3, 4, 5, 6, 0x78A5636F, w[57]);
+	step(r, 6, 7, 0, 1, 2, 3, 4, 5, 0x84C87814, w[58]);
+	step(r, 5, 6, 7, 0, 1, 2, 3, 4, 0x8CC70208, w[59]);
+	step(r, 4, 5, 6, 7, 0, 1, 2, 3, 0x90BEFFFA, w[60]);
+	step(r, 3, 4, 5, 6, 7, 0, 1, 2, 0xA4506CEB, w[61]);
+	step(r, 2, 3, 4, 5, 6, 7, 0, 1, 0xBEF9A3F7, w[62]);
+	step(r, 1, 2, 3, 4, 5, 6, 7, 0, 0xC67178F2, w[63]);
 
 	for(unsigned i = 0; i < 8; ++i){
-		pContext->au32Regs[i] += r[i];
+		regs[i] += r[i];
 	}
 }
 
@@ -136,10 +134,10 @@ void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *restrict pContext, const void
 			memcpy(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uChunkAvail);
 			uRemaining -= uChunkAvail;
 			pContext->uChunkOffset = 0;
-			EatChunk(pContext, pContext->au8Chunk);
+			sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 		}
 		while(uRemaining >= 64){
-			EatChunk(pContext, (const unsigned char *)pData + uSize - uRemaining);
+			sha256_chunk(pContext->au32Regs, (const unsigned char *)pData + uSize - uRemaining);
 			uRemaining -= 64;
 		}
 	}
@@ -154,7 +152,7 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 	size_t uChunkAvail = 64 - pContext->uChunkOffset;
 	if(uChunkAvail < 8){
 		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail);
-		EatChunk(pContext, pContext->au8Chunk);
+		sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 		pContext->uChunkOffset = 0;
 		uChunkAvail = 64;
 	}
@@ -163,7 +161,7 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 		pContext->uChunkOffset = 56;
 	}
 	MCFBUILD_store_be_uint64((uint64_t *)pContext->au8Chunk + 7, pContext->u64BitsTotal);
-	EatChunk(pContext, pContext->au8Chunk);
+	sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
 		MCFBUILD_store_be_uint32((uint32_t *)pau8Result + uIndex, pContext->au32Regs[uIndex]);
 	}

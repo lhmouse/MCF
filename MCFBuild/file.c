@@ -104,9 +104,9 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
-	LARGE_INTEGER liPosition;
-	liPosition.QuadPart = 0;
-	if(!SetFilePointerEx(hFile, liPosition, NULL, FILE_END)){
+	LARGE_INTEGER liFilePointer;
+	liFilePointer.QuadPart = 0;
+	if(!SetFilePointerEx(hFile, liFilePointer, NULL, FILE_END)){
 		dwErrorCode = GetLastError();
 		CloseHandle(hFile);
 		SetLastError(dwErrorCode);

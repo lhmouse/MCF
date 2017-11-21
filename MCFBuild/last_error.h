@@ -10,6 +10,7 @@
 
 MCFBUILD_EXTERN_C_BEGIN
 
+// These are wrappers for `GetLastError()` and `SetLastError()`, respectively.
 extern unsigned long MCFBUILD_GetLastError(void) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_SetLastError(unsigned long unErrorCode) MCFBUILD_NOEXCEPT;
 

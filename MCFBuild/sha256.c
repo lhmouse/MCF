@@ -115,6 +115,7 @@ static void sha256_chunk(uint32_t *restrict regs, const unsigned char *restrict 
 }
 
 void MCFBUILD_Sha256Initialize(MCFBUILD_Sha256Context *pContext){
+	// Fill in hard-coded values.
 	pContext->au32Regs[0] = 0x6A09E667;
 	pContext->au32Regs[1] = 0xBB67AE85;
 	pContext->au32Regs[2] = 0x3C6EF372;
@@ -129,39 +130,51 @@ void MCFBUILD_Sha256Initialize(MCFBUILD_Sha256Context *pContext){
 void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *restrict pContext, const void *restrict pData, size_t uSize){
 	size_t uRemaining = uSize;
 	size_t uChunkAvail = 64 - pContext->uChunkOffset;
+	// If there are any data pending in the chunk, ...
 	if(uRemaining >= uChunkAvail){
+		// ... fill the chunk up, and eat it.
 		if(pContext->uChunkOffset != 0){
 			memcpy(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uChunkAvail);
 			uRemaining -= uChunkAvail;
 			pContext->uChunkOffset = 0;
 			sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 		}
+		// Avoid copying data to the internal chunk over and over by reading from the input area directly.
 		while(uRemaining >= 64){
 			sha256_chunk(pContext->au32Regs, (const unsigned char *)pData + uSize - uRemaining);
 			uRemaining -= 64;
 		}
 	}
+	// The data remaining should fit into the internal chunk. Absorb them if any.
 	if(uRemaining != 0){
 		memcpy(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uRemaining);
 		pContext->uChunkOffset += uRemaining;
 	}
+	// Add up the number of BITs.
 	pContext->u64BitsTotal += (uint64_t)uSize * 8;
 }
 void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256Context *restrict pContext){
+	// Append an `0x80` to the last chunk.
+	// There is no need for overflow checks since the last chunk will never be full.
 	pContext->au8Chunk[(pContext->uChunkOffset)++] = 0x80;
 	size_t uChunkAvail = 64 - pContext->uChunkOffset;
+	// Pad the last chunk until there are exactly 8 bytes remaining.
+	// If there are fewer at this time, fill it up with zeroes, eat it, and prepare another chunk after it.
 	if(uChunkAvail < 8){
 		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail);
 		sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 		pContext->uChunkOffset = 0;
 		uChunkAvail = 64;
 	}
+	// The last chunk should have no more than 56 bytes here. Pad it.
 	if(uChunkAvail > 8){
 		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail - 8);
 		pContext->uChunkOffset = 56;
 	}
+	// Finish the last chunk.
 	MCFBUILD_store_be_uint64((uint64_t *)pContext->au8Chunk + 7, pContext->u64BitsTotal);
 	sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
+	// Copy the hash out.
 	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
 		MCFBUILD_store_be_uint32((uint32_t *)pau8Result + uIndex, pContext->au32Regs[uIndex]);
 	}

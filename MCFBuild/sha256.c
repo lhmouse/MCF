@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "sha256.h"
+#include "endian.h"
 #include <x86intrin.h>
 
 // https://en.wikipedia.org/wiki/SHA-2
@@ -12,7 +13,7 @@ static void EatChunk(MCFBUILD_Sha256Context *restrict pContext, const unsigned c
 
 	uint32_t w[64];
 	for(unsigned i = 0; i < 16; ++i){
-		w[i] = __builtin_bswap32(((const uint32_t *)pbyChunk)[i]);
+		w[i] = MCFBUILD_load_be_uint32((const uint32_t *)pbyChunk + i);
 	}
 	for(unsigned i = 16; i < 64; ++i){
 		s0 = __rord(w[i - 15],  7) ^ __rord(w[i - 15], 18) ^ (w[i - 15] >>  3);
@@ -158,9 +159,9 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail - 8);
 		pContext->uChunkOffset = 56;
 	}
-	((uint64_t *)pContext->au8Chunk)[7] = __builtin_bswap64(pContext->u64BitsTotal);
+	MCFBUILD_store_be_uint64((uint64_t *)pContext->au8Chunk + 7, pContext->u64BitsTotal);
 	EatChunk(pContext, pContext->au8Chunk);
 	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
-		((uint32_t *)pau8Result)[uIndex] = __builtin_bswap32(pContext->au32Regs[uIndex]);
+		MCFBUILD_store_be_uint32((uint32_t *)pau8Result + uIndex, pContext->au32Regs[uIndex]);
 	}
 }

@@ -13,7 +13,7 @@ mkdir -p "${DEST}/include/mcfbuild/"
   -Wno-error=unused-parameter -Winvalid-pch -Wwrite-strings -Wconversion \
   -Wsign-conversion -Wdouble-promotion -Wsuggest-attribute=noreturn \
   -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-prototypes \
-  -pipe -mfpmath=both -march=core2 -mtune=intel \
+  -pipe -mfpmath=both -march=core2 -mtune=intel -municode \
   -shared -Wl,--export-all-symbols,--exclude-libs,ALL \
   -Wl,--disable-stdcall-fixup,--enable-auto-image-base \
   -O0 -g3 $(find . -name "*.c") \

@@ -6,6 +6,16 @@
 #include "sha256.h"
 #include <windows.h>
 
+static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
+	size_t uDifference;
+	if(uMinuend <= uSubtrahend){
+		uDifference = 0;
+	} else if((uDifference = uMinuend - uSubtrahend) > UINT32_MAX){
+		uDifference = UINT32_MAX;
+	}
+	return (DWORD)uDifference;
+}
+
 bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size_t *puSize, const wchar_t *restrict pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
@@ -21,28 +31,29 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 		SetLastError(dwErrorCode);
 		return false;
 	}
-	// Make sure the size fits into 32 bits.
-	DWORD dwBytesToReadTotal = (DWORD)liFileSize.QuadPart;
-	if((LONGLONG)dwBytesToReadTotal != liFileSize.QuadPart){
+	// Reject overlarge files.
+	if(liFileSize.QuadPart > PTRDIFF_MAX){
 		CloseHandle(hFile);
-		SetLastError(ERROR_ARITHMETIC_OVERFLOW);
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
+	size_t uSize = (size_t)liFileSize.QuadPart;
 	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContents()`.
-	void *pData = HeapAlloc(GetProcessHeap(), 0, dwBytesToReadTotal);
+	void *pData = HeapAlloc(GetProcessHeap(), 0, uSize);
 	if(!pData){
 		CloseHandle(hFile);
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	// Read data in a loop, up to the specified number of bytes.
-	DWORD dwBytesReadTotal = 0;
+	size_t uBytesTotal = 0;
 	for(;;){
-		if(dwBytesReadTotal >= dwBytesToReadTotal){
+		DWORD dwBytesToRead = SubtractWithSaturation(uSize, uBytesTotal);
+		if(dwBytesToRead == 0){
 			break;
 		}
 		DWORD dwBytesRead;
-		if(!ReadFile(hFile, (char *)pData + dwBytesReadTotal, dwBytesToReadTotal - dwBytesReadTotal, &dwBytesRead, NULL)){
+		if(!ReadFile(hFile, (char *)pData + uBytesTotal, dwBytesToRead, &dwBytesRead, NULL)){
 			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
 			HeapFree(GetProcessHeap(), 0, pData);
@@ -54,12 +65,12 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 			// EOF encountered. Stop.
 			break;
 		}
-		dwBytesReadTotal += dwBytesRead;
+		uBytesTotal += dwBytesRead;
 	}
 	CloseHandle(hFile);
 	// Return this buffer to the caller.
 	*ppData = pData;
-	*puSize = dwBytesReadTotal;
+	*puSize = uBytesTotal;
 	return true;
 }
 void MCFBUILD_FileFreeContents(void *pData){
@@ -76,10 +87,9 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
-	// Create the SHA-256 context.
+	// Read data in a loop, until no more bytes are to be read.
 	MCFBUILD_Sha256Context vContext;
 	MCFBUILD_Sha256Initialize(&vContext);
-	// Read data in a loop, until no more bytes are to be read.
 	for(;;){
 		unsigned char abyTemp[4096];
 		DWORD dwBytesRead;
@@ -104,50 +114,33 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 
 bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t uSize){
 	DWORD dwErrorCode;
-	// Make sure the size fits into 32 bits.
-	DWORD dwBytesToWriteTotal = (DWORD)uSize;
-	if(dwBytesToWriteTotal != uSize){
-		SetLastError(ERROR_ARITHMETIC_OVERFLOW);
-		return false;
-	}
 	// Open the file for writing. Create one if it does not exist. Any existent data are discarded.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_WRITE_DATA, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
 	// Write data in a loop, up to the specified number of bytes.
-	DWORD dwBytesWrittenTotal = 0;
+	size_t uBytesTotal = 0;
 	for(;;){
-		if(dwBytesWrittenTotal >= dwBytesToWriteTotal){
+		DWORD dwBytesToWrite = SubtractWithSaturation(uSize, uBytesTotal);
+		if(dwBytesToWrite == 0){
 			break;
 		}
 		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + dwBytesWrittenTotal, dwBytesToWriteTotal - dwBytesWrittenTotal, &dwBytesWritten, NULL)){
+		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, NULL)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
 			return false;
 		}
-		if(dwBytesWritten == 0){
-			// What the hell? This should not happen.
-			CloseHandle(hFile);
-			SetLastError(ERROR_BROKEN_PIPE);
-			return false;
-		}
-		dwBytesWrittenTotal += dwBytesWritten;
+		uBytesTotal += dwBytesWritten;
 	}
 	CloseHandle(hFile);
 	return true;
 }
 bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size_t uSize){
 	DWORD dwErrorCode;
-	// Make sure the size fits into 32 bits.
-	DWORD dwBytesToWriteTotal = (DWORD)uSize;
-	if(dwBytesToWriteTotal != uSize){
-		SetLastError(ERROR_ARITHMETIC_OVERFLOW);
-		return false;
-	}
 	// Open the file for appending. Create one if it does not exist. Any existent data are left alone.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_APPEND_DATA, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(hFile == INVALID_HANDLE_VALUE){
@@ -163,26 +156,21 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 		return false;
 	}
 	// Write data in a loop, up to the specified number of bytes.
-	DWORD dwBytesWrittenTotal = 0;
+	size_t uBytesTotal = 0;
 	for(;;){
-		if(dwBytesWrittenTotal >= dwBytesToWriteTotal){
+		DWORD dwBytesToWrite = SubtractWithSaturation(uSize, uBytesTotal);
+		if(dwBytesToWrite == 0){
 			break;
 		}
 		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + dwBytesWrittenTotal, dwBytesToWriteTotal - dwBytesWrittenTotal, &dwBytesWritten, NULL)){
+		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, NULL)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
 			SetLastError(dwErrorCode);
 			return false;
 		}
-		if(dwBytesWritten == 0){
-			// What the hell? This should not happen.
-			CloseHandle(hFile);
-			SetLastError(ERROR_BROKEN_PIPE);
-			return false;
-		}
-		dwBytesWrittenTotal += dwBytesWritten;
+		uBytesTotal += dwBytesWritten;
 	}
 	CloseHandle(hFile);
 	return true;

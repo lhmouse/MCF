@@ -9,9 +9,6 @@
 
 MCFBUILD_EXTERN_C_BEGIN
 
-// Be noted that no file size shall exceed 4GiB.
-// Otherwise these functions fail and `GetLastError()` returns `ERROR_ARITHMETIC_OVERFLOW`.
-
 // Upon success, `MCFBUILD_FileGetContents()` allocates a buffer, stores a pointer to the buffer into `*ppData` and the size of the buffer into `*puSize`.
 // The buffer shall be freed with `MCFBUILD_FileFreeContents()`.
 extern bool MCFBUILD_FileGetContents(void *MCFBUILD_RESTRICT *MCFBUILD_RESTRICT ppData, MCFBUILD_STD size_t *puSize, const wchar_t *MCFBUILD_RESTRICT pwcPath) MCFBUILD_NOEXCEPT;

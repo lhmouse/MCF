@@ -2,7 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
+#define WIN32_LEAN_AND_MEAN 1
 #include "file.h"
+#include "heap.h"
+#include "last_error.h"
 #include "sha256.h"
 #include <windows.h>
 
@@ -28,21 +31,21 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 	if(!GetFileSizeEx(hFile, &liFileSize)){
 		dwErrorCode = GetLastError();
 		CloseHandle(hFile);
-		SetLastError(dwErrorCode);
+		MCFBUILD_SetLastError(dwErrorCode);
 		return false;
 	}
 	// Reject overlarge files.
 	if(liFileSize.QuadPart > PTRDIFF_MAX){
 		CloseHandle(hFile);
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	size_t uSize = (size_t)liFileSize.QuadPart;
 	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContents()`.
-	void *pData = HeapAlloc(GetProcessHeap(), 0, uSize);
+	void *pData = MCFBUILD_HeapAlloc(uSize);
 	if(!pData){
 		CloseHandle(hFile);
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	// Read data in a loop, up to the specified number of bytes.
@@ -56,9 +59,9 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 		if(!ReadFile(hFile, (char *)pData + uBytesTotal, dwBytesToRead, &dwBytesRead, 0)){
 			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
-			HeapFree(GetProcessHeap(), 0, pData);
+			MCFBUILD_HeapFree(pData);
 			CloseHandle(hFile);
-			SetLastError(dwErrorCode);
+			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
 		if(dwBytesRead == 0){
@@ -74,10 +77,7 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 	return true;
 }
 void MCFBUILD_FileFreeContents(void *pData){
-	// Be warned that passing a null pointer to `HeapFree()` is undefined behavior.
-	if(pData){
-		HeapFree(GetProcessHeap(), 0, pData);
-	}
+	MCFBUILD_HeapFree(pData);
 }
 bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *restrict pwcPath){
 	DWORD dwErrorCode;
@@ -96,7 +96,7 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
-			SetLastError(dwErrorCode);
+			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
 		if(dwBytesRead == 0){
@@ -130,7 +130,7 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
-			SetLastError(dwErrorCode);
+			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
 		uBytesTotal += dwBytesWritten;
@@ -151,7 +151,7 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	if(!SetFilePointerEx(hFile, liFilePointer, 0, FILE_END)){
 		dwErrorCode = GetLastError();
 		CloseHandle(hFile);
-		SetLastError(dwErrorCode);
+		MCFBUILD_SetLastError(dwErrorCode);
 		return false;
 	}
 	// Write data in a loop, up to the specified number of bytes.
@@ -166,7 +166,7 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
-			SetLastError(dwErrorCode);
+			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
 		uBytesTotal += dwBytesWritten;

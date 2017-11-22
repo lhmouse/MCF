@@ -3,7 +3,8 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "string_stack.h"
-#include <windows.h>
+#include "heap.h"
+#include "last_error.h"
 
 typedef struct tagStackElement {
 	uint64_t u64OffsetPadded : 3;
@@ -18,15 +19,16 @@ void MCFBUILD_StringStackInitialize(MCFBUILD_StringStack *pStack){
 	pStack->uOffsetEnd = 0;
 }
 void MCFBUILD_StringStackUninitialize(MCFBUILD_StringStack *pStack){
-	// Passing a null pointer to `HeapFree()` is undefined behavior.
-	if(pStack->pbyStorage){
-		HeapFree(GetProcessHeap(), 0, pStack->pbyStorage);
-	}
+	MCFBUILD_HeapFree(pStack->pbyStorage);
 }
 
+void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){
+	pStack->uOffsetTop = 0;
+	pStack->uOffsetEnd = 0;
+}
 bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *restrict puLength, const MCFBUILD_StringStack *restrict pStack){
 	if(pStack->uOffsetTop == pStack->uOffsetEnd){
-		SetLastError(ERROR_NO_MORE_ITEMS);
+		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;
 	}
 	/*-----------------------------------------------------------*\
@@ -41,17 +43,13 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	*puLength = (pStack->uOffsetEnd - pStack->uOffsetTop - pElement->u64OffsetPadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
 	return true;
 }
-void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){
-	pStack->uOffsetTop = 0;
-	pStack->uOffsetEnd = 0;
-}
-bool MCFBUILD_StringStackPushN(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwcString, size_t uLength){
+bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwcString, size_t uLength){
 	size_t uSizeToAdd = (uLength + 1) * sizeof(wchar_t) + sizeof(StackElement);
 	size_t uSizeToPad = -uSizeToAdd % 8;
 	uSizeToAdd += uSizeToPad;
 	size_t uMinimumSizeToReserve;
 	if(__builtin_add_overflow(pStack->uOffsetEnd, uSizeToAdd, &uMinimumSizeToReserve)){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	unsigned char *pbyStorage = pStack->pbyStorage;
@@ -62,13 +60,9 @@ bool MCFBUILD_StringStackPushN(MCFBUILD_StringStack *restrict pStack, const wcha
 		uCapacity &= (size_t)-0x10;
 		uCapacity |= uMinimumSizeToReserve;
 		uCapacity |= 0x400;
-		// Is passing a null pointer to `HeapReAlloc()` undefined behavior?
-		// MSDN says passing a null pointer to `HeapFree()` is UB, but merely says 'this pointer is returned
-		// by an earlier call to the `HeapAlloc` or `HeapReAlloc` function'. We assume it is unsafe here.
-		pbyStorage = pbyStorage ? HeapReAlloc(GetProcessHeap(), 0, pbyStorage, uCapacity)
-		                        : HeapAlloc(GetProcessHeap(), 0, uCapacity);
+		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);
 		if(!pbyStorage){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		pStack->pbyStorage = pbyStorage;
@@ -92,12 +86,12 @@ bool MCFBUILD_StringStackPushN(MCFBUILD_StringStack *restrict pStack, const wcha
 	pStack->uOffsetEnd = uOffsetEndNew;
 	return true;
 }
-bool MCFBUILD_StringStackPushZ(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwszString){
-	return MCFBUILD_StringStackPushN(pStack, pwszString, wcslen(pwszString));
+bool MCFBUILD_StringStackPushNullTerminated(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwszString){
+	return MCFBUILD_StringStackPush(pStack, pwszString, wcslen(pwszString));
 }
 bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	if(pStack->uOffsetTop == pStack->uOffsetEnd){
-		SetLastError(ERROR_NO_MORE_ITEMS);
+		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;
 	}
 	/*-----------------------------------------------------------*\

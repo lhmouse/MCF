@@ -19,10 +19,10 @@ typedef struct MCFBUILD_tagStringStack {
 extern void MCFBUILD_StringStackInitialize(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_StringStackUninitialize(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 
-extern bool MCFBUILD_StringStackGetTop(const wchar_t **MCFBUILD_RESTRICT ppwszString, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, const MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
-extern bool MCFBUILD_StringStackPushN(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const wchar_t *MCFBUILD_RESTRICT ppwcString, MCFBUILD_STD size_t uLength) MCFBUILD_NOEXCEPT;
-extern bool MCFBUILD_StringStackPushZ(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const wchar_t *MCFBUILD_RESTRICT ppwszString) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_StringStackGetTop(const wchar_t **MCFBUILD_RESTRICT ppwszString, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, const MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const wchar_t *MCFBUILD_RESTRICT ppwcString, MCFBUILD_STD size_t uLength) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_StringStackPushNullTerminated(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const wchar_t *MCFBUILD_RESTRICT ppwszString) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 
 MCFBUILD_EXTERN_C_END

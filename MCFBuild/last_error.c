@@ -8,6 +8,6 @@
 unsigned long MCFBUILD_GetLastError(void) MCFBUILD_NOEXCEPT {
 	return GetLastError();
 }
-void MCFBUILD_SetLastError(unsigned long unErrorCode){
-	SetLastError(unErrorCode);
+void MCFBUILD_SetLastError(unsigned long ulErrorCode){
+	SetLastError(ulErrorCode);
 }

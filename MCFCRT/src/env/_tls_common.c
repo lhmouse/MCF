@@ -154,7 +154,7 @@ unsigned long __MCFCRT_InternalTlsGet(__MCFCRT_TlsThreadMapHandle hThreadMap, _M
 	const TlsObjectKey vObjectKey = { pKey, pKey->uCounter };
 	TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThreadMap->avlObjects), (intptr_t)&vObjectKey, &TlsObjectComparatorNodeKey);
 	if(!pObject){
-		return ERROR_FILE_NOT_FOUND;
+		return ERROR_NOT_FOUND;
 	}
 	*ppStorage = pObject->abyStorage;
 	return 0;

@@ -19,7 +19,7 @@ static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
 bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size_t *puSize, const wchar_t *restrict pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
-	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
@@ -53,7 +53,7 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 			break;
 		}
 		DWORD dwBytesRead;
-		if(!ReadFile(hFile, (char *)pData + uBytesTotal, dwBytesToRead, &dwBytesRead, NULL)){
+		if(!ReadFile(hFile, (char *)pData + uBytesTotal, dwBytesToRead, &dwBytesRead, 0)){
 			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
 			HeapFree(GetProcessHeap(), 0, pData);
@@ -75,15 +75,14 @@ bool MCFBUILD_FileGetContents(void *restrict *restrict ppData, MCFBUILD_STD size
 }
 void MCFBUILD_FileFreeContents(void *pData){
 	// Be warned that passing a null pointer to `HeapFree()` is undefined behavior.
-	if(!pData){
-		return;
+	if(pData){
+		HeapFree(GetProcessHeap(), 0, pData);
 	}
-	HeapFree(GetProcessHeap(), 0, pData);
 }
 bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *restrict pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
-	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
@@ -93,7 +92,7 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 	for(;;){
 		unsigned char abyTemp[4096];
 		DWORD dwBytesRead;
-		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, NULL)){
+		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
@@ -115,7 +114,7 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t uSize){
 	DWORD dwErrorCode;
 	// Open the file for writing. Create one if it does not exist. Any existent data are discarded.
-	HANDLE hFile = CreateFileW(pwcPath, FILE_WRITE_DATA, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_WRITE_DATA, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
@@ -127,7 +126,7 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 			break;
 		}
 		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, NULL)){
+		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);
@@ -142,14 +141,14 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size_t uSize){
 	DWORD dwErrorCode;
 	// Open the file for appending. Create one if it does not exist. Any existent data are left alone.
-	HANDLE hFile = CreateFileW(pwcPath, FILE_APPEND_DATA, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFileW(pwcPath, FILE_APPEND_DATA, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
 	// Set the file pointer to the EOF.
 	LARGE_INTEGER liFilePointer;
 	liFilePointer.QuadPart = 0;
-	if(!SetFilePointerEx(hFile, liFilePointer, NULL, FILE_END)){
+	if(!SetFilePointerEx(hFile, liFilePointer, 0, FILE_END)){
 		dwErrorCode = GetLastError();
 		CloseHandle(hFile);
 		SetLastError(dwErrorCode);
@@ -163,7 +162,7 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 			break;
 		}
 		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, NULL)){
+		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);

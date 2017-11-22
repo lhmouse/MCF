@@ -95,9 +95,6 @@ static void ReprotectSections(const UnprotectedSection *restrict pUnprotectResul
 	}
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-
 typedef struct tagRelocationElement_v1 {
 	DWORD dwOffset;
 	DWORD dwTargetRva;
@@ -123,6 +120,8 @@ static void ReallyRelocate_v2(HMODULE hModule, const RelocationElement_v2 *pTabl
 		const INT_PTR n64Offset = (char *)*(void **)pSymbol - (char *)pSymbol;
 		void *const pTarget = (char *)hModule + pTable[uIndex].dwTargetRva;
 		switch(pTable[uIndex].dwFlags & 0xFF){
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 		case 8:
 			*(UINT8 *)pTarget += (UINT8)n64Offset;
 			break;
@@ -135,13 +134,12 @@ static void ReallyRelocate_v2(HMODULE hModule, const RelocationElement_v2 *pTabl
 		case 64:
 			*(UINT64 *)pTarget += (UINT64)n64Offset;
 			break;
+#pragma GCC diagnostic pop
 		default:
 			_MCFCRT_Bail(L"ReallyRelocate_v2() 失败：重定位块大小无效。");
 		}
 	}
 }
-
-#pragma GCC diagnostic pop
 
 void __MCFCRT_pei386_relocator_common(HMODULE hModule, const DWORD *pdwTableBegin, const DWORD *pdwTableEnd){
 	const DWORD *pdwTablePayload = _MCFCRT_NULLPTR;

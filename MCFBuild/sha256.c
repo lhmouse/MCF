@@ -180,7 +180,7 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 	}
 }
 
-void MCFBUILD_Sha256Simple(uint8_t (*restrict pau8Result)[32], const void *restrict pData, size_t uSize){
+void MCFBUILD_Sha256Simple(uint8_t (*pau8Result)[32], const void *pData, size_t uSize){
 	MCFBUILD_Sha256Context arContext[1];
 	MCFBUILD_Sha256Initialize(arContext);
 	MCFBUILD_Sha256Update(arContext, pData, uSize);

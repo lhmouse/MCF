@@ -169,7 +169,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 			MCFBUILD_store_be_uint16((wchar_t *)pbyWrite, pElement->awszString[uIndex - 1]);
 			pbyWrite += sizeof(wchar_t);
 		}
-		// This is tricky. Acknowledging that `uSizeOfString + uSizeToPad` will be aligned onto a 8-byte boundary, we add
+		// This is tricky. Acknowledging that `uSizeOfString + uSizeToPad` will be aligned onto an 8-byte boundary, we add
 		// another `uSizeToPad` to the result, which will have `uSizeToPad` in its three LSBs intactly, with the rest being
 		// `uSizeOfString + uSizeToPad` which can be fetched by bitwise and'ing the three LSBs away.
 		SerializedElement *pSerialized = (void *)pbyWrite;

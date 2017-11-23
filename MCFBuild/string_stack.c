@@ -7,8 +7,8 @@
 #include "last_error.h"
 
 typedef struct tagStackElement {
-	uint64_t u64SizePadded : 3;
-	uint64_t u64OffsetPrevInQwords : 61;
+	size_t uSizePadded : 3;
+	size_t uOffsetPrevInWords : sizeof(size_t) * 8 - 3;
 	wchar_t awszString[];
 } StackElement;
 
@@ -41,8 +41,9 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	|                                            \________/length |
 	\*-----------------------------------------------------------*/
 	const StackElement *pElement = (void *)(pStack->pbyStorage + uOffsetTop);
+	size_t uStringSize = uOffsetEnd - uOffsetTop - pElement->uSizePadded - sizeof(StackElement) - sizeof(wchar_t);
 	*ppwszString = pElement->awszString;
-	*puLength = (uOffsetEnd - uOffsetTop - pElement->u64SizePadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
+	*puLength = uStringSize / sizeof(wchar_t);
 	return true;
 }
 bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwcString, size_t uLength){
@@ -79,8 +80,8 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	| AFTER                                     ^top        ^end  |
 	\*-----------------------------------------------------------*/
 	StackElement *pElement = (void *)(pStack->pbyStorage + uOffsetEnd);
-	pElement->u64SizePadded = uSizeToPad % 8;
-	pElement->u64OffsetPrevInQwords = (uOffsetTop / 8) & (UINT64_MAX >> 3);
+	pElement->uSizePadded = uSizeToPad % 8;
+	pElement->uOffsetPrevInWords = (uOffsetTop / 8) & (SIZE_MAX >> 3);
 	wmemcpy(pElement->awszString, pwcString, uLength)[uLength] = 0;
 	pStack->uOffsetTop = uOffsetEnd;
 	pStack->uOffsetEnd = uOffsetEnd + uSizeToAdd;
@@ -103,7 +104,7 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	| AFTER                          ^top       ^end              |
 	\*-----------------------------------------------------------*/
 	const StackElement *pElement = (void *)(pStack->pbyStorage + uOffsetTop);
-	pStack->uOffsetTop = (size_t)(pElement->u64OffsetPrevInQwords * 8);
 	pStack->uOffsetEnd = uOffsetTop;
+	pStack->uOffsetTop = (size_t)(pElement->uOffsetPrevInWords) * 8;
 	return true;
 }

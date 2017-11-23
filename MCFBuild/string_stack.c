@@ -27,7 +27,9 @@ void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){
 	pStack->uOffsetEnd = 0;
 }
 bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *restrict puLength, const MCFBUILD_StringStack *restrict pStack){
-	if(pStack->uOffsetTop == pStack->uOffsetEnd){
+	size_t uOffsetTop = pStack->uOffsetTop;
+	size_t uOffsetEnd = pStack->uOffsetEnd;
+	if(uOffsetTop == uOffsetEnd){
 		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;
 	}
@@ -38,17 +40,19 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	| AFTER                                      ^string          |
 	|                                            \________/length |
 	\*-----------------------------------------------------------*/
-	const StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetTop);
+	const StackElement *pElement = (void *)(pStack->pbyStorage + uOffsetTop);
 	*ppwszString = pElement->awszString;
-	*puLength = (pStack->uOffsetEnd - pStack->uOffsetTop - pElement->u64SizePadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
+	*puLength = (uOffsetEnd - uOffsetTop - pElement->u64SizePadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
 	return true;
 }
 bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwcString, size_t uLength){
+	size_t uOffsetTop = pStack->uOffsetTop;
+	size_t uOffsetEnd = pStack->uOffsetEnd;
 	size_t uSizeToAdd = (uLength + 1) * sizeof(wchar_t) + sizeof(StackElement);
 	size_t uSizeToPad = -uSizeToAdd % 8;
 	uSizeToAdd += uSizeToPad;
 	size_t uMinimumSizeToReserve;
-	if(__builtin_add_overflow(pStack->uOffsetEnd, uSizeToAdd, &uMinimumSizeToReserve)){
+	if(__builtin_add_overflow(uOffsetEnd, uSizeToAdd, &uMinimumSizeToReserve)){
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
@@ -74,20 +78,21 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	| BEFORE                         ^top       ^end              |
 	| AFTER                                     ^top        ^end  |
 	\*-----------------------------------------------------------*/
-	StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetEnd);
+	StackElement *pElement = (void *)(pStack->pbyStorage + uOffsetEnd);
 	pElement->u64SizePadded = uSizeToPad % 8;
-	pElement->u64OffsetPrevInQwords = (pStack->uOffsetTop / 8) & (UINT64_MAX >> 3);
+	pElement->u64OffsetPrevInQwords = (uOffsetTop / 8) & (UINT64_MAX >> 3);
 	wmemcpy(pElement->awszString, pwcString, uLength)[uLength] = 0;
-	size_t uOffsetEndNew = pStack->uOffsetEnd + uSizeToAdd;
-	pStack->uOffsetTop = pStack->uOffsetEnd;
-	pStack->uOffsetEnd = uOffsetEndNew;
+	pStack->uOffsetTop = uOffsetEnd;
+	pStack->uOffsetEnd = uOffsetEnd + uSizeToAdd;
 	return true;
 }
 bool MCFBUILD_StringStackPushNullTerminated(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwszString){
 	return MCFBUILD_StringStackPush(pStack, pwszString, wcslen(pwszString));
 }
 bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
-	if(pStack->uOffsetTop == pStack->uOffsetEnd){
+	size_t uOffsetTop = pStack->uOffsetTop;
+	size_t uOffsetEnd = pStack->uOffsetEnd;
+	if(uOffsetTop == uOffsetEnd){
 		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;
 	}
@@ -97,9 +102,8 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	| BEFORE                                    ^top        ^end  |
 	| AFTER                          ^top       ^end              |
 	\*-----------------------------------------------------------*/
-	const StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetTop);
-	size_t uOffsetTopNew = (size_t)(pElement->u64OffsetPrevInQwords * 8);
-	pStack->uOffsetEnd = pStack->uOffsetTop;
-	pStack->uOffsetTop = uOffsetTopNew;
+	const StackElement *pElement = (void *)(pStack->pbyStorage + uOffsetTop);
+	pStack->uOffsetTop = (size_t)(pElement->u64OffsetPrevInQwords * 8);
+	pStack->uOffsetEnd = uOffsetTop;
 	return true;
 }

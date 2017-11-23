@@ -145,15 +145,6 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
-	// Set the file pointer to the EOF.
-	LARGE_INTEGER liFilePointer;
-	liFilePointer.QuadPart = 0;
-	if(!SetFilePointerEx(hFile, liFilePointer, 0, FILE_END)){
-		dwErrorCode = GetLastError();
-		CloseHandle(hFile);
-		MCFBUILD_SetLastError(dwErrorCode);
-		return false;
-	}
 	// Write data in a loop, up to the specified number of bytes.
 	size_t uBytesTotal = 0;
 	for(;;){
@@ -161,8 +152,13 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 		if(dwBytesToWrite == 0){
 			break;
 		}
+		// Override the file pointer with this offset.
+		// See <https://msdn.microsoft.com/en-us/library/windows/desktop/aa365747.aspx>.
+		OVERLAPPED vOverlapped = { 0 };
+		vOverlapped.Offset = ULONG_MAX;
+		vOverlapped.OffsetHigh = ULONG_MAX;
 		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, 0)){
+		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, &vOverlapped)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CloseHandle(hFile);

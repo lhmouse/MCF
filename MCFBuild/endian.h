@@ -10,9 +10,11 @@
 MCFBUILD_EXTERN_C_BEGIN
 
 #define MCFBUILD_ENDIAN_DEFINE_(name_ld_, name_st_, type_, op_)	\
+	__attribute__((__always_inline__, __artificial__))	\
 	static inline type_ name_ld_(const type_ *p) MCFBUILD_NOEXCEPT {	\
 		return op_(*p);	\
 	}	\
+	__attribute__((__always_inline__, __artificial__))	\
 	static inline void name_st_(type_ *p, type_ n) MCFBUILD_NOEXCEPT {	\
 		*p = op_(n);	\
 	}

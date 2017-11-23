@@ -71,7 +71,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *puSiz
 		uBytesTotal += dwBytesRead;
 	}
 	CloseHandle(hFile);
-	// Return this buffer to the caller.
+	// Hand over the buffer to our caller.
 	*ppData = pData;
 	*puSize = uBytesTotal;
 	return true;

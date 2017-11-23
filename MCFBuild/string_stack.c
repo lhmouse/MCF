@@ -125,7 +125,7 @@ typedef struct tagSerializedHeader {
 } SerializedHeader;
 
 // This is the salt used to create checksums. The null terminator is part of the salt.
-static const char kMagic[] = "MCFBUILD_StringStack:1";
+static const char kMagic[] = "MCFBUILD_StringStack:2017-11-23";
 
 bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSize, const MCFBUILD_StringStack *restrict pStack){
 	// Estimate the upper bound of number of bytes to allocate.

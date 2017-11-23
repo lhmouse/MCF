@@ -179,3 +179,10 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 		MCFBUILD_store_be_uint32((uint32_t *)pau8Result + uIndex, pContext->au32Regs[uIndex]);
 	}
 }
+
+void MCFBUILD_Sha256Simple(uint8_t (*restrict pau8Result)[32], const void *restrict pData, size_t uSize){
+	MCFBUILD_Sha256Context arContext[1];
+	MCFBUILD_Sha256Initialize(arContext);
+	MCFBUILD_Sha256Update(arContext, pData, uSize);
+	MCFBUILD_Sha256Finalize(pau8Result, arContext);
+}

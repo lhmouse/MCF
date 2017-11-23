@@ -7,7 +7,7 @@
 #include "last_error.h"
 
 typedef struct tagStackElement {
-	uint64_t u64OffsetPadded : 3;
+	uint64_t u64SizePadded : 3;
 	uint64_t u64OffsetPrev : 61;
 	wchar_t awszString[];
 } StackElement;
@@ -40,7 +40,7 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	\*-----------------------------------------------------------*/
 	const StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetTop);
 	*ppwszString = pElement->awszString;
-	*puLength = (pStack->uOffsetEnd - pStack->uOffsetTop - pElement->u64OffsetPadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
+	*puLength = (pStack->uOffsetEnd - pStack->uOffsetTop - pElement->u64SizePadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
 	return true;
 }
 bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwcString, size_t uLength){
@@ -75,11 +75,8 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	| AFTER                                     ^top        ^end  |
 	\*-----------------------------------------------------------*/
 	StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetEnd);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-	pElement->u64OffsetPadded = uSizeToPad;
-	pElement->u64OffsetPrev = pStack->uOffsetTop;
-#pragma GCC diagnostic pop
+	pElement->u64SizePadded = uSizeToPad & 7;
+	pElement->u64OffsetPrev = pStack->uOffsetTop & (UINT64_MAX >> 3);
 	wmemcpy(pElement->awszString, pwcString, uLength)[uLength] = 0;
 	size_t uOffsetEndNew = pStack->uOffsetEnd + uSizeToAdd;
 	pStack->uOffsetTop = pStack->uOffsetEnd;
@@ -101,10 +98,7 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	| AFTER                          ^top       ^end              |
 	\*-----------------------------------------------------------*/
 	const StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetTop);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-	size_t uOffsetTopNew = pElement->u64OffsetPrev;
-#pragma GCC diagnostic pop
+	size_t uOffsetTopNew = pElement->u64OffsetPrev & SIZE_MAX;
 	pStack->uOffsetEnd = pStack->uOffsetTop;
 	pStack->uOffsetTop = uOffsetTopNew;
 	return true;

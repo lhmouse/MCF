@@ -90,7 +90,7 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 	MCFBUILD_Sha256Context vContext;
 	MCFBUILD_Sha256Initialize(&vContext);
 	for(;;){
-		unsigned char abyTemp[4096];
+		alignas(64) unsigned char abyTemp[4096];
 		DWORD dwBytesRead;
 		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, 0)){
 			// If an error occurs, bail out.

@@ -41,7 +41,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *puSiz
 		return false;
 	}
 	size_t uSize = (size_t)liFileSize.QuadPart;
-	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContents()`.
+	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContentBuffer()`.
 	void *pData = MCFBUILD_HeapAlloc(uSize);
 	if(!pData){
 		CloseHandle(hFile);
@@ -76,7 +76,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *puSiz
 	*puSize = uBytesTotal;
 	return true;
 }
-void MCFBUILD_FileFreeContents(void *pData){
+void MCFBUILD_FileFreeContentBuffer(void *pData){
 	MCFBUILD_HeapFree(pData);
 }
 bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *restrict pwcPath){

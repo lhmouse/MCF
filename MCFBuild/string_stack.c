@@ -9,7 +9,7 @@
 typedef struct tagStackElement {
 	uint64_t u64OffsetPadded : 3;
 	uint64_t u64OffsetPrev : 61;
-	wchar_t awcData[];
+	wchar_t awszString[];
 } StackElement;
 
 void MCFBUILD_StringStackInitialize(MCFBUILD_StringStack *pStack){
@@ -39,7 +39,7 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	|                                            \________/length |
 	\*-----------------------------------------------------------*/
 	const StackElement *pElement = (void *)(pStack->pbyStorage + pStack->uOffsetTop);
-	*ppwszString = pElement->awcData;
+	*ppwszString = pElement->awszString;
 	*puLength = (pStack->uOffsetEnd - pStack->uOffsetTop - pElement->u64OffsetPadded - sizeof(StackElement)) / sizeof(wchar_t) - 1;
 	return true;
 }
@@ -80,7 +80,7 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	pElement->u64OffsetPadded = uSizeToPad;
 	pElement->u64OffsetPrev = pStack->uOffsetTop;
 #pragma GCC diagnostic pop
-	wmemcpy(pElement->awcData, pwcString, uLength)[uLength] = 0;
+	wmemcpy(pElement->awszString, pwcString, uLength)[uLength] = 0;
 	size_t uOffsetEndNew = pStack->uOffsetEnd + uSizeToAdd;
 	pStack->uOffsetTop = pStack->uOffsetEnd;
 	pStack->uOffsetEnd = uOffsetEndNew;

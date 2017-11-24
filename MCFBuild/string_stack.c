@@ -157,8 +157,10 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 			MCFBUILD_store_be_uint16((void *)(pbyWrite + uOffset), 0xFFFF);
 		}
 		// Store this string without the null terminator.
-		for(size_t uOffset = 0; uOffset < uSizeOfString; uOffset += sizeof(wchar_t)){
-			MCFBUILD_store_be_uint16((void *)(pbyWrite + uSizePadded + uOffset), *(const wchar_t *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString + uOffset));
+		const wchar_t *pwcReadBase = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
+		wchar_t *pwcWriteBase = (void *)(pbyWrite + uSizePadded);
+		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
+			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
 		pbyWrite += uSizeWhole;
 		// This is tricky. Acknowledging that `uSizeOfString + uSizePadded` will be aligned onto an 8-byte boundary, we add
@@ -261,8 +263,10 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		uSizeWhole += uSizePadded;
 		StackElement *pElement = (void *)(pbyStorage + uOffsetEnd + uSizeWhole);
 		// Load this string. There is no null terminator so we have to append one.
-		for(size_t uOffset = 0; uOffset < uSizeOfString; uOffset += sizeof(wchar_t)){
-			*(wchar_t *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString + uOffset) = MCFBUILD_load_be_uint16((void *)(pbyRead + u64SizeWholeAndPadding % 8 + uOffset));
+		const wchar_t *pwcReadBase = (const void *)(pbyRead + u64SizeWholeAndPadding % 8);
+		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
+		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
+			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
 		*(wchar_t *)((unsigned char *)pElement - sizeof(wchar_t)) = 0;
 		pElement->uSizePadded = uSizePadded % 8;

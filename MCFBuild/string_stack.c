@@ -263,7 +263,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		uSizeWhole += uSizePadded;
 		StackElement *pElement = (void *)(pbyStorage + uOffsetEnd + uSizeWhole);
 		// Load this string. There is no null terminator so we have to append one.
-		const wchar_t *pwcReadBase = (const void *)(pbyRead + u64SizeWholeAndPadding % 8);
+		const wchar_t *pwcReadBase = (const void *)(pbyRead + (size_t)(u64SizeWholeAndPadding % 8));
 		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));

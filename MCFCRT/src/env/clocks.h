@@ -13,9 +13,11 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+__attribute__((__artificial__))
 __MCFCRT_CLOCKS_INLINE_OR_EXTERN _MCFCRT_STD uint32_t _MCFCRT_ReadTimeStampCounter32(void) _MCFCRT_NOEXCEPT {
 	return (_MCFCRT_STD uint32_t)__builtin_ia32_rdtsc();
 }
+__attribute__((__artificial__))
 __MCFCRT_CLOCKS_INLINE_OR_EXTERN _MCFCRT_STD uint64_t _MCFCRT_ReadTimeStampCounter64(void) _MCFCRT_NOEXCEPT {
 	return __builtin_ia32_rdtsc();
 }

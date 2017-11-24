@@ -14,9 +14,11 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_ENDIAN_DEFINE(__name_ld_, __name_st_, __type_, __op_)	\
+	__attribute__((__artificial__))	\
 	_MCFCRT_CONSTEXPR __MCFCRT_ENDIAN_INLINE_OR_EXTERN __type_ __name_ld_(const __type_ *__p) _MCFCRT_NOEXCEPT {	\
 		return __op_(*__p);	\
 	}	\
+	__attribute__((__artificial__))	\
 	_MCFCRT_CONSTEXPR __MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_st_(__type_ *__p, __type_ __n) _MCFCRT_NOEXCEPT {	\
 		*__p = __op_(__n);	\
 	}

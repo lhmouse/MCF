@@ -14,6 +14,7 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_REP_CMPS_DEFINE(__name_, __mnemonic_, __type_)	\
+	__attribute__((__artificial__))	\
 	__MCFCRT_REP_CMPS_INLINE_OR_EXTERN int __name_(__type_ **_MCFCRT_RESTRICT __es1, __type_ **_MCFCRT_RESTRICT __es2, const __type_ *__s1, const __type_ *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
 		bool __z, __b;	\
 		const __type_ *__p1 = __s1;	\

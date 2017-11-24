@@ -53,11 +53,11 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	size_t uOffsetTop = pStack->uOffsetTop;
 	size_t uOffsetEnd = pStack->uOffsetEnd;
 	size_t uSizeOfString = uLength * sizeof(wchar_t);
-	size_t uSizeToAdd = sizeof(StackElement) + uSizeOfString + sizeof(wchar_t);
-	size_t uSizeToPad = -uSizeToAdd % 8;
-	uSizeToAdd += uSizeToPad;
+	size_t uSizeTotal = sizeof(StackElement) + uSizeOfString + sizeof(wchar_t);
+	size_t uSizeToPad = -uSizeTotal % 8;
+	uSizeTotal += uSizeToPad;
 	size_t uMinimumSizeToReserve;
-	if(__builtin_add_overflow(uOffsetEnd, uSizeToAdd, &uMinimumSizeToReserve)){
+	if(__builtin_add_overflow(uOffsetEnd, uSizeTotal, &uMinimumSizeToReserve)){
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
@@ -87,7 +87,7 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	pElement->uOffsetPrevInWords = (uOffsetTop / 8) & (SIZE_MAX >> 3);
 	wmemcpy(pElement->awszString, pwcString, uLength)[uLength] = 0;
 	pStack->uOffsetTop = uOffsetEnd;
-	pStack->uOffsetEnd = uOffsetEnd + uSizeToAdd;
+	pStack->uOffsetEnd = uOffsetEnd + uSizeTotal;
 	return true;
 }
 bool MCFBUILD_StringStackPushNullTerminated(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwszString){
@@ -235,10 +235,10 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		}
 		pbyRead -= uSizeOfString;
 		// Add up the number of bytes that a StackElement is going to take.
-		size_t uSizeToAdd = sizeof(StackElement) + uSizeOfString + sizeof(wchar_t);
-		size_t uSizeToPad = -uSizeToAdd % 8;
-		uSizeToAdd += uSizeToPad;
-		if(__builtin_add_overflow(uMinimumSizeToReserve, uSizeToAdd, &uMinimumSizeToReserve)){
+		size_t uSizeTotal = sizeof(StackElement) + uSizeOfString + sizeof(wchar_t);
+		size_t uSizeToPad = -uSizeTotal % 8;
+		uSizeTotal += uSizeToPad;
+		if(__builtin_add_overflow(uMinimumSizeToReserve, uSizeTotal, &uMinimumSizeToReserve)){
 			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
@@ -273,9 +273,9 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		size_t uSizePadded = u64WholeAndPadding % 8;
 		size_t uSizeOfString = (size_t)u64WholeAndPadding - uSizePadded * 2;
 		// Create a new element in the stack.
-		size_t uSizeToAdd = sizeof(StackElement) + uSizeOfString + sizeof(wchar_t);
-		size_t uSizeToPad = -uSizeToAdd % 8;
-		uSizeToAdd += uSizeToPad;
+		size_t uSizeTotal = sizeof(StackElement) + uSizeOfString + sizeof(wchar_t);
+		size_t uSizeToPad = -uSizeTotal % 8;
+		uSizeTotal += uSizeToPad;
 		StackElement *pElement = (void *)(pbyStorage + uOffsetEnd);
 		pElement->uSizePadded = uSizeToPad % 8;
 		pElement->uOffsetPrevInWords = (uOffsetTop / 8) & (SIZE_MAX >> 3);
@@ -286,7 +286,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		}
 		pElement->awszString[uSizeOfString / sizeof(wchar_t)] = 0;
 		uOffsetTop = uOffsetEnd;
-		uOffsetEnd = uOffsetEnd + uSizeToAdd;
+		uOffsetEnd = uOffsetEnd + uSizeTotal;
 		// Discard padded characters.
 		pbyRead -= uSizePadded;
 	}

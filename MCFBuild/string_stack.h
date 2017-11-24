@@ -12,7 +12,6 @@ MCFBUILD_EXTERN_C_BEGIN
 typedef struct MCFBUILD_tagStringStack {
 	unsigned char *pbyStorage;
 	MCFBUILD_STD size_t uCapacity;
-	MCFBUILD_STD size_t uOffsetTop;
 	MCFBUILD_STD size_t uOffsetEnd;
 } MCFBUILD_StringStack;
 

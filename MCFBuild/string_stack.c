@@ -44,10 +44,10 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	| AFTER   ^storage                           ^string          |
 	|                                            \_______/length  |
 	\*-----------------------------------------------------------*/
-	unsigned char *pbyStorage = pStack->pbyStorage;
+	const unsigned char *pbyStorage = pStack->pbyStorage;
 	const StackElement *pElement = (const void *)(pbyStorage + uOffsetEnd - sizeof(StackElement));
 	size_t uSizeOfString = (size_t)(pElement->uSizeWholeInQwords) * 8 - pElement->uSizePadded - sizeof(wchar_t);
-	*ppwszString = (void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
+	*ppwszString = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 	*puLength = uSizeOfString / sizeof(wchar_t);
 	return true;
 }

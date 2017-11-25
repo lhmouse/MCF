@@ -28,7 +28,6 @@ void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){
 	pStack->uOffsetEnd = 0;
 }
 bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *restrict puLength, const MCFBUILD_StringStack *restrict pStack){
-	size_t uOffsetEnd = pStack->uOffsetEnd;
 	/*-----------------------------------------------------------*\
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
@@ -41,6 +40,7 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	|         ^storage                           ^string          |
 	|                                            \_______/length  |
 	\*-----------------------------------------------------------*/
+	size_t uOffsetEnd = pStack->uOffsetEnd;
 	if(uOffsetEnd == 0){
 		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;
@@ -53,7 +53,6 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	return true;
 }
 bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar_t *restrict pwcString, size_t uLength){
-	size_t uOffsetEnd = pStack->uOffsetEnd;
 	/*-----------------------------------------------------------*\
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
@@ -65,6 +64,7 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	| AFTER   ??=======_*??==_*====_*??=======_*?=========_*      |
 	|         ^storage                                      ^end  |
 	\*-----------------------------------------------------------*/
+	size_t uOffsetEnd = pStack->uOffsetEnd;
 	size_t uSizeOfString = uLength * sizeof(wchar_t);
 	size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 	unsigned char bySizePadded = -uSizeWhole % 8;
@@ -101,7 +101,6 @@ bool MCFBUILD_StringStackPushNullTerminated(MCFBUILD_StringStack *restrict pStac
 	return MCFBUILD_StringStackPush(pStack, pwszString, wcslen(pwszString));
 }
 bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
-	size_t uOffsetEnd = pStack->uOffsetEnd;
 	/*-----------------------------------------------------------*\
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
@@ -113,6 +112,7 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	| AFTER   ??=======_*??==_*====_*??=======_*                  |
 	|         ^storage                          ^end              |
 	\*-----------------------------------------------------------*/
+	size_t uOffsetEnd = pStack->uOffsetEnd;
 	if(uOffsetEnd == 0){
 		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;

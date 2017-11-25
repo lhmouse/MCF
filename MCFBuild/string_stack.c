@@ -153,7 +153,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		uSizeToAlloc += uSizeWhole;
 		uSizeToAlloc += sizeof(SerializedElement);
 		// Scan for the next element.
-		uOffsetEnd = uOffsetEnd - sizeof(StackElement) - pElement->uSizeWhole;
+		uOffsetEnd -= sizeof(StackElement) + pElement->uSizeWhole;
 	}
 	// Allocate the buffer now.
 	SerializedHeader *pHeader = MCFBUILD_HeapAlloc(uSizeToAlloc);
@@ -188,7 +188,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeAndPadding), uSizeOfString + (unsigned)bySizePadded * 2);
 		pbyWrite += sizeof(SerializedElement);
 		// Scan for the next element.
-		uOffsetEnd = uOffsetEnd - sizeof(StackElement) - pElement->uSizeWhole;
+		uOffsetEnd -= sizeof(StackElement) + pElement->uSizeWhole;
 	}
 	// Calculate the checksum.
 	MCFBUILD_Sha256Context vSha256Context;
@@ -289,7 +289,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		*(wchar_t *)((unsigned char *)pElement - sizeof(wchar_t)) = 0;
 		pElement->uSizeWhole = uSizeWhole;
 		pElement->bySizePadded = bySizePadded % 8;
-		uOffsetEnd = uOffsetEnd + uSizeWhole + sizeof(StackElement);
+		uOffsetEnd += uSizeWhole + sizeof(StackElement);
 	}
 	pStack->uOffsetEnd = uOffsetEnd;
 	return true;

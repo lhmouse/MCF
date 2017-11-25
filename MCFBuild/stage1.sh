@@ -9,7 +9,7 @@ else
   _opt_flags="-O0"
 fi
 
-rm -rf "${_dest}/"
+#rm -rf "${_dest}/"
 
 mkdir -p "${_dest}/bin/"
 mkdir -p "${_dest}/lib/"

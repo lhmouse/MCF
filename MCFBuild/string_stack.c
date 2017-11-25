@@ -169,7 +169,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		size_t uSizeWhole = uSizeOfString;
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		// Store this string without the null terminator.
+		// Store the string without the null terminator.
 		const wchar_t *pwcReadBase = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		wchar_t *pwcWriteBase = (void *)(pbyWrite + bySizePadded);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
@@ -276,7 +276,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void
 		uSizeWhole += bySizePadded;
 		pStack->uOffsetEnd += uSizeWhole + sizeof(StackElement);
 		StackElement *pElement = (void *)(pbyStorage + pStack->uOffsetEnd - sizeof(StackElement));
-		// Load this string. There is no null terminator so we have to append one.
+		// Load the string. There is no null terminator so we have to append one.
 		const wchar_t *pwcReadBase = (const void *)(pbyRead + (size_t)(u64SizeWholeAndPadding % 8));
 		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){

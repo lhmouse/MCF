@@ -160,6 +160,8 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 	if(!pHeader){
 		return false;
 	}
+	// Populate the buffer with something predictable to ensure padding bytes have fixed values.
+	memset(pHeader, -1, uSizeToAlloc);
 	// Copy strings from top to bottom.
 	unsigned char *pbyWrite = pHeader->abyPayload;
 	uOffsetEnd = pStack->uOffsetEnd;
@@ -170,10 +172,6 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		size_t uSizeWhole = uSizeOfString;
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		// Fill padding characters with something predictable. Otherwise it will not be possible to get a meaningful checksum.
-		for(size_t uOffset = 0; uOffset < bySizePadded; uOffset += sizeof(wchar_t)){
-			MCFBUILD_store_be_uint16((void *)(pbyWrite + uOffset), 0xFFFF);
-		}
 		// Store this string without the null terminator.
 		const wchar_t *pwcReadBase = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		wchar_t *pwcWriteBase = (void *)(pbyWrite + bySizePadded);

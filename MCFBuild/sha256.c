@@ -153,7 +153,7 @@ void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *restrict pContext, const void
 	// Add up the number of BITs.
 	pContext->u64BitsTotal += (uint64_t)uSize * 8;
 }
-void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256Context *restrict pContext){
+void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *restrict pau8Sha256, MCFBUILD_Sha256Context *restrict pContext){
 	// Append an `0x80` to the last chunk.
 	// There is no need for overflow checks since the last chunk will never be full.
 	pContext->au8Chunk[(pContext->uChunkOffset)++] = 0x80;
@@ -176,13 +176,13 @@ void MCFBUILD_Sha256Finalize(uint8_t (*restrict pau8Result)[32], MCFBUILD_Sha256
 	sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 	// Copy the hash out.
 	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
-		MCFBUILD_store_be_uint32((uint32_t *)pau8Result + uIndex, pContext->au32Regs[uIndex]);
+		MCFBUILD_store_be_uint32((uint32_t *)pau8Sha256 + uIndex, pContext->au32Regs[uIndex]);
 	}
 }
 
-void MCFBUILD_Sha256Simple(uint8_t (*pau8Result)[32], const void *pData, size_t uSize){
+void MCFBUILD_Sha256Simple(MCFBUILD_Sha256 *pau8Sha256, const void *pData, size_t uSize){
 	MCFBUILD_Sha256Context arContext[1];
 	MCFBUILD_Sha256Initialize(arContext);
 	MCFBUILD_Sha256Update(arContext, pData, uSize);
-	MCFBUILD_Sha256Finalize(pau8Result, arContext);
+	MCFBUILD_Sha256Finalize(pau8Sha256, arContext);
 }

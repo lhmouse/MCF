@@ -9,6 +9,8 @@
 
 MCFBUILD_EXTERN_C_BEGIN
 
+typedef MCFBUILD_STD uint8_t MCFBUILD_Sha256[32];
+
 typedef struct MCFBUILD_tagSha256Context {
 	MCFBUILD_STD uint32_t au32Regs[8];
 	MCFBUILD_STD uint8_t au8Chunk[64];
@@ -18,9 +20,9 @@ typedef struct MCFBUILD_tagSha256Context {
 
 extern void MCFBUILD_Sha256Initialize(MCFBUILD_Sha256Context *pContext) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *MCFBUILD_RESTRICT pContext, const void *MCFBUILD_RESTRICT pData, MCFBUILD_STD size_t uSize) MCFBUILD_NOEXCEPT;
-extern void MCFBUILD_Sha256Finalize(MCFBUILD_STD uint8_t (*MCFBUILD_RESTRICT pau8Result)[32], MCFBUILD_Sha256Context *MCFBUILD_RESTRICT pContext) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *MCFBUILD_RESTRICT pau8Sha256, MCFBUILD_Sha256Context *MCFBUILD_RESTRICT pContext) MCFBUILD_NOEXCEPT;
 
-extern void MCFBUILD_Sha256Simple(MCFBUILD_STD uint8_t (*pau8Result)[32], const void *pData, MCFBUILD_STD size_t uSize) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_Sha256Simple(MCFBUILD_Sha256 *pau8Sha256, const void *pData, MCFBUILD_STD size_t uSize) MCFBUILD_NOEXCEPT;
 
 MCFBUILD_EXTERN_C_END
 

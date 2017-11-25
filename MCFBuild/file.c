@@ -19,7 +19,7 @@ static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
 	return (DWORD)uDifference;
 }
 
-bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *puSize, const wchar_t *restrict pwcPath){
+bool MCFBUILD_FileGetContents(void **ppData, MCFBUILD_STD size_t *puSize, const wchar_t *pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -79,7 +79,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *puSiz
 void MCFBUILD_FileFreeContentBuffer(void *pData){
 	MCFBUILD_HeapFree(pData);
 }
-bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *restrict pwcPath){
+bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -107,7 +107,7 @@ bool MCFBUILD_FileGetSha256(uint8_t (*restrict pau8Result)[32], const wchar_t *r
 	}
 	CloseHandle(hFile);
 	// Write the result.
-	MCFBUILD_Sha256Finalize(pau8Result, &vContext);
+	MCFBUILD_Sha256Finalize(pau8Sha256, &vContext);
 	return true;
 }
 
@@ -170,3 +170,4 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	CloseHandle(hFile);
 	return true;
 }
+

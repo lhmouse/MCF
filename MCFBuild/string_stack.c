@@ -39,9 +39,10 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	|         | |      /---- Null terminator                      |
 	|         | |      |/--- StackElement                         |
 	|         | |      ||                                         |
-	|         ??=======_*??==_*====_*??=======_*?=========_*      |
-	| BEFORE  ^storage                                      ^end  |
-	| AFTER   ^storage                           ^string          |
+	| BEFORE  ??=======_*??==_*====_*??=======_*?=========_*      |
+	|         ^storage                                      ^end  |
+	| AFTER   ??=======_*??==_*====_*??=======_*?=========_*      |
+	|         ^storage                           ^string          |
 	|                                            \_______/length  |
 	\*-----------------------------------------------------------*/
 	const unsigned char *pbyStorage = pStack->pbyStorage;
@@ -83,9 +84,10 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	|         | |      /---- Null terminator                      |
 	|         | |      |/--- StackElement                         |
 	|         | |      ||                                         |
-	|         ??=======_*??==_*====_*??=======_*?=========_*      |
-	| BEFORE  ^storage                          ^end              |
-	| AFTER   ^storage                                      ^end  |
+	| BEFORE  ??=======_*??==_*====_*??=======_*                  |
+	|         ^storage                          ^end              |
+	| AFTER   ??=======_*??==_*====_*??=======_*?=========_*      |
+	|         ^storage                                      ^end  |
 	\*-----------------------------------------------------------*/
 	StackElement *pElement = (void *)(pbyStorage + uOffsetEnd + uSizeWhole);
 	memcpy((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString, pwcString, uSizeOfString);
@@ -110,9 +112,10 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	|         | |      /---- Null terminator                      |
 	|         | |      |/--- StackElement                         |
 	|         | |      ||                                         |
-	|         ??=======_*??==_*====_*??=======_*?=========_*      |
-	| BEFORE  ^storage                                      ^end  |
-	| AFTER   ^storage                          ^end              |
+	| BEFORE  ??=======_*??==_*====_*??=======_*?=========_*      |
+	|         ^storage                                      ^end  |
+	| AFTER   ??=======_*??==_*====_*??=======_*                  |
+	|         ^storage                          ^end              |
 	\*-----------------------------------------------------------*/
 	unsigned char *pbyStorage = pStack->pbyStorage;
 	const StackElement *pElement = (const void *)(pbyStorage + uOffsetEnd - sizeof(StackElement));

@@ -34,6 +34,11 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 		return false;
 	}
 	/*-----------------------------------------------------------*\
+	|         /------------- Beginning of padding                 |
+	|         | /----------- Beginning of string body             |
+	|         | |      /---- Null terminator                      |
+	|         | |      |/--- StackElement                         |
+	|         | |      ||                                         |
 	|         ??=======_*??==_*====_*??=======_*?=========_*      |
 	| BEFORE  ^storage                                      ^end  |
 	| AFTER   ^storage                           ^string          |
@@ -73,6 +78,11 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 		pStack->uCapacity = uCapacity;
 	}
 	/*-----------------------------------------------------------*\
+	|         /------------- Beginning of padding                 |
+	|         | /----------- Beginning of string body             |
+	|         | |      /---- Null terminator                      |
+	|         | |      |/--- StackElement                         |
+	|         | |      ||                                         |
 	|         ??=======_*??==_*====_*??=======_*?=========_*      |
 	| BEFORE  ^storage                          ^end              |
 	| AFTER   ^storage                                      ^end  |
@@ -95,6 +105,11 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 		return false;
 	}
 	/*-----------------------------------------------------------*\
+	|         /------------- Beginning of padding                 |
+	|         | /----------- Beginning of string body             |
+	|         | |      /---- Null terminator                      |
+	|         | |      |/--- StackElement                         |
+	|         | |      ||                                         |
 	|         ??=======_*??==_*====_*??=======_*?=========_*      |
 	| BEFORE  ^storage                                      ^end  |
 	| AFTER   ^storage                          ^end              |

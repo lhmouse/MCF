@@ -152,7 +152,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		uSizeWhole += bySizePadded;
 		uSizeToAlloc += uSizeWhole;
 		uSizeToAlloc += sizeof(SerializedElement);
-		// Scan for the next element.
+		// Scan the next element.
 		uOffsetEnd -= sizeof(StackElement) + pElement->uSizeWhole;
 	}
 	// Allocate the buffer now.
@@ -185,7 +185,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		SerializedElement *pSerialized = (void *)pbyWrite;
 		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeAndPadding), uSizeOfString + (unsigned)bySizePadded * 2);
 		pbyWrite += sizeof(SerializedElement);
-		// Scan for the next element.
+		// Scan the next element.
 		uOffsetEnd -= sizeof(StackElement) + pElement->uSizeWhole;
 	}
 	// Calculate the checksum.

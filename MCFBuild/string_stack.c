@@ -199,12 +199,12 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 void MCFBUILD_StringStackFreeSerializedBuffer(void *pData){
 	MCFBUILD_HeapFree(pData);
 }
-bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, void *restrict pData, size_t uSize){
+bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, const void *restrict pData, size_t uSize){
 	if(uSize < sizeof(SerializedHeader)){
 		MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}
-	SerializedHeader *pHeader = pData;
+	const SerializedHeader *pHeader = pData;
 	const unsigned char *pbyEnd = (const unsigned char *)pData + uSize;
 	// Verify the checksum.
 	uint8_t au8Checksum[32];

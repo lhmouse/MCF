@@ -26,7 +26,7 @@ extern bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXC
 
 extern bool MCFBUILD_StringStackSerialize(void **MCFBUILD_RESTRICT ppData, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puSize, const MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_StringStackFreeSerializedBuffer(void *pData) MCFBUILD_NOEXCEPT;
-extern bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, void *MCFBUILD_RESTRICT pData, MCFBUILD_STD size_t uSize) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const void *MCFBUILD_RESTRICT pData, MCFBUILD_STD size_t uSize) MCFBUILD_NOEXCEPT;
 
 MCFBUILD_EXTERN_C_END
 

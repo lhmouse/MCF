@@ -122,7 +122,7 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 
 // In reality, members in this structure are stored in reverse order.
 typedef struct tagSerializedElement {
-	uint64_t u64SizeSerialized;
+	uint64_t u64SizeWholeSerialized;
 	// wchar_t awcReverseString[];
 } SerializedElement;
 
@@ -180,7 +180,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		// another `bySizePadded` to the result, which will have `bySizePadded` in its three LSBs intactly, with the rest being
 		// `uSizeOfString + bySizePadded` which can be fetched by bitwise and'ing the three LSBs away.
 		SerializedElement *pSerialized = (void *)pbyWrite;
-		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeSerialized), uSizeOfString + (unsigned)bySizePadded * 2);
+		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeOfString + (unsigned)bySizePadded * 2);
 		pbyWrite += sizeof(SerializedElement);
 		// Scan the next element.
 		uOffsetReadEnd -= sizeof(StackElement) + pElement->uSizeWhole;
@@ -227,18 +227,18 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		}
 		pbyRead -= sizeof(SerializedElement);
 		const SerializedElement *pSerialized = (const void *)pbyRead;
-		uint64_t u64SizeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeSerialized));
-		// See comments in `MCFBUILD_StringStackSerialize()` for description of `SerializedElement::u64SizeSerialized`.
-		if(u64SizeSerialized > SIZE_MAX){
+		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
+		// See comments in `MCFBUILD_StringStackSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
+		if(u64SizeWholeSerialized > SIZE_MAX){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		if((size_t)(pbyRead - pHeader->abyPayload) < (size_t)u64SizeSerialized / 8 * 8){
+		if((size_t)(pbyRead - pHeader->abyPayload) < (size_t)u64SizeWholeSerialized / 8 * 8){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		pbyRead -= (size_t)u64SizeSerialized / 8 * 8;
-		size_t uSizeOfString = (size_t)(u64SizeSerialized - u64SizeSerialized % 8 * 2);
+		pbyRead -= (size_t)u64SizeWholeSerialized / 8 * 8;
+		size_t uSizeOfString = (size_t)(u64SizeWholeSerialized - u64SizeWholeSerialized % 8 * 2);
 		// Add up the number of bytes that a StackElement is going to take.
 		size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
@@ -266,25 +266,25 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 	while(pbyRead != pHeader->abyPayload){
 		pbyRead -= sizeof(SerializedElement);
 		const SerializedElement *pSerialized = (const void *)pbyRead;
-		uint64_t u64SizeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeSerialized));
-		// See comments in `MCFBUILD_StringStackSerialize()` for description of `SerializedElement::u64SizeSerialized`.
-		pbyRead -= (size_t)u64SizeSerialized / 8 * 8;
-		size_t uSizeOfString = (size_t)(u64SizeSerialized - u64SizeSerialized % 8 * 2);
+		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
+		// See comments in `MCFBUILD_StringStackSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
+		pbyRead -= (size_t)u64SizeWholeSerialized / 8 * 8;
+		size_t uSizeOfString = (size_t)(u64SizeWholeSerialized - u64SizeWholeSerialized % 8 * 2);
 		// Create a new element in the stack.
 		size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		pStack->uOffsetEnd += uSizeWhole + sizeof(StackElement);
-		StackElement *pElement = (void *)(pbyStorage + pStack->uOffsetEnd - sizeof(StackElement));
+		StackElement *pElement = (void *)(pbyStorage + pStack->uOffsetEnd + uSizeWhole);
 		// Load the string. There is no null terminator so we have to append one.
-		const wchar_t *pwcReadBase = (const void *)(pbyRead + (size_t)(u64SizeSerialized % 8));
+		const wchar_t *pwcReadBase = (const void *)(pbyRead + (size_t)(u64SizeWholeSerialized % 8));
 		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
-		*(wchar_t *)((unsigned char *)pElement - sizeof(wchar_t)) = 0;
+		pwcWriteBase[uSizeOfString / sizeof(wchar_t)] = 0;
 		pElement->uSizeWhole = uSizeWhole;
 		pElement->bySizePadded = bySizePadded % 8;
+		pStack->uOffsetEnd += uSizeWhole + sizeof(StackElement);
 	}
 	return true;
 }

@@ -4,7 +4,7 @@ _cc="gcc"
 _dest="../_Build/stage1"
 
 if [[ -n "${OPTIMIZE}" ]]; then
-  _opt_flags="-O3"
+  _opt_flags="-O2"
 else
   _opt_flags="-O0"
 fi

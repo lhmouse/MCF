@@ -419,8 +419,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
 		uint64_t u64OffsetToValueSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64OffsetToValueSerialized));
 		pbyRead += sizeof(SerializedElement);
-		const wchar_t *pwcKeyEnd = wmemchr(pSerialized->awcString, 0, (size_t)u64OffsetToValueSerialized / sizeof(wchar_t));
-		size_t uSizeOfKey = (size_t)(pwcKeyEnd - pSerialized->awcString) * sizeof(wchar_t);
+		size_t uSizeOfKey = wcslen(pSerialized->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = (size_t)(u64SizeWholeSerialized - u64OffsetToValueSerialized);
 		// Create a new element in the map.
 		MapElement *pElement = (void *)(pbyStorage + pMap->uOffsetEnd);
@@ -430,7 +429,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		size_t uOffsetToValue = uSizeWhole - uSizeOfValue - sizeof(wchar_t);
 		pElement->uSizeWhole = uSizeWhole;
 		pElement->uOffsetToValue = uOffsetToValue;
-		// Load the key with the null terminator.
+		// Load the key without the null terminator, then append one.
 		const wchar_t *pwcReadBase = pSerialized->awcString;
 		wchar_t *pwcWriteBase = pElement->awcString;
 		for(size_t uIndex = 0; uIndex < uSizeOfKey / sizeof(wchar_t); ++uIndex){

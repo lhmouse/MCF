@@ -233,12 +233,13 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		if((size_t)(pbyRead - pHeader->abyPayload) < (size_t)u64SizeWholeSerialized / 8 * 8){
+		size_t uSizeWholeSerialized = (size_t)u64SizeWholeSerialized;
+		if((size_t)(pbyRead - pHeader->abyPayload) < uSizeWholeSerialized / 8 * 8){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		pbyRead -= (size_t)u64SizeWholeSerialized / 8 * 8;
-		size_t uSizeOfString = (size_t)(u64SizeWholeSerialized - u64SizeWholeSerialized % 8 * 2);
+		pbyRead -= uSizeWholeSerialized / 8 * 8;
+		size_t uSizeOfString = uSizeWholeSerialized - uSizeWholeSerialized % 8 * 2;
 		// Add up the number of bytes that a StackElement is going to take.
 		size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
@@ -266,17 +267,17 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 	while(pbyRead != pHeader->abyPayload){
 		pbyRead -= sizeof(SerializedElement);
 		const SerializedElement *pSerialized = (const void *)pbyRead;
-		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
+		size_t uSizeWholeSerialized = (size_t)MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
 		// See comments in `MCFBUILD_StringStackSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
-		pbyRead -= (size_t)u64SizeWholeSerialized / 8 * 8;
-		size_t uSizeOfString = (size_t)(u64SizeWholeSerialized - u64SizeWholeSerialized % 8 * 2);
+		pbyRead -= uSizeWholeSerialized / 8 * 8;
+		size_t uSizeOfString = uSizeWholeSerialized - uSizeWholeSerialized % 8 * 2;
 		// Create a new element in the stack.
 		size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
 		StackElement *pElement = (void *)(pbyStorage + pStack->uOffsetEnd + uSizeWhole);
 		// Load the string. There is no null terminator so we have to append one.
-		const wchar_t *pwcReadBase = (const void *)(pbyRead + (size_t)(u64SizeWholeSerialized % 8));
+		const wchar_t *pwcReadBase = (const void *)(pbyRead + uSizeWholeSerialized % 8);
 		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));

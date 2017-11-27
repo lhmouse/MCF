@@ -262,7 +262,7 @@ typedef struct tagSerializedHeader {
 } SerializedHeader;
 
 // This is the salt used to create checksums. The null terminator is part of the salt.
-static const char kMagic[] = "MCFBUILD_VariableMap:2017-11-25";
+static const char kMagic[] = "MCFBUILD_VariableMap:2017-11-27";
 
 bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSize, const MCFBUILD_VariableMap *restrict pMap){
 	// Estimate the upper bound of number of bytes to allocate.
@@ -278,7 +278,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 		// The key is serialized with its null terminator. The value is not.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
-		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue;
+		size_t uSizeWhole = uSizeOfKey + uSizeOfValue;
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
 		uSizeToAlloc += sizeof(SerializedElement) + uSizeWhole;
@@ -301,24 +301,24 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 		// The key is serialized with its null terminator. The value is not.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
-		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue;
+		size_t uSizeWhole = uSizeOfKey + uSizeOfValue;
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		// Write the header.
+		// This is tricky. Acknowledging that `uSizeWhole` will be aligned onto an 8-byte boundary,
+		// we add `bySizePadded` to it, preserving `bySizePadded` in its three LSBs intactly, with the rest being
+		// `uSizeWhole` which can be fetched by bitwise and'ing the three LSBs away.
 		SerializedElement *pSerialized = (void *)pbyWrite;
-		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeWhole);
-		size_t uOffsetToValueSerialized = uSizeWhole - uSizeOfValue;
-		MCFBUILD_store_be_uint64(&(pSerialized->u64OffsetToValueSerialized), uOffsetToValueSerialized);
-		// Store the key with the null terminator.
+		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeWhole + bySizePadded);
+		MCFBUILD_store_be_uint64(&(pSerialized->u64OffsetToValueSerialized), uSizeWhole - uSizeOfValue);
+		// Store the key without the null terminator.
 		const wchar_t *pwcReadBase = pElement->awcString;
 		wchar_t *pwcWriteBase = pSerialized->awcString;
 		for(size_t uIndex = 0; uIndex < uSizeOfKey / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
-		pwcWriteBase[uSizeOfKey / sizeof(wchar_t)] = 0;
 		// Store the value without the null terminator.
 		pwcReadBase = pElement->awcString + pElement->uOffsetToValue / sizeof(wchar_t);
-		pwcWriteBase = pSerialized->awcString + uOffsetToValueSerialized / sizeof(wchar_t);
+		pwcWriteBase = pSerialized->awcString + (uSizeWhole - uSizeOfValue) / sizeof(wchar_t);
 		for(size_t uIndex = 0; uIndex < uSizeOfValue / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
@@ -370,25 +370,23 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
 		uint64_t u64OffsetToValueSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64OffsetToValueSerialized));
 		pbyRead += sizeof(SerializedElement);
+		// See comments in `MCFBUILD_VariableMapSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
 		if(u64SizeWholeSerialized > SIZE_MAX){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		if((size_t)(pbyEnd - pbyRead) < (size_t)u64SizeWholeSerialized){
+		size_t uSizeWholeSerialized = (size_t)u64SizeWholeSerialized;
+		if((size_t)(pbyEnd - pbyRead) < uSizeWholeSerialized / 8 * 8){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		if(u64SizeWholeSerialized < u64OffsetToValueSerialized){
+		if(u64OffsetToValueSerialized > uSizeWholeSerialized / 8 * 8){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}
-		const wchar_t *pwcKeyEnd = wmemchr(pSerialized->awcString, 0, (size_t)u64OffsetToValueSerialized / sizeof(wchar_t));
-		if(!pwcKeyEnd){
-			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
-			return false;
-		}
-		size_t uSizeOfKey = (size_t)(pwcKeyEnd - pSerialized->awcString) * sizeof(wchar_t);
-		size_t uSizeOfValue = (size_t)(u64SizeWholeSerialized - u64OffsetToValueSerialized);
+		size_t uOffsetToValueSerialized = (size_t)u64OffsetToValueSerialized;
+		size_t uSizeOfKey = uOffsetToValueSerialized - uSizeWholeSerialized % 8;
+		size_t uSizeOfValue = uSizeWholeSerialized / 8 * 8 - uOffsetToValueSerialized;
 		// Add up the number of bytes that a MapElement is going to take.
 		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
@@ -397,7 +395,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		pbyRead += (size_t)u64SizeWholeSerialized;
+		pbyRead += uSizeWholeSerialized / 8 * 8;
 	}
 	// Allocate the buffer. Reuse the existent buffer if possible.
 	unsigned char *pbyStorage = pMap->pbyStorage;
@@ -416,11 +414,12 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 	pbyRead = pHeader->abyPayload;
 	while(pbyRead != pbyEnd){
 		const SerializedElement *pSerialized = (const void *)pbyRead;
-		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
-		uint64_t u64OffsetToValueSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64OffsetToValueSerialized));
+		size_t uSizeWholeSerialized = (size_t)MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
+		size_t uOffsetToValueSerialized = (size_t)MCFBUILD_load_be_uint64(&(pSerialized->u64OffsetToValueSerialized));
 		pbyRead += sizeof(SerializedElement);
-		size_t uSizeOfKey = wcslen(pSerialized->awcString) * sizeof(wchar_t);
-		size_t uSizeOfValue = (size_t)(u64SizeWholeSerialized - u64OffsetToValueSerialized);
+		// See comments in `MCFBUILD_VariableMapSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
+		size_t uSizeOfKey = uOffsetToValueSerialized - uSizeWholeSerialized % 8;
+		size_t uSizeOfValue = uSizeWholeSerialized / 8 * 8 - uOffsetToValueSerialized;
 		// Create a new element in the map.
 		MapElement *pElement = (void *)(pbyStorage + pMap->uOffsetEnd);
 		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
@@ -437,13 +436,13 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		}
 		pwcWriteBase[uSizeOfKey / sizeof(wchar_t)] = 0;
 		// Load the value without the null terminator, then append one.
-		pwcReadBase = pSerialized->awcString + (size_t)u64OffsetToValueSerialized / sizeof(wchar_t);
+		pwcReadBase = pSerialized->awcString + uOffsetToValueSerialized / sizeof(wchar_t);
 		pwcWriteBase = pElement->awcString + uOffsetToValue / sizeof(wchar_t);
 		for(size_t uIndex = 0; uIndex < uSizeOfValue / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
 		pwcWriteBase[uSizeOfValue / sizeof(wchar_t)] = 0;
-		pbyRead += (size_t)u64SizeWholeSerialized;
+		pbyRead += uSizeWholeSerialized / 8 * 8;
 		pMap->uOffsetEnd += sizeof(MapElement) + uSizeWhole;
 	}
 	return true;

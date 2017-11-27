@@ -13,30 +13,34 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-#define __MCFCRT_ENDIAN_DEFINE(__name_ld_, __name_st_, __type_, __op_)	\
+#define __MCFCRT_ENDIAN_DEFINE(__name_ld_, __name_st_, __name_mv_, __type_, __op_)	\
 	__attribute__((__artificial__))	\
-	_MCFCRT_CONSTEXPR __MCFCRT_ENDIAN_INLINE_OR_EXTERN __type_ __name_ld_(const __type_ *__p) _MCFCRT_NOEXCEPT {	\
-		return __op_(*__p);	\
+	__MCFCRT_ENDIAN_INLINE_OR_EXTERN __type_ __name_ld_(const __type_ *__r) _MCFCRT_NOEXCEPT {	\
+		return __op_(*__r);	\
 	}	\
 	__attribute__((__artificial__))	\
-	_MCFCRT_CONSTEXPR __MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_st_(__type_ *__p, __type_ __n) _MCFCRT_NOEXCEPT {	\
-		*__p = __op_(__n);	\
+	__MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_st_(__type_ *__w, __type_ __n) _MCFCRT_NOEXCEPT {	\
+		*__w = __op_(__n);	\
+	}	\
+	__attribute__((__artificial__))	\
+	__MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_mv_(__type_ *__w, const __type_ *__r) _MCFCRT_NOEXCEPT {	\
+		*__w = __op_(*__r);	\
 	}
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint16, _MCFCRT_store_be_uint16, _MCFCRT_STD uint16_t, __builtin_bswap16)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint16, _MCFCRT_store_le_uint16, _MCFCRT_STD uint16_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_STD uint32_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_STD uint64_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint16, _MCFCRT_store_be_uint16, _MCFCRT_move_be_uint16, _MCFCRT_STD uint16_t, __builtin_bswap16)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_move_be_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_move_be_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint16, _MCFCRT_store_le_uint16, _MCFCRT_move_le_uint16, _MCFCRT_STD uint16_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_move_le_uint32, _MCFCRT_STD uint32_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_move_le_uint64, _MCFCRT_STD uint64_t,                  )
 #else
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint16, _MCFCRT_store_be_uint16, _MCFCRT_STD uint16_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_STD uint32_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_STD uint64_t,                  )
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint16, _MCFCRT_store_le_uint16, _MCFCRT_STD uint16_t, __builtin_bswap16)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
-__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint16, _MCFCRT_store_be_uint16, _MCFCRT_move_be_uint16, _MCFCRT_STD uint16_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint32, _MCFCRT_store_be_uint32, _MCFCRT_move_be_uint32, _MCFCRT_STD uint32_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_be_uint64, _MCFCRT_store_be_uint64, _MCFCRT_move_be_uint64, _MCFCRT_STD uint64_t,                  )
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint16, _MCFCRT_store_le_uint16, _MCFCRT_move_le_uint16, _MCFCRT_STD uint16_t, __builtin_bswap16)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint32, _MCFCRT_store_le_uint32, _MCFCRT_move_le_uint32, _MCFCRT_STD uint32_t, __builtin_bswap32)
+__MCFCRT_ENDIAN_DEFINE(_MCFCRT_load_le_uint64, _MCFCRT_store_le_uint64, _MCFCRT_move_le_uint64, _MCFCRT_STD uint64_t, __builtin_bswap64)
 #endif
 
 _MCFCRT_EXTERN_C_END

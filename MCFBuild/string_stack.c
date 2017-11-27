@@ -176,11 +176,11 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
 		}
 		pbyWrite += uSizeWhole;
-		// This is tricky. Acknowledging that `uSizeOfString + bySizePadded` will be aligned onto an 8-byte boundary, we add
-		// another `bySizePadded` to the result, which will have `bySizePadded` in its three LSBs intactly, with the rest being
-		// `uSizeOfString + bySizePadded` which can be fetched by bitwise and'ing the three LSBs away.
+		// This is tricky. Acknowledging that `uSizeWhole` will be aligned onto an 8-byte boundary,
+		// we add `bySizePadded` to it, preserving `bySizePadded` in its three LSBs intactly, with the rest being
+		// `uSizeWhole` which can be fetched by bitwise and'ing the three LSBs away.
 		SerializedElement *pSerialized = (void *)pbyWrite;
-		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeOfString + (unsigned)bySizePadded * 2);
+		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeWhole + bySizePadded);
 		pbyWrite += sizeof(SerializedElement);
 		// Scan the next element.
 		uOffsetReadEnd -= sizeof(StackElement) + pElement->uSizeWhole;
@@ -283,7 +283,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		}
 		pwcWriteBase[uSizeOfString / sizeof(wchar_t)] = 0;
 		pElement->uSizeWhole = uSizeWhole;
-		pElement->bySizePadded = bySizePadded % 8;
+		pElement->bySizePadded = bySizePadded;
 		pStack->uOffsetEnd += uSizeWhole + sizeof(StackElement);
 	}
 	return true;

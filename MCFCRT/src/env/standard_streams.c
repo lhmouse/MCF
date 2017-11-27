@@ -10,6 +10,16 @@
 static_assert(sizeof (wchar_t) == sizeof (char16_t), "What?");
 static_assert(alignof(wchar_t) == alignof(char16_t), "What?");
 
+static inline void *VirtualAllocHelper(size_t uSize){
+	return VirtualAlloc(_MCFCRT_NULLPTR, uSize, MEM_COMMIT, PAGE_READWRITE);
+}
+static inline void VirtualFreeHelper(void *pAddress){
+	if(!pAddress){
+		return;
+	}
+	VirtualFree(pAddress, 0, MEM_RELEASE);
+}
+
 #define POPULATION_INCREMENT    8192ul
 #define FLUSH_THRESHOLD         4096ul
 
@@ -69,26 +79,31 @@ static DWORD UnlockedReserve(Stream *restrict pStream, size_t uTextSizeAdd, size
 		if(__builtin_add_overflow(uTextSizeToReserve, uBinarySizeToReserve, &uMinimumSizeToReserve)){
 			return ERROR_NOT_ENOUGH_MEMORY;
 		}
-		unsigned char *pbyBuffer = pStream->pbyBuffer;
-		size_t uCapacity = pStream->uCapacity;
-		if(uCapacity < uMinimumSizeToReserve){
-			uCapacity += pStream->uCapacity / 2;
-			uCapacity += 0x0F;
-			uCapacity &= (size_t)-0x10;
-			uCapacity |= uMinimumSizeToReserve;
-			uCapacity |= 0x400;
-			pbyBuffer = LocalReAlloc(pbyBuffer, uCapacity, LMEM_FIXED);
-			if(!pbyBuffer){
-				return ERROR_NOT_ENOUGH_MEMORY;
+		unsigned char *pbyBufferOld = pStream->pbyBuffer;
+		unsigned char *pbyBufferNew = pbyBufferOld;
+		size_t uCapacityNew = pStream->uCapacity;
+		if(uCapacityNew < uMinimumSizeToReserve){
+			uCapacityNew += pStream->uCapacity / 2;
+			uCapacityNew |= uMinimumSizeToReserve;
+			// Round the size up to the next 64KiB boundary.
+			// See <https://blogs.msdn.microsoft.com/oldnewthing/20031008-00/?p=42223>.
+			uCapacityNew += 0xFFFF;
+			uCapacityNew &= (DWORD_PTR)-0x10000;
+			pbyBufferNew = VirtualAllocHelper(uCapacityNew);
+			if(!pbyBufferNew){
+				return GetLastError();
 			}
-			pStream->pbyBuffer = pbyBuffer;
-			pStream->uCapacity = uCapacity;
 		}
-		if((0 != pStream->uTextBegin) && (uTextSize != 0)){
-			memmove(pbyBuffer, pbyBuffer + pStream->uTextBegin, uTextSize);
+		if((uTextSize != 0) && (pbyBufferNew != pbyBufferOld + pStream->uTextBegin)){
+			memmove(pbyBufferNew, pbyBufferOld + pStream->uTextBegin, uTextSize);
 		}
-		if((uTextSizeToReserve != pStream->uBinaryBegin) && (uBinarySize != 0)){
-			memmove(pbyBuffer + uTextSizeToReserve, pbyBuffer + pStream->uBinaryBegin, uBinarySize);
+		if((uBinarySize != 0) && (pbyBufferNew + uTextSizeToReserve != pbyBufferOld + pStream->uBinaryBegin)){
+			memmove(pbyBufferNew + uTextSizeToReserve, pbyBufferOld + pStream->uBinaryBegin, uBinarySize);
+		}
+		if(pbyBufferNew != pbyBufferOld){
+			VirtualFreeHelper(pbyBufferOld);
+			pStream->pbyBuffer = pbyBufferNew;
+			pStream->uCapacity = uCapacityNew;
 		}
 		pStream->uTextBegin = 0;
 		pStream->uTextEnd = uTextSize;
@@ -245,7 +260,7 @@ static DWORD UnlockedFlush(Stream *restrict pStream, bool bHard){
 static void UnlockedReset(Stream *restrict pStream, HANDLE hFile, bool bBuffered){
 	// Errors are ignored.
 	UnlockedFlush(pStream, true);
-	LocalFree(pStream->pbyBuffer);
+	VirtualFreeHelper(pStream->pbyBuffer);
 	pStream->pbyBuffer = _MCFCRT_NULLPTR;
 	pStream->uCapacity = 0;
 	pStream->uBinaryBegin = 0;

@@ -23,7 +23,14 @@ MCFBUILD_EXTERN_C_BEGIN
 		*w = op_(*r);	\
 	}
 
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint16, MCFBUILD_store_be_uint16, MCFBUILD_move_be_uint16, MCFBUILD_STD uint16_t,                  )
+MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint32, MCFBUILD_store_be_uint32, MCFBUILD_move_be_uint32, MCFBUILD_STD uint32_t,                  )
+MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint64, MCFBUILD_store_be_uint64, MCFBUILD_move_be_uint64, MCFBUILD_STD uint64_t,                  )
+MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint16, MCFBUILD_store_le_uint16, MCFBUILD_move_le_uint16, MCFBUILD_STD uint16_t, __builtin_bswap16)
+MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint32, MCFBUILD_store_le_uint32, MCFBUILD_move_le_uint32, MCFBUILD_STD uint32_t, __builtin_bswap32)
+MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint64, MCFBUILD_store_le_uint64, MCFBUILD_move_le_uint64, MCFBUILD_STD uint64_t, __builtin_bswap64)
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint16, MCFBUILD_store_be_uint16, MCFBUILD_move_be_uint16, MCFBUILD_STD uint16_t, __builtin_bswap16)
 MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint32, MCFBUILD_store_be_uint32, MCFBUILD_move_be_uint32, MCFBUILD_STD uint32_t, __builtin_bswap32)
 MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint64, MCFBUILD_store_be_uint64, MCFBUILD_move_be_uint64, MCFBUILD_STD uint64_t, __builtin_bswap64)
@@ -31,12 +38,7 @@ MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint16, MCFBUILD_store_le_uint16, MCFBU
 MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint32, MCFBUILD_store_le_uint32, MCFBUILD_move_le_uint32, MCFBUILD_STD uint32_t,                  )
 MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint64, MCFBUILD_store_le_uint64, MCFBUILD_move_le_uint64, MCFBUILD_STD uint64_t,                  )
 #else
-MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint16, MCFBUILD_store_be_uint16, MCFBUILD_move_be_uint16, MCFBUILD_STD uint16_t,                  )
-MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint32, MCFBUILD_store_be_uint32, MCFBUILD_move_be_uint32, MCFBUILD_STD uint32_t,                  )
-MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_be_uint64, MCFBUILD_store_be_uint64, MCFBUILD_move_be_uint64, MCFBUILD_STD uint64_t,                  )
-MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint16, MCFBUILD_store_le_uint16, MCFBUILD_move_le_uint16, MCFBUILD_STD uint16_t, __builtin_bswap16)
-MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint32, MCFBUILD_store_le_uint32, MCFBUILD_move_le_uint32, MCFBUILD_STD uint32_t, __builtin_bswap32)
-MCFBUILD_ENDIAN_DEFINE_(MCFBUILD_load_le_uint64, MCFBUILD_store_le_uint64, MCFBUILD_move_le_uint64, MCFBUILD_STD uint64_t, __builtin_bswap64)
+#  error This architecture is not supported.
 #endif
 
 MCFBUILD_EXTERN_C_END

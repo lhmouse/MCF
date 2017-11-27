@@ -173,7 +173,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		const wchar_t *pwcReadBase = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		wchar_t *pwcWriteBase = (void *)(pbyWrite + bySizePadded);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
-			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
+			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
 		pbyWrite += uSizeWhole;
 		// This is tricky. Acknowledging that `uSizeWhole` will be aligned onto an 8-byte boundary,
@@ -280,7 +280,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		const wchar_t *pwcReadBase = (const void *)(pbyRead + uSizeWholeSerialized % 8);
 		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 		for(size_t uIndex = 0; uIndex < uSizeOfString / sizeof(wchar_t); ++uIndex){
-			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
+			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
 		pwcWriteBase[uSizeOfString / sizeof(wchar_t)] = 0;
 		pElement->uSizeWhole = uSizeWhole;

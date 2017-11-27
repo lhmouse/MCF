@@ -314,13 +314,13 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 		const wchar_t *pwcReadBase = pElement->awcString;
 		wchar_t *pwcWriteBase = pSerialized->awcString;
 		for(size_t uIndex = 0; uIndex < uSizeOfKey / sizeof(wchar_t); ++uIndex){
-			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
+			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
 		// Store the value without the null terminator.
 		pwcReadBase = pElement->awcString + pElement->uOffsetToValue / sizeof(wchar_t);
 		pwcWriteBase = pSerialized->awcString + (uSizeWhole - uSizeOfValue) / sizeof(wchar_t);
 		for(size_t uIndex = 0; uIndex < uSizeOfValue / sizeof(wchar_t); ++uIndex){
-			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
+			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
 		pbyWrite += sizeof(SerializedElement) + uSizeWhole;
 		// Scan the next element.
@@ -432,14 +432,14 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		const wchar_t *pwcReadBase = pSerialized->awcString;
 		wchar_t *pwcWriteBase = pElement->awcString;
 		for(size_t uIndex = 0; uIndex < uSizeOfKey / sizeof(wchar_t); ++uIndex){
-			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
+			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
 		pwcWriteBase[uSizeOfKey / sizeof(wchar_t)] = 0;
 		// Load the value without the null terminator, then append one.
 		pwcReadBase = pSerialized->awcString + uOffsetToValueSerialized / sizeof(wchar_t);
 		pwcWriteBase = pElement->awcString + uOffsetToValue / sizeof(wchar_t);
 		for(size_t uIndex = 0; uIndex < uSizeOfValue / sizeof(wchar_t); ++uIndex){
-			MCFBUILD_store_be_uint16(pwcWriteBase + uIndex, *(pwcReadBase + uIndex));
+			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
 		pwcWriteBase[uSizeOfValue / sizeof(wchar_t)] = 0;
 		pbyRead += uSizeWholeSerialized / 8 * 8;

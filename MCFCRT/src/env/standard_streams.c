@@ -88,7 +88,10 @@ static DWORD UnlockedReserve(Stream *restrict pStream, size_t uTextSizeAdd, size
 			// Round the size up to the next 64KiB boundary.
 			// See <https://blogs.msdn.microsoft.com/oldnewthing/20031008-00/?p=42223>.
 			uCapacityNew += 0xFFFF;
-			uCapacityNew &= (DWORD_PTR)-0x10000;
+			uCapacityNew &= (size_t)-0x10000;
+			if(uCapacityNew < uMinimumSizeToReserve){
+				return ERROR_NOT_ENOUGH_MEMORY;
+			}
 			pbyBufferNew = VirtualAllocHelper(uCapacityNew);
 			if(!pbyBufferNew){
 				return GetLastError();

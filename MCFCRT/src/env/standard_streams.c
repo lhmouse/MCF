@@ -69,30 +69,26 @@ static DWORD UnlockedReserve(Stream *restrict pStream, size_t uTextSizeAdd, size
 		if(__builtin_add_overflow(uTextSizeToReserve, uBinarySizeToReserve, &uMinimumSizeToReserve)){
 			return ERROR_NOT_ENOUGH_MEMORY;
 		}
-		unsigned char *pbyBufferOld = pStream->pbyBuffer;
-		unsigned char *pbyBufferNew = pbyBufferOld;
-		size_t uCapacityNew = pStream->uCapacity;
-		if(uCapacityNew < uMinimumSizeToReserve){
-			uCapacityNew += pStream->uCapacity / 2;
-			uCapacityNew += 0x0F;
-			uCapacityNew &= (size_t)-0x10;
-			uCapacityNew |= uMinimumSizeToReserve;
-			uCapacityNew |= 0x400;
-			pbyBufferNew = HeapAlloc(GetProcessHeap(), 0, uCapacityNew);
-			if(!pbyBufferNew){
+		unsigned char *pbyBuffer = pStream->pbyBuffer;
+		size_t uCapacity = pStream->uCapacity;
+		if(uCapacity < uMinimumSizeToReserve){
+			uCapacity += pStream->uCapacity / 2;
+			uCapacity += 0x0F;
+			uCapacity &= (size_t)-0x10;
+			uCapacity |= uMinimumSizeToReserve;
+			uCapacity |= 0x400;
+			pbyBuffer = LocalReAlloc(pbyBuffer, uCapacity, LMEM_FIXED);
+			if(!pbyBuffer){
 				return ERROR_NOT_ENOUGH_MEMORY;
 			}
+			pStream->pbyBuffer = pbyBuffer;
+			pStream->uCapacity = uCapacity;
 		}
-		if((uTextSize != 0) && (pbyBufferNew != pbyBufferOld + pStream->uTextBegin)){
-			memmove(pbyBufferNew, pbyBufferOld + pStream->uTextBegin, uTextSize);
+		if((0 != pStream->uTextBegin) && (uTextSize != 0)){
+			memmove(pbyBuffer, pbyBuffer + pStream->uTextBegin, uTextSize);
 		}
-		if((uBinarySize != 0) && (pbyBufferNew + uTextSizeToReserve != pbyBufferOld + pStream->uBinaryBegin)){
-			memmove(pbyBufferNew + uTextSizeToReserve, pbyBufferOld + pStream->uBinaryBegin, uBinarySize);
-		}
-		if(pbyBufferNew != pbyBufferOld){
-			HeapFree(GetProcessHeap(), 0, pbyBufferOld);
-			pStream->pbyBuffer = pbyBufferNew;
-			pStream->uCapacity = uCapacityNew;
+		if((uTextSizeToReserve != pStream->uBinaryBegin) && (uBinarySize != 0)){
+			memmove(pbyBuffer + uTextSizeToReserve, pbyBuffer + pStream->uBinaryBegin, uBinarySize);
 		}
 		pStream->uTextBegin = 0;
 		pStream->uTextEnd = uTextSize;
@@ -249,7 +245,7 @@ static DWORD UnlockedFlush(Stream *restrict pStream, bool bHard){
 static void UnlockedReset(Stream *restrict pStream, HANDLE hFile, bool bBuffered){
 	// Errors are ignored.
 	UnlockedFlush(pStream, true);
-	HeapFree(GetProcessHeap(), 0, pStream->pbyBuffer);
+	LocalFree(pStream->pbyBuffer);
 	pStream->pbyBuffer = _MCFCRT_NULLPTR;
 	pStream->uCapacity = 0;
 	pStream->uBinaryBegin = 0;

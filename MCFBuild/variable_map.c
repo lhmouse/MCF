@@ -371,7 +371,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		uint64_t u64OffsetToValueSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64OffsetToValueSerialized));
 		pbyRead += sizeof(SerializedElement);
 		// See comments in `MCFBUILD_VariableMapSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
-		if(u64SizeWholeSerialized > SIZE_MAX){
+		if(u64SizeWholeSerialized > PTRDIFF_MAX){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}

@@ -229,7 +229,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		const SerializedElement *pSerialized = (const void *)pbyRead;
 		uint64_t u64SizeWholeSerialized = MCFBUILD_load_be_uint64(&(pSerialized->u64SizeWholeSerialized));
 		// See comments in `MCFBUILD_StringStackSerialize()` for description of `SerializedElement::u64SizeWholeSerialized`.
-		if(u64SizeWholeSerialized > SIZE_MAX){
+		if(u64SizeWholeSerialized > PTRDIFF_MAX){
 			MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 			return false;
 		}

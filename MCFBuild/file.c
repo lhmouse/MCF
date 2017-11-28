@@ -19,7 +19,7 @@ static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
 	return (DWORD)uDifference;
 }
 
-bool MCFBUILD_FileGetContents(void **ppData, MCFBUILD_STD size_t *puSize, const wchar_t *pwcPath){
+bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restrict puSize, const wchar_t *pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -171,3 +171,16 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	return true;
 }
 
+bool MCFBUILD_FileLock(uintptr_t *restrict puCookie, const wchar_t *pwcPath){
+	// Open the file without access to its data. Create one if it does not exist.
+	HANDLE hFile = CreateFileW(pwcPath, 0, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, 0);
+	if(hFile == INVALID_HANDLE_VALUE){
+		return false;
+	}
+	*puCookie = (uintptr_t)EncodePointer(hFile);
+	return true;
+}
+void MCFBUILD_FileUnlock(uintptr_t uCookie){
+	HANDLE hFile = DecodePointer((HANDLE)uCookie);
+	CloseHandle(hFile);
+}

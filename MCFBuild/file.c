@@ -21,9 +21,7 @@ static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
 
 static void CheckedCloseHandle(HANDLE hObject){
 	if(!CloseHandle(hObject)){
-		char aszTemp[256];
-		wsprintfA(aszTemp, "*** FATAL *** Failed to close handle %p!", (void *)hObject);
-		OutputDebugStringA(aszTemp);
+		OutputDebugStringA("*** FATAL *** Failed to close handle of kernel object.");
 		DebugBreak();
 	}
 }

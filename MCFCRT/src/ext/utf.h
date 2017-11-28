@@ -18,10 +18,10 @@ _MCFCRT_EXTERN_C_BEGIN
 
 #define _MCFCRT_UTF_SUCCESS(__c_)        ((_MCFCRT_STD int32_t)(__c_) >= 0)
 
-#define _MCFCRT_UTF_INVALID_INPUT        UINT32_C(-1)  // 输入字符串不是合法的 UTF 序列。
-#define _MCFCRT_UTF_NO_DATA              UINT32_C(-2)  // 没有输入数据。
-#define _MCFCRT_UTF_PARTIAL_DATA         UINT32_C(-3)  // 输入的最后一个码点不完整。
-#define _MCFCRT_UTF_BUFFER_TOO_SMALL     UINT32_C(-4)  // 输出缓冲区太小。
+#define _MCFCRT_UTF_INVALID_INPUT        ((char32_t)-1)  // 输入字符串不是合法的 UTF 序列。
+#define _MCFCRT_UTF_NO_DATA              ((char32_t)-2)  // 没有输入数据。
+#define _MCFCRT_UTF_PARTIAL_DATA         ((char32_t)-3)  // 输入的最后一个码点不完整。
+#define _MCFCRT_UTF_BUFFER_TOO_SMALL     ((char32_t)-4)  // 输出缓冲区太小。
 
 #define __MCFCRT_UTF_HANDLE_INVALID_INPUT_(__permissive_, __code_point_, __goto_label_)	\
 	{	\

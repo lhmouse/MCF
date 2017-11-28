@@ -97,10 +97,10 @@ static DWORD UnlockedReserve(Stream *restrict pStream, size_t uTextSizeAdd, size
 				return GetLastError();
 			}
 		}
-		if((uTextSize != 0) && (pbyBufferNew != pbyBufferOld + pStream->uTextBegin)){
+		if(pbyBufferNew != pbyBufferOld + pStream->uTextBegin){
 			memmove(pbyBufferNew, pbyBufferOld + pStream->uTextBegin, uTextSize);
 		}
-		if((uBinarySize != 0) && (pbyBufferNew + uTextSizeToReserve != pbyBufferOld + pStream->uBinaryBegin)){
+		if(pbyBufferNew + uTextSizeToReserve != pbyBufferOld + pStream->uBinaryBegin){
 			memmove(pbyBufferNew + uTextSizeToReserve, pbyBufferOld + pStream->uBinaryBegin, uBinarySize);
 		}
 		if(pbyBufferNew != pbyBufferOld){

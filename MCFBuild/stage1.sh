@@ -22,8 +22,8 @@ mkdir -p "${_dest}/include/mcfbuild/"
   -pipe -mfpmath=both -march=core2 -mtune=intel -municode \
   -shared -Wl,--export-all-symbols,--exclude-libs,ALL \
   -Wl,--disable-stdcall-fixup,--enable-auto-image-base \
-  "${_opt_flags}" -g3 $(find . -name "*.c") \
+  "${_opt_flags}" -g3 *.c \
   -o "${_dest}/bin/mcfbuild-stage1.dll" \
   -Wl,--out-implib,"${_dest}/lib/libmcfbuild.dll.a"
-cp -Rp $(find . -name "*.h") \
+cp -Rp *.h \
   -t "${_dest}/include/mcfbuild/" --parents

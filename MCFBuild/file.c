@@ -19,6 +19,15 @@ static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
 	return (DWORD)uDifference;
 }
 
+static void CheckedCloseHandle(HANDLE hObject){
+	if(!CloseHandle(hObject)){
+		char aszTemp[256];
+		wsprintfA(aszTemp, "*** FATAL *** Failed to close handle %p!", (void *)hObject);
+		OutputDebugStringA(aszTemp);
+		DebugBreak();
+	}
+}
+
 bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restrict puSize, const wchar_t *pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
@@ -30,13 +39,13 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restr
 	LARGE_INTEGER liFileSize;
 	if(!GetFileSizeEx(hFile, &liFileSize)){
 		dwErrorCode = GetLastError();
-		CloseHandle(hFile);
+		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(dwErrorCode);
 		return false;
 	}
 	// Reject overlarge files.
 	if(liFileSize.QuadPart > PTRDIFF_MAX){
-		CloseHandle(hFile);
+		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
@@ -44,7 +53,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restr
 	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContentBuffer()`.
 	void *pData = MCFBUILD_HeapAlloc(uSize);
 	if(!pData){
-		CloseHandle(hFile);
+		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
@@ -60,7 +69,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restr
 			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
 			MCFBUILD_HeapFree(pData);
-			CloseHandle(hFile);
+			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
@@ -70,7 +79,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restr
 		}
 		uBytesTotal += dwBytesRead;
 	}
-	CloseHandle(hFile);
+	CheckedCloseHandle(hFile);
 	// Hand over the buffer to our caller.
 	*ppData = pData;
 	*puSize = uBytesTotal;
@@ -95,7 +104,7 @@ bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath)
 		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
-			CloseHandle(hFile);
+			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
@@ -105,7 +114,7 @@ bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath)
 		}
 		MCFBUILD_Sha256Update(&vContext, abyTemp, dwBytesRead);
 	}
-	CloseHandle(hFile);
+	CheckedCloseHandle(hFile);
 	// Write the result.
 	MCFBUILD_Sha256Finalize(pau8Sha256, &vContext);
 	return true;
@@ -129,13 +138,13 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
-			CloseHandle(hFile);
+			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
 		uBytesTotal += dwBytesWritten;
 	}
-	CloseHandle(hFile);
+	CheckedCloseHandle(hFile);
 	return true;
 }
 bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size_t uSize){
@@ -161,13 +170,13 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, &vOverlapped)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
-			CloseHandle(hFile);
+			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
 		uBytesTotal += dwBytesWritten;
 	}
-	CloseHandle(hFile);
+	CheckedCloseHandle(hFile);
 	return true;
 }
 
@@ -182,5 +191,5 @@ bool MCFBUILD_FileLock(uintptr_t *restrict puCookie, const wchar_t *pwcPath){
 }
 void MCFBUILD_FileUnlock(uintptr_t uCookie){
 	HANDLE hFile = DecodePointer((HANDLE)uCookie);
-	CloseHandle(hFile);
+	CheckedCloseHandle(hFile);
 }

@@ -75,7 +75,7 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	unsigned char *pbyStorage = pStack->pbyStorage;
 	size_t uCapacity = pStack->uCapacity;
 	if(uCapacity < uMinimumSizeToReserve){
-		uCapacity += pStack->uCapacity / 2;
+		uCapacity += uCapacity / 2;
 		uCapacity += 0x0F;
 		uCapacity &= (size_t)-0x10;
 		uCapacity |= uMinimumSizeToReserve;

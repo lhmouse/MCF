@@ -76,8 +76,6 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	size_t uCapacity = pStack->uCapacity;
 	if(uCapacity < uMinimumSizeToReserve){
 		uCapacity += uCapacity / 2;
-		uCapacity += 0x0F;
-		uCapacity &= (size_t)-0x10;
 		uCapacity |= uMinimumSizeToReserve;
 		uCapacity |= 0x400;
 		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);

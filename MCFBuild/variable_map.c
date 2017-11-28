@@ -141,8 +141,6 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 		size_t uCapacity = pMap->uCapacity;
 		if(uCapacity < uMinimumSizeToReserve){
 			uCapacity += uCapacity / 2;
-			uCapacity += 0x0F;
-			uCapacity &= (size_t)-0x10;
 			uCapacity |= uMinimumSizeToReserve;
 			uCapacity |= 0x400;
 			pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);

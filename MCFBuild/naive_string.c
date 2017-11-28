@@ -52,11 +52,15 @@ bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveStr
 	size_t uCapacity = pString->uCapacity;
 	if(uCapacity < uMinimumSizeToReserve){
 		uCapacity += uCapacity / 2;
-		uCapacity += 0x0F;
-		uCapacity &= (size_t)-0x10;
 		uCapacity |= uMinimumSizeToReserve;
 		uCapacity |= 0x400;
-		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);
+		// Reserve space for the null terminator.
+		size_t uRealSizeToAlloc;
+		if(__builtin_add_overflow(uCapacity, sizeof(wchar_t), &uRealSizeToAlloc)){
+			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return false;
+		}
+		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uRealSizeToAlloc);
 		if(!pbyStorage){
 			return false;
 		}

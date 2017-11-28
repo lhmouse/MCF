@@ -16,11 +16,16 @@ void MCFBUILD_NaiveStringUninitialize(MCFBUILD_NaiveString *pString){
 }
 
 const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString){
+	// If the string is empty, return a pointer to something allocated statically.
 	if(pString->uSize == 0){
 		return L"";
 	}
 	unsigned char *pbyStorage = pString->pbyStorage;
-	*(wchar_t *)(pbyStorage + pString->uSize) = 0;
+	// If there is no null terminator, append one.
+	wchar_t *pwcTerminator = (void *)(pbyStorage + pString->uSize);
+	if(*pwcTerminator != 0){
+		*pwcTerminator = 0;
+	}
 	return (wchar_t *)pbyStorage;
 }
 wchar_t *MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString){
@@ -35,10 +40,12 @@ void MCFBUILD_NaiveStringClear(MCFBUILD_NaiveString *pString){
 	pString->uSize = 0;
 }
 bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveString *pString, size_t uInsertAt, size_t uLengthToInsert){
+	// Make sure `uInsertAt` is within the string.
 	if(uInsertAt > pString->uSize / sizeof(wchar_t)){
 		MCFBUILD_SetLastError(ERROR_INVALID_INDEX);
 		return false;
 	}
+	// Allocate buffer for the area to be reserved.
 	size_t uMinimumSizeToReserve;
 	if(__builtin_mul_overflow(uLengthToInsert, sizeof(wchar_t), &uMinimumSizeToReserve)){
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -67,6 +74,7 @@ bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveStr
 		pString->pbyStorage = pbyStorage;
 		pString->uCapacity = uCapacity;
 	}
+	// Relocate characters after `uInsertAt`.
 	if(uLengthToInsert != 0){
 		memmove(pbyStorage + (uInsertAt + uLengthToInsert) * sizeof(wchar_t), pbyStorage + uInsertAt * sizeof(wchar_t), pString->uSize - uInsertAt * sizeof(wchar_t));
 		pString->uSize += uLengthToInsert * sizeof(wchar_t);
@@ -75,15 +83,18 @@ bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveStr
 	return true;
 }
 bool MCFBUILD_NaiveStringRemove(MCFBUILD_NaiveString *pString, size_t uRemoveFrom, size_t uLengthToRemove){
+	// Make sure `uRemoveFrom` is within the string.
 	if(uRemoveFrom > pString->uSize / sizeof(wchar_t)){
 		MCFBUILD_SetLastError(ERROR_INVALID_INDEX);
 		return false;
 	}
+	// Do the same with `uRemoveFrom + uLengthToRemove`. Be noted that the addition may wrap.
 	if(uLengthToRemove > pString->uSize / sizeof(wchar_t) - uRemoveFrom){
 		MCFBUILD_SetLastError(ERROR_INVALID_INDEX);
 		return false;
 	}
 	unsigned char *pbyStorage = pString->pbyStorage;
+	// Relocate characters after `uRemoveFrom + uLengthToRemove`.
 	if(uLengthToRemove != 0){
 		memmove(pbyStorage + uRemoveFrom * sizeof(wchar_t), pbyStorage + (uRemoveFrom + uLengthToRemove) * sizeof(wchar_t), pString->uSize - (uRemoveFrom + uLengthToRemove) * sizeof(wchar_t));
 		pString->uSize -= uLengthToRemove * sizeof(wchar_t);

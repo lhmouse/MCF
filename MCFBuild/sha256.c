@@ -4,18 +4,16 @@
 
 #include "sha256.h"
 #include "endian.h"
+#include <x86intrin.h> // __rord
+#include <intrin.h> // __stosb, __movsb
 
 // https://en.wikipedia.org/wiki/SHA-2
 
-static inline uint32_t rotr(uint32_t val, unsigned bits){
-	return (val << (32 - bits)) | (val >> bits);
-}
-
 static inline void sha256_round(uint32_t *restrict r, int a, int b, int c, int d, int e, int f, int g, int h, uint32_t k, uint32_t x){
-	uint32_t S0 = rotr(r[a], 2) ^ rotr(r[a], 13) ^ rotr(r[a], 22);
+	uint32_t S0 = __rord(r[a], 2) ^ __rord(r[a], 13) ^ __rord(r[a], 22);
 	uint32_t maj = (r[a] & r[b]) | (r[c] & (r[a] ^ r[b]));
 	uint32_t t2 = S0 + maj;
-	uint32_t S1 = rotr(r[e], 6) ^ rotr(r[e], 11) ^ rotr(r[e], 25);
+	uint32_t S1 = __rord(r[e], 6) ^ __rord(r[e], 11) ^ __rord(r[e], 25);
 	uint32_t ch = r[g] ^ (r[e] & (r[f] ^ r[g]));
 	uint32_t t1 = r[h] + S1 + ch + k + x;
 	r[d] += t1;
@@ -27,8 +25,8 @@ static void sha256_chunk(uint32_t *restrict regs, const unsigned char *restrict 
 		w[i] = MCFBUILD_load_be_uint32((const uint32_t *)chunk + i);
 	}
 	for(unsigned i = 16; i < 64; ++i){
-		uint32_t s0 = rotr(w[i - 15],  7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>  3);
-		uint32_t s1 = rotr(w[i -  2], 17) ^ rotr(w[i -  2], 19) ^ (w[i -  2] >> 10);
+		uint32_t s0 = __rord(w[i - 15],  7) ^ __rord(w[i - 15], 18) ^ (w[i - 15] >>  3);
+		uint32_t s1 = __rord(w[i -  2], 17) ^ __rord(w[i -  2], 19) ^ (w[i -  2] >> 10);
 		w[i] = w[i - 16] + w[i - 7] + s0 + s1;
 	}
 
@@ -134,7 +132,7 @@ void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *restrict pContext, const void
 	if(uRemaining >= uChunkAvail){
 		// ... fill the chunk up, and eat it.
 		if(pContext->uChunkOffset != 0){
-			memcpy(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uChunkAvail);
+			__movsb(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uChunkAvail);
 			uRemaining -= uChunkAvail;
 			pContext->uChunkOffset = 0;
 			sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
@@ -147,7 +145,7 @@ void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *restrict pContext, const void
 	}
 	// The data remaining should fit into the internal chunk. Absorb them if any.
 	if(uRemaining != 0){
-		memcpy(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uRemaining);
+		__movsb(pContext->au8Chunk + pContext->uChunkOffset, (const unsigned char *)pData + uSize - uRemaining, uRemaining);
 		pContext->uChunkOffset += uRemaining;
 	}
 	// Add up the number of BITs.
@@ -161,14 +159,14 @@ void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *restrict pau8Sha256, MCFBUILD_Sha2
 	// Pad the last chunk until there are exactly 8 bytes remaining.
 	// If there are fewer at this time, fill it up with zeroes, eat it, and prepare another chunk after it.
 	if(uChunkAvail < 8){
-		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail);
+		__stosb(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail);
 		sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 		pContext->uChunkOffset = 0;
 		uChunkAvail = 64;
 	}
 	// The last chunk should have no more than 56 bytes here. Pad it.
 	if(uChunkAvail > 8){
-		memset(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail - 8);
+		__stosb(pContext->au8Chunk + pContext->uChunkOffset, 0, uChunkAvail - 8);
 		pContext->uChunkOffset = 56;
 	}
 	// Finish the last chunk.

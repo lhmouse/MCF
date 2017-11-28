@@ -97,7 +97,7 @@ bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath)
 	MCFBUILD_Sha256Context vContext;
 	MCFBUILD_Sha256Initialize(&vContext);
 	for(;;){
-		alignas(64) unsigned char abyTemp[4096];
+		unsigned char abyTemp[4096];
 		DWORD dwBytesRead;
 		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, 0)){
 			// If an error occurs, bail out.

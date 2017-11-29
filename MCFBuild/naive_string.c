@@ -42,7 +42,7 @@ void MCFBUILD_NaiveStringClear(MCFBUILD_NaiveString *pString){
 bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveString *pString, size_t uInsertAt, size_t uLengthToInsert){
 	// Make sure `uInsertAt` is within the string.
 	if(uInsertAt > pString->uSize / sizeof(wchar_t)){
-		MCFBUILD_SetLastError(ERROR_INVALID_INDEX);
+		MCFBUILD_SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 	// Allocate buffer for the area to be reserved.
@@ -85,12 +85,12 @@ bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveStr
 bool MCFBUILD_NaiveStringRemove(MCFBUILD_NaiveString *pString, size_t uRemoveFrom, size_t uLengthToRemove){
 	// Make sure `uRemoveFrom` is within the string.
 	if(uRemoveFrom > pString->uSize / sizeof(wchar_t)){
-		MCFBUILD_SetLastError(ERROR_INVALID_INDEX);
+		MCFBUILD_SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 	// Do the same with `uRemoveFrom + uLengthToRemove`. Be noted that the addition may wrap.
 	if(uLengthToRemove > pString->uSize / sizeof(wchar_t) - uRemoveFrom){
-		MCFBUILD_SetLastError(ERROR_INVALID_INDEX);
+		MCFBUILD_SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 	unsigned char *pbyStorage = pString->pbyStorage;
@@ -100,4 +100,43 @@ bool MCFBUILD_NaiveStringRemove(MCFBUILD_NaiveString *pString, size_t uRemoveFro
 		pString->uSize -= uLengthToRemove * sizeof(wchar_t);
 	}
 	return true;
+}
+
+bool MCFBUILD_NaiveStringInsert(MCFBUILD_NaiveString *restrict pString, size_t uInsertAt, const wchar_t *restrict pwcStringToInsert, size_t uLengthToInsert){
+	wchar_t *pwcCaret;
+	if(!MCFBUILD_NaiveStringReserve(&pwcCaret, pString, uInsertAt, uLengthToInsert)){
+		return false;
+	}
+	wmemcpy(pwcCaret, pwcStringToInsert, uLengthToInsert);
+	return true;
+}
+bool MCFBUILD_NaiveStringInsertNullTerminated(MCFBUILD_NaiveString *restrict pString, size_t uInsertAt, const wchar_t *restrict pwszStringToInsert){
+	return MCFBUILD_NaiveStringInsert(pString, uInsertAt, pwszStringToInsert, wcslen(pwszStringToInsert));
+}
+bool MCFBUILD_NaiveStringInsertRepeated(MCFBUILD_NaiveString *restrict pString, size_t uInsertAt, wchar_t wcCharacterToInsert, size_t uLengthToInsert){
+	wchar_t *pwcCaret;
+	if(!MCFBUILD_NaiveStringReserve(&pwcCaret, pString, uInsertAt, uLengthToInsert)){
+		return false;
+	}
+	wmemset(pwcCaret, wcCharacterToInsert, uLengthToInsert);
+	return true;
+}
+bool MCFBUILD_NaiveStringAppend(MCFBUILD_NaiveString *restrict pString, const wchar_t *restrict pwcStringToInsert, size_t uLengthToInsert){
+	size_t uInsertAt = MCFBUILD_NaiveStringGetLength(pString);
+	return MCFBUILD_NaiveStringInsert(pString, uInsertAt, pwcStringToInsert, uLengthToInsert);
+}
+bool MCFBUILD_NaiveStringAppendNullTerminated(MCFBUILD_NaiveString *restrict pString, const wchar_t *restrict pwszStringToInsert){
+	return MCFBUILD_NaiveStringAppend(pString, pwszStringToInsert, wcslen(pwszStringToInsert));
+}
+bool MCFBUILD_NaiveStringPush(MCFBUILD_NaiveString *pString, wchar_t wcCharacterToInsert, size_t uLengthToInsert){
+	size_t uInsertAt = MCFBUILD_NaiveStringGetLength(pString);
+	return MCFBUILD_NaiveStringInsertRepeated(pString, uInsertAt, wcCharacterToInsert, uLengthToInsert);
+}
+bool MCFBUILD_NaiveStringPop(MCFBUILD_NaiveString *pString, size_t uLengthToRemove){
+	size_t uRemoveFrom;
+	if(__builtin_sub_overflow(MCFBUILD_NaiveStringGetLength(pString), uLengthToRemove, &uRemoveFrom)){
+		MCFBUILD_SetLastError(ERROR_INVALID_PARAMETER);
+		return false;
+	}
+	return MCFBUILD_NaiveStringRemove(pString, uRemoveFrom, uLengthToRemove);
 }

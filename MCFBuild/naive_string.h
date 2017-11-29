@@ -30,6 +30,15 @@ extern void MCFBUILD_NaiveStringClear(MCFBUILD_NaiveString *pString) MCFBUILD_NO
 extern bool MCFBUILD_NaiveStringReserve(wchar_t **MCFBUILD_RESTRICT ppwcCaret, MCFBUILD_NaiveString *pString, MCFBUILD_STD size_t uInsertAt, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_NaiveStringRemove(MCFBUILD_NaiveString *pString, MCFBUILD_STD size_t uRemoveFrom, MCFBUILD_STD size_t uLengthToRemove) MCFBUILD_NOEXCEPT;
 
+// These are wrappers for convenience.
+extern bool MCFBUILD_NaiveStringInsert(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_STD size_t uInsertAt, const wchar_t *MCFBUILD_RESTRICT pwcStringToInsert, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_NaiveStringInsertNullTerminated(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_STD size_t uInsertAt, const wchar_t *MCFBUILD_RESTRICT pwszStringToInsert) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_NaiveStringInsertRepeated(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_STD size_t uInsertAt, wchar_t wcCharacterToInsert, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_NaiveStringAppend(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, const wchar_t *MCFBUILD_RESTRICT pwcStringToInsert, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_NaiveStringAppendNullTerminated(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, const wchar_t *MCFBUILD_RESTRICT pwszStringToInsert) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_NaiveStringPush(MCFBUILD_NaiveString *pString, wchar_t wcCharacterToInsert, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_NaiveStringPop(MCFBUILD_NaiveString *pString, MCFBUILD_STD size_t uLengthToRemove) MCFBUILD_NOEXCEPT;
+
 MCFBUILD_EXTERN_C_END
 
 #endif

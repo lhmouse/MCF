@@ -47,40 +47,47 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restr
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
-	size_t uSize = (size_t)liFileSize.QuadPart;
+	size_t uCapacity;
+	if(__builtin_add_overflow((size_t)liFileSize.QuadPart, (size_t)4, &uCapacity)){
+		CheckedCloseHandle(hFile);
+		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return false;
+	}
 	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContentBuffer()`.
-	void *pData = MCFBUILD_HeapAlloc(uSize);
-	if(!pData){
+	unsigned char *pbyData = MCFBUILD_HeapAlloc(uCapacity);
+	if(!pbyData){
 		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	// Read data in a loop, up to the specified number of bytes.
-	size_t uBytesTotal = 0;
+	size_t uSizeTotal = 0;
 	for(;;){
-		DWORD dwBytesToRead = SubtractWithSaturation(uSize, uBytesTotal);
-		if(dwBytesToRead == 0){
+		DWORD dwSizeToRead = SubtractWithSaturation(uCapacity, uSizeTotal);
+		if(dwSizeToRead == 0){
 			break;
 		}
-		DWORD dwBytesRead;
-		if(!ReadFile(hFile, (char *)pData + uBytesTotal, dwBytesToRead, &dwBytesRead, 0)){
+		DWORD dwSizeRead;
+		if(!ReadFile(hFile, pbyData + uSizeTotal, dwSizeToRead, &dwSizeRead, 0)){
 			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
-			MCFBUILD_HeapFree(pData);
+			MCFBUILD_HeapFree(pbyData);
 			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
-		if(dwBytesRead == 0){
+		if(dwSizeRead == 0){
 			// EOF encountered. Stop.
 			break;
 		}
-		uBytesTotal += dwBytesRead;
+		uSizeTotal += dwSizeRead;
 	}
+	// Terminate contents with four zero bytes.
+	memset(pbyData + uSizeTotal, 0, 4);
 	CheckedCloseHandle(hFile);
 	// Hand over the buffer to our caller.
-	*ppData = pData;
-	*puSize = uBytesTotal;
+	*ppData = pbyData;
+	*puSize = uSizeTotal;
 	return true;
 }
 void MCFBUILD_FileFreeContentBuffer(void *pData){
@@ -98,19 +105,19 @@ bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath)
 	MCFBUILD_Sha256Initialize(&vContext);
 	for(;;){
 		unsigned char abyTemp[4096];
-		DWORD dwBytesRead;
-		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwBytesRead, 0)){
+		DWORD dwSizeRead;
+		if(!ReadFile(hFile, abyTemp, sizeof(abyTemp), &dwSizeRead, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
-		if(dwBytesRead == 0){
+		if(dwSizeRead == 0){
 			// EOF encountered. Stop.
 			break;
 		}
-		MCFBUILD_Sha256Update(&vContext, abyTemp, dwBytesRead);
+		MCFBUILD_Sha256Update(&vContext, abyTemp, dwSizeRead);
 	}
 	CheckedCloseHandle(hFile);
 	// Write the result.
@@ -125,22 +132,23 @@ bool MCFBUILD_FilePutContents(const wchar_t *pwcPath, const void *pData, size_t 
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
+	const unsigned char *pbyData = pData;
 	// Write data in a loop, up to the specified number of bytes.
-	size_t uBytesTotal = 0;
+	size_t uSizeTotal = 0;
 	for(;;){
-		DWORD dwBytesToWrite = SubtractWithSaturation(uSize, uBytesTotal);
-		if(dwBytesToWrite == 0){
+		DWORD dwSizeToWrite = SubtractWithSaturation(uSize, uSizeTotal);
+		if(dwSizeToWrite == 0){
 			break;
 		}
-		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, 0)){
+		DWORD dwSizeWritten;
+		if(!WriteFile(hFile, pbyData + uSizeTotal, dwSizeToWrite, &dwSizeWritten, 0)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
-		uBytesTotal += dwBytesWritten;
+		uSizeTotal += dwSizeWritten;
 	}
 	CheckedCloseHandle(hFile);
 	return true;
@@ -152,11 +160,12 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 	if(hFile == INVALID_HANDLE_VALUE){
 		return false;
 	}
+	const unsigned char *pbyData = pData;
 	// Write data in a loop, up to the specified number of bytes.
-	size_t uBytesTotal = 0;
+	size_t uSizeTotal = 0;
 	for(;;){
-		DWORD dwBytesToWrite = SubtractWithSaturation(uSize, uBytesTotal);
-		if(dwBytesToWrite == 0){
+		DWORD dwSizeToWrite = SubtractWithSaturation(uSize, uSizeTotal);
+		if(dwSizeToWrite == 0){
 			break;
 		}
 		// Override the file pointer with this offset.
@@ -164,15 +173,15 @@ bool MCFBUILD_FileAppendContents(const wchar_t *pwcPath, const void *pData, size
 		OVERLAPPED vOverlapped = { 0 };
 		vOverlapped.Offset = ULONG_MAX;
 		vOverlapped.OffsetHigh = ULONG_MAX;
-		DWORD dwBytesWritten;
-		if(!WriteFile(hFile, (const char *)pData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, &vOverlapped)){
+		DWORD dwSizeWritten;
+		if(!WriteFile(hFile, pbyData + uSizeTotal, dwSizeToWrite, &dwSizeWritten, &vOverlapped)){
 			// If an error occurs, bail out.
 			dwErrorCode = GetLastError();
 			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
 		}
-		uBytesTotal += dwBytesWritten;
+		uSizeTotal += dwSizeWritten;
 	}
 	CheckedCloseHandle(hFile);
 	return true;

@@ -184,3 +184,23 @@ void MCFBUILD_Sha256Simple(MCFBUILD_Sha256 *pau8Sha256, const void *pData, size_
 	MCFBUILD_Sha256Update(arContext, pData, uSize);
 	MCFBUILD_Sha256Finalize(pau8Sha256, arContext);
 }
+
+size_t MCFBUILD_Sha256Print(wchar_t *restrict pwcBuffer, size_t uBufferLength, const MCFBUILD_Sha256 *restrict pau8Sha256, bool bUpperCase){
+	static const wchar_t kHexTable[] = L"00112233445566778899aAbBcCdDeEfF";
+	size_t uCharactersWritten = 0;
+	for(size_t uByteIndex = 0; uByteIndex < 32; ++uByteIndex){
+		if(uCharactersWritten == uBufferLength){
+			break;
+		}
+		unsigned uByte = (*pau8Sha256)[uByteIndex];
+		pwcBuffer[uCharactersWritten++] = kHexTable[((uByte >> 3) & 0x1E) + bUpperCase];
+		if(uCharactersWritten == uBufferLength){
+			break;
+		}
+		pwcBuffer[uCharactersWritten++] = kHexTable[((uByte << 1) & 0x1E) + bUpperCase];
+	}
+	if(uCharactersWritten != uBufferLength){
+		pwcBuffer[uCharactersWritten] = 0;
+	}
+	return uCharactersWritten;
+}

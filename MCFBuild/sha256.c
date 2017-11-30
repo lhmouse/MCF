@@ -179,10 +179,10 @@ void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *restrict pau8Sha256, MCFBUILD_Sha2
 }
 
 void MCFBUILD_Sha256Simple(MCFBUILD_Sha256 *pau8Sha256, const void *pData, size_t uSize){
-	MCFBUILD_Sha256Context arContext[1];
-	MCFBUILD_Sha256Initialize(arContext);
-	MCFBUILD_Sha256Update(arContext, pData, uSize);
-	MCFBUILD_Sha256Finalize(pau8Sha256, arContext);
+	MCFBUILD_Sha256Context vContext;
+	MCFBUILD_Sha256Initialize(&vContext);
+	MCFBUILD_Sha256Update(&vContext, pData, uSize);
+	MCFBUILD_Sha256Finalize(pau8Sha256, &vContext);
 }
 
 size_t MCFBUILD_Sha256Print(wchar_t *restrict pwcBuffer, size_t uBufferLength, const MCFBUILD_Sha256 *restrict pau8Sha256, bool bUpperCase){

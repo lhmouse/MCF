@@ -12,7 +12,7 @@ MCFBUILD_EXTERN_C_BEGIN
 typedef MCFBUILD_STD uint8_t MCFBUILD_Sha256[32];
 
 // Upon success, `MCFBUILD_FileGetContents()` allocates a buffer, stores a pointer to the buffer into `*ppData` and the size of the buffer into `*puSize`.
-// Contents of the buffer are terminated with four extra zero bytes, making it possible to treat the buffer as a null-terminated string.
+// Contents of the buffer are terminated with four extra zero bytes, making it possible to treat the buffer as a null-terminated string. These terminators are not counted in `*puSize`.
 // `*ppData` shall be freed with `MCFBUILD_FileFreeContentBuffer()`.
 extern bool MCFBUILD_FileGetContents(void **MCFBUILD_RESTRICT ppData, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puSize, const wchar_t *pwcPath) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_FileFreeContentBuffer(void *pData) MCFBUILD_NOEXCEPT;

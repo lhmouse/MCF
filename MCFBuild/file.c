@@ -42,19 +42,14 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restr
 		return false;
 	}
 	// Reject overlarge files.
-	if(liFileSize.QuadPart > PTRDIFF_MAX){
+	if(liFileSize.QuadPart > PTRDIFF_MAX - 4){
 		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
-	size_t uCapacity;
-	if(__builtin_add_overflow((size_t)liFileSize.QuadPart, (size_t)4, &uCapacity)){
-		CheckedCloseHandle(hFile);
-		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return false;
-	}
+	size_t uCapacity = (size_t)liFileSize.QuadPart;
 	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContentBuffer()`.
-	unsigned char *pbyData = MCFBUILD_HeapAlloc(uCapacity);
+	unsigned char *pbyData = MCFBUILD_HeapAlloc(uCapacity + 4);
 	if(!pbyData){
 		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);

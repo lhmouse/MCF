@@ -10,7 +10,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 
 	unsigned char *wp = (unsigned char *)s1;
 	const unsigned char *rp = (const unsigned char *)s2;
-	const size_t off = -(uintptr_t)s1 & ~(uintptr_t)-16; // off = 16 - misalignment
+	const size_t off = -(uintptr_t)s1 % 16; // off = 16 - misalignment
 	__m128i mis_w;
 	if(_MCFCRT_EXPECT(off != 0)){
 		mis_w = _mm_loadu_si128((const __m128i *)s2);
@@ -20,7 +20,7 @@ void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
 	size_t rem = (n - off) / 16;
 	if(_MCFCRT_EXPECT(rem != 0)){
 		const size_t nt = !!(n >> 20) << 4;
-		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
+		const size_t ur = !!((uintptr_t)rp % 16) << 3;
 		switch((rem - 1) % 8 + nt + ur){
 #define STEP(k_, store_, load_)	\
 				__attribute__((__fallthrough__));	\
@@ -111,7 +111,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 
 	unsigned char *wp = (unsigned char *)s1;
 	const unsigned char *rp = (const unsigned char *)s2;
-	const size_t off = (uintptr_t)s1 & ~(uintptr_t)-16; // off = misalignment
+	const size_t off = (uintptr_t)s1 % 16; // off = misalignment
 	__m128i mis_w;
 	if(_MCFCRT_EXPECT(off != 0)){
 		mis_w = _mm_loadu_si128((const __m128i *)s2 - 1);
@@ -121,7 +121,7 @@ void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
 	size_t rem = (n - off) / 16;
 	if(_MCFCRT_EXPECT(rem != 0)){
 		const size_t nt = !!(n >> 20) << 4;
-		const size_t ur = !!((uintptr_t)rp & ~(uintptr_t)-16) << 3;
+		const size_t ur = !!((uintptr_t)rp % 16) << 3;
 		switch((rem - 1) % 8 + nt + ur){
 #define STEP(k_, store_, load_)	\
 				__attribute__((__fallthrough__));	\

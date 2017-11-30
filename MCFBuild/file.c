@@ -26,7 +26,7 @@ static void CheckedCloseHandle(HANDLE hObject){
 	}
 }
 
-bool MCFBUILD_FileGetContents(void **restrict ppData, MCFBUILD_STD size_t *restrict puSize, const wchar_t *pwcPath){
+bool MCFBUILD_FileGetContents(void **restrict ppData, size_t *restrict puSize, const wchar_t *pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);

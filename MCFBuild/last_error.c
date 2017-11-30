@@ -6,7 +6,7 @@
 #include "last_error.h"
 #include <windows.h>
 
-unsigned long MCFBUILD_GetLastError(void) MCFBUILD_NOEXCEPT {
+unsigned long MCFBUILD_GetLastError(void){
 	return GetLastError();
 }
 void MCFBUILD_SetLastError(unsigned long ulErrorCode){

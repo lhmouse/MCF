@@ -5,6 +5,8 @@
 #include "naive_string.h"
 #include "heap.h"
 #include "last_error.h"
+#include "endian.h"
+#include "sha256.h"
 
 void MCFBUILD_NaiveStringInitialize(MCFBUILD_NaiveString *pString){
 	pString->pbyStorage = 0;
@@ -76,7 +78,7 @@ bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveStr
 	}
 	// Relocate characters after `uInsertAt`.
 	if(uLengthToInsert != 0){
-		memmove(pbyStorage + (uInsertAt + uLengthToInsert) * sizeof(wchar_t), pbyStorage + uInsertAt * sizeof(wchar_t), pString->uSize - uInsertAt * sizeof(wchar_t));
+		wmemmove((wchar_t *)pbyStorage + uInsertAt + uLengthToInsert, (wchar_t *)pbyStorage + uInsertAt, pString->uSize / sizeof(wchar_t) - uInsertAt);
 		pString->uSize += uLengthToInsert * sizeof(wchar_t);
 	}
 	*ppwcCaret = (wchar_t *)(pbyStorage + uInsertAt * sizeof(wchar_t));
@@ -96,10 +98,36 @@ bool MCFBUILD_NaiveStringRemove(MCFBUILD_NaiveString *pString, size_t uRemoveFro
 	unsigned char *pbyStorage = pString->pbyStorage;
 	// Relocate characters after `uRemoveFrom + uLengthToRemove`.
 	if(uLengthToRemove != 0){
-		memmove(pbyStorage + uRemoveFrom * sizeof(wchar_t), pbyStorage + (uRemoveFrom + uLengthToRemove) * sizeof(wchar_t), pString->uSize - (uRemoveFrom + uLengthToRemove) * sizeof(wchar_t));
+		wmemmove((wchar_t *)pbyStorage + uRemoveFrom, (wchar_t *)pbyStorage + uRemoveFrom + uLengthToRemove, pString->uSize / sizeof(wchar_t) - uRemoveFrom - uLengthToRemove);
 		pString->uSize -= uLengthToRemove * sizeof(wchar_t);
 	}
 	return true;
+}
+
+// This is the salt used to create checksums. The null terminator is part of the salt.
+static const char kMagic[] = "MCFBUILD_NaiveString:2017-12-01";
+
+void MCFBUILD_NaiveStringGetSha256(MCFBUILD_Sha256 *pau8Sha256, const MCFBUILD_NaiveString *pString){
+	MCFBUILD_Sha256Context vSha256Context;
+	MCFBUILD_Sha256Initialize(&vSha256Context);
+	MCFBUILD_Sha256Update(&vSha256Context, kMagic, sizeof(kMagic));
+	const unsigned char *pbyStorage = pString->pbyStorage;
+	// Read characters in big endian order.
+	size_t uSizeTotal = 0;
+	for(;;){
+		unsigned char abyTemp[2];
+		size_t uSizeTemp = 0;
+		while((uSizeTemp < sizeof(abyTemp)) && (uSizeTotal < pString->uSize)){
+			MCFBUILD_move_be_uint16((wchar_t *)(abyTemp + uSizeTemp), (const wchar_t *)(pbyStorage + uSizeTotal));
+			uSizeTemp += sizeof(wchar_t);
+			uSizeTotal += sizeof(wchar_t);
+		}
+		if(uSizeTemp == 0){
+			break;
+		}
+		MCFBUILD_Sha256Update(&vSha256Context, abyTemp, uSizeTemp);
+	}
+	MCFBUILD_Sha256Finalize(pau8Sha256, &vSha256Context);
 }
 
 bool MCFBUILD_NaiveStringInsert(MCFBUILD_NaiveString *restrict pString, size_t uInsertAt, const wchar_t *restrict pwcStringToInsert, size_t uLengthToInsert){

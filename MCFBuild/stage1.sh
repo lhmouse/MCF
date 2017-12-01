@@ -19,7 +19,7 @@ mkdir -p "${_dest}/include/mcfbuild/"
   -Wno-error=unused-parameter -Winvalid-pch -Wwrite-strings -Wconversion \
   -Wsign-conversion -Wdouble-promotion -Wsuggest-attribute=noreturn \
   -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-prototypes \
-  -pipe -mfpmath=both -march=core2 -mtune=intel -municode \
+  -pipe -mfpmath=both -march=native -mtune=intel -municode \
   -shared -Wl,--export-all-symbols,--exclude-libs,ALL \
   -Wl,--disable-stdcall-fixup,--enable-auto-image-base \
   "${_opt_flags}" -g3 *.c \

@@ -15,6 +15,8 @@ typedef struct MCFBUILD_tagNaiveString {
 	MCFBUILD_STD size_t uSize;
 } MCFBUILD_NaiveString;
 
+typedef MCFBUILD_STD uint8_t MCFBUILD_Sha256[32];
+
 extern void MCFBUILD_NaiveStringInitialize(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_NaiveStringUninitialize(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 
@@ -26,11 +28,15 @@ extern const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_Naive
 extern wchar_t *MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern MCFBUILD_STD size_t MCFBUILD_NaiveStringGetLength(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 
+// Fundamental modifiers.
 extern void MCFBUILD_NaiveStringClear(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_NaiveStringReserve(wchar_t **MCFBUILD_RESTRICT ppwcCaret, MCFBUILD_NaiveString *pString, MCFBUILD_STD size_t uInsertAt, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_NaiveStringRemove(MCFBUILD_NaiveString *pString, MCFBUILD_STD size_t uRemoveFrom, MCFBUILD_STD size_t uLengthToRemove) MCFBUILD_NOEXCEPT;
 
-// These are wrappers for convenience.
+// Hash support.
+extern void MCFBUILD_NaiveStringGetSha256(MCFBUILD_Sha256 *pau8Sha256, const MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
+
+// Wrappers for convenience.
 extern bool MCFBUILD_NaiveStringInsert(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_STD size_t uInsertAt, const wchar_t *MCFBUILD_RESTRICT pwcStringToInsert, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_NaiveStringInsertNullTerminated(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_STD size_t uInsertAt, const wchar_t *MCFBUILD_RESTRICT pwszStringToInsert) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_NaiveStringInsertRepeated(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_STD size_t uInsertAt, wchar_t wcCharacterToInsert, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;

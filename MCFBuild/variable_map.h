@@ -27,13 +27,12 @@ extern bool MCFBUILD_VariableMapSetNullTerminated(MCFBUILD_VariableMap *MCFBUILD
 extern bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *MCFBUILD_RESTRICT pwszKey) MCFBUILD_NOEXCEPT;
 
 typedef struct MCFBUILD_tagVariableMapEnumerationCookie {
+	const MCFBUILD_VariableMap *pMap;
 	MCFBUILD_STD size_t uOffsetNext;
 } MCFBUILD_VariableMapEnumerationCookie;
 
-// The user shall initialize `*pCookie` to `{ 0 }` before calling this function.
-// Upon each call, this function alters `*pCookie` to designate the next element if any, sets up `*ppwszKey`, `*ppwszValue` and `*puLength` accordingly, then returns `true`.
-// If there are no more elements, this function returns `false`.
-extern bool MCFBUILD_VariableMapEnumerate(const wchar_t **MCFBUILD_RESTRICT ppwszKey, const wchar_t **MCFBUILD_RESTRICT ppwszValue, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, MCFBUILD_VariableMapEnumerationCookie *MCFBUILD_RESTRICT pCookie, const MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_VariableMapEnumerateBegin(MCFBUILD_VariableMapEnumerationCookie *MCFBUILD_RESTRICT pCookie, const MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap) MCFBUILD_NOEXCEPT;
+extern bool MCFBUILD_VariableMapEnumerateNext(const wchar_t **MCFBUILD_RESTRICT ppwszKey, const wchar_t **MCFBUILD_RESTRICT ppwszValue, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, MCFBUILD_VariableMapEnumerationCookie *MCFBUILD_RESTRICT pCookie) MCFBUILD_NOEXCEPT;
 
 extern bool MCFBUILD_VariableMapSerialize(void **MCFBUILD_RESTRICT ppData, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puSize, const MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_VariableMapFreeSerializedBuffer(void *pData) MCFBUILD_NOEXCEPT;

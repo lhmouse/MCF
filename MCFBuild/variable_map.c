@@ -210,7 +210,11 @@ bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *restrict pMap, const wchar_
 	return true;
 }
 
-bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wchar_t **restrict ppwszValue, size_t *restrict puLength, MCFBUILD_VariableMapEnumerationCookie *restrict pCookie, const MCFBUILD_VariableMap *restrict pMap){
+void MCFBUILD_VariableMapEnumerateBegin(MCFBUILD_VariableMapEnumerationCookie *restrict pCookie, const MCFBUILD_VariableMap *restrict pMap){
+	pCookie->pMap = pMap;
+	pCookie->uOffsetNext = 0;
+}
+bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wchar_t **restrict ppwszValue, size_t *restrict puLength, MCFBUILD_VariableMapEnumerationCookie *restrict pCookie){
 	/*-----------------------------------------------------------*\
 	|         /------------- MapElement                           |
 	|         |/------------ Beginning of key                     |
@@ -225,6 +229,7 @@ bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wcha
 	|         ^storage                ^key ^string                |
 	|                                      \__/length             |
 	\*-----------------------------------------------------------*/
+	const MCFBUILD_VariableMap *restrict pMap = pCookie->pMap;
 	const unsigned char *pbyStorage = pMap->pbyStorage;
 	const MapElement *pElement;
 	size_t uCapacityTaken;

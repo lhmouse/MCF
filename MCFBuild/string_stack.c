@@ -118,6 +118,44 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	return true;
 }
 
+void MCFBUILD_StringStackEnumerateBegin(MCFBUILD_StringStackEnumerationCookie *restrict pCookie, const MCFBUILD_StringStack *restrict pStack){
+	pCookie->pStack = pStack;
+	pCookie->uOffsetNext = pStack->uOffsetEnd;
+}
+bool MCFBUILD_StringStackEnumerateNext(const wchar_t **restrict ppwszString, size_t *restrict puLength, MCFBUILD_StringStackEnumerationCookie *restrict pCookie){
+	/*-----------------------------------------------------------*\
+	|         /------------- Beginning of padding                 |
+	|         | /----------- Beginning of string body             |
+	|         | |      /---- Null terminator                      |
+	|         | |      |/--- StackElement                         |
+	|         | |      ||                                         |
+	| BEFORE  ??=======_*??==_*====_*??=======_*?=========_*      |
+	|         ^storage                                      ^end  |
+	| AFTER   ??=======_*??==_*====_*??=======_*?=========_*      |
+	|         ^storage                           ^string          |
+	|                                            \_______/length  |
+	\*-----------------------------------------------------------*/
+	const MCFBUILD_StringStack *restrict pStack = pCookie->pStack;
+	const unsigned char *pbyStorage = pStack->pbyStorage;
+	const StackElement *pElement;
+	size_t uOffsetCursor = pCookie->uOffsetNext;
+	if(uOffsetCursor == 0){
+		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
+		return false;
+	}
+	if(uOffsetCursor > pStack->uOffsetEnd){
+		MCFBUILD_SetLastError(ERROR_INVALID_PARAMETER);
+		return false;
+	}
+	pElement = (const void *)(pbyStorage + uOffsetCursor - sizeof(StackElement));
+	size_t uSizeOfString = pElement->uSizeWhole - pElement->bySizePadded - sizeof(wchar_t);
+	*ppwszString = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
+	*puLength = uSizeOfString / sizeof(wchar_t);
+	uOffsetCursor -= sizeof(StackElement) + pElement->uSizeWhole;
+	pCookie->uOffsetNext = uOffsetCursor;
+	return true;
+}
+
 // In reality, members in this structure are stored in reverse order.
 typedef struct tagSerializedElement {
 	uint64_t u64SizeWholeSerialized;

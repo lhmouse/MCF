@@ -17,8 +17,8 @@ typedef struct MCFBUILD_tagVariableMap {
 	MCFBUILD_STD size_t uOffsetEnd;
 } MCFBUILD_VariableMap;
 
-extern void MCFBUILD_VariableMapInitialize(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
-extern void MCFBUILD_VariableMapUninitialize(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_VariableMapDestruct(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
 
 extern void MCFBUILD_VariableMapClear(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapGet(const wchar_t **MCFBUILD_RESTRICT ppwszValue, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, const MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *pwszKey) MCFBUILD_NOEXCEPT;

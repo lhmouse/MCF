@@ -8,12 +8,12 @@
 #include "endian.h"
 #include "sha256.h"
 
-void MCFBUILD_NaiveStringInitialize(MCFBUILD_NaiveString *pString){
+void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString){
 	pString->pbyStorage = 0;
 	pString->uCapacity = 0;
 	pString->uSize = 0;
 }
-void MCFBUILD_NaiveStringUninitialize(MCFBUILD_NaiveString *pString){
+void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString){
 	MCFBUILD_HeapFree(pString->pbyStorage);
 }
 

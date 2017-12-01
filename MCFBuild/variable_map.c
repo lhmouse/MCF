@@ -38,12 +38,12 @@ typedef struct tagMapElement {
 	wchar_t awcString[];
 } MapElement;
 
-void MCFBUILD_VariableMapInitialize(MCFBUILD_VariableMap *pMap){
+void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap){
 	pMap->pbyStorage = 0;
 	pMap->uCapacity = 0;
 	pMap->uOffsetEnd = 0;
 }
-void MCFBUILD_VariableMapUninitialize(MCFBUILD_VariableMap *pMap){
+void MCFBUILD_VariableMapDestruct(MCFBUILD_VariableMap *pMap){
 	MCFBUILD_HeapFree(pMap->pbyStorage);
 }
 

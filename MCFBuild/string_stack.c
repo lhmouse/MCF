@@ -15,12 +15,12 @@ typedef struct tagStackElement {
 	// wchar_t awszString[];
 } StackElement;
 
-void MCFBUILD_StringStackInitialize(MCFBUILD_StringStack *pStack){
+void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack){
 	pStack->pbyStorage = 0;
 	pStack->uCapacity = 0;
 	pStack->uOffsetEnd = 0;
 }
-void MCFBUILD_StringStackUninitialize(MCFBUILD_StringStack *pStack){
+void MCFBUILD_StringStackDestruct(MCFBUILD_StringStack *pStack){
 	MCFBUILD_HeapFree(pStack->pbyStorage);
 }
 

@@ -15,8 +15,8 @@ typedef struct MCFBUILD_tagStringStack {
 	MCFBUILD_STD size_t uOffsetEnd;
 } MCFBUILD_StringStack;
 
-extern void MCFBUILD_StringStackInitialize(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
-extern void MCFBUILD_StringStackUninitialize(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_StringStackDestruct(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 
 extern void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_StringStackGetTop(const wchar_t **MCFBUILD_RESTRICT ppwszString, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, const MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack) MCFBUILD_NOEXCEPT;

@@ -17,8 +17,8 @@ typedef struct MCFBUILD_tagNaiveString {
 
 typedef MCFBUILD_STD uint8_t MCFBUILD_Sha256[32];
 
-extern void MCFBUILD_NaiveStringInitialize(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
-extern void MCFBUILD_NaiveStringUninitialize(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 
 // This function returns a pointer to a null-terminated, immutable string.
 // This function will never return a null pointer.

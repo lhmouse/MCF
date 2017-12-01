@@ -115,7 +115,7 @@ void MCFBUILD_NaiveStringGetSha256(MCFBUILD_Sha256 *pau8Sha256, const MCFBUILD_N
 	// Read characters in big endian order.
 	size_t uSizeTotal = 0;
 	for(;;){
-		unsigned char abyTemp[2];
+		unsigned char abyTemp[1024];
 		size_t uSizeTemp = 0;
 		while((uSizeTemp < sizeof(abyTemp)) && (uSizeTotal < pString->uSize)){
 			MCFBUILD_move_be_uint16((wchar_t *)(abyTemp + uSizeTemp), (const wchar_t *)(pbyStorage + uSizeTotal));

@@ -9,7 +9,7 @@
 
 // https://en.wikipedia.org/wiki/SHA-2
 
-static inline void sha256_round(uint32_t *restrict r, int a, int b, int c, int d, int e, int f, int g, int h, uint32_t k, uint32_t x){
+static inline void sha256_round(uint32_t *restrict r, size_t a, size_t b, size_t c, size_t d, size_t e, size_t f, size_t g, size_t h, uint32_t k, uint32_t x){
 	uint32_t S0 = __rord(r[a], 2) ^ __rord(r[a], 13) ^ __rord(r[a], 22);
 	uint32_t maj = (r[a] & r[b]) | (r[c] & (r[a] ^ r[b]));
 	uint32_t t2 = S0 + maj;

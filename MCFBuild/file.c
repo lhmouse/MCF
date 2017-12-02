@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "file.h"
-#include "heap.h"
 #include "last_error.h"
 #include "sha256.h"
 #include "mcfwin.h"
@@ -48,7 +47,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, size_t *restrict puSize, c
 	}
 	size_t uCapacity = (size_t)liFileSize.QuadPart;
 	// Allocate the buffer that is to be freed using `MCFBUILD_FileFreeContentBuffer()`.
-	unsigned char *pbyData = MCFBUILD_HeapAlloc(uCapacity + 4);
+	unsigned char *pbyData = malloc(uCapacity + 4);
 	if(!pbyData){
 		CheckedCloseHandle(hFile);
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -65,7 +64,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, size_t *restrict puSize, c
 		if(!ReadFile(hFile, pbyData + uSizeTotal, dwSizeToRead, &dwSizeRead, 0)){
 			// If an error occurs, deallocate the buffer and bail out.
 			dwErrorCode = GetLastError();
-			MCFBUILD_HeapFree(pbyData);
+			free(pbyData);
 			CheckedCloseHandle(hFile);
 			MCFBUILD_SetLastError(dwErrorCode);
 			return false;
@@ -85,7 +84,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, size_t *restrict puSize, c
 	return true;
 }
 void MCFBUILD_FileFreeContentBuffer(void *pData){
-	MCFBUILD_HeapFree(pData);
+	free(pData);
 }
 bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath){
 	DWORD dwErrorCode;

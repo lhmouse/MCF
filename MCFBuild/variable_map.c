@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "variable_map.h"
-#include "heap.h"
 #include "last_error.h"
 #include "endian.h"
 #include "sha256.h"
@@ -44,7 +43,7 @@ void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap){
 	pMap->uOffsetEnd = 0;
 }
 void MCFBUILD_VariableMapDestruct(MCFBUILD_VariableMap *pMap){
-	MCFBUILD_HeapFree(pMap->pbyStorage);
+	free(pMap->pbyStorage);
 }
 
 void MCFBUILD_VariableMapClear(MCFBUILD_VariableMap *pMap){
@@ -143,8 +142,9 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 			uCapacity += uCapacity / 2;
 			uCapacity |= uMinimumSizeToReserve;
 			uCapacity |= 0x400;
-			pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);
+			pbyStorage = realloc(pbyStorage, uCapacity);
 			if(!pbyStorage){
+				MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return false;
 			}
 			pMap->pbyStorage = pbyStorage;
@@ -289,8 +289,9 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 		uOffsetCursor += uCapacityTaken;
 	}
 	// Allocate the buffer now.
-	SerializedHeader *pHeader = MCFBUILD_HeapAlloc(uSizeToAlloc);
+	SerializedHeader *pHeader = malloc(uSizeToAlloc);
 	if(!pHeader){
+		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	// Populate the buffer with something predictable to ensure padding bytes have fixed values.
@@ -341,7 +342,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	return true;
 }
 void MCFBUILD_VariableMapFreeSerializedBuffer(void *pData){
-	MCFBUILD_HeapFree(pData);
+	free(pData);
 }
 bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const void *restrict pData, size_t uSize){
 	if(uSize < sizeof(SerializedHeader)){
@@ -405,8 +406,9 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 	size_t uCapacity = pMap->uCapacity;
 	if(uCapacity < uMinimumSizeToReserve){
 		uCapacity = uMinimumSizeToReserve;
-		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);
+		pbyStorage = realloc(pbyStorage, uCapacity);
 		if(!pbyStorage){
+			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		pMap->pbyStorage = pbyStorage;

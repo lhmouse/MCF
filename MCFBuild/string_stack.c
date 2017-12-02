@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "string_stack.h"
-#include "heap.h"
 #include "last_error.h"
 #include "endian.h"
 #include "sha256.h"
@@ -21,7 +20,7 @@ void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack){
 	pStack->uOffsetEnd = 0;
 }
 void MCFBUILD_StringStackDestruct(MCFBUILD_StringStack *pStack){
-	MCFBUILD_HeapFree(pStack->pbyStorage);
+	free(pStack->pbyStorage);
 }
 
 void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){
@@ -78,8 +77,9 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 		uCapacity += uCapacity / 2;
 		uCapacity |= uMinimumSizeToReserve;
 		uCapacity |= 0x400;
-		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);
+		pbyStorage = realloc(pbyStorage, uCapacity);
 		if(!pbyStorage){
+			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		pStack->pbyStorage = pbyStorage;
@@ -189,8 +189,9 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		uOffsetReadEnd -= sizeof(StackElement) + pElement->uSizeWhole;
 	}
 	// Allocate the buffer now.
-	SerializedHeader *pHeader = MCFBUILD_HeapAlloc(uSizeToAlloc);
+	SerializedHeader *pHeader = malloc(uSizeToAlloc);
 	if(!pHeader){
+		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
 	// Populate the buffer with something predictable to ensure padding bytes have fixed values.
@@ -233,7 +234,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 	return true;
 }
 void MCFBUILD_StringStackFreeSerializedBuffer(void *pData){
-	MCFBUILD_HeapFree(pData);
+	free(pData);
 }
 bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, const void *restrict pData, size_t uSize){
 	if(uSize < sizeof(SerializedHeader)){
@@ -290,8 +291,9 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 	size_t uCapacity = pStack->uCapacity;
 	if(uCapacity < uMinimumSizeToReserve){
 		uCapacity = uMinimumSizeToReserve;
-		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uCapacity);
+		pbyStorage = realloc(pbyStorage, uCapacity);
 		if(!pbyStorage){
+			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		pStack->pbyStorage = pbyStorage;

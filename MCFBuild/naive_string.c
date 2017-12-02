@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "naive_string.h"
-#include "heap.h"
 #include "last_error.h"
 #include "endian.h"
 #include "sha256.h"
@@ -14,7 +13,7 @@ void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString){
 	pString->uSize = 0;
 }
 void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString){
-	MCFBUILD_HeapFree(pString->pbyStorage);
+	free(pString->pbyStorage);
 }
 
 const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString){
@@ -69,8 +68,9 @@ bool MCFBUILD_NaiveStringReserve(wchar_t **restrict ppwcCaret, MCFBUILD_NaiveStr
 			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		pbyStorage = MCFBUILD_HeapRealloc(pbyStorage, uRealSizeToAlloc);
+		pbyStorage = realloc(pbyStorage, uRealSizeToAlloc);
 		if(!pbyStorage){
+			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		pString->pbyStorage = pbyStorage;

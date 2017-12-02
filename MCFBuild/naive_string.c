@@ -113,19 +113,10 @@ void MCFBUILD_NaiveStringGetSha256(MCFBUILD_Sha256 *pau8Sha256, const MCFBUILD_N
 	MCFBUILD_Sha256Update(&vSha256Context, kMagic, sizeof(kMagic));
 	const unsigned char *pbyStorage = pString->pbyStorage;
 	// Read characters in big endian order.
-	size_t uSizeTotal = 0;
-	for(;;){
-		unsigned char abyTemp[1024];
-		size_t uSizeTemp = 0;
-		while((uSizeTemp < sizeof(abyTemp)) && (uSizeTotal < pString->uSize)){
-			MCFBUILD_move_be_uint16((wchar_t *)(abyTemp + uSizeTemp), (const wchar_t *)(pbyStorage + uSizeTotal));
-			uSizeTemp += sizeof(wchar_t);
-			uSizeTotal += sizeof(wchar_t);
-		}
-		if(uSizeTemp == 0){
-			break;
-		}
-		MCFBUILD_Sha256Update(&vSha256Context, abyTemp, uSizeTemp);
+	for(size_t uSizeTotal = 0; uSizeTotal < pString->uSize; uSizeTotal += sizeof(wchar_t)){
+		wchar_t awchStep[1];
+		MCFBUILD_move_be_uint16(awchStep, (const wchar_t *)(pbyStorage + uSizeTotal));
+		MCFBUILD_Sha256Update(&vSha256Context, awchStep, sizeof(awchStep));
 	}
 	MCFBUILD_Sha256Finalize(pau8Sha256, &vSha256Context);
 }

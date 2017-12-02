@@ -2,12 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN 1
 #include "file.h"
 #include "heap.h"
 #include "last_error.h"
 #include "sha256.h"
-#include <windows.h>
+#include "mcfwin.h"
 
 static inline DWORD SubtractWithSaturation(size_t uMinuend, size_t uSubtrahend){
 	size_t uDifference;

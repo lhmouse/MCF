@@ -302,7 +302,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
 		uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
-		// The key is serialized with its null terminator. The value is not.
+		// Neither the key or the value is serialized with its null terminator.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
 		size_t uSizeWhole = uSizeOfKey + uSizeOfValue;

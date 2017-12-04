@@ -84,7 +84,7 @@ DWORD _tls_index = 0;
 __attribute__((__section__(".CRT$XLA"))) const PIMAGE_TLS_CALLBACK __xl_a = &__MCFCRT_ExeTlsCallback;
 __attribute__((__section__(".CRT$XLZ"))) const PIMAGE_TLS_CALLBACK __xl_z = _MCFCRT_NULLPTR;
 
-__attribute__((__section__(".tls"), __used__)) const IMAGE_TLS_DIRECTORY _tls_used = {
+__attribute__((__used__)) const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData = (UINT_PTR)&_tls_start,
 	.EndAddressOfRawData   = (UINT_PTR)&_tls_end,
 	.AddressOfIndex        = (UINT_PTR)&_tls_index,

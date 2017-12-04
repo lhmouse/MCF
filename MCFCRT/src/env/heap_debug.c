@@ -4,6 +4,7 @@
 
 #include "heap_debug.h"
 #include "avl_tree.h"
+#include "mutex.h"
 #include "inline_mem.h"
 #include "standard_streams.h"
 #include "bail.h"
@@ -66,12 +67,13 @@ static bool CheckSentry(uintptr_t uCookie, const unsigned char *pbyData, size_t 
 	return true;
 }
 
-static _MCFCRT_AvlRoot s_avlBlocks = _MCFCRT_NULLPTR;
+static _MCFCRT_Mutex g_vMutex = { 0 };
+static _MCFCRT_AvlRoot g_avlBlocks = _MCFCRT_NULLPTR;
 
-static void CheckForMemoryLeaks(void){
+static void CheckForMemoryLeaksUnlocked(void){
 	wchar_t awcLine[1024];
 	uintptr_t uCount = 0;
-	const BlockHeader *pHeader = (BlockHeader *)_MCFCRT_AvlFront(&s_avlBlocks);
+	const BlockHeader *pHeader = (BlockHeader *)_MCFCRT_AvlFront(&g_avlBlocks);
 	while(pHeader){
 		++uCount;
 		if(uCount <= 9999){
@@ -109,12 +111,12 @@ bool __MCFCRT_HeapDebugInit(void){
 	return true;
 }
 void __MCFCRT_HeapDebugUninit(void){
-	CheckForMemoryLeaks();
+	CheckForMemoryLeaksUnlocked();
 }
 
 size_t __MCFCRT_HeapDebugCalculateSizeToAlloc(size_t uSize){
-	const size_t uSizeToAlloc = sizeof(BlockHeader) + uSize + sizeof(BlockTrailer);
-	if(uSizeToAlloc < uSize){
+	size_t uSizeToAlloc;
+	if(__builtin_add_overflow(uSize, sizeof(BlockHeader) + sizeof(BlockTrailer), &uSizeToAlloc)){
 		return SIZE_MAX;
 	}
 	return uSizeToAlloc;
@@ -134,7 +136,10 @@ void __MCFCRT_HeapDebugRegister(void **restrict ppBlock, size_t uSize, void *pSt
 	// Initialize the trailer.
 	MakeSentry(pTrailer->abySentry, sizeof(pTrailer->abySentry), pHeader->uCookie);
 
-	_MCFCRT_AvlAttach(&s_avlBlocks, (_MCFCRT_AvlNodeHeader *)pStorage, &BlockHeaderComparatorNodes);
+	// Register it.
+	_MCFCRT_WaitForMutexForever(&g_vMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	_MCFCRT_AvlAttach(&g_avlBlocks, (_MCFCRT_AvlNodeHeader *)pStorage, &BlockHeaderComparatorNodes);
+	_MCFCRT_SignalMutex(&g_vMutex);
 
 	*ppBlock = pBlock;
 }
@@ -152,13 +157,17 @@ bool __MCFCRT_HeapDebugValidateAndUnregister(size_t *restrict puSize, void **res
 	if(!CheckSentry(pHeader->uCookie, pTrailer->abySentry, sizeof(pTrailer->abySentry))){
 		return false;
 	}
-	// Search for it in all registered blocks.
-	BlockHeader *const pHeaderFound = (BlockHeader *)_MCFCRT_AvlFind(&s_avlBlocks, (intptr_t)pHeader, &BlockHeaderComparatorNodeHeader);
+
+	// Search for it in all registered blocks. Detach it if one is found.
+	_MCFCRT_WaitForMutexForever(&g_vMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	BlockHeader *const pHeaderFound = (BlockHeader *)_MCFCRT_AvlFind(&g_avlBlocks, (intptr_t)pHeader, &BlockHeaderComparatorNodeHeader);
 	if(pHeaderFound != pHeader){
+		_MCFCRT_SignalMutex(&g_vMutex);
 		return false;
 	}
-
 	_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pStorage);
+	_MCFCRT_SignalMutex(&g_vMutex);
+
 	// Leave the header alone in order to enable the unregistration to be reverted.
 	// Zero out the trailer so the storage can be passed to `HeapReAlloc()` with the `HEAP_ZERO_MEMORY` option without causing confusion.
 	_MCFCRT_inline_mempset_fwd(pTrailer, 0, sizeof(*pTrailer));
@@ -179,5 +188,8 @@ void __MCFCRT_HeapDebugUndoUnregister(void *pStorage){
 	BlockTrailer *const pTrailer = (void *)((char *)pHeader + sizeof(BlockHeader) + uSize);
 	MakeSentry(pTrailer->abySentry, sizeof(pTrailer->abySentry), pHeader->uCookie);
 
-	_MCFCRT_AvlAttach(&s_avlBlocks, (_MCFCRT_AvlNodeHeader *)pStorage, &BlockHeaderComparatorNodes);
+	// Re-register it.
+	_MCFCRT_WaitForMutexForever(&g_vMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	_MCFCRT_AvlAttach(&g_avlBlocks, (_MCFCRT_AvlNodeHeader *)pStorage, &BlockHeaderComparatorNodes);
+	_MCFCRT_SignalMutex(&g_vMutex);
 }

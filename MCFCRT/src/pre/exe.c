@@ -76,9 +76,11 @@ void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	__MCFCRT_SEH_TOP_END
 }
 
-__extension__ __attribute__((__section__(".tls$AAA"))) const char _tls_start[0] = { };
-__extension__ __attribute__((__section__(".tls$ZZZ"))) const char _tls_end[0]   = { };
+__extension__ __attribute__((__section__(".tls$AAA"))) const char _tls_start = { };
+__extension__ __attribute__((__section__(".tls$ZZZ"))) const char _tls_end   = { };
+
 DWORD _tls_index = 0;
+
 __attribute__((__section__(".CRT$XLA"))) const PIMAGE_TLS_CALLBACK __xl_a = &__MCFCRT_ExeTlsCallback;
 __attribute__((__section__(".CRT$XLZ"))) const PIMAGE_TLS_CALLBACK __xl_z = _MCFCRT_NULLPTR;
 

@@ -9,117 +9,131 @@
 #include "inline_mem.h"
 #include "bail.h"
 
-#define HEAP_DEBUG_MUTEX_SPIN_COUNT    1000u
-
-static _MCFCRT_Mutex g_vMutex = { 0 };
-
 #ifndef NDEBUG
 #  undef __MCFCRT_HEAP_DEBUG
 #  define __MCFCRT_HEAP_DEBUG     1
 #endif
 
-#ifdef __MCFCRT_HEAP_DEBUG
-#  define HEAP_DEBUG_CALCULATE_SIZE_TO_ALLOC(n_)                 __MCFCRT_HeapDebugCalculateSizeToAlloc(n_)
-#  define HEAP_DEBUG_REGISTER(ppb_, n_, ps_, ro_, ri_)           __MCFCRT_HeapDebugRegister(ppb_, n_, ps_, ro_, ri_)
-#  define HEAP_DEBUG_VALIDATE_AND_UNREGISTER(pn_, pps_, pb_)     __MCFCRT_HeapDebugValidateAndUnregister(pn_, pps_, pb_)
-#  define HEAP_DEBUG_UNDO_UNREGISTER(ps_)                        __MCFCRT_HeapDebugUndoUnregister(ps_)
-#else
-#  define HEAP_DEBUG_CALCULATE_SIZE_TO_ALLOC(n_)                 (size_t)(n_)
-#  define HEAP_DEBUG_REGISTER(ppb_, n_, ps_, ro_, ri_)           (void)((*(ppb_) = (ps_)), (void)(n_), (void)(ro_), ri_)
-#  define HEAP_DEBUG_VALIDATE_AND_UNREGISTER(pn_, pps_, pb_)     (bool)((void)(pn_), (*(pps_) = (pb_)), true)
-#  define HEAP_DEBUG_UNDO_UNREGISTER(ps_)                        (void)(ps_)
-#endif
+static inline void *Underlying_malloc_zf(size_t size, bool zero_fill){
+	return LocalAlloc(zero_fill ? LPTR : LMEM_FIXED, size);
+}
+static inline void *Underlying_realloc_zf(void *ptr, size_t size, bool zero_fill){
+	return LocalReAlloc(ptr, size, zero_fill ? LPTR : LMEM_FIXED);
+}
+static inline void Underlying_free(void *ptr){
+	LocalFree(ptr);
+}
 
-void *__MCFCRT_HeapAlloc(size_t uNewSize, bool bFillsWithZero, const void *pRetAddrOuter){
+static inline void InvokeHeapCallback(void *pBlockNew, size_t uSizeNew, void *pBlockOld, const void *pRetAddrOuter, const void *pRetAddrInner){
+	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
+	if(!pfnCallback){
+		return;
+	}
+	(*pfnCallback)(pBlockNew, uSizeNew, pBlockOld, pRetAddrOuter, pRetAddrInner);
+}
+
+void *__MCFCRT_HeapAlloc(size_t uSizeNew, bool bFillsWithZero, const void *pRetAddrOuter){
+	size_t uSizeToAlloc;
+	void *pStorageNew, *pBlockNew;
+
 #ifdef __MCFCRT_HEAP_DEBUG
+	// Clobber the per-thread error code unconditionally in debug mode.
 	SetLastError(0xDEADBEEF);
+	// Include the size of additional debug information if requested.
+	uSizeToAlloc = __MCFCRT_HeapDebugCalculateSizeToAlloc(uSizeNew);
+#else
+	uSizeToAlloc = uSizeNew;
 #endif
-
-	_MCFCRT_WaitForMutexForever(&g_vMutex, HEAP_DEBUG_MUTEX_SPIN_COUNT);
-	DWORD dwFlags = 0;
-	dwFlags |= bFillsWithZero * (DWORD)HEAP_ZERO_MEMORY;
-	const size_t uSizeToAlloc = HEAP_DEBUG_CALCULATE_SIZE_TO_ALLOC(uNewSize);
-	void *pNewStorage = HeapAlloc(GetProcessHeap(), dwFlags, uSizeToAlloc);
-	if(!pNewStorage){
-		_MCFCRT_SignalMutex(&g_vMutex);
+	// Perform the allocation.
+	pStorageNew = Underlying_malloc_zf(uSizeToAlloc, bFillsWithZero);
+	if(!pStorageNew){
 		return _MCFCRT_NULLPTR;
 	}
-	void *pNewBlock;
-	HEAP_DEBUG_REGISTER(&pNewBlock, uNewSize, pNewStorage, pRetAddrOuter, __builtin_return_address(0));
 #ifdef __MCFCRT_HEAP_DEBUG
-	if(!bFillsWithZero && (uNewSize > 0)){
-		_MCFCRT_inline_mempset_fwd(pNewBlock, 0xCA, uNewSize);
+	// Register it and adjust the pointer.
+	__MCFCRT_HeapDebugRegister(&pBlockNew, uSizeNew, pStorageNew, pRetAddrOuter, __builtin_return_address(0));
+	if(!bFillsWithZero && (uSizeNew > 0)){
+		// If any bytes have been allocated, poison those that are considered uninitialized.
+		_MCFCRT_inline_mempset_fwd(pBlockNew, 0xCA, uSizeNew);
 	}
-#endif
-	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
-	if(pfnCallback){
-		(*pfnCallback)(pNewBlock, uNewSize, _MCFCRT_NULLPTR, pRetAddrOuter, __builtin_return_address(0));
-	}
-	_MCFCRT_SignalMutex(&g_vMutex);
-	return pNewBlock;
-}
-void *__MCFCRT_HeapRealloc(void *pOldBlock, size_t uNewSize, bool bFillsWithZero, const void *pRetAddrOuter){
-#ifdef __MCFCRT_HEAP_DEBUG
-	SetLastError(0xDEADBEEF);
+#else
+	pBlockNew = pStorageNew;
 #endif
 
-	_MCFCRT_WaitForMutexForever(&g_vMutex, HEAP_DEBUG_MUTEX_SPIN_COUNT);
-	size_t uOldSize;
-	void *pOldStorage;
-	if(!HEAP_DEBUG_VALIDATE_AND_UNREGISTER(&uOldSize, &pOldStorage, pOldBlock)){
+	// Invoke the heap callback in the end, if any.
+	InvokeHeapCallback(pBlockNew, uSizeNew, _MCFCRT_NULLPTR, pRetAddrOuter, __builtin_return_address(0));
+	return pBlockNew;
+}
+void *__MCFCRT_HeapRealloc(void *pBlockOld, size_t uSizeNew, bool bFillsWithZero, const void *pRetAddrOuter){
+	size_t uSizeOld, uSizeToAlloc;
+	void *pStorageOld, *pStorageNew, *pBlockNew;
+
+#ifdef __MCFCRT_HEAP_DEBUG
+	// Clobber the per-thread error code unconditionally in debug mode.
+	SetLastError(0xDEADBEEF);
+	// Make sure the old block is not corrupted.
+	if(!__MCFCRT_HeapDebugValidateAndUnregister(&uSizeOld, &pStorageOld, pBlockOld)){
 		_MCFCRT_Bail(L"__MCFCRT_HeapRealloc() 检测到堆损坏，这通常是错误的内存写入操作导致的。");
 	}
-#ifdef __MCFCRT_HEAP_DEBUG
-	if(uOldSize > uNewSize){
-		_MCFCRT_inline_mempset_fwd((char *)pOldBlock + uNewSize, 0xDB, uOldSize - uNewSize);
+	if(uSizeOld > uSizeNew){
+		// If the block is to be shrinked, poison bytes that are to be discarded.
+		_MCFCRT_inline_mempset_fwd((unsigned char *)pBlockOld + uSizeNew, 0xDB, uSizeOld - uSizeNew);
 	}
+	// Include the size of additional debug information if requested.
+	uSizeToAlloc = __MCFCRT_HeapDebugCalculateSizeToAlloc(uSizeNew);
+#else
+	(void)uSizeOld;
+	pStorageOld = pBlockOld;
+	uSizeToAlloc = uSizeNew;
 #endif
-	DWORD dwFlags = 0;
-	dwFlags |= bFillsWithZero * (DWORD)HEAP_ZERO_MEMORY;
-	const size_t uSizeToAlloc = HEAP_DEBUG_CALCULATE_SIZE_TO_ALLOC(uNewSize);
-	void *pNewStorage = HeapReAlloc(GetProcessHeap(), dwFlags, pOldStorage, uSizeToAlloc);
-	if(!pNewStorage){
-		HEAP_DEBUG_UNDO_UNREGISTER(pOldStorage);
-		_MCFCRT_SignalMutex(&g_vMutex);
+	// Perform the reallocation.
+	pStorageNew = Underlying_realloc_zf(pStorageOld, uSizeToAlloc, bFillsWithZero);
+	if(!pStorageNew){
+#ifdef __MCFCRT_HEAP_DEBUG
+		// Stuff it back...
+		__MCFCRT_HeapDebugUndoUnregister(pStorageOld);
+#endif
 		return _MCFCRT_NULLPTR;
 	}
-	void *pNewBlock;
-	HEAP_DEBUG_REGISTER(&pNewBlock, uNewSize, pNewStorage, pRetAddrOuter, __builtin_return_address(0));
 #ifdef __MCFCRT_HEAP_DEBUG
-	if(!bFillsWithZero && (uNewSize > uOldSize)){
-		_MCFCRT_inline_mempset_fwd((char *)pNewBlock + uOldSize, 0xCC, uNewSize - uOldSize);
+	// Register it and adjust the pointer.
+	__MCFCRT_HeapDebugRegister(&pBlockNew, uSizeNew, pStorageNew, pRetAddrOuter, __builtin_return_address(0));
+	if(!bFillsWithZero && (uSizeNew > uSizeOld)){
+		// If the block has been extended, poison bytes that are considered uninitialized.
+		_MCFCRT_inline_mempset_fwd((unsigned char *)pBlockNew + uSizeOld, 0xCC, uSizeNew - uSizeOld);
 	}
-#endif
-	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
-	if(pfnCallback){
-		(*pfnCallback)(pNewBlock, uNewSize, pOldBlock, pRetAddrOuter, __builtin_return_address(0));
-	}
-	_MCFCRT_SignalMutex(&g_vMutex);
-	return pNewBlock;
-}
-void __MCFCRT_HeapFree(void *pOldBlock, const void *pRetAddrOuter){
-#ifdef __MCFCRT_HEAP_DEBUG
-	SetLastError(0xDEADBEEF);
+#else
+	pBlockNew = pStorageNew;
 #endif
 
-	_MCFCRT_WaitForMutexForever(&g_vMutex, HEAP_DEBUG_MUTEX_SPIN_COUNT);
-	size_t uOldSize;
-	void *pOldStorage;
-	if(!HEAP_DEBUG_VALIDATE_AND_UNREGISTER(&uOldSize, &pOldStorage, pOldBlock)){
+	// Invoke the heap callback in the end, if any.
+	InvokeHeapCallback(pBlockNew, uSizeNew, pBlockOld, pRetAddrOuter, __builtin_return_address(0));
+	return pBlockNew;
+}
+void __MCFCRT_HeapFree(void *pBlockOld, const void *pRetAddrOuter){
+	size_t uSizeOld;
+	void *pStorageOld;
+
+#ifdef __MCFCRT_HEAP_DEBUG
+	// Clobber the per-thread error code unconditionally in debug mode.
+	SetLastError(0xDEADBEEF);
+	// Make sure the old block is not corrupted.
+	if(!__MCFCRT_HeapDebugValidateAndUnregister(&uSizeOld, &pStorageOld, pBlockOld)){
 		_MCFCRT_Bail(L"__MCFCRT_HeapFree() 检测到堆损坏，这通常是错误的内存写入操作导致的。");
 	}
-#ifdef __MCFCRT_HEAP_DEBUG
-	if(uOldSize > 0){
-		_MCFCRT_inline_mempset_fwd(pOldBlock, 0xDD, uOldSize);
+	if(uSizeOld > 0){
+		// If any bytes are to be freed, poison those that are to be discarded.
+		_MCFCRT_inline_mempset_fwd(pBlockOld, 0xDD, uSizeOld);
 	}
+#else
+	(void)uSizeOld;
+	pStorageOld = pBlockOld;
 #endif
-	DWORD dwFlags = 0;
-	HeapFree(GetProcessHeap(), dwFlags, pOldStorage);
-	const _MCFCRT_HeapCallback pfnCallback = _MCFCRT_GetHeapCallback();
-	if(pfnCallback){
-		(*pfnCallback)(_MCFCRT_NULLPTR, 0, pOldBlock, pRetAddrOuter, __builtin_return_address(0));
-	}
-	_MCFCRT_SignalMutex(&g_vMutex);
+	// Perform the deallocation.
+	Underlying_free(pStorageOld);
+
+	// Invoke the heap callback in the end, if any.
+	InvokeHeapCallback(_MCFCRT_NULLPTR, 0, pBlockOld, pRetAddrOuter, __builtin_return_address(0));
 }
 
 static volatile _MCFCRT_HeapCallback g_pfnHeapCallback = _MCFCRT_NULLPTR;

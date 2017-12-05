@@ -15,8 +15,12 @@ typedef struct MCFBUILD_tagStringStack {
 	MCFBUILD_STD size_t uOffsetEnd;
 } MCFBUILD_StringStack;
 
+// This function constructs an empty `MCFBUILD_StringStack`.
 extern void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
+// This function destructs a `MCFBUILD_StringStack`, deallocating any storage it has allocated.
 extern void MCFBUILD_StringStackDestruct(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
+// This function constructs a `MCFBUILD_StringStack` using the contents from `*pSource` and destructs it thereafter.
+extern void MCFBUILD_StringStackMove(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, MCFBUILD_StringStack *MCFBUILD_RESTRICT pSource) MCFBUILD_NOEXCEPT;
 
 extern void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_StringStackGetTop(const wchar_t **MCFBUILD_RESTRICT ppwszString, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, const MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack) MCFBUILD_NOEXCEPT;

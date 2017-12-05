@@ -44,6 +44,17 @@ void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap){
 }
 void MCFBUILD_VariableMapDestruct(MCFBUILD_VariableMap *pMap){
 	free(pMap->pbyStorage);
+#ifndef NDEBUG
+	memset(pMap, 0xEC, sizeof(*pMap));
+#endif
+}
+void MCFBUILD_VariableMapMove(MCFBUILD_VariableMap *restrict pMap, MCFBUILD_VariableMap *restrict pSource){
+	pMap->pbyStorage = pSource->pbyStorage;
+	pMap->uCapacity = pSource->uCapacity;
+	pMap->uOffsetEnd = pSource->uOffsetEnd;
+#ifndef NDEBUG
+	memset(pSource, 0xEB, sizeof(*pSource));
+#endif
 }
 
 void MCFBUILD_VariableMapClear(MCFBUILD_VariableMap *pMap){

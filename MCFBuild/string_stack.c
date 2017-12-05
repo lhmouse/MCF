@@ -21,6 +21,17 @@ void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack){
 }
 void MCFBUILD_StringStackDestruct(MCFBUILD_StringStack *pStack){
 	free(pStack->pbyStorage);
+#ifndef NDEBUG
+	memset(pStack, 0xEC, sizeof(*pStack));
+#endif
+}
+void MCFBUILD_StringStackMove(MCFBUILD_StringStack *restrict pStack, MCFBUILD_StringStack *restrict pSource){
+	pStack->pbyStorage = pSource->pbyStorage;
+	pStack->uCapacity = pSource->uCapacity;
+	pStack->uOffsetEnd = pSource->uOffsetEnd;
+#ifndef NDEBUG
+	memset(pSource, 0xEB, sizeof(*pSource));
+#endif
 }
 
 void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){

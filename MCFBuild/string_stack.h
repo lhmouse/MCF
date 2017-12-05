@@ -15,6 +15,11 @@ typedef struct MCFBUILD_tagStringStack {
 	MCFBUILD_STD size_t uOffsetEnd;
 } MCFBUILD_StringStack;
 
+typedef struct MCFBUILD_tagStringStackEnumerationCookie {
+	const MCFBUILD_StringStack *pStack;
+	MCFBUILD_STD size_t uOffsetNext;
+} MCFBUILD_StringStackEnumerationCookie;
+
 // This function constructs an empty `MCFBUILD_StringStack`.
 extern void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 // This function destructs a `MCFBUILD_StringStack`, deallocating any storage it has allocated.
@@ -27,11 +32,6 @@ extern bool MCFBUILD_StringStackGetTop(const wchar_t **MCFBUILD_RESTRICT ppwszSt
 extern bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const wchar_t *MCFBUILD_RESTRICT pwcString, MCFBUILD_STD size_t uLength) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_StringStackPushNullTerminated(MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack, const wchar_t *MCFBUILD_RESTRICT pwszString) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
-
-typedef struct MCFBUILD_tagStringStackEnumerationCookie {
-	const MCFBUILD_StringStack *pStack;
-	MCFBUILD_STD size_t uOffsetNext;
-} MCFBUILD_StringStackEnumerationCookie;
 
 extern void MCFBUILD_StringStackEnumerateBegin(MCFBUILD_StringStackEnumerationCookie *MCFBUILD_RESTRICT pCookie, const MCFBUILD_StringStack *MCFBUILD_RESTRICT pStack) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_StringStackEnumerateNext(const wchar_t **MCFBUILD_RESTRICT ppwszString, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, MCFBUILD_StringStackEnumerationCookie *MCFBUILD_RESTRICT pCookie) MCFBUILD_NOEXCEPT;

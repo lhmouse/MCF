@@ -17,6 +17,11 @@ typedef struct MCFBUILD_tagVariableMap {
 	MCFBUILD_STD size_t uOffsetEnd;
 } MCFBUILD_VariableMap;
 
+typedef struct MCFBUILD_tagVariableMapEnumerationCookie {
+	const MCFBUILD_VariableMap *pMap;
+	MCFBUILD_STD size_t uOffsetNext;
+} MCFBUILD_VariableMapEnumerationCookie;
+
 // This function constructs an empty `MCFBUILD_VariableMap`.
 extern void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
 // This function destructs a `MCFBUILD_VariableMap`, deallocating any storage it has allocated.
@@ -29,11 +34,6 @@ extern bool MCFBUILD_VariableMapGet(const wchar_t **MCFBUILD_RESTRICT ppwszValue
 extern bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *MCFBUILD_RESTRICT pwszKey, const wchar_t *MCFBUILD_RESTRICT pwcValue, MCFBUILD_STD size_t uLength) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapSetNullTerminated(MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *MCFBUILD_RESTRICT pwszKey, const wchar_t *MCFBUILD_RESTRICT ppwszValue) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *MCFBUILD_RESTRICT pwszKey) MCFBUILD_NOEXCEPT;
-
-typedef struct MCFBUILD_tagVariableMapEnumerationCookie {
-	const MCFBUILD_VariableMap *pMap;
-	MCFBUILD_STD size_t uOffsetNext;
-} MCFBUILD_VariableMapEnumerationCookie;
 
 extern void MCFBUILD_VariableMapEnumerateBegin(MCFBUILD_VariableMapEnumerationCookie *MCFBUILD_RESTRICT pCookie, const MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapEnumerateNext(const wchar_t **MCFBUILD_RESTRICT ppwszKey, const wchar_t **MCFBUILD_RESTRICT ppwszValue, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, MCFBUILD_VariableMapEnumerationCookie *MCFBUILD_RESTRICT pCookie) MCFBUILD_NOEXCEPT;

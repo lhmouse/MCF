@@ -238,7 +238,9 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 	MCFBUILD_Sha256Initialize(&vSha256Context);
 	MCFBUILD_Sha256Update(&vSha256Context, kMagic, sizeof(kMagic));
 	MCFBUILD_Sha256Update(&vSha256Context, pHeader->abyPayload, (size_t)(pbyWrite - pHeader->abyPayload));
-	MCFBUILD_Sha256Finalize(&(pHeader->au8Checksum), &vSha256Context);
+	MCFBUILD_Sha256 vSha256;
+	MCFBUILD_Sha256Finalize(&vSha256, &vSha256Context);
+	memcpy(pHeader->au8Checksum, &vSha256, 32);
 	// Hand over the buffer to our caller.
 	*ppData = pHeader;
 	*puSize = uSizeToAlloc;
@@ -255,13 +257,13 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 	const SerializedHeader *pHeader = pData;
 	const unsigned char *pbyEnd = (const unsigned char *)pData + uSize;
 	// Verify the checksum.
-	uint8_t au8Checksum[32];
 	MCFBUILD_Sha256Context vSha256Context;
 	MCFBUILD_Sha256Initialize(&vSha256Context);
 	MCFBUILD_Sha256Update(&vSha256Context, kMagic, sizeof(kMagic));
 	MCFBUILD_Sha256Update(&vSha256Context, pHeader->abyPayload, (size_t)(pbyEnd - pHeader->abyPayload));
-	MCFBUILD_Sha256Finalize(&au8Checksum, &vSha256Context);
-	if(memcmp(au8Checksum, pHeader->au8Checksum, 32) != 0){
+	MCFBUILD_Sha256 vSha256;
+	MCFBUILD_Sha256Finalize(&vSha256, &vSha256Context);
+	if(memcmp(pHeader->au8Checksum, &vSha256, 32) != 0){
 		MCFBUILD_SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}

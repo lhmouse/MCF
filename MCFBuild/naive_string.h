@@ -9,13 +9,13 @@
 
 MCFBUILD_EXTERN_C_BEGIN
 
+typedef struct MCFBUILD_tagSha256 MCFBUILD_Sha256;
+
 typedef struct MCFBUILD_tagNaiveString {
 	unsigned char *pbyStorage;
 	MCFBUILD_STD size_t uCapacity;
 	MCFBUILD_STD size_t uSize;
 } MCFBUILD_NaiveString;
-
-typedef MCFBUILD_STD uint8_t MCFBUILD_Sha256[32];
 
 extern void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;

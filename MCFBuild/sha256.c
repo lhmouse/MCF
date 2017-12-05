@@ -151,7 +151,7 @@ void MCFBUILD_Sha256Update(MCFBUILD_Sha256Context *restrict pContext, const void
 	// Add up the number of BITs.
 	pContext->u64BitsTotal += (uint64_t)uSize * 8;
 }
-void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *restrict pau8Sha256, MCFBUILD_Sha256Context *restrict pContext){
+void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *restrict pSha256, MCFBUILD_Sha256Context *restrict pContext){
 	// Append an `0x80` to the last chunk.
 	// There is no need for overflow checks since the last chunk will never be full.
 	pContext->au8Chunk[(pContext->uChunkOffset)++] = 0x80;
@@ -174,25 +174,25 @@ void MCFBUILD_Sha256Finalize(MCFBUILD_Sha256 *restrict pau8Sha256, MCFBUILD_Sha2
 	sha256_chunk(pContext->au32Regs, pContext->au8Chunk);
 	// Copy the hash out.
 	for(unsigned uIndex = 0; uIndex < 8; ++uIndex){
-		MCFBUILD_store_be_uint32((uint32_t *)pau8Sha256 + uIndex, pContext->au32Regs[uIndex]);
+		MCFBUILD_store_be_uint32((uint32_t *)pSha256 + uIndex, pContext->au32Regs[uIndex]);
 	}
 }
 
-void MCFBUILD_Sha256Simple(MCFBUILD_Sha256 *pau8Sha256, const void *pData, size_t uSize){
+void MCFBUILD_Sha256Simple(MCFBUILD_Sha256 *pSha256, const void *pData, size_t uSize){
 	MCFBUILD_Sha256Context vContext;
 	MCFBUILD_Sha256Initialize(&vContext);
 	MCFBUILD_Sha256Update(&vContext, pData, uSize);
-	MCFBUILD_Sha256Finalize(pau8Sha256, &vContext);
+	MCFBUILD_Sha256Finalize(pSha256, &vContext);
 }
 
-size_t MCFBUILD_Sha256Print(wchar_t *restrict pwcBuffer, size_t uBufferLength, const MCFBUILD_Sha256 *restrict pau8Sha256, bool bUpperCase){
+size_t MCFBUILD_Sha256Print(wchar_t *restrict pwcBuffer, size_t uBufferLength, const MCFBUILD_Sha256 *restrict pSha256, bool bUpperCase){
 	static const wchar_t kHexTable[] = L"00112233445566778899aAbBcCdDeEfF";
 	size_t uCharactersWritten = 0;
 	for(size_t uByteIndex = 0; uByteIndex < 32; ++uByteIndex){
 		if(uCharactersWritten == uBufferLength){
 			break;
 		}
-		unsigned uByte = (*pau8Sha256)[uByteIndex];
+		unsigned uByte = pSha256->au8Bytes[uByteIndex];
 		pwcBuffer[uCharactersWritten++] = kHexTable[((uByte >> 3) & 0x1E) + bUpperCase];
 		if(uCharactersWritten == uBufferLength){
 			break;

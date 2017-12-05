@@ -9,7 +9,9 @@
 
 MCFBUILD_EXTERN_C_BEGIN
 
-typedef MCFBUILD_STD uint8_t MCFBUILD_Sha256[32];
+typedef struct MCFBUILD_tagSha256 {
+	MCFBUILD_STD uint8_t au8Bytes[32];
+} MCFBUILD_Sha256;
 
 typedef struct MCFBUILD_tagSha256Context {
 	MCFBUILD_STD uint32_t au32Regs[8];

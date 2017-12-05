@@ -86,7 +86,7 @@ bool MCFBUILD_FileGetContents(void **restrict ppData, size_t *restrict puSize, c
 void MCFBUILD_FileFreeContents(void *pData){
 	free(pData);
 }
-bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath){
+bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pSha256, const wchar_t *pwcPath){
 	DWORD dwErrorCode;
 	// Open the file for reading. Fail if it does not exist.
 	HANDLE hFile = CreateFileW(pwcPath, FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -114,7 +114,7 @@ bool MCFBUILD_FileGetSha256(MCFBUILD_Sha256 *pau8Sha256, const wchar_t *pwcPath)
 	}
 	CheckedCloseHandle(hFile);
 	// Write the result.
-	MCFBUILD_Sha256Finalize(pau8Sha256, &vContext);
+	MCFBUILD_Sha256Finalize(pSha256, &vContext);
 	return true;
 }
 

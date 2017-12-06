@@ -8,11 +8,11 @@
 #include "sha256.h"
 
 // In reality, members in this structure are stored in reverse order.
-typedef struct tagStackElement {
+typedef struct tagElement {
 	size_t uSizeWhole;
 	unsigned char bySizePadded;
 	// wchar_t awszString[];
-} StackElement;
+} Element;
 
 void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack){
 	pStack->pbyStorage = 0;
@@ -42,7 +42,7 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
 	|         | |      /---- Null terminator                      |
-	|         | |      |/--- StackElement                         |
+	|         | |      |/--- Element                              |
 	|         | |      ||                                         |
 	| BEFORE  ??=======_*??==_*====_*??=======_*?=========_*      |
 	|         ^storage                                      ^end  |
@@ -55,7 +55,7 @@ bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *re
 		return false;
 	}
 	const unsigned char *pbyStorage = pStack->pbyStorage;
-	const StackElement *pElement = (const void *)(pbyStorage + pStack->uOffsetEnd - sizeof(StackElement));
+	const Element *pElement = (const void *)(pbyStorage + pStack->uOffsetEnd - sizeof(Element));
 	size_t uSizeOfString = pElement->uSizeWhole - pElement->bySizePadded - sizeof(wchar_t);
 	*ppwszString = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 	*puLength = uSizeOfString / sizeof(wchar_t);
@@ -66,7 +66,7 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
 	|         | |      /---- Null terminator                      |
-	|         | |      |/--- StackElement                         |
+	|         | |      |/--- Element                              |
 	|         | |      ||                                         |
 	| BEFORE  ??=======_*??==_*====_*??=======_*                  |
 	|         ^storage                          ^end              |
@@ -78,7 +78,7 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 	unsigned char bySizePadded = -uSizeWhole % 8;
 	uSizeWhole += bySizePadded;
 	size_t uMinimumSizeToReserve;
-	if(__builtin_add_overflow(pStack->uOffsetEnd, uSizeWhole + sizeof(StackElement), &uMinimumSizeToReserve)){
+	if(__builtin_add_overflow(pStack->uOffsetEnd, uSizeWhole + sizeof(Element), &uMinimumSizeToReserve)){
 		MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
@@ -96,8 +96,8 @@ bool MCFBUILD_StringStackPush(MCFBUILD_StringStack *restrict pStack, const wchar
 		pStack->pbyStorage = pbyStorage;
 		pStack->uCapacity = uCapacity;
 	}
-	pStack->uOffsetEnd += uSizeWhole + sizeof(StackElement);
-	StackElement *pElement = (void *)(pbyStorage + pStack->uOffsetEnd - sizeof(StackElement));
+	pStack->uOffsetEnd += uSizeWhole + sizeof(Element);
+	Element *pElement = (void *)(pbyStorage + pStack->uOffsetEnd - sizeof(Element));
 	memcpy((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString, pwcString, uSizeOfString);
 	*(wchar_t *)((unsigned char *)pElement - sizeof(wchar_t)) = 0;
 	pElement->uSizeWhole = uSizeWhole;
@@ -112,7 +112,7 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
 	|         | |      /---- Null terminator                      |
-	|         | |      |/--- StackElement                         |
+	|         | |      |/--- Element                              |
 	|         | |      ||                                         |
 	| BEFORE  ??=======_*??==_*====_*??=======_*?=========_*      |
 	|         ^storage                                      ^end  |
@@ -124,8 +124,8 @@ bool MCFBUILD_StringStackPop(MCFBUILD_StringStack *pStack){
 		return false;
 	}
 	unsigned char *pbyStorage = pStack->pbyStorage;
-	const StackElement *pElement = (const void *)(pbyStorage + pStack->uOffsetEnd - sizeof(StackElement));
-	pStack->uOffsetEnd -= sizeof(StackElement) + pElement->uSizeWhole;
+	const Element *pElement = (const void *)(pbyStorage + pStack->uOffsetEnd - sizeof(Element));
+	pStack->uOffsetEnd -= sizeof(Element) + pElement->uSizeWhole;
 	return true;
 }
 
@@ -138,7 +138,7 @@ bool MCFBUILD_StringStackEnumerateNext(const wchar_t **restrict ppwszString, siz
 	|         /------------- Beginning of padding                 |
 	|         | /----------- Beginning of string body             |
 	|         | |      /---- Null terminator                      |
-	|         | |      |/--- StackElement                         |
+	|         | |      |/--- Element                              |
 	|         | |      ||                                         |
 	| BEFORE  ??=======_*??==_*====_*??=======_*?=========_*      |
 	|         ^storage                                      ^end  |
@@ -148,7 +148,7 @@ bool MCFBUILD_StringStackEnumerateNext(const wchar_t **restrict ppwszString, siz
 	\*-----------------------------------------------------------*/
 	const MCFBUILD_StringStack *restrict pStack = pCookie->pStack;
 	const unsigned char *pbyStorage = pStack->pbyStorage;
-	const StackElement *pElement;
+	const Element *pElement;
 	size_t uOffsetCursor = pCookie->uOffsetNext;
 	if(uOffsetCursor == 0){
 		MCFBUILD_SetLastError(ERROR_NO_MORE_ITEMS);
@@ -158,11 +158,11 @@ bool MCFBUILD_StringStackEnumerateNext(const wchar_t **restrict ppwszString, siz
 		MCFBUILD_SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
-	pElement = (const void *)(pbyStorage + uOffsetCursor - sizeof(StackElement));
+	pElement = (const void *)(pbyStorage + uOffsetCursor - sizeof(Element));
 	size_t uSizeOfString = pElement->uSizeWhole - pElement->bySizePadded - sizeof(wchar_t);
 	*ppwszString = (const void *)((const unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
 	*puLength = uSizeOfString / sizeof(wchar_t);
-	uOffsetCursor -= sizeof(StackElement) + pElement->uSizeWhole;
+	uOffsetCursor -= sizeof(Element) + pElement->uSizeWhole;
 	pCookie->uOffsetNext = uOffsetCursor;
 	return true;
 }
@@ -188,7 +188,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 	unsigned char *pbyStorage = pStack->pbyStorage;
 	size_t uOffsetReadEnd = pStack->uOffsetEnd;
 	while(uOffsetReadEnd != 0){
-		const StackElement *pElement = (const void *)(pbyStorage + uOffsetReadEnd - sizeof(StackElement));
+		const Element *pElement = (const void *)(pbyStorage + uOffsetReadEnd - sizeof(Element));
 		size_t uSizeOfString = pElement->uSizeWhole - pElement->bySizePadded - sizeof(wchar_t);
 		// There is no need to serialize null terminators.
 		size_t uSizeWhole = uSizeOfString;
@@ -197,7 +197,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		uSizeToAlloc += uSizeWhole;
 		uSizeToAlloc += sizeof(SerializedElement);
 		// Scan the next element.
-		uOffsetReadEnd -= sizeof(StackElement) + pElement->uSizeWhole;
+		uOffsetReadEnd -= sizeof(Element) + pElement->uSizeWhole;
 	}
 	// Allocate the buffer now.
 	SerializedHeader *pHeader = malloc(uSizeToAlloc);
@@ -211,7 +211,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 	unsigned char *pbyWrite = pHeader->abyPayload;
 	uOffsetReadEnd = pStack->uOffsetEnd;
 	while(uOffsetReadEnd != 0){
-		const StackElement *pElement = (const void *)(pbyStorage + uOffsetReadEnd - sizeof(StackElement));
+		const Element *pElement = (const void *)(pbyStorage + uOffsetReadEnd - sizeof(Element));
 		size_t uSizeOfString = pElement->uSizeWhole - pElement->bySizePadded - sizeof(wchar_t);
 		// There is no need to serialize null terminators.
 		size_t uSizeWhole = uSizeOfString;
@@ -231,7 +231,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeWhole + bySizePadded);
 		pbyWrite += sizeof(SerializedElement);
 		// Scan the next element.
-		uOffsetReadEnd -= sizeof(StackElement) + pElement->uSizeWhole;
+		uOffsetReadEnd -= sizeof(Element) + pElement->uSizeWhole;
 	}
 	// Calculate the checksum.
 	MCFBUILD_Sha256Context vSha256Context;
@@ -290,11 +290,11 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		}
 		pbyRead -= uSizeWholeSerialized / 8 * 8;
 		size_t uSizeOfString = uSizeWholeSerialized - uSizeWholeSerialized % 8 * 2;
-		// Add up the number of bytes that a StackElement is going to take.
+		// Add up the number of bytes that a Element is going to take.
 		size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		if(__builtin_add_overflow(uMinimumSizeToReserve, uSizeWhole + sizeof(StackElement), &uMinimumSizeToReserve)){
+		if(__builtin_add_overflow(uMinimumSizeToReserve, uSizeWhole + sizeof(Element), &uMinimumSizeToReserve)){
 			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
@@ -326,7 +326,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		size_t uSizeWhole = uSizeOfString + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		StackElement *pElement = (void *)(pbyStorage + pStack->uOffsetEnd + uSizeWhole);
+		Element *pElement = (void *)(pbyStorage + pStack->uOffsetEnd + uSizeWhole);
 		// Load the string. There is no null terminator so we have to append one.
 		const wchar_t *pwcReadBase = (const void *)(pbyRead + uSizeWholeSerialized % 8);
 		wchar_t *pwcWriteBase = (void *)((unsigned char *)pElement - sizeof(wchar_t) - uSizeOfString);
@@ -336,7 +336,7 @@ bool MCFBUILD_StringStackDeserialize(MCFBUILD_StringStack *restrict pStack, cons
 		pwcWriteBase[uSizeOfString / sizeof(wchar_t)] = 0;
 		pElement->uSizeWhole = uSizeWhole;
 		pElement->bySizePadded = bySizePadded;
-		pStack->uOffsetEnd += uSizeWhole + sizeof(StackElement);
+		pStack->uOffsetEnd += uSizeWhole + sizeof(Element);
 	}
 	return true;
 }

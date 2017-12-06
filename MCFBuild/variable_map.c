@@ -31,11 +31,11 @@ bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
 	return true;
 }
 
-typedef struct tagMapElement {
+typedef struct tagElement {
 	size_t uSizeWhole;
 	size_t uOffsetToValue;
 	wchar_t awcString[];
-} MapElement;
+} Element;
 
 void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap){
 	pMap->pbyStorage = 0;
@@ -67,7 +67,7 @@ bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restri
 		return false;
 	}
 	/*-----------------------------------------------------------*\
-	|         /------------- MapElement                           |
+	|         /------------- Element                              |
 	|         |/------------ Beginning of key                     |
 	|         || /---------- Null terminator of key               |
 	|         || |/--------- Beginning of padding                 |
@@ -81,7 +81,7 @@ bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restri
 	|                                      \__/length             |
 	\*-----------------------------------------------------------*/
 	const unsigned char *pbyStorage = pMap->pbyStorage;
-	const MapElement *pElement;
+	const Element *pElement;
 	size_t uCapacityTaken;
 	size_t uOffsetCursor = 0;
 	for(;;){
@@ -90,7 +90,7 @@ bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restri
 			MCFBUILD_SetLastError(ERROR_NOT_FOUND);
 			return false;
 		}
-		uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
 		if(wcscmp(pElement->awcString, pwszKey) == 0){
 			break;
 		}
@@ -108,7 +108,7 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 		return false;
 	}
 	/*-----------------------------------------------------------*\
-	|         /------------- MapElement                           |
+	|         /------------- Element                              |
 	|         |/------------ Beginning of key                     |
 	|         || /---------- Null terminator of key               |
 	|         || |/--------- Beginning of padding                 |
@@ -122,7 +122,7 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 	|                                      \__/length             |
 	\*-----------------------------------------------------------*/
 	unsigned char *pbyStorage = pMap->pbyStorage;
-	MapElement *pElement;
+	Element *pElement;
 	size_t uCapacityTaken;
 	size_t uOffsetCursor = 0;
 	for(;;){
@@ -131,7 +131,7 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 			uCapacityTaken = 0;
 			break;
 		}
-		uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
 		if(wcscmp(pElement->awcString, pwszKey) == 0){
 			break;
 		}
@@ -141,7 +141,7 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 	size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
 	unsigned char bySizePadded = -uSizeWhole % 8;
 	uSizeWhole += bySizePadded;
-	ptrdiff_t nDistanceToMove = (ptrdiff_t)(sizeof(MapElement) + uSizeWhole) - (ptrdiff_t)uCapacityTaken;
+	ptrdiff_t nDistanceToMove = (ptrdiff_t)(sizeof(Element) + uSizeWhole) - (ptrdiff_t)uCapacityTaken;
 	if(nDistanceToMove > 0){
 		size_t uMinimumSizeToReserve;
 		if(__builtin_add_overflow(pMap->uOffsetEnd, (size_t)nDistanceToMove, &uMinimumSizeToReserve)){
@@ -188,7 +188,7 @@ bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *restrict pMap, const wchar_
 		return false;
 	}
 	/*-----------------------------------------------------------*\
-	|         /------------- MapElement                           |
+	|         /------------- Element                              |
 	|         |/------------ Beginning of key                     |
 	|         || /---------- Null terminator of key               |
 	|         || |/--------- Beginning of padding                 |
@@ -201,7 +201,7 @@ bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *restrict pMap, const wchar_
 	|         ^storage                           ^end             |
 	\*-----------------------------------------------------------*/
 	unsigned char *pbyStorage = pMap->pbyStorage;
-	const MapElement *pElement;
+	const Element *pElement;
 	size_t uCapacityTaken;
 	size_t uOffsetCursor = 0;
 	for(;;){
@@ -210,7 +210,7 @@ bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *restrict pMap, const wchar_
 			MCFBUILD_SetLastError(ERROR_NOT_FOUND);
 			return false;
 		}
-		uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
 		if(wcscmp(pElement->awcString, pwszKey) == 0){
 			break;
 		}
@@ -227,7 +227,7 @@ void MCFBUILD_VariableMapEnumerateBegin(MCFBUILD_VariableMapEnumerationCookie *r
 }
 bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wchar_t **restrict ppwszValue, size_t *restrict puLength, MCFBUILD_VariableMapEnumerationCookie *restrict pCookie){
 	/*-----------------------------------------------------------*\
-	|         /------------- MapElement                           |
+	|         /------------- Element                              |
 	|         |/------------ Beginning of key                     |
 	|         || /---------- Null terminator of key               |
 	|         || |/--------- Beginning of padding                 |
@@ -242,7 +242,7 @@ bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wcha
 	\*-----------------------------------------------------------*/
 	const MCFBUILD_VariableMap *restrict pMap = pCookie->pMap;
 	const unsigned char *pbyStorage = pMap->pbyStorage;
-	const MapElement *pElement;
+	const Element *pElement;
 	size_t uCapacityTaken;
 	size_t uOffsetCursor = pCookie->uOffsetNext;
 	if(uOffsetCursor == pMap->uOffsetEnd){
@@ -254,7 +254,7 @@ bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wcha
 		return false;
 	}
 	pElement = (const void *)(pbyStorage + uOffsetCursor);
-	uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
+	uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
 	*ppwszKey = pElement->awcString;
 	size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
 	*ppwszValue = (const void *)((const unsigned char *)(pElement->awcString) + pElement->uOffsetToValue);
@@ -283,12 +283,12 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	size_t uSizeToAlloc = sizeof(SerializedHeader);
 	// Iterate from beginning to end, accumulating number of bytes for each element on the way.
 	unsigned char *pbyStorage = pMap->pbyStorage;
-	const MapElement *pElement;
+	const Element *pElement;
 	size_t uCapacityTaken;
 	size_t uOffsetCursor = 0;
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
-		uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
 		// The key is serialized with its null terminator. The value is not.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
@@ -312,7 +312,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	uOffsetCursor = 0;
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
-		uCapacityTaken = sizeof(MapElement) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
 		// Neither the key or the value is serialized with its null terminator.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
@@ -404,11 +404,11 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		size_t uOffsetToValueSerialized = (size_t)u64OffsetToValueSerialized;
 		size_t uSizeOfKey = uOffsetToValueSerialized - uSizeWholeSerialized % 8;
 		size_t uSizeOfValue = uSizeWholeSerialized / 8 * 8 - uOffsetToValueSerialized;
-		// Add up the number of bytes that a MapElement is going to take.
+		// Add up the number of bytes that a Element is going to take.
 		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
-		if(__builtin_add_overflow(uMinimumSizeToReserve, sizeof(MapElement) + uSizeWhole, &uMinimumSizeToReserve)){
+		if(__builtin_add_overflow(uMinimumSizeToReserve, sizeof(Element) + uSizeWhole, &uMinimumSizeToReserve)){
 			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
@@ -439,7 +439,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		size_t uSizeOfKey = uOffsetToValueSerialized - uSizeWholeSerialized % 8;
 		size_t uSizeOfValue = uSizeWholeSerialized / 8 * 8 - uOffsetToValueSerialized;
 		// Create a new element in the map.
-		MapElement *pElement = (void *)(pbyStorage + pMap->uOffsetEnd);
+		Element *pElement = (void *)(pbyStorage + pMap->uOffsetEnd);
 		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
 		unsigned char bySizePadded = -uSizeWhole % 8;
 		uSizeWhole += bySizePadded;
@@ -461,7 +461,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		}
 		pwcWriteBase[uSizeOfValue / sizeof(wchar_t)] = 0;
 		pbyRead += uSizeWholeSerialized / 8 * 8;
-		pMap->uOffsetEnd += sizeof(MapElement) + uSizeWhole;
+		pMap->uOffsetEnd += sizeof(Element) + uSizeWhole;
 	}
 	return true;
 }

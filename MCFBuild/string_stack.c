@@ -185,7 +185,7 @@ bool MCFBUILD_StringStackSerialize(void **restrict ppData, size_t *restrict puSi
 	// Estimate the upper bound of number of bytes to allocate.
 	size_t uSizeToAlloc = sizeof(SerializedHeader);
 	// Iterate from top to bottom, accumulating number of bytes for each element on the way.
-	unsigned char *pbyStorage = pStack->pbyStorage;
+	const unsigned char *pbyStorage = pStack->pbyStorage;
 	size_t uOffsetReadEnd = pStack->uOffsetEnd;
 	while(uOffsetReadEnd != 0){
 		const Element *pElement = (const void *)(pbyStorage + uOffsetReadEnd - sizeof(Element));

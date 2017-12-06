@@ -282,7 +282,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	// Estimate the upper bound of number of bytes to allocate.
 	size_t uSizeToAlloc = sizeof(SerializedHeader);
 	// Iterate from beginning to end, accumulating number of bytes for each element on the way.
-	unsigned char *pbyStorage = pMap->pbyStorage;
+	const unsigned char *pbyStorage = pMap->pbyStorage;
 	const Element *pElement;
 	size_t uCapacityTaken;
 	size_t uOffsetCursor = 0;

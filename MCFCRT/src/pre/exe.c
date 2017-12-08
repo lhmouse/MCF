@@ -76,8 +76,8 @@ void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	__MCFCRT_SEH_TOP_END
 }
 
-__extension__ __attribute__((__section__(".tls$AAA"))) const char _tls_start = { };
-__extension__ __attribute__((__section__(".tls$ZZZ"))) const char _tls_end   = { };
+__extension__ __attribute__((__section__(".tls$AAA"))) const char _tls_start = 0;
+__extension__ __attribute__((__section__(".tls$ZZZ"))) const char _tls_end   = 0;
 
 DWORD _tls_index = 0;
 

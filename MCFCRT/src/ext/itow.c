@@ -43,16 +43,20 @@ wchar_t *_MCFCRT_itow_X(wchar_t *buffer, uintptr_t value){
 	return _MCFCRT_itow0X(buffer, value, 0);
 }
 wchar_t *_MCFCRT_itow0d(wchar_t *buffer, intptr_t value, unsigned min_digits){
-	wchar_t *begin = buffer;
-	uintptr_t abs = (uintptr_t)value;
-	if(value < 0){
-		*(begin++) = L'-';
-		abs = -abs;
+	wchar_t *begin;
+	uintptr_t abs;
+	if(value >= 0){
+		begin = buffer;
+		abs = (uintptr_t)value;
+	} else {
+		buffer[0] = L'-';
+		begin = buffer + 1;
+		abs = -(uintptr_t)value;
 	}
 	return Really_itow_u(begin, abs, min_digits, L"0123456789", 10);
 }
 wchar_t *_MCFCRT_itow0u(wchar_t *buffer, uintptr_t value, unsigned min_digits){
-	return Really_itow_u(buffer, value, min_digits, L"0123456789"      , 10);
+	return Really_itow_u(buffer, value, min_digits, L"0123456789", 10);
 }
 wchar_t *_MCFCRT_itow0x(wchar_t *buffer, uintptr_t value, unsigned min_digits){
 	return Really_itow_u(buffer, value, min_digits, L"0123456789abcdef", 16);

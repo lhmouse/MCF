@@ -32,7 +32,7 @@ bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
 }
 
 typedef struct tagElement {
-	size_t uSizeWhole;
+	size_t uSizeWithPadding;
 	size_t uOffsetToValue;
 	alignas(uintptr_t) wchar_t awcString[];
 } Element;
@@ -90,13 +90,13 @@ bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restri
 			MCFBUILD_SetLastError(ERROR_NOT_FOUND);
 			return false;
 		}
-		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 		if(wcscmp(pElement->awcString, pwszKey) == 0){
 			break;
 		}
 		uOffsetCursor += uCapacityTaken;
 	}
-	size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
+	size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
 	*ppwszValue = (const void *)((const unsigned char *)(pElement->awcString) + pElement->uOffsetToValue);
 	*puLength = uSizeOfValue / sizeof(wchar_t);
 	return true;
@@ -131,17 +131,17 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 			uCapacityTaken = 0;
 			break;
 		}
-		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 		if(wcscmp(pElement->awcString, pwszKey) == 0){
 			break;
 		}
 		uOffsetCursor += uCapacityTaken;
 	}
 	size_t uSizeOfValue = uLength * sizeof(wchar_t);
-	size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
-	unsigned char bySizePadded = -uSizeWhole % 8;
-	uSizeWhole += bySizePadded;
-	ptrdiff_t nDistanceToMove = (ptrdiff_t)(sizeof(Element) + uSizeWhole) - (ptrdiff_t)uCapacityTaken;
+	size_t uSizeWithPadding = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
+	unsigned char bySizePadded = -uSizeWithPadding % 8;
+	uSizeWithPadding += bySizePadded;
+	ptrdiff_t nDistanceToMove = (ptrdiff_t)(sizeof(Element) + uSizeWithPadding) - (ptrdiff_t)uCapacityTaken;
 	if(nDistanceToMove > 0){
 		size_t uMinimumSizeToReserve;
 		if(__builtin_add_overflow(pMap->uOffsetEnd, (size_t)nDistanceToMove, &uMinimumSizeToReserve)){
@@ -167,8 +167,8 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 		memmove(pbyStorage + uOffsetCursor + uCapacityTaken + nDistanceToMove, pbyStorage + uOffsetCursor + uCapacityTaken, pMap->uOffsetEnd - uOffsetCursor - uCapacityTaken);
 		pMap->uOffsetEnd += (size_t)nDistanceToMove;
 	}
-	size_t uOffsetToValue = uSizeWhole - uSizeOfValue - sizeof(wchar_t);
-	pElement->uSizeWhole = uSizeWhole;
+	size_t uOffsetToValue = uSizeWithPadding - uSizeOfValue - sizeof(wchar_t);
+	pElement->uSizeWithPadding = uSizeWithPadding;
 	pElement->uOffsetToValue = uOffsetToValue;
 	if(uCapacityTaken == 0){
 		// Copy the key only if there wasn't one. The key will always be null-terminated as well as `pwszKey`.
@@ -210,7 +210,7 @@ bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *restrict pMap, const wchar_
 			MCFBUILD_SetLastError(ERROR_NOT_FOUND);
 			return false;
 		}
-		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 		if(wcscmp(pElement->awcString, pwszKey) == 0){
 			break;
 		}
@@ -254,9 +254,9 @@ bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wcha
 		return false;
 	}
 	pElement = (const void *)(pbyStorage + uOffsetCursor);
-	uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
+	uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 	*ppwszKey = pElement->awcString;
-	size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
+	size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
 	*ppwszValue = (const void *)((const unsigned char *)(pElement->awcString) + pElement->uOffsetToValue);
 	*puLength = uSizeOfValue / sizeof(wchar_t);
 	uOffsetCursor += uCapacityTaken;
@@ -288,14 +288,14 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	size_t uOffsetCursor = 0;
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
-		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 		// The key is serialized with its null terminator. The value is not.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
-		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
-		size_t uSizeWhole = uSizeOfKey + uSizeOfValue;
-		unsigned char bySizePadded = -uSizeWhole % 8;
-		uSizeWhole += bySizePadded;
-		uSizeToAlloc += sizeof(SerializedElement) + uSizeWhole;
+		size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
+		size_t uSizeWithPadding = uSizeOfKey + uSizeOfValue;
+		unsigned char bySizePadded = -uSizeWithPadding % 8;
+		uSizeWithPadding += bySizePadded;
+		uSizeToAlloc += sizeof(SerializedElement) + uSizeWithPadding;
 		// Scan the next element.
 		uOffsetCursor += uCapacityTaken;
 	}
@@ -312,19 +312,19 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	uOffsetCursor = 0;
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
-		uCapacityTaken = sizeof(Element) + pElement->uSizeWhole;
+		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 		// Neither the key or the value is serialized with its null terminator.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
-		size_t uSizeOfValue = pElement->uSizeWhole - pElement->uOffsetToValue - sizeof(wchar_t);
-		size_t uSizeWhole = uSizeOfKey + uSizeOfValue;
-		unsigned char bySizePadded = -uSizeWhole % 8;
-		uSizeWhole += bySizePadded;
-		// This is tricky. Acknowledging that `uSizeWhole` will be aligned onto an 8-byte boundary,
+		size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
+		size_t uSizeWithPadding = uSizeOfKey + uSizeOfValue;
+		unsigned char bySizePadded = -uSizeWithPadding % 8;
+		uSizeWithPadding += bySizePadded;
+		// This is tricky. Acknowledging that `uSizeWithPadding` will be aligned onto an 8-byte boundary,
 		// we add `bySizePadded` to it, preserving `bySizePadded` in its three LSBs intactly, with the rest being
-		// `uSizeWhole` which can be fetched by bitwise and'ing the three LSBs away.
+		// `uSizeWithPadding` which can be fetched by bitwise and'ing the three LSBs away.
 		SerializedElement *pSerialized = (void *)pbyWrite;
-		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeWhole + bySizePadded);
-		MCFBUILD_store_be_uint64(&(pSerialized->u64OffsetToValueSerialized), uSizeWhole - uSizeOfValue);
+		MCFBUILD_store_be_uint64(&(pSerialized->u64SizeWholeSerialized), uSizeWithPadding + bySizePadded);
+		MCFBUILD_store_be_uint64(&(pSerialized->u64OffsetToValueSerialized), uSizeWithPadding - uSizeOfValue);
 		// Store the key without the null terminator.
 		const wchar_t *pwcReadBase = pElement->awcString;
 		wchar_t *pwcWriteBase = pSerialized->awcString;
@@ -333,11 +333,11 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 		}
 		// Store the value without the null terminator.
 		pwcReadBase = pElement->awcString + pElement->uOffsetToValue / sizeof(wchar_t);
-		pwcWriteBase = pSerialized->awcString + (uSizeWhole - uSizeOfValue) / sizeof(wchar_t);
+		pwcWriteBase = pSerialized->awcString + (uSizeWithPadding - uSizeOfValue) / sizeof(wchar_t);
 		for(size_t uIndex = 0; uIndex < uSizeOfValue / sizeof(wchar_t); ++uIndex){
 			MCFBUILD_move_be_uint16(pwcWriteBase + uIndex, pwcReadBase + uIndex);
 		}
-		pbyWrite += sizeof(SerializedElement) + uSizeWhole;
+		pbyWrite += sizeof(SerializedElement) + uSizeWithPadding;
 		// Scan the next element.
 		uOffsetCursor += uCapacityTaken;
 	}
@@ -405,10 +405,10 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		size_t uSizeOfKey = uOffsetToValueSerialized - uSizeWholeSerialized % 8;
 		size_t uSizeOfValue = uSizeWholeSerialized / 8 * 8 - uOffsetToValueSerialized;
 		// Add up the number of bytes that a Element is going to take.
-		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
-		unsigned char bySizePadded = -uSizeWhole % 8;
-		uSizeWhole += bySizePadded;
-		if(__builtin_add_overflow(uMinimumSizeToReserve, sizeof(Element) + uSizeWhole, &uMinimumSizeToReserve)){
+		size_t uSizeWithPadding = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
+		unsigned char bySizePadded = -uSizeWithPadding % 8;
+		uSizeWithPadding += bySizePadded;
+		if(__builtin_add_overflow(uMinimumSizeToReserve, sizeof(Element) + uSizeWithPadding, &uMinimumSizeToReserve)){
 			MCFBUILD_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
@@ -440,11 +440,11 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		size_t uSizeOfValue = uSizeWholeSerialized / 8 * 8 - uOffsetToValueSerialized;
 		// Create a new element in the map.
 		Element *pElement = (void *)(pbyStorage + pMap->uOffsetEnd);
-		size_t uSizeWhole = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
-		unsigned char bySizePadded = -uSizeWhole % 8;
-		uSizeWhole += bySizePadded;
-		size_t uOffsetToValue = uSizeWhole - uSizeOfValue - sizeof(wchar_t);
-		pElement->uSizeWhole = uSizeWhole;
+		size_t uSizeWithPadding = uSizeOfKey + sizeof(wchar_t) + uSizeOfValue + sizeof(wchar_t);
+		unsigned char bySizePadded = -uSizeWithPadding % 8;
+		uSizeWithPadding += bySizePadded;
+		size_t uOffsetToValue = uSizeWithPadding - uSizeOfValue - sizeof(wchar_t);
+		pElement->uSizeWithPadding = uSizeWithPadding;
 		pElement->uOffsetToValue = uOffsetToValue;
 		// Load the key without the null terminator, then append one.
 		const wchar_t *pwcReadBase = pSerialized->awcString;
@@ -461,7 +461,7 @@ bool MCFBUILD_VariableMapDeserialize(MCFBUILD_VariableMap *restrict pMap, const 
 		}
 		pwcWriteBase[uSizeOfValue / sizeof(wchar_t)] = 0;
 		pbyRead += uSizeWholeSerialized / 8 * 8;
-		pMap->uOffsetEnd += sizeof(Element) + uSizeWhole;
+		pMap->uOffsetEnd += sizeof(Element) + uSizeWithPadding;
 	}
 	return true;
 }

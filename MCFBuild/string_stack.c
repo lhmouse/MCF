@@ -11,7 +11,7 @@
 typedef struct tagElement {
 	size_t uSizeWhole;
 	unsigned char bySizePadded;
-	// wchar_t awszString[];
+	alignas(uintptr_t) wchar_t awszString[];
 } Element;
 
 void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack){

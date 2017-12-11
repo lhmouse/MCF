@@ -34,7 +34,7 @@ bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
 typedef struct tagElement {
 	size_t uSizeWhole;
 	size_t uOffsetToValue;
-	wchar_t awcString[];
+	alignas(uintptr_t) wchar_t awcString[];
 } Element;
 
 void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap){

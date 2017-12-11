@@ -188,18 +188,115 @@ void MCFBUILD_StringTemplateClear(MCFBUILD_StringTemplate *pTemplate){
 	pTemplate->uOffsetEnd = 0;
 }
 bool MCFBUILD_StringTemplateParse(MCFBUILD_StringTemplate *restrict pTemplate, MCFBUILD_StringTemplateParseResult *restrict peResult, size_t *restrict puResultOffset, const wchar_t *restrict pwszRawString){
-	// Save the offset to data end. If anything goes wrong we will have to restore it to this value.
-//	size_t uOffsetEndOld = pTemplate->uOffsetEnd;
-
 	// Calculate the size of the last segment, if any.
 	size_t uLastCapacityTaken = 0;
 	for(size_t uOffsetCursor = 0; uOffsetCursor != pTemplate->uOffsetEnd; uOffsetCursor += uLastCapacityTaken){
 		const Segment *pSegment = (void *)(pTemplate->pbyStorage + uOffsetCursor);
 		uLastCapacityTaken = sizeof(Segment) + GetSizeWithPadding(pSegment->byType, pSegment->uParam);
 	}
+	// Save the offset to data end. If anything goes wrong we will have to restore it to this value.
+	size_t uOffsetEndOld = pTemplate->uOffsetEnd;
 
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"abc", 6);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"def", 4);
+	// Parse the input using an LL(n) parser.
+	// Define the parser output.
+	size_t uResultOffset = 0;
+	// Define parser states.
+	enum {
+		kDelimiter,
+		kSingleQuoted,
+		kDoubleQuoted,
+		kPlain,
+	} eState = kDelimiter;
+	// A token here consists of a single character.
+	wchar_t wcToken;
+	for(;;){
+		wcToken = pwszRawString[uResultOffset];
+		switch(eState){
+		case kDelimiter:
+			if((wcToken == L' ') || (wcToken == L'\t')){
+				eState = kDelimiter;
+				break;
+			
+			if(wcToken == L'\''){
+				eState = kSingleQuoted;
+				break;
+			} 
+			if(wcToken == L'\"'){
+				eState = kDoubleQuoted;
+				break;
+			}
+			goto jNormalMayBeEscaped;
+		case kPlain:
+			if((wcToken == L' ') || (wcToken == L'\t')){
+				if(!PushSegment(pTemplate, &kSegmentEndOfString, 0, 0, 0)){
+					pTemplate->uOffsetEnd = uOffsetEndOld;
+					*peResult = MCFBUILD_kStringTemplateParseNotEnoughMemory;
+					*puResultOffset = uResultOffset;
+					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+					return false;
+				}
+				eState = kDelimiter;
+				break;
+			}
+			if(wcToken == L'\''){
+				eState = kSingleQuoted;
+				break;
+			}
+			if(wcToken == L'\"'){
+				eState = kDoubleQuoted;
+				break;
+			} 
+		jNormalMayBeEscaped:
+			if(!PushSegment(pTemplate, &kSegmentLiteral, 0, &wcToken, sizeof(wcToken))){
+				pTemplate->uOffsetEnd = uOffsetEndOld;
+				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+				return false;
+			}
+			eState = kPlain;
+			break;
+		case kSingleQuoted:
+			if(wcToken == 0){
+				pTemplate->uOffsetEnd = uOffsetEndOld;
+				*peResult = MCFBUILD_kStringTemplateParseSingleQuoteUnclosed;
+				*puResultOffset = uResultOffset;
+				SetLastError(ERROR_INVALID_DATA);
+				return false;
+			}
+			if(wcToken == L'\''){
+				eState = kSingleQuoted;
+				break;
+			}
+			if(!PushSegment(pTemplate, &kSegmentLiteral, 0, &wcToken, sizeof(wcToken))){
+				pTemplate->uOffsetEnd = uOffsetEndOld;
+				*peResult = MCFBUILD_kStringTemplateParseNotEnoughMemory;
+				*puResultOffset = uResultOffset;
+				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+				return false;
+			}
+			eState = kPlain;
+			break;
+		case kDoubleQuoted:
+			if(wcToken == 0){
+				pTemplate->uOffsetEnd = uOffsetEndOld;
+				*peResult = MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed;
+				*puResultOffset = uResultOffset;
+				SetLastError(ERROR_INVALID_DATA);
+				return false;
+			}
+			if(wcToken == L'\"'){
+				eState = kDoubleQuoted;
+				break;
+			} 
+			goto jNormalMayBeEscaped;
+		default:
+			__builtin_trap();
+		}
+		if(wcToken == 0){
+			break;
+		}
+		++uResultOffset;
+	}
+/*
 	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"fghi", 6);
 	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"ijk", 6);
 	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentEndOfString, 0, 0, 0);
@@ -209,65 +306,9 @@ bool MCFBUILD_StringTemplateParse(MCFBUILD_StringTemplate *restrict pTemplate, M
 	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"DEF", 6);
 	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"G", 2);
 	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentFromStack, 0, 0, 0);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"HIJ", 6);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentEndOfString, 0, 0, 0);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"KLMN", 8);
-
-/*	// Define parser states.
-	enum {
-		kDelimiter,
-		kPlain,
-		kSingleQuoted,
-		kDoubleQuoted,
-	} eState = kDelimiter;
-
-	MCFBUILD_StringTemplateParseResult eResult;
-	size_t uOffset = 0;
-
 */
-
 	*peResult = MCFBUILD_kStringTemplateParseSuccess;
-	*puResultOffset = 1;
-
-
-
-
-
-//		if(wcThis == L'\\'){
-//
-/*
- Syntax
- 1. Escape Sequences
-    \'          Literal '
-    \"          Literal "
-    \?          Literal ?
-    \$          Literal $
-    \#          Literal #
-    \a          Alert (0x07)
-    \b          Backspace (0x08)
-    \f          Form feed (0x0C)
-    \n          Line feed (0x0A)
-    \r          Carriage return (0x0D)
-    \t          Tab (0x09)
-    \v          Vertical tab (0x0B)
-    \xHH        UTF-16 code unit (2 digits with zero extension)
-    \uHHHH      UTF-16 code unit (4 digits)
-    \UHHHHHHHH  UTF code point (8 digits)
-    \\          Literal \
- 2. Replacement Sequences
-    $$          Literal $
-    $[N]        The Nth (max 9999th) segment from the top of the string stack
-    $0 ~ $9     The same as $[0] ~ $[9]
-    ${KEY}      The value of KEY in the variable map
- 3. Comments
-    Anything following a non-literal #, as well as the # itself, is ignored.
- 4. Single Quotes
-    Anything between an innermost pair of single quotes are preserved literally.
- 5. Escaped Line Feeds
-    If a line feed is escaped, the line preceding it is concatenated with the line following it, with a space delimiter in the middle. The line feed itself is removed.
- 6. Whitespaces
-    Literal whitespaces (spaces, tabs and line feeds) are used to delimit parameters. Each series made up of literal spaces/tabs is replaced with a single space.
-*/
+	*puResultOffset = uResultOffset;
 	return true;
 }
 

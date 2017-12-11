@@ -65,6 +65,7 @@ typedef enum MCFBUILD_tagStringTemplateParseResult {
 	MCFBUILD_kStringTemplateParseSingleQuoteUnclosed   = 5007,
 	MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed   = 5008,
 	MCFBUILD_kStringTemplateParseUtfCodePointInvalid   = 5009,
+	MCFBUILD_kStringTemplateParseNotEnoughMemory       = 5010,
 } MCFBUILD_StringTemplateParseResult;
 
 // This function constructs an empty `MCFBUILD_StringTemplate`.

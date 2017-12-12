@@ -12,7 +12,7 @@ MCFBUILD_EXTERN_C_BEGIN
 typedef struct MCFBUILD_tagStringStack {
 	unsigned char *pbyStorage;
 	MCFBUILD_STD size_t uCapacity;
-	MCFBUILD_STD size_t uOffsetEnd;
+	MCFBUILD_STD size_t uOffsetBegin;
 } MCFBUILD_StringStack;
 
 typedef struct MCFBUILD_tagStringStackEnumerationCookie {

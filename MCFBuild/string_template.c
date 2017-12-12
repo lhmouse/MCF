@@ -50,7 +50,12 @@ static size_t GetSizeWithPadding(SegmentType eType, size_t uParam){
 	}
 	return uSizeWithPadding;
 }
-static bool PushSegment(MCFBUILD_StringTemplate *restrict pTemplate, size_t *restrict puLastCapacityTaken, SegmentType eType, size_t uParam, const wchar_t *pwcString, size_t uSizeOfString){
+
+static inline unsigned long MakeParseResult(MCFBUILD_StringTemplateParseResult *restrict peResult, unsigned long ulErrorCode, MCFBUILD_StringTemplateParseResult eResult){
+	*peResult = eResult;
+	return ulErrorCode;
+}
+static unsigned long PushSegment(MCFBUILD_StringTemplateParseResult *restrict peResult, MCFBUILD_StringTemplate *restrict pTemplate, size_t *restrict puLastCapacityTaken, SegmentType eType, size_t uParam, const wchar_t *pwcString, size_t uSizeOfString){
 	// Reserve storage for the new segment.
 	size_t uSizeWithPadding;
 	switch(eType){
@@ -73,7 +78,7 @@ static bool PushSegment(MCFBUILD_StringTemplate *restrict pTemplate, size_t *res
 	uSizeWithPadding += bySizePadded;
 	size_t uMinimumSizeToReserve;
 	if(__builtin_add_overflow(pTemplate->uOffsetEnd, sizeof(Segment) + uSizeWithPadding, &uMinimumSizeToReserve)){
-		return false;
+		return MakeParseResult(peResult, ERROR_NOT_ENOUGH_MEMORY, MCFBUILD_kStringTemplateParseNotEnoughMemory);
 	}
 	unsigned char *pbyStorage = pTemplate->pbyStorage;
 	size_t uCapacity = pTemplate->uCapacity;
@@ -83,7 +88,7 @@ static bool PushSegment(MCFBUILD_StringTemplate *restrict pTemplate, size_t *res
 		uCapacity |= 0x400;
 		pbyStorage = realloc(pbyStorage, uCapacity);
 		if(!pbyStorage){
-			return false;
+			return MakeParseResult(peResult, ERROR_NOT_ENOUGH_MEMORY, MCFBUILD_kStringTemplateParseNotEnoughMemory);
 		}
 		pTemplate->pbyStorage = pbyStorage;
 		pTemplate->uCapacity = uCapacity;
@@ -94,7 +99,8 @@ static bool PushSegment(MCFBUILD_StringTemplate *restrict pTemplate, size_t *res
 		// Adjacent segments having type `kSegmentLiteral` will be merged.
 		pSegment = (void *)(pbyStorage + pTemplate->uOffsetEnd - uLastCapacityTaken);
 		if(pSegment->byType == kSegmentLiteral){
-			// Merge into it!
+			// Pop the last segment, then merge into it!
+			pTemplate->uOffsetEnd -= uLastCapacityTaken;
 			size_t uSizeOfStringOld = pSegment->uParam - pSegment->bySizePadded;
 			// Recalculate the size of the last segment.
 			uSizeWithPadding = uSizeOfStringOld + uSizeOfString;
@@ -104,7 +110,6 @@ static bool PushSegment(MCFBUILD_StringTemplate *restrict pTemplate, size_t *res
 			pSegment->bySizePadded = bySizePadded;
 			pSegment->uParam = uSizeWithPadding;
 			memcpy((wchar_t *)((unsigned char *)(pSegment->awcString) + uSizeOfStringOld), pwcString, uSizeOfString);
-			pTemplate->uOffsetEnd -= uLastCapacityTaken;
 			uLastCapacityTaken = sizeof(Segment) + uSizeWithPadding;
 			goto jDone;
 		}
@@ -142,27 +147,196 @@ static bool PushSegment(MCFBUILD_StringTemplate *restrict pTemplate, size_t *res
 jDone:
 	pTemplate->uOffsetEnd += uLastCapacityTaken;
 	*puLastCapacityTaken = uLastCapacityTaken;
-	return true;
+	return 0;
 }
-
-/*static MCFBUILD_StringTemplateParseResult ParseDigits(uint32_t *restrict pu32Value, unsigned uRadix, const wchar_t *pwcString, size_t uLength){
+static unsigned long ParseDigits(MCFBUILD_StringTemplateParseResult *restrict peResult, uint32_t *restrict pu32Value, unsigned uRadix, const wchar_t *pwcString, size_t uLength){
 	static const wchar_t kHexTable[] = L"00112233445566778899aAbBcCdDeEfF";
 	uint32_t u32Value = 0;
 	for(size_t uIndex = 0; uIndex < uLength; ++uIndex){
 		wchar_t wcDigit = pwcString[uIndex];
 		if(wcDigit == 0){
-			return MCFBUILD_kStringTemplateParseDigitsTooFew;
+			return MakeParseResult(peResult, ERROR_HANDLE_EOF, MCFBUILD_kStringTemplateParseDigitsTooFew);
 		}
 		const wchar_t *pwcFound = wmemchr(kHexTable, wcDigit, uRadix * 2);
 		if(!pwcFound){
-			return MCFBUILD_kStringTemplateParseDigitsInvalid;
+			return MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseDigitsInvalid);
 		}
-		u32Value += (unsigned)(pwcFound - kHexTable) / 2;
 		u32Value *= uRadix;
+		u32Value += (unsigned)(pwcFound - kHexTable) / 2;
 	}
 	*pu32Value = u32Value;
-	return MCFBUILD_kStringTemplateParseSuccess;
-}*/
+	return 0;
+}
+static unsigned long ParseAndPushEscapeable(MCFBUILD_StringTemplateParseResult *restrict peResult, size_t *restrict puTokenLength, MCFBUILD_StringTemplate *restrict pTemplate, size_t *restrict puLastCapacityTaken, const wchar_t *pwszToken){
+	unsigned long ulErrorCode;
+	uint32_t u32Value;
+	wchar_t awcString[4];
+	const wchar_t *pwcPosition;
+	size_t uLength, uInvalidIndex;
+	switch(pwszToken[0]){
+	case L'\\':
+		switch(pwszToken[1]){
+		case L'\\':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\\", sizeof(wchar_t));
+			break;
+		case L'\'':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\'", sizeof(wchar_t));
+			break;
+		case L'\"':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\"", sizeof(wchar_t));
+			break;
+		case L'?':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"?", sizeof(wchar_t));
+			break;
+		case L'$':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"$", sizeof(wchar_t));
+			break;
+		case L'#':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"#", sizeof(wchar_t));
+			break;
+		case L'a':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\a", sizeof(wchar_t));
+			break;
+		case L'b':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\b", sizeof(wchar_t));
+			break;
+		case L'f':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\f", sizeof(wchar_t));
+			break;
+		case L'n':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\n", sizeof(wchar_t));
+			break;
+		case L'r':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\r", sizeof(wchar_t));
+			break;
+		case L't':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\t", sizeof(wchar_t));
+			break;
+		case L'v':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"\v", sizeof(wchar_t));
+			break;
+		case L'x':
+			*puTokenLength = 4;
+			ulErrorCode = ParseDigits(peResult, &u32Value, 16, pwszToken + 2, 2);
+			if(ulErrorCode != 0){
+				break;
+			}
+			awcString[0] = (uint8_t)u32Value;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, awcString, sizeof(wchar_t));
+			break;
+		case L'u':
+			*puTokenLength = 6;
+			ulErrorCode = ParseDigits(peResult, &u32Value, 16, pwszToken + 2, 4);
+			if(ulErrorCode != 0){
+				break;
+			}
+			awcString[0] = (uint16_t)u32Value;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, awcString, sizeof(wchar_t));
+			break;
+		case L'U':
+			*puTokenLength = 10;
+			ulErrorCode = ParseDigits(peResult, &u32Value, 16, pwszToken + 2, 8);
+			if(ulErrorCode != 0){
+				break;
+			}
+			if(u32Value < 0x10000){
+				if(u32Value - 0xD800 < 0x800){
+					ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseUtfCodePointInvalid);
+					break;
+				}
+				awcString[0] = (uint16_t)u32Value;
+				ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, awcString, sizeof(wchar_t));
+			} else if(u32Value < 0x110000){
+				awcString[0] = (char16_t)((((u32Value - 0x10000)      ) >> 10) + 0xD800);
+				awcString[1] = (char16_t)((((u32Value          ) << 22) >> 22) + 0xDC00);
+				ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, awcString, sizeof(wchar_t) * 2);
+			} else {
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseUtfCodePointInvalid);
+				break;
+			}
+			break;
+		default:
+			ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseEscapeInvalid);
+			break;
+		}
+		break;
+	case L'$':
+		switch(pwszToken[1]){
+		case L'$':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, L"$", sizeof(wchar_t));
+			break;
+		case L'[':
+			pwcPosition = wcschr(pwszToken + 2, L']');
+			if(!pwcPosition){
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseSquareBracketUnclosed);
+				break;
+			}
+			uLength = (size_t)(pwcPosition - (pwszToken + 2));
+			if(uLength == 0){
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseStackSubscriptInvalid);
+				break;
+			}
+			if(uLength > 4){
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseStackSubscriptInvalid);
+				break;
+			}
+			*puTokenLength = uLength + 3;
+			ulErrorCode = ParseDigits(peResult, &u32Value, 10, pwszToken + 2, uLength);
+			if(ulErrorCode != 0){
+				break;
+			}
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentFromStack, u32Value, 0, 0);
+			break;
+		case L'0':  case L'1':  case L'2':  case L'3':  case L'4':
+		case L'5':  case L'6':  case L'7':  case L'8':  case L'9':
+			*puTokenLength = 2;
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentFromStack, (uint16_t)(pwszToken[1] - L'0'), 0, 0);
+			break;
+		case L'{':
+			pwcPosition = wcschr(pwszToken + 2, L'}');
+			if(!pwcPosition){
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseBraceUnclosed);
+				break;
+			}
+			uLength = (size_t)(pwcPosition - (pwszToken + 2));
+			if(uLength == 0){
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseKeyInvalid);
+				break;
+			}
+			*puTokenLength = uLength + 3;
+			MCFBUILD_VariableMapValidateKey(&uInvalidIndex, pwszToken + 2);
+			if(uInvalidIndex < uLength){
+				ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseKeyInvalid);
+				break;
+			}
+			ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentFromMap, 0, pwszToken + 2, uLength);
+			break;
+		default:
+			ulErrorCode = MakeParseResult(peResult, ERROR_INVALID_DATA, MCFBUILD_kStringTemplateParseReplacementInvalid);
+			break;
+		}
+		break;
+	default:
+		// *puTokenLength = 1;
+		ulErrorCode = PushSegment(peResult, pTemplate, puLastCapacityTaken, kSegmentLiteral, 0, pwszToken, sizeof(wchar_t));
+		break;
+	}
+	return ulErrorCode;
+}
 
 void MCFBUILD_StringTemplateConstruct(MCFBUILD_StringTemplate *pTemplate){
 	pTemplate->pbyStorage = 0;
@@ -188,127 +362,149 @@ void MCFBUILD_StringTemplateClear(MCFBUILD_StringTemplate *pTemplate){
 	pTemplate->uOffsetEnd = 0;
 }
 bool MCFBUILD_StringTemplateParse(MCFBUILD_StringTemplate *restrict pTemplate, MCFBUILD_StringTemplateParseResult *restrict peResult, size_t *restrict puResultOffset, const wchar_t *restrict pwszRawString){
-	// Calculate the size of the last segment, if any.
-	size_t uLastCapacityTaken = 0;
-	for(size_t uOffsetCursor = 0; uOffsetCursor != pTemplate->uOffsetEnd; uOffsetCursor += uLastCapacityTaken){
-		const Segment *pSegment = (void *)(pTemplate->pbyStorage + uOffsetCursor);
-		uLastCapacityTaken = sizeof(Segment) + GetSizeWithPadding(pSegment->byType, pSegment->uParam);
-	}
-	// Save the offset to data end. If anything goes wrong we will have to restore it to this value.
+	// Save the offset to data end. If anything goes wrong we just reset it to this value.
 	size_t uOffsetEndOld = pTemplate->uOffsetEnd;
-
-	// Parse the input using an LL(n) parser.
-	// Define the parser output.
+	// Parse the input using an LL(n) parser, appending data to the string template as we walk.
+	// Do not merge into segments existent before this call, otherwise it will not be possible to restore the string template in case of errors.
+	size_t uLastCapacityTaken = 0;
+	// Define the output.
+	unsigned long ulErrorCode = 0;
 	size_t uResultOffset = 0;
 	// Define parser states.
 	enum {
 		kDelimiter,
 		kSingleQuoted,
 		kDoubleQuoted,
-		kPlain,
+		kLiteral,
 	} eState = kDelimiter;
-	// A token here consists of a single character.
-	wchar_t wcToken;
+	// Parse one character in each loop.
 	for(;;){
-		wcToken = pwszRawString[uResultOffset];
+		wchar_t wcToken = pwszRawString[uResultOffset];
+		size_t uTokenLength = 1;
 		switch(eState){
 		case kDelimiter:
-			if((wcToken == L' ') || (wcToken == L'\t')){
-				eState = kDelimiter;
+			switch(wcToken){
+			case 0:
+			case L'#':
+				ulErrorCode = MakeParseResult(peResult, 0, MCFBUILD_kStringTemplateParseSuccess);
+				goto jDone;
+			case L' ':
+			case L'\t':
+				// eState = kDelimiter;
 				break;
-			
-			if(wcToken == L'\''){
+			case L'\'':
 				eState = kSingleQuoted;
 				break;
-			} 
-			if(wcToken == L'\"'){
+			case L'\"':
 				eState = kDoubleQuoted;
 				break;
+			case L'\\':
+				if(pwszRawString[uResultOffset + 1] == 0){
+					ulErrorCode = MakeParseResult(peResult, 0, MCFBUILD_kStringTemplateParsePartial);
+					goto jDone;
+				}
+				// Fallthrough
+			default:
+				ulErrorCode = ParseAndPushEscapeable(peResult, &uTokenLength, pTemplate, &uLastCapacityTaken, pwszRawString + uResultOffset);
+				if(ulErrorCode != 0){
+					goto jDone;
+				}
+				eState = kLiteral;
+				break;
 			}
-			goto jNormalMayBeEscaped;
-		case kPlain:
-			if((wcToken == L' ') || (wcToken == L'\t')){
-				if(!PushSegment(pTemplate, &kSegmentEndOfString, 0, 0, 0)){
-					pTemplate->uOffsetEnd = uOffsetEndOld;
-					*peResult = MCFBUILD_kStringTemplateParseNotEnoughMemory;
-					*puResultOffset = uResultOffset;
-					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-					return false;
+			break;
+		case kSingleQuoted:
+			switch(wcToken){
+			case 0:
+				ulErrorCode = MakeParseResult(peResult, ERROR_HANDLE_EOF, MCFBUILD_kStringTemplateParseSingleQuoteUnclosed);
+				goto jDone;
+			case L'\'':
+				eState = kLiteral;
+				break;
+			default:
+				ulErrorCode = PushSegment(peResult, pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, &wcToken, sizeof(wcToken));
+				if(ulErrorCode != 0){
+					goto jDone;
+				}
+				// eState = kSingleQuoted;
+				break;
+			}
+			break;
+		case kDoubleQuoted:
+			switch(wcToken){
+			case 0:
+				ulErrorCode = MakeParseResult(peResult, ERROR_HANDLE_EOF, MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed);
+				goto jDone;
+			case L'\"':
+				eState = kLiteral;
+				break;
+			case L'\\':
+				if(pwszRawString[uResultOffset + 1] == 0){
+					// Double quotes must be closed on the same line. If this is not the case, fail.
+					ulErrorCode = MakeParseResult(peResult, ERROR_HANDLE_EOF, MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed);
+					goto jDone;
+				}
+				// Fallthrough
+			default:
+				ulErrorCode = ParseAndPushEscapeable(peResult, &uTokenLength, pTemplate, &uLastCapacityTaken, pwszRawString + uResultOffset);
+				if(ulErrorCode != 0){
+					goto jDone;
+				}
+				// eState = kDoubleQuoted;
+				break;
+			}
+			break;
+		case kLiteral:
+			switch(wcToken){
+			case 0:
+			case L'#':
+				ulErrorCode = PushSegment(peResult, pTemplate, &uLastCapacityTaken, kSegmentEndOfString, 0, 0, 0);
+				if(ulErrorCode != 0){
+					goto jDone;
+				}
+				ulErrorCode = MakeParseResult(peResult, 0, MCFBUILD_kStringTemplateParseSuccess);
+				goto jDone;
+			case L' ':
+			case L'\t':
+				ulErrorCode = PushSegment(peResult, pTemplate, &uLastCapacityTaken, kSegmentEndOfString, 0, 0, 0);
+				if(ulErrorCode != 0){
+					goto jDone;
 				}
 				eState = kDelimiter;
 				break;
-			}
-			if(wcToken == L'\''){
+			case L'\'':
 				eState = kSingleQuoted;
 				break;
-			}
-			if(wcToken == L'\"'){
+			case L'\"':
 				eState = kDoubleQuoted;
 				break;
-			} 
-		jNormalMayBeEscaped:
-			if(!PushSegment(pTemplate, &kSegmentLiteral, 0, &wcToken, sizeof(wcToken))){
-				pTemplate->uOffsetEnd = uOffsetEndOld;
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return false;
-			}
-			eState = kPlain;
-			break;
-		case kSingleQuoted:
-			if(wcToken == 0){
-				pTemplate->uOffsetEnd = uOffsetEndOld;
-				*peResult = MCFBUILD_kStringTemplateParseSingleQuoteUnclosed;
-				*puResultOffset = uResultOffset;
-				SetLastError(ERROR_INVALID_DATA);
-				return false;
-			}
-			if(wcToken == L'\''){
-				eState = kSingleQuoted;
+			case L'\\':
+				if(pwszRawString[uResultOffset + 1] == 0){
+					ulErrorCode = MakeParseResult(peResult, 0, MCFBUILD_kStringTemplateParsePartial);
+					goto jDone;
+				}
+				// Fallthrough
+			default:
+				ulErrorCode = ParseAndPushEscapeable(peResult, &uTokenLength, pTemplate, &uLastCapacityTaken, pwszRawString + uResultOffset);
+				if(ulErrorCode != 0){
+					goto jDone;
+				}
+				// eState = kLiteral;
 				break;
 			}
-			if(!PushSegment(pTemplate, &kSegmentLiteral, 0, &wcToken, sizeof(wcToken))){
-				pTemplate->uOffsetEnd = uOffsetEndOld;
-				*peResult = MCFBUILD_kStringTemplateParseNotEnoughMemory;
-				*puResultOffset = uResultOffset;
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return false;
-			}
-			eState = kPlain;
 			break;
-		case kDoubleQuoted:
-			if(wcToken == 0){
-				pTemplate->uOffsetEnd = uOffsetEndOld;
-				*peResult = MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed;
-				*puResultOffset = uResultOffset;
-				SetLastError(ERROR_INVALID_DATA);
-				return false;
-			}
-			if(wcToken == L'\"'){
-				eState = kDoubleQuoted;
-				break;
-			} 
-			goto jNormalMayBeEscaped;
 		default:
 			__builtin_trap();
 		}
-		if(wcToken == 0){
-			break;
-		}
-		++uResultOffset;
+		uResultOffset += uTokenLength;
 	}
-/*
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"fghi", 6);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"ijk", 6);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentEndOfString, 0, 0, 0);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"ABCDE\n", 6);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentFromStack, 12, 0, 0);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentFromMap, 0, L"key2", 10);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"DEF", 6);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentLiteral, 0, L"G", 2);
-	PushSegment(pTemplate, &uLastCapacityTaken, kSegmentFromStack, 0, 0, 0);
-*/
-	*peResult = MCFBUILD_kStringTemplateParseSuccess;
+jDone:
 	*puResultOffset = uResultOffset;
+	if(ulErrorCode != 0){
+		pTemplate->uOffsetEnd = uOffsetEndOld;
+		MCFBUILD_SetLastError(ulErrorCode);
+		return false;
+	}
 	return true;
 }
 

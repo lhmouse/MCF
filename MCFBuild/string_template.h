@@ -12,6 +12,7 @@ MCFBUILD_EXTERN_C_BEGIN
 /*
  Syntax
  1. Escape Sequences
+    \\          Literal \
     \'          Literal '
     \"          Literal "
     \?          Literal ?
@@ -27,7 +28,6 @@ MCFBUILD_EXTERN_C_BEGIN
     \xHH        UTF-16 code unit (2 digits with zero extension)
     \uHHHH      UTF-16 code unit (4 digits)
     \UHHHHHHHH  UTF code point (8 digits)
-    \\          Literal \
  2. Replacement Sequences
     $$          Literal $
     $[N]        The Nth (max 9999th) element from the top of the string stack
@@ -59,13 +59,15 @@ typedef enum MCFBUILD_tagStringTemplateParseResult {
 	MCFBUILD_kStringTemplateParseEscapeInvalid         = 5001,
 	MCFBUILD_kStringTemplateParseDigitsTooFew          = 5002,
 	MCFBUILD_kStringTemplateParseDigitsInvalid         = 5003,
-	MCFBUILD_kStringTemplateParsePrematureEndOfString  = 5004,
-	MCFBUILD_kStringTemplateParseReplacementInvalid    = 5005,
-	MCFBUILD_kStringTemplateParseBracketUnclosed       = 5006,
-	MCFBUILD_kStringTemplateParseSingleQuoteUnclosed   = 5007,
-	MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed   = 5008,
-	MCFBUILD_kStringTemplateParseUtfCodePointInvalid   = 5009,
-	MCFBUILD_kStringTemplateParseNotEnoughMemory       = 5010,
+	MCFBUILD_kStringTemplateParseReplacementInvalid    = 5004,
+	MCFBUILD_kStringTemplateParseBraceUnclosed         = 5005,
+	MCFBUILD_kStringTemplateParseSingleQuoteUnclosed   = 5006,
+	MCFBUILD_kStringTemplateParseDoubleQuoteUnclosed   = 5007,
+	MCFBUILD_kStringTemplateParseUtfCodePointInvalid   = 5008,
+	MCFBUILD_kStringTemplateParseNotEnoughMemory       = 5009,
+	MCFBUILD_kStringTemplateParseSquareBracketUnclosed = 5010,
+	MCFBUILD_kStringTemplateParseStackSubscriptInvalid = 5011,
+	MCFBUILD_kStringTemplateParseKeyInvalid            = 5012,
 } MCFBUILD_StringTemplateParseResult;
 
 // This function constructs an empty `MCFBUILD_StringTemplate`.

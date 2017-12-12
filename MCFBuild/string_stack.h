@@ -20,6 +20,8 @@ typedef struct MCFBUILD_tagStringStackEnumerationCookie {
 	MCFBUILD_STD size_t uOffsetNext;
 } MCFBUILD_StringStackEnumerationCookie;
 
+extern const MCFBUILD_StringStack *MCFBUILD_StringStackGetEmpty(void) MCFBUILD_NOEXCEPT;
+
 // This function constructs an empty `MCFBUILD_StringStack`.
 extern void MCFBUILD_StringStackConstruct(MCFBUILD_StringStack *pStack) MCFBUILD_NOEXCEPT;
 // This function destructs a `MCFBUILD_StringStack`, deallocating any storage it has allocated.

@@ -17,8 +17,11 @@ typedef struct MCFBUILD_tagNaiveString {
 	MCFBUILD_STD size_t uSize;
 } MCFBUILD_NaiveString;
 
+extern const MCFBUILD_NaiveString *MCFBUILD_NaiveStringGetEmpty(void) MCFBUILD_NOEXCEPT;
+
 extern void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
+extern void MCFBUILD_NaiveStringMove(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pString, MCFBUILD_NaiveString *MCFBUILD_RESTRICT pSource) MCFBUILD_NOEXCEPT;
 
 // This function returns a pointer to a null-terminated, immutable string.
 // This function will never return a null pointer.

@@ -7,6 +7,11 @@
 #include "endian.h"
 #include "sha256.h"
 
+const MCFBUILD_NaiveString *MCFBUILD_NaiveStringGetEmpty(void){
+	static const MCFBUILD_NaiveString s_vString;
+	return &s_vString;
+}
+
 void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString){
 	pString->pbyStorage = 0;
 	pString->uCapacity = 0;
@@ -14,6 +19,17 @@ void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString){
 }
 void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString){
 	free(pString->pbyStorage);
+#ifndef NDEBUG
+	memset(pString, 0xEC, sizeof(*pString));
+#endif
+}
+void MCFBUILD_NaiveStringMove(MCFBUILD_NaiveString *restrict pString, MCFBUILD_NaiveString *restrict pSource){
+	pString->pbyStorage = pSource->pbyStorage;
+	pString->uCapacity = pSource->uCapacity;
+	pString->uSize = pSource->uSize;
+#ifndef NDEBUG
+	memset(pSource, 0xEB, sizeof(*pSource));
+#endif
 }
 
 const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString){

@@ -7,7 +7,7 @@
 #include "endian.h"
 #include "sha256.h"
 
-static inline bool ValidateKey(size_t *restrict puSizeOfKey, const wchar_t *restrict pwszKey){
+static bool ValidateKey(size_t *restrict puInvalidIndex, const wchar_t *pwszKey){
 	// Get the array index of the first character that is not acceptable.
 	size_t uIndex = wcsspn(pwszKey, L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
 	// If `uIndex` does not designate the null terminator, the key is invalid.
@@ -18,17 +18,20 @@ static inline bool ValidateKey(size_t *restrict puSizeOfKey, const wchar_t *rest
 	if(uIndex == 0){
 		return false;
 	}
-	*puSizeOfKey = uIndex * sizeof(wchar_t);
+	*puInvalidIndex = uIndex;
 	return true;
 }
 
-bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
-	size_t uSizeOfKey;
-	if(!ValidateKey(&uSizeOfKey, pwszKey)){
+bool MCFBUILD_VariableMapValidateKey(size_t *restrict puInvalidIndex, const wchar_t *pwszKey){
+	if(!ValidateKey(puInvalidIndex, pwszKey)){
 		MCFBUILD_SetLastError(ERROR_INVALID_NAME);
 		return false;
 	}
 	return true;
+}
+bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
+	size_t uInvalidIndex;
+	return MCFBUILD_VariableMapValidateKey(&uInvalidIndex, pwszKey);
 }
 
 typedef struct tagElement {
@@ -61,8 +64,8 @@ void MCFBUILD_VariableMapClear(MCFBUILD_VariableMap *pMap){
 	pMap->uOffsetEnd = 0;
 }
 bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restrict puLength, const MCFBUILD_VariableMap *restrict pMap, const wchar_t *pwszKey){
-	size_t uSizeOfKey;
-	if(!ValidateKey(&uSizeOfKey, pwszKey)){
+	size_t uInvalidIndex;
+	if(!ValidateKey(&uInvalidIndex, pwszKey)){
 		MCFBUILD_SetLastError(ERROR_INVALID_NAME);
 		return false;
 	}
@@ -102,11 +105,12 @@ bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restri
 	return true;
 }
 bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t *restrict pwszKey, const wchar_t *restrict pwcValue, size_t uLength){
-	size_t uSizeOfKey;
-	if(!ValidateKey(&uSizeOfKey, pwszKey)){
+	size_t uInvalidIndex;
+	if(!ValidateKey(&uInvalidIndex, pwszKey)){
 		MCFBUILD_SetLastError(ERROR_INVALID_NAME);
 		return false;
 	}
+	size_t uSizeOfKey = uInvalidIndex * sizeof(wchar_t);
 	/*-----------------------------------------------------------*\
 	|         /------------- Element                              |
 	|         |/------------ Beginning of key                     |
@@ -182,8 +186,8 @@ bool MCFBUILD_VariableMapSetNullTerminated(MCFBUILD_VariableMap *restrict pMap, 
 	return MCFBUILD_VariableMapSet(pMap, pwszKey, pwszValue, wcslen(pwszValue));
 }
 bool MCFBUILD_VariableMapUnset(MCFBUILD_VariableMap *restrict pMap, const wchar_t *restrict pwszKey){
-	size_t uSizeOfKey;
-	if(!ValidateKey(&uSizeOfKey, pwszKey)){
+	size_t uInvalidIndex;
+	if(!ValidateKey(&uInvalidIndex, pwszKey)){
 		MCFBUILD_SetLastError(ERROR_INVALID_NAME);
 		return false;
 	}

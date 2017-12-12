@@ -9,6 +9,7 @@
 
 MCFBUILD_EXTERN_C_BEGIN
 
+extern bool MCFBUILD_VariableMapValidateKey(MCFBUILD_STD size_t *MCFBUILD_RESTRICT puInvalidIndex, const wchar_t *pwszKey) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey) MCFBUILD_NOEXCEPT;
 
 typedef struct MCFBUILD_tagVariableMap {

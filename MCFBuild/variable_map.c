@@ -105,7 +105,7 @@ bool MCFBUILD_VariableMapGet(const wchar_t **restrict ppwszValue, size_t *restri
 		uOffsetCursor += uCapacityTaken;
 	}
 	size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
-	*ppwszValue = (const void *)((const unsigned char *)(pElement->awcString) + pElement->uOffsetToValue);
+	*ppwszValue = pElement->awcString + pElement->uOffsetToValue / sizeof(wchar_t);
 	*puLength = uSizeOfValue / sizeof(wchar_t);
 	return true;
 }
@@ -183,8 +183,8 @@ bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *restrict pMap, const wchar_t 
 		// Copy the key only if there wasn't one. The key will always be null-terminated as well as `pwszKey`.
 		memcpy(pElement->awcString, pwszKey, uSizeOfKey + sizeof(wchar_t));
 	}
-	memcpy((unsigned char *)(pElement->awcString) + uOffsetToValue, pwcValue, uSizeOfValue);
-	*(wchar_t *)((unsigned char *)(pElement->awcString) + uOffsetToValue + uSizeOfValue) = 0;
+	memcpy(pElement->awcString + uOffsetToValue / sizeof(wchar_t), pwcValue, uSizeOfValue);
+	pElement->awcString[(uOffsetToValue + uSizeOfValue) / sizeof(wchar_t)] = 0;
 	return true;
 }
 bool MCFBUILD_VariableMapSetNullTerminated(MCFBUILD_VariableMap *restrict pMap, const wchar_t *restrict pwszKey, const wchar_t *restrict pwszValue){
@@ -266,7 +266,7 @@ bool MCFBUILD_VariableMapEnumerate(const wchar_t **restrict ppwszKey, const wcha
 	uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
 	*ppwszKey = pElement->awcString;
 	size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
-	*ppwszValue = (const void *)((const unsigned char *)(pElement->awcString) + pElement->uOffsetToValue);
+	*ppwszValue = pElement->awcString + pElement->uOffsetToValue / sizeof(wchar_t);
 	*puLength = uSizeOfValue / sizeof(wchar_t);
 	uOffsetCursor += uCapacityTaken;
 	pCookie->uOffsetNext = uOffsetCursor;
@@ -298,7 +298,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
 		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
-		// The key is serialized with its null terminator. The value is not.
+		// Neither the key nor the value is serialized with its null terminator.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
 		size_t uSizeWithPadding = uSizeOfKey + uSizeOfValue;
@@ -322,7 +322,7 @@ bool MCFBUILD_VariableMapSerialize(void **restrict ppData, size_t *restrict puSi
 	while(uOffsetCursor != pMap->uOffsetEnd){
 		pElement = (const void *)(pbyStorage + uOffsetCursor);
 		uCapacityTaken = sizeof(Element) + pElement->uSizeWithPadding;
-		// Neither the key or the value is serialized with its null terminator.
+		// Neither the key nor the value is serialized with its null terminator.
 		size_t uSizeOfKey = wcslen(pElement->awcString) * sizeof(wchar_t);
 		size_t uSizeOfValue = pElement->uSizeWithPadding - pElement->uOffsetToValue - sizeof(wchar_t);
 		size_t uSizeWithPadding = uSizeOfKey + uSizeOfValue;

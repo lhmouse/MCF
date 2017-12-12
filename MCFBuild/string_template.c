@@ -109,7 +109,7 @@ static unsigned long PushSegment(MCFBUILD_StringTemplateParseResult *restrict pe
 			// Extend the last segment to absorb the string.
 			pSegment->bySizePadded = bySizePadded;
 			pSegment->uParam = uSizeWithPadding;
-			memcpy((wchar_t *)((unsigned char *)(pSegment->awcString) + uSizeOfStringOld), pwcString, uSizeOfString);
+			memcpy(pSegment->awcString + uSizeOfStringOld / sizeof(wchar_t), pwcString, uSizeOfString);
 			uLastCapacityTaken = sizeof(Segment) + uSizeWithPadding;
 			goto jDone;
 		}
@@ -138,7 +138,7 @@ static unsigned long PushSegment(MCFBUILD_StringTemplateParseResult *restrict pe
 		pSegment->bySizePadded = bySizePadded;
 		pSegment->uParam = uSizeWithPadding;
 		memcpy(pSegment->awcString, pwcString, uSizeOfString);
-		*(wchar_t *)((unsigned char *)(pSegment->awcString) + uSizeOfString) = 0;
+		pSegment->awcString[uSizeOfString / sizeof(wchar_t)] = 0;
 		uLastCapacityTaken = sizeof(Segment) + uSizeWithPadding;
 		break;
 	default:

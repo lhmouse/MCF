@@ -38,7 +38,7 @@ MCFBUILD_EXTERN_C_BEGIN
  4. Single Quotes
     Anything between an innermost pair of single quotes are preserved literally.
  5. Escaped Line Feeds
-    If a line feed is escaped, the line preceding it is concatenated with the line following it, with a space delimiter in the middle. The line feed itself is removed.
+    If a line feed is escaped, the line preceding it is concatenated with the line following it. The line feed itself is removed thereafter.
  6. Whitespaces
     Literal whitespaces (spaces, tabs and line feeds) are used to delimit parameters. Each series made up of literal spaces/tabs is replaced with a single space.
 */

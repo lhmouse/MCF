@@ -38,8 +38,11 @@ void MCFBUILD_StringStackMove(MCFBUILD_StringStack *restrict pStack, MCFBUILD_St
 #endif
 }
 
+bool MCFBUILD_StringStackIsEmpty(const MCFBUILD_StringStack *pStack){
+	return pStack->uOffsetBegin == pStack->uCapacity;
+}
 void MCFBUILD_StringStackClear(MCFBUILD_StringStack *pStack){
-	pStack->uOffsetBegin = 0;
+	pStack->uOffsetBegin = pStack->uCapacity;
 }
 bool MCFBUILD_StringStackGetTop(const wchar_t **restrict ppwszString, size_t *restrict puLength, const MCFBUILD_StringStack *restrict pStack){
 	/*-----------------------------------------------------------*\

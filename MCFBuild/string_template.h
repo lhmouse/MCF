@@ -77,6 +77,7 @@ extern void MCFBUILD_StringTemplateDestruct(MCFBUILD_StringTemplate *pTemplate) 
 // This function constructs a `MCFBUILD_StringTemplate` using the contents from `*pSource` and destructs it thereafter.
 extern void MCFBUILD_StringTemplateMove(MCFBUILD_StringTemplate *MCFBUILD_RESTRICT pTemplate, MCFBUILD_StringTemplate *MCFBUILD_RESTRICT pSource) MCFBUILD_NOEXCEPT;
 
+extern bool MCFBUILD_StringTemplateIsEmpty(const MCFBUILD_StringTemplate *pTemplate) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_StringTemplateClear(MCFBUILD_StringTemplate *pTemplate) MCFBUILD_NOEXCEPT;
 // Any elements parsed are appended to `*pTemplate`. If the function fails, the contents of `*pTemplate` are left intact.
 extern bool MCFBUILD_StringTemplateParse(MCFBUILD_StringTemplate *MCFBUILD_RESTRICT pTemplate, MCFBUILD_StringTemplateParseResult *MCFBUILD_RESTRICT peResult, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puResultOffset, const wchar_t *MCFBUILD_RESTRICT pwszRawString) MCFBUILD_NOEXCEPT;

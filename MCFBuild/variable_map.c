@@ -10,7 +10,7 @@
 static bool ValidateKey(size_t *restrict puInvalidIndex, const wchar_t *pwszKey){
 	// Get the array index of the first character that is not acceptable.
 	size_t uIndex = wcsspn(pwszKey, L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
-	// If `uIndex` does not designate the null terminator, the key is invalid.
+	// The key is invalid if `uIndex` does not designate the null terminator.
 	if(pwszKey[uIndex] != 0){
 		return false;
 	}
@@ -22,16 +22,16 @@ static bool ValidateKey(size_t *restrict puInvalidIndex, const wchar_t *pwszKey)
 	return true;
 }
 
+bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
+	size_t uInvalidIndex;
+	return ValidateKey(&uInvalidIndex, pwszKey);
+}
 bool MCFBUILD_VariableMapValidateKey(size_t *restrict puInvalidIndex, const wchar_t *pwszKey){
 	if(!ValidateKey(puInvalidIndex, pwszKey)){
 		MCFBUILD_SetLastError(ERROR_INVALID_NAME);
 		return false;
 	}
 	return true;
-}
-bool MCFBUILD_VariableMapIsKeyValid(const wchar_t *pwszKey){
-	size_t uInvalidIndex;
-	return MCFBUILD_VariableMapValidateKey(&uInvalidIndex, pwszKey);
 }
 
 typedef struct tagElement {
@@ -65,6 +65,9 @@ void MCFBUILD_VariableMapMove(MCFBUILD_VariableMap *restrict pMap, MCFBUILD_Vari
 #endif
 }
 
+bool MCFBUILD_VariableMapIsEmpty(const MCFBUILD_VariableMap *pMap){
+	return pMap->uOffsetEnd == 0;
+}
 void MCFBUILD_VariableMapClear(MCFBUILD_VariableMap *pMap){
 	pMap->uOffsetEnd = 0;
 }

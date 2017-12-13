@@ -53,6 +53,9 @@ size_t MCFBUILD_NaiveStringGetLength(MCFBUILD_NaiveString *pString){
 	return pString->uSize / sizeof(wchar_t);
 }
 
+bool MCFBUILD_NaiveStringIsEmpty(const MCFBUILD_NaiveString *pString){
+	return pString->uSize == 0;
+}
 void MCFBUILD_NaiveStringClear(MCFBUILD_NaiveString *pString){
 	pString->uSize = 0;
 }

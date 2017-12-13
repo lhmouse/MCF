@@ -32,6 +32,7 @@ extern void MCFBUILD_VariableMapDestruct(MCFBUILD_VariableMap *pMap) MCFBUILD_NO
 // This function constructs a `MCFBUILD_VariableMap` using the contents from `*pSource` and destructs it thereafter.
 extern void MCFBUILD_VariableMapMove(MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, MCFBUILD_VariableMap *MCFBUILD_RESTRICT pSource) MCFBUILD_NOEXCEPT;
 
+extern bool MCFBUILD_VariableMapIsEmpty(const MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_VariableMapClear(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapGet(const wchar_t **MCFBUILD_RESTRICT ppwszValue, MCFBUILD_STD size_t *MCFBUILD_RESTRICT puLength, const MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *pwszKey) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_VariableMapSet(MCFBUILD_VariableMap *MCFBUILD_RESTRICT pMap, const wchar_t *MCFBUILD_RESTRICT pwszKey, const wchar_t *MCFBUILD_RESTRICT pwcValue, MCFBUILD_STD size_t uLength) MCFBUILD_NOEXCEPT;

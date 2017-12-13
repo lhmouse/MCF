@@ -358,6 +358,9 @@ void MCFBUILD_StringTemplateMove(MCFBUILD_StringTemplate *restrict pTemplate, MC
 #endif
 }
 
+bool MCFBUILD_StringTemplateIsEmpty(const MCFBUILD_StringTemplate *pTemplate){
+	return pTemplate->uOffsetEnd == 0;
+}
 void MCFBUILD_StringTemplateClear(MCFBUILD_StringTemplate *pTemplate){
 	pTemplate->uOffsetEnd = 0;
 }

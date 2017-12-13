@@ -31,6 +31,7 @@ extern const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_Naive
 extern wchar_t *MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern MCFBUILD_STD size_t MCFBUILD_NaiveStringGetLength(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 
+extern bool MCFBUILD_NaiveStringIsEmpty(const MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 // Fundamental modifiers.
 extern void MCFBUILD_NaiveStringClear(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern bool MCFBUILD_NaiveStringReserve(wchar_t **MCFBUILD_RESTRICT ppwcCaret, MCFBUILD_NaiveString *pString, MCFBUILD_STD size_t uInsertAt, MCFBUILD_STD size_t uLengthToInsert) MCFBUILD_NOEXCEPT;

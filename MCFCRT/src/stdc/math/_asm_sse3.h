@@ -1,6 +1,6 @@
 // 这个文件是 MCF 的一部分。
 // 有关具体授权说明，请参阅 MCFLicense.txt。
-// Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
+// Copyleft 2013 - 2018, LH_Mouse. All wrongs reserved.
 
 #ifndef __MCFCRT_STDC_MATH_ASM_SSE3_H_
 #define __MCFCRT_STDC_MATH_ASM_SSE3_H_

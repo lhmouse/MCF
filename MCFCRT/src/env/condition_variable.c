@@ -51,6 +51,10 @@ static_assert(__builtin_popcountll(MASK_THREADS_RELEASED) == __builtin_popcountl
 #define MIN_SPIN_COUNT          ((uintptr_t)64)
 #define MAX_SPIN_MULTIPLIER     ((uintptr_t)32)
 
+static inline size_t Min(size_t uSelf, size_t uOther){
+	return (uSelf <= uOther) ? uSelf : uOther;
+}
+
 __attribute__((__always_inline__))
 static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut){
 	size_t uMaxSpinCount, uSpinMultiplier;
@@ -85,7 +89,6 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
 	if(_MCFCRT_EXPECT(bSignaled)){
-		// This is effectively a spurious wakeup.
 		return true;
 	}
 	intptr_t nUnlocked;
@@ -191,16 +194,19 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	return true;
 }
 __attribute__((__always_inline__))
-static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToSignal){
-	uintptr_t uCountToSignal;
+static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToReleaseOrSignal){
+	uintptr_t uCountToRelease; // Number of threads spinning to release
+	uintptr_t uCountToSignal; // Number of threads trapped to signal
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
+			const size_t uThreadsReleased = (uOld & MASK_THREADS_RELEASED) / THREADS_RELEASED_ONE;
 			const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
-			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
-			uNew = (uOld & ~MASK_THREADS_RELEASED) + uThreadsSpinning * THREADS_RELEASED_ONE - uCountToSignal * THREADS_TRAPPED_ONE;
+			uCountToRelease = Min(uThreadsSpinning - uThreadsReleased, uMaxCountToReleaseOrSignal);
+			uCountToSignal = Min(uThreadsTrapped, uMaxCountToReleaseOrSignal - uCountToRelease);
+			uNew = uOld + uCountToRelease * THREADS_RELEASED_ONE - uCountToSignal * THREADS_TRAPPED_ONE;
 			if(uNew == uOld){
 				break;
 			}
@@ -215,7 +221,7 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
 	}
-	return uCountToSignal;
+	return uCountToRelease + uCountToSignal;
 }
 
 bool __MCFCRT_ReallyWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){

@@ -166,7 +166,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_lock(mtx_t *__mutex) _MCFCR
 			_MCFCRT_WaitForMutexForever(&(__mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 			__atomic_store_n(&(__mutex->__owner), __self, __ATOMIC_RELAXED);
 		}
-		const _MCFCRT_STD size_t __new_count = ++__mutex->__count;
+		const _MCFCRT_STD size_t __new_count = ++(__mutex->__count);
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
 		_MCFCRT_WaitForMutexForever(&(__mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
@@ -187,7 +187,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *_MCFCRT_RE
 			}
 			__atomic_store_n(&(__mutex->__owner), __self, __ATOMIC_RELAXED);
 		}
-		const _MCFCRT_STD size_t __new_count = ++__mutex->__count;
+		const _MCFCRT_STD size_t __new_count = ++(__mutex->__count);
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
 		const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_c11thread_translate_timeout(__timeout);
@@ -207,7 +207,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_trylock(mtx_t *__mutex) _MC
 			}
 			__atomic_store_n(&(__mutex->__owner), __self, __ATOMIC_RELAXED);
 		}
-		const _MCFCRT_STD size_t __new_count = ++__mutex->__count;
+		const _MCFCRT_STD size_t __new_count = ++(__mutex->__count);
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
 		if(_MCFCRT_EXPECT_NOT(!_MCFCRT_WaitForMutex(&(__mutex->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0))){
@@ -219,7 +219,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_trylock(mtx_t *__mutex) _MC
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_unlock(mtx_t *__mutex) _MCFCRT_NOEXCEPT {
 	if(__mutex->__mask & mtx_recursive){
 		_MCFCRT_DEBUG_CHECK(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__mutex->__owner), __ATOMIC_RELAXED));
-		const _MCFCRT_STD size_t __new_count = --__mutex->__count;
+		const _MCFCRT_STD size_t __new_count = --(__mutex->__count);
 		if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 			__atomic_store_n(&(__mutex->__owner), 0, __ATOMIC_RELAXED);
 			_MCFCRT_SignalMutex(&(__mutex->__mutex));

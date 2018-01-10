@@ -30,9 +30,11 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-_MCFCRT_CONSTEXPR __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
+_MCFCRT_CONSTEXPR __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_active_p(void) _MCFCRT_NOEXCEPT {
 	return 1;
 }
+
+#define __gthread_active_p  __MCFCRT_gthread_active_p
 
 //-----------------------------------------------------------------------------
 // Once
@@ -124,7 +126,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_trylock(_
 		}
 		__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
 	}
-	const _MCFCRT_STD size_t __new_count = ++__recur_mutex->__count;
+	const _MCFCRT_STD size_t __new_count = ++(__recur_mutex->__count);
 	_MCFCRT_ASSERT(__new_count != 0);
 	return 0;
 }
@@ -135,13 +137,13 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_lock(__gt
 		__gthread_mutex_lock(&(__recur_mutex->__mutex));
 		__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
 	}
-	const _MCFCRT_STD size_t __new_count = ++__recur_mutex->__count;
+	const _MCFCRT_STD size_t __new_count = ++(__recur_mutex->__count);
 	_MCFCRT_ASSERT(__new_count != 0);
 	return 0;
 }
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
 	_MCFCRT_DEBUG_CHECK(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
-	const _MCFCRT_STD size_t __new_count = --__recur_mutex->__count;
+	const _MCFCRT_STD size_t __new_count = --(__recur_mutex->__count);
 	if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 		__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);
 		__gthread_mutex_unlock(&(__recur_mutex->__mutex));
@@ -318,7 +320,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_timedlock
 		}
 		__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
 	}
-	const _MCFCRT_STD size_t __new_count = ++__recur_mutex->__count;
+	const _MCFCRT_STD size_t __new_count = ++(__recur_mutex->__count);
 	_MCFCRT_ASSERT(__new_count != 0);
 	return 0;
 }

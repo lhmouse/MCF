@@ -17,10 +17,10 @@ _MCFCRT_EXTERN_C_BEGIN
 	__attribute__((__artificial__))	\
 	__MCFCRT_STOS_INLINE_OR_EXTERN __type_ *__name_(__type_ *_MCFCRT_RESTRICT __s, __type_ __c, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
 		__type_ *__p = __s;	\
-		_MCFCRT_STD size_t __unused;	\
+		_MCFCRT_STD size_t __dumb;	\
 		__asm__ (	\
 			__mnemonic_ " \n"	\
-			: "=o"(*(char (*)[])__p), "+D"(__p), "=c"(__unused)	\
+			: "=o"(*(char (*)[])__p), "+D"(__p), "=c"(__dumb)	\
 			: "a"(__c), "c"(__n)	\
 		);	\
 		return __p;	\

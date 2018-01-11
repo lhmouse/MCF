@@ -105,23 +105,23 @@ static inline double __MCFCRT_xmmabssd(double __x) _MCFCRT_NOEXCEPT {
 }
 
 static inline float __MCFCRT_xmmcopysignss(float __x, float __y) _MCFCRT_NOEXCEPT {
-	float __ret, __unused;
+	float __ret, __dumb;
 	__asm__ (
 		"xorps %1, %0 \n"
 		"andps %1, %4 \n"
 		"xorps %0, %1 \n"
-		: "=&x"(__ret), "=&x"(__unused)
+		: "=&x"(__ret), "=&x"(__dumb)
 		: "0"(__x), "1"(__y), "x"(-(float)0)
 	);
 	return __ret;
 }
 static inline double __MCFCRT_xmmcopysignsd(double __x, double __y) _MCFCRT_NOEXCEPT {
-	double __ret, __unused;
+	double __ret, __dumb;
 	__asm__ (
 		"xorpd %1, %0 \n"
 		"andpd %1, %4 \n"
 		"xorpd %0, %1 \n"
-		: "=&x"(__ret), "=&x"(__unused)
+		: "=&x"(__ret), "=&x"(__dumb)
 		: "0"(__x), "1"(__y), "x"(-(double)0)
 	);
 	return __ret;

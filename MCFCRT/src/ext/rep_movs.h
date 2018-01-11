@@ -18,10 +18,10 @@ _MCFCRT_EXTERN_C_BEGIN
 	__MCFCRT_REP_MOVS_INLINE_OR_EXTERN __type_ *__name_(__type_ **_MCFCRT_RESTRICT __es2, __type_ *__s1, const __type_ *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {	\
 		__type_ *__p1 = __s1;	\
 		const __type_ *__p2 = __s2;	\
-		_MCFCRT_STD size_t __unused;	\
+		_MCFCRT_STD size_t __dumb;	\
 		__asm__ (	\
 			__mnemonic_ " \n"	\
-			: "=o"(*(char (*)[])__p1), "+D"(__p1), "+S"(__p2), "=c"(__unused)	\
+			: "=o"(*(char (*)[])__p1), "+D"(__p1), "+S"(__p2), "=c"(__dumb)	\
 			: "o"(*(const char (*)[])__p2), "c"(__n)	\
 		);	\
 		if(__es2){	\

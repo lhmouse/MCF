@@ -40,7 +40,7 @@ static void CheckExitingThread(unsigned uExitCode){
 	if(dwOldExitingThreadId != 0){
 		if(dwOldExitingThreadId == dwCurrentThreadId){
 			_MCFCRT_Bail(L"_MCFCRT_QuickExit() 或 _MCFCRT_Exit() 被递归调用。\n"
-				"这可能是在被 static 或 thread_local 修饰的对象的析构函数中调用了 exit() 或 quick_exit() 导致的。");
+			              "这可能是在被 static 或 thread_local 修饰的对象的析构函数中调用了 exit() 或 quick_exit() 导致的。");
 		}
 		ExitThread(uExitCode);
 		__builtin_trap();

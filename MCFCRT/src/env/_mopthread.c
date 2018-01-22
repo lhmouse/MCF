@@ -79,7 +79,7 @@ static unsigned char g_abyInitialControlStorage[sizeof(MopthreadControl) + sizeo
 static_assert(sizeof(g_abyInitialControlStorage) == sizeof(void *) * 17, "??");
 
 // The caller must have the global mutex locked!
-static inline void DropControlRefUnsafe(MopthreadControl *restrict pControl){
+static void DropControlRefUnsafe(MopthreadControl *restrict pControl){
 	_MCFCRT_ASSERT(pControl->uRefCount > 0);
 	if(--(pControl->uRefCount) == 0){
 		_MCFCRT_ASSERT(pControl->eState == kStateJoined);
@@ -185,7 +185,7 @@ static unsigned long MopthreadProc(void *pParam){
 	(*(pControl->pfnProc))(pControl->abyParams);
 	return 0;
 }
-__MCFCRT_C_STDCALL __attribute__((__noreturn__))
+__attribute__((__noreturn__, __stdcall__))
 static unsigned long NativeMopthreadProc(void *pParam){
 	MopthreadControl *const restrict pControl = pParam;
 	_MCFCRT_DEBUG_CHECK(pControl);

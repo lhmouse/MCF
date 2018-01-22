@@ -62,13 +62,11 @@ void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
 __attribute__((__force_align_arg_pointer__))
 unsigned long _MCFCRT_WrapThreadProcWithSehTop(_MCFCRT_WrappedThreadProc pfnThreadProc, void *pParam){
 	unsigned long ulExitCode;
-
 	__MCFCRT_SEH_TOP_BEGIN
 	{
 		ulExitCode = (*pfnThreadProc)(pParam);
 	}
 	__MCFCRT_SEH_TOP_END
-
 	return ulExitCode;
 }
 

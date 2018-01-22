@@ -6,25 +6,24 @@
 #include "module.h"
 #include "tls.h"
 #include "../mcfcrt.h"
+#include "../env/_fpu.h"
 #include "../env/xassert.h"
 #include "../env/standard_streams.h"
 #include "../env/crt_module.h"
 #include "../env/bail.h"
-#include "../env/_seh_top.h"
-#include "../env/_fpu.h"
-#include <winnt.h>
+#include "../env/thread.h"
+#include "../env/mcfwin.h"
 
 extern unsigned _MCFCRT_Main(void);
-
 __attribute__((__weak__))
 extern void _MCFCRT_OnCtrlEvent(bool bIsSigInt);
 
 // -Wl,-e@__MCFCRT_ExeStartup
-_Noreturn __MCFCRT_C_STDCALL
+__attribute__((__noreturn__, __stdcall__))
 extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("@__MCFCRT_ExeStartup");
 
-__MCFCRT_C_STDCALL
+__attribute__((__force_align_arg_pointer__, __stdcall__))
 static BOOL CtrlHandler(DWORD dwCtrlType){
 	if(_MCFCRT_OnCtrlEvent){
 		const bool bIsSigInt = ((dwCtrlType == CTRL_C_EVENT) || (dwCtrlType == CTRL_BREAK_EVENT));
@@ -39,41 +38,53 @@ static BOOL CtrlHandler(DWORD dwCtrlType){
 
 static bool s_bProcessAttachNotified = false;
 
-__MCFCRT_C_STDCALL
-void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
-	(void)hInstance, (void)pReserved;
+typedef struct tagTlsCallbackParams {
+	HINSTANCE hInstance;
+	DWORD dwReason;
+	LPVOID pReserved;
+} TlsCallbackParams;
 
-	__MCFCRT_FpuInitialize();
+static unsigned long WrappedTlsCallback(void *pOpaque){
+	TlsCallbackParams *const pParams = pOpaque;
 
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		switch(dwReason){
-		case DLL_PROCESS_ATTACH:
-			if(!__MCFCRT_InitRecursive()){
-				_MCFCRT_Bail(L"MCFCRT 初始化失败。");
-			}
-			if(!__MCFCRT_ModuleInit()){
-				_MCFCRT_Bail(L"MCFCRT 可执行模块初始化失败。");
-			}
-			if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
-				_MCFCRT_Bail(L"MCFCRT 可执行模块 Ctrl-C 响应回调函数注册失败。");
-			}
-			s_bProcessAttachNotified = true;
-			break;
-		case DLL_THREAD_ATTACH:
-			break;
-		case DLL_THREAD_DETACH:
-			__MCFCRT_TlsCleanup();
-			break;
-		case DLL_PROCESS_DETACH:
-			SetConsoleCtrlHandler(&CtrlHandler, false);
-			__MCFCRT_TlsCleanup();
-			__MCFCRT_ModuleUninit();
-			__MCFCRT_UninitRecursive();
-			break;
+	switch(pParams->dwReason){
+	case DLL_PROCESS_ATTACH:
+		if(!__MCFCRT_InitRecursive()){
+			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
 		}
+		if(!__MCFCRT_ModuleInit()){
+			_MCFCRT_Bail(L"MCFCRT 可执行模块初始化失败。");
+		}
+		if(!SetConsoleCtrlHandler(&CtrlHandler, true)){
+			_MCFCRT_Bail(L"MCFCRT 可执行模块 Ctrl-C 响应回调函数注册失败。");
+		}
+		s_bProcessAttachNotified = true;
+		return true;
+
+	case DLL_PROCESS_DETACH:
+		SetConsoleCtrlHandler(&CtrlHandler, false);
+		__MCFCRT_TlsCleanup();
+		__MCFCRT_ModuleUninit();
+		__MCFCRT_UninitRecursive();
+		return true;
+
+	case DLL_THREAD_ATTACH:
+		return true;
+
+	case DLL_THREAD_DETACH:
+		__MCFCRT_TlsCleanup();
+		return true;
+
+	default:
+		return false;
 	}
-	__MCFCRT_SEH_TOP_END
+}
+
+__attribute__((__stdcall__))
+void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
+	__MCFCRT_FpuInitialize();
+	TlsCallbackParams vParams = { hInstance, dwReason, pReserved };
+	_MCFCRT_WrapThreadProcWithSehTop(&WrappedTlsCallback, &vParams);
 }
 
 __extension__ __attribute__((__section__(".tls$AAA"))) const char _tls_start = 0;
@@ -93,24 +104,22 @@ __attribute__((__used__)) const IMAGE_TLS_DIRECTORY _tls_used = {
 	.Characteristics       = 0,
 };
 
-_Noreturn __MCFCRT_C_STDCALL
-DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
-	(void)pUnknown;
+static unsigned long WrappedExeStartup(void *pOpaque){
+	(void)pOpaque;
 
 	if(!s_bProcessAttachNotified){
 		__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, _MCFCRT_NULLPTR);
 	}
 	_MCFCRT_ASSERT(s_bProcessAttachNotified);
 
+	const unsigned uExitCode = _MCFCRT_Main();
+	return uExitCode;
+}
+
+__attribute__((__noreturn__, __stdcall__))
+DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
+	(void)pUnknown;
 	__MCFCRT_FpuInitialize();
-
-	unsigned uExitCode = 3;
-
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		uExitCode = _MCFCRT_Main();
-	}
-	__MCFCRT_SEH_TOP_END
-
-	_MCFCRT_Exit(uExitCode);
+	const unsigned long dwResult = _MCFCRT_WrapThreadProcWithSehTop(&WrappedExeStartup, _MCFCRT_NULLPTR);
+	_MCFCRT_Exit((unsigned)dwResult);
 }

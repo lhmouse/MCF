@@ -87,4 +87,7 @@
 #  define _MCFCRT_NULLPTR              ((void *)0)
 #endif
 
+#define _MCFCRT_CACHE_LINE_SIZE        0x0040
+#define _MCFCRT_PAGE_SIZE_MINIMUM      0x1000
+
 #endif

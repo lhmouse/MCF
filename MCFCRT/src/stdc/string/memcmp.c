@@ -7,16 +7,6 @@
 
 #undef memcmp
 
-static inline uintptr_t bswap_ptr(uintptr_t w){
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return _Generic(w,
-		uint32_t: __builtin_bswap32((uint32_t)w),
-		uint64_t: __builtin_bswap64((uint64_t)w));
-#else
-	return w;
-#endif
-}
-
 int memcmp(const void *s1, const void *s2, size_t n){
 	const unsigned char *rp1 = s1;
 	const unsigned char *rp2 = s2;
@@ -24,17 +14,14 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	if(_MCFCRT_EXPECT_NOT(rem != 0)){
 		switch((rem - 1) % 32){
 			uintptr_t w, c;
-		diff_wc:
-			w = bswap_ptr(w);
-			c = bswap_ptr(c);
-			return (w < c) ? -1 : 1;
 #define STEP(k_)	\
 				__attribute__((__fallthrough__));	\
 		case (k_):	\
 				__builtin_memcpy(&w, rp1, sizeof(w));	\
 				__builtin_memcpy(&c, rp2, sizeof(c));	\
 				if(_MCFCRT_EXPECT_NOT(w != c)){	\
-					goto diff_wc;	\
+					rem = sizeof(uintptr_t);	\
+					goto diff_char;	\
 				}	\
 				rp1 += sizeof(w);	\
 				rp2 += sizeof(c);	\
@@ -51,6 +38,7 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		}
 	}
 	rem = n % sizeof(uintptr_t);
+diff_char:
 	while(_MCFCRT_EXPECT(rem != 0)){
 		if(*rp1 != *rp2){
 			return (*rp1 < *rp2) ? -1 : 1;

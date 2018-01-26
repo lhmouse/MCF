@@ -40,8 +40,8 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		if(_MCFCRT_EXPECT_NOT(*rp1 != *rp2)){	\
 			return (*rp1 < *rp2) ? -1 : 1;	\
 		}	\
-		rp1 += 1;	\
-		rp2 += 1;	\
+		++rp1;	\
+		++rp2;	\
 	case (k_):	\
 		;
 //=============================================================================

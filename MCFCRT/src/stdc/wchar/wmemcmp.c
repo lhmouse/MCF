@@ -40,8 +40,8 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		if(_MCFCRT_EXPECT_NOT(*rp1 != *rp2)){	\
 			return (*rp1 < *rp2) ? -1 : 1;	\
 		}	\
-		rp1 += 1;	\
-		rp2 += 1;	\
+		++rp1;	\
+		++rp2;	\
 	case (k_):	\
 		;
 //=============================================================================

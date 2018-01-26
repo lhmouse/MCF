@@ -7,103 +7,417 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
-#include <emmintrin.h>
+#include "../../env/xassert.h"
+#include <pmmintrin.h>
+
+#ifndef __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN
+#  define __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
 
 _MCFCRT_EXTERN_C_BEGIN
 
-_MCFCRT_CONSTEXPR static inline bool __MCFCRT_memcpy_is_small_enough(_MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	return __n < 128;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-unreachable"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece01_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*(volatile _MCFCRT_STD uint8_t *)*__wp = *(const _MCFCRT_STD uint8_t *)*__rp;
+	*__wp += 1;
+	*__rp += 1;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece01_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*__wp -= 1;
+	*__rp -= 1;
+	*(volatile _MCFCRT_STD uint8_t *)*__wp = *(const _MCFCRT_STD uint8_t *)*__rp;
 }
 
-static inline void __MCFCRT_memcpy_small_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	unsigned char *__wp = (unsigned char *)__s1;
-	const unsigned char *__rp = (const unsigned char *)__s2;
-	_MCFCRT_STD size_t __rem = __n / 8;
-	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
-		switch((__rem - 1) % 8){
-#define __MCFCRT_STEP_(__k_)	\
-				__attribute__((__fallthrough__));	\
-		case (__k_):	\
-				_mm_storel_epi64((__m128i *)__wp, _mm_loadl_epi64((const __m128i *)__rp));	\
-				__wp += 8;	\
-				__rp += 8;	\
-				--__rem;
-//=============================================================================
-			do {
-		__MCFCRT_STEP_(7)
-		__MCFCRT_STEP_(6)
-		__MCFCRT_STEP_(5)
-		__MCFCRT_STEP_(4)
-		__MCFCRT_STEP_(3)
-		__MCFCRT_STEP_(2)
-		__MCFCRT_STEP_(1)
-		__MCFCRT_STEP_(0)
-			} while(_MCFCRT_EXPECT(__rem != 0));
-//=============================================================================
-#undef __MCFCRT_STEP_
-		}
-	}
-	__rem = __n % 8;
-#define __MCFCRT_STEP_(__b_)	\
-	if(_MCFCRT_EXPECT(__rem & (__b_ / 8))){	\
-		*(volatile _MCFCRT_STD uint##__b_##_t *)__wp = *(_MCFCRT_STD uint##__b_##_t *)__rp;	\
-		__wp += __b_ / 8;	\
-		__rp += __b_ / 8;	\
-	}
-//=============================================================================
-	__MCFCRT_STEP_(32)
-	__MCFCRT_STEP_(16)
-	__MCFCRT_STEP_( 8)
-//=============================================================================
-#undef __MCFCRT_STEP_
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece02_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*(volatile _MCFCRT_STD uint16_t *)*__wp = *(const _MCFCRT_STD uint16_t *)*__rp;
+	*__wp += 2;
+	*__rp += 2;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece02_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*__wp -= 2;
+	*__rp -= 2;
+	*(volatile _MCFCRT_STD uint16_t *)*__wp = *(const _MCFCRT_STD uint16_t *)*__rp;
 }
 
-void __MCFCRT_memcpy_large_fwd(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT;
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece04_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*(volatile _MCFCRT_STD uint32_t *)*__wp = *(const _MCFCRT_STD uint32_t *)*__rp;
+	*__wp += 4;
+	*__rp += 4;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece04_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*__wp -= 4;
+	*__rp -= 4;
+	*(volatile _MCFCRT_STD uint32_t *)*__wp = *(const _MCFCRT_STD uint32_t *)*__rp;
+}
 
-static inline void __MCFCRT_memcpy_small_bwd(_MCFCRT_STD size_t __n, void *__s1, const void *__s2) _MCFCRT_NOEXCEPT {
-	unsigned char *__wp = (unsigned char *)__s1;
-	const unsigned char *__rp = (const unsigned char *)__s2;
-	_MCFCRT_STD size_t __rem = __n % 8;
-#define __MCFCRT_STEP_(__b_)	\
-	if(_MCFCRT_EXPECT(__rem & (__b_ / 8))){	\
-		__wp -= __b_ / 8;	\
-		__rp -= __b_ / 8;	\
-		*(volatile _MCFCRT_STD uint##__b_##_t *)__wp = *(_MCFCRT_STD uint##__b_##_t *)__rp;	\
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece08_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*(volatile _MCFCRT_STD uint64_t *)*__wp = *(const _MCFCRT_STD uint64_t *)*__rp;
+	*__wp += 8;
+	*__rp += 8;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece08_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*__wp -= 8;
+	*__rp -= 8;
+	*(volatile _MCFCRT_STD uint64_t *)*__wp = *(const _MCFCRT_STD uint64_t *)*__rp;
+}
+
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece16_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	_mm_storeu_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece16_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_storeu_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+}
+
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	__MCFCRT_memcpy_piece16_fwd(__wp, __rp);
+	__MCFCRT_memcpy_piece16_fwd(__wp, __rp);
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	__MCFCRT_memcpy_piece16_bwd(__wp, __rp);
+	__MCFCRT_memcpy_piece16_bwd(__wp, __rp);
+}
+
+extern void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+
+// Dispatchers.
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
+	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
+	unsigned char *__wp = __bwp;
+	const unsigned char *__rp = __brp;
+	switch((_MCFCRT_STD size_t)(__erp - __rp)){
+	          // Deal with empty blocks.
+	case  0:  break;
+	          // Deal with tiny blocks using a detailed table.
+	case 63:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 31:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case 15:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	case  7:  __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	case  3:  __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	case  1:  __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 62:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 30:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case 14:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	case  6:  __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	case  2:  __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 61:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 29:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case 13:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	case  5:  __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 60:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 28:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case 12:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	case  4:  __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          break;
+	case 59:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 27:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case 11:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 58:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 26:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case 10:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 57:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 25:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case  9:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 56:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 24:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	case  8:  __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          break;
+	case 55:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 23:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 54:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 22:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 53:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 21:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 52:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 20:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          break;
+	case 51:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 19:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 50:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 18:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 49:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 17:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 48:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	case 16:  __MCFCRT_memcpy_piece16_fwd(&__wp, &__rp);
+	          break;
+	case 47:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 46:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 45:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 44:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          break;
+	case 43:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 42:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 41:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 40:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_fwd(&__wp, &__rp);
+	          break;
+	case 39:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 38:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 37:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 36:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_fwd(&__wp, &__rp);
+	          break;
+	case 35:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 34:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece02_fwd(&__wp, &__rp);
+	          break;
+	case 33:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece01_fwd(&__wp, &__rp);
+	          break;
+	case 32:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	          break;
+	          // Deal with large blocks.
+	default:  __MCFCRT_memcpy_large_fwd(__bwp, __ewp, __brp, __erp);
+	          break;
 	}
-//=============================================================================
-	__MCFCRT_STEP_(32)
-	__MCFCRT_STEP_(16)
-	__MCFCRT_STEP_( 8)
-//=============================================================================
-#undef __MCFCRT_STEP_
-	__rem = __n / 8;
-	if(_MCFCRT_EXPECT_NOT(__rem != 0)){
-		switch((__rem - 1) % 8){
-#define __MCFCRT_STEP_(__k_)	\
-				__attribute__((__fallthrough__));	\
-		case (__k_):	\
-				__wp -= 8;	\
-				__rp -= 8;	\
-				_mm_storel_epi64((__m128i *)__wp, _mm_loadl_epi64((const __m128i *)__rp));	\
-				--__rem;
-//=============================================================================
-			do {
-		__MCFCRT_STEP_(7)
-		__MCFCRT_STEP_(6)
-		__MCFCRT_STEP_(5)
-		__MCFCRT_STEP_(4)
-		__MCFCRT_STEP_(3)
-		__MCFCRT_STEP_(2)
-		__MCFCRT_STEP_(1)
-		__MCFCRT_STEP_(0)
-			} while(_MCFCRT_EXPECT(__rem != 0));
-//=============================================================================
-#undef __MCFCRT_STEP_
-		}
+}
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
+	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
+	unsigned char *__wp = __ewp;
+	const unsigned char *__rp = __erp;
+	switch((_MCFCRT_STD size_t)(__rp - __brp)){
+	          // Deal with empty blocks.
+	case  0:  break;
+	          // Deal with tiny blocks using a detailed table.
+	case 63:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 62:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 60:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	case 56:  __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	case 48:  __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	case 32:  __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 31:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 30:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 28:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	case 24:  __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	case 16:  __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 47:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 46:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 44:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	case 40:  __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 15:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 14:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 12:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	case  8:  __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          break;
+	case 55:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 54:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 52:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 23:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 22:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 20:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 39:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 38:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case 36:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case  7:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case  6:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	case  4:  __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          break;
+	case 59:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 58:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 27:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 26:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 43:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 42:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 11:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 10:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          break;
+	case 51:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 50:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 19:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 18:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 35:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case 34:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case  3:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	case  2:  __MCFCRT_memcpy_piece02_bwd(&__wp, &__rp);
+	          break;
+	case 61:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 29:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 45:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 13:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          break;
+	case 53:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 21:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 37:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case  5:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece04_bwd(&__wp, &__rp);
+	          break;
+	case 57:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 25:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 41:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case  9:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece08_bwd(&__wp, &__rp);
+	          break;
+	case 49:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case 17:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece16_bwd(&__wp, &__rp);
+	          break;
+	case 33:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	          break;
+	case  1:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
+	          break;
+	          // Deal with large blocks.
+	default:  __MCFCRT_memcpy_large_bwd(__bwp, __ewp, __brp, __erp);
+	          break;
 	}
 }
 
-void __MCFCRT_memcpy_large_bwd(_MCFCRT_STD size_t __n, void *__s1, const void *__s2) _MCFCRT_NOEXCEPT;
+#pragma GCC diagnostic pop
 
 _MCFCRT_EXTERN_C_END
 

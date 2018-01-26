@@ -12,17 +12,9 @@ void *memmove(void *s1, const void *s2, size_t n){
 	const unsigned char *rp = s2;
 	size_t pred = (uintptr_t)wp - (uintptr_t)rp;
 	if(_MCFCRT_EXPECT(pred >= n)){
-		if(_MCFCRT_EXPECT(__MCFCRT_memcpy_is_small_enough(n))){
-			__MCFCRT_memcpy_small_fwd(wp, rp, n);
-		} else {
-			__MCFCRT_memcpy_large_fwd(wp, rp, n);
-		}
+		__MCFCRT_memcpy_impl_fwd(wp, wp + n, rp, rp + n);
 	} else if(_MCFCRT_EXPECT(pred != 0)){
-		if(_MCFCRT_EXPECT(__MCFCRT_memcpy_is_small_enough(n))){
-			__MCFCRT_memcpy_small_bwd(n, wp + n, rp + n);
-		} else {
-			__MCFCRT_memcpy_large_bwd(n, wp + n, rp + n);
-		}
+		__MCFCRT_memcpy_impl_bwd(wp, wp + n, rp, rp + n);
 	}
 	return s1;
 }

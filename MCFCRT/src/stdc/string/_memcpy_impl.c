@@ -2,207 +2,153 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2018, LH_Mouse. All wrongs reserved.
 
+#define __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN     extern inline
 #include "_memcpy_impl.h"
-#include "../../env/xassert.h"
 
-void __MCFCRT_memcpy_large_fwd(void *s1, const void *s2, size_t n){
-	_MCFCRT_ASSERT(n >= 16);
+#pragma GCC diagnostic ignored "-Wswitch-unreachable"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 
-	unsigned char *wp = (unsigned char *)s1;
-	const unsigned char *rp = (const unsigned char *)s2;
-	const size_t off = -(uintptr_t)s1 % 16; // off = 16 - misalignment
-	__m128i mis_w;
-	if(_MCFCRT_EXPECT(off != 0)){
-		mis_w = _mm_loadu_si128((const __m128i *)s2);
-		wp += off;
-		rp += off;
-	}
-	size_t rem = (n - off) / 16;
-	if(_MCFCRT_EXPECT(rem != 0)){
-		const size_t nt = !!(n >> 20) << 4;
-		const size_t ur = !!((uintptr_t)rp % 16) << 3;
-		switch((rem - 1) % 8 + nt + ur){
-#define STEP(k_, store_, load_)	\
-				__attribute__((__fallthrough__));	\
-		case (k_):	\
-				store_((__m128i *)wp, load_((const __m128i *)rp));	\
-				wp += 16;	\
-				rp += 16;	\
-				--rem;
-//=============================================================================
-			break;
-		// temporal, aligned read
-			do {
-		STEP(007, _mm_store_si128 , _mm_load_si128 )
-		STEP(006, _mm_store_si128 , _mm_load_si128 )
-		STEP(005, _mm_store_si128 , _mm_load_si128 )
-		STEP(004, _mm_store_si128 , _mm_load_si128 )
-		STEP(003, _mm_store_si128 , _mm_load_si128 )
-		STEP(002, _mm_store_si128 , _mm_load_si128 )
-		STEP(001, _mm_store_si128 , _mm_load_si128 )
-		STEP(000, _mm_store_si128 , _mm_load_si128 )
-			} while(_MCFCRT_EXPECT(rem != 0));
-//=============================================================================
-			break;
-		// temporal, unaligned read
-			do {
-		STEP(017, _mm_store_si128 , _mm_loadu_si128)
-		STEP(016, _mm_store_si128 , _mm_loadu_si128)
-		STEP(015, _mm_store_si128 , _mm_loadu_si128)
-		STEP(014, _mm_store_si128 , _mm_loadu_si128)
-		STEP(013, _mm_store_si128 , _mm_loadu_si128)
-		STEP(012, _mm_store_si128 , _mm_loadu_si128)
-		STEP(011, _mm_store_si128 , _mm_loadu_si128)
-		STEP(010, _mm_store_si128 , _mm_loadu_si128)
-			} while(_MCFCRT_EXPECT(rem != 0));
-//=============================================================================
-			break;
-		// non-temporal, aligned read
-			do {
-		STEP(027, _mm_stream_si128, _mm_load_si128 )
-		STEP(026, _mm_stream_si128, _mm_load_si128 )
-		STEP(025, _mm_stream_si128, _mm_load_si128 )
-		STEP(024, _mm_stream_si128, _mm_load_si128 )
-		STEP(023, _mm_stream_si128, _mm_load_si128 )
-		STEP(022, _mm_stream_si128, _mm_load_si128 )
-		STEP(021, _mm_stream_si128, _mm_load_si128 )
-		STEP(020, _mm_stream_si128, _mm_load_si128 )
-			} while(_MCFCRT_EXPECT(rem != 0));
-			_mm_sfence();
-//=============================================================================
-			break;
-		// non-temporal, unaligned read
-			do {
-		STEP(037, _mm_stream_si128, _mm_loadu_si128)
-		STEP(036, _mm_stream_si128, _mm_loadu_si128)
-		STEP(035, _mm_stream_si128, _mm_loadu_si128)
-		STEP(034, _mm_stream_si128, _mm_loadu_si128)
-		STEP(033, _mm_stream_si128, _mm_loadu_si128)
-		STEP(032, _mm_stream_si128, _mm_loadu_si128)
-		STEP(031, _mm_stream_si128, _mm_loadu_si128)
-		STEP(030, _mm_stream_si128, _mm_loadu_si128)
-			} while(_MCFCRT_EXPECT(rem != 0));
-			_mm_sfence();
-//=============================================================================
-#undef STEP
-		}
-	}
-	rem = (n - off) % 16;
-#define STEP(b_)	\
-	if(_MCFCRT_EXPECT(rem & (b_ / 8))){	\
-		*(volatile uint##b_##_t *)wp = *(uint##b_##_t *)rp;	\
-		wp += b_ / 8;	\
-		rp += b_ / 8;	\
-	}
-//=============================================================================
-	STEP(64)
-	STEP(32)
-	STEP(16)
-	STEP( 8)
-//=============================================================================
-#undef STEP
-	if(_MCFCRT_EXPECT(off != 0)){
-		_mm_storeu_si128((__m128i *)s1, mis_w);
-	}
+static inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+}
+static inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
 }
 
-void __MCFCRT_memcpy_large_bwd(size_t n, void *s1, const void *s2){
-	_MCFCRT_ASSERT(n >= 16);
+static inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+}
+static inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+}
 
-	unsigned char *wp = (unsigned char *)s1;
-	const unsigned char *rp = (const unsigned char *)s2;
-	const size_t off = (uintptr_t)s1 % 16; // off = misalignment
-	__m128i mis_w;
-	if(_MCFCRT_EXPECT(off != 0)){
-		mis_w = _mm_loadu_si128((const __m128i *)s2 - 1);
-		wp -= off;
-		rp -= off;
-	}
-	size_t rem = (n - off) / 16;
-	if(_MCFCRT_EXPECT(rem != 0)){
-		const size_t nt = !!(n >> 20) << 4;
-		const size_t ur = !!((uintptr_t)rp % 16) << 3;
-		switch((rem - 1) % 8 + nt + ur){
-#define STEP(k_, store_, load_)	\
-				__attribute__((__fallthrough__));	\
+void __MCFCRT_memcpy_large_fwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp){
+	_MCFCRT_ASSERT(ewp - bwp == erp - brp);
+	_MCFCRT_ASSERT(ewp - bwp >= 64);
+	unsigned char *wp = bwp;
+	const unsigned char *rp = brp;
+	// Copy the initial, potentially unaligned word.
+	__MCFCRT_memcpy_piece32_fwd(&wp, &rp);
+	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
+	wp = (unsigned char *)((uintptr_t)wp & (uintptr_t)-16);
+	rp = erp - (ewp - wp);
+	// Copy words to aligned locations.
+	if(_MCFCRT_EXPECT((size_t)(ewp - wp) < 0x100000)){
+		// We will copy the final word separately, hence the last (0,32] bytes are excluded here.
+		switch((size_t)(ewp - wp - 1) / 32 % 16){
+			do {
+#define COPY_WORD(k_)	\
+			__MCFCRT_memcpy_aligned32_fwd(&wp, &rp);	\
 		case (k_):	\
-				wp -= 16;	\
-				rp -= 16;	\
-				store_((__m128i *)wp, load_((const __m128i *)rp));	\
-				--rem;
+			;
 //=============================================================================
-			break;
-		// temporal, aligned read
-			do {
-		STEP(007, _mm_store_si128 , _mm_load_si128 )
-		STEP(006, _mm_store_si128 , _mm_load_si128 )
-		STEP(005, _mm_store_si128 , _mm_load_si128 )
-		STEP(004, _mm_store_si128 , _mm_load_si128 )
-		STEP(003, _mm_store_si128 , _mm_load_si128 )
-		STEP(002, _mm_store_si128 , _mm_load_si128 )
-		STEP(001, _mm_store_si128 , _mm_load_si128 )
-		STEP(000, _mm_store_si128 , _mm_load_si128 )
-			} while(_MCFCRT_EXPECT(rem != 0));
+		COPY_WORD(017)  COPY_WORD(016)  COPY_WORD(015)  COPY_WORD(014)
+		COPY_WORD(013)  COPY_WORD(012)  COPY_WORD(011)  COPY_WORD(010)
+		COPY_WORD(007)  COPY_WORD(006)  COPY_WORD(005)  COPY_WORD(004)
+		COPY_WORD(003)  COPY_WORD(002)  COPY_WORD(001)  COPY_WORD(000)
 //=============================================================================
-			break;
-		// temporal, unaligned read
-			do {
-		STEP(017, _mm_store_si128 , _mm_loadu_si128)
-		STEP(016, _mm_store_si128 , _mm_loadu_si128)
-		STEP(015, _mm_store_si128 , _mm_loadu_si128)
-		STEP(014, _mm_store_si128 , _mm_loadu_si128)
-		STEP(013, _mm_store_si128 , _mm_loadu_si128)
-		STEP(012, _mm_store_si128 , _mm_loadu_si128)
-		STEP(011, _mm_store_si128 , _mm_loadu_si128)
-		STEP(010, _mm_store_si128 , _mm_loadu_si128)
-			} while(_MCFCRT_EXPECT(rem != 0));
-//=============================================================================
-			break;
-		// non-temporal, aligned read
-			do {
-		STEP(027, _mm_stream_si128, _mm_load_si128 )
-		STEP(026, _mm_stream_si128, _mm_load_si128 )
-		STEP(025, _mm_stream_si128, _mm_load_si128 )
-		STEP(024, _mm_stream_si128, _mm_load_si128 )
-		STEP(023, _mm_stream_si128, _mm_load_si128 )
-		STEP(022, _mm_stream_si128, _mm_load_si128 )
-		STEP(021, _mm_stream_si128, _mm_load_si128 )
-		STEP(020, _mm_stream_si128, _mm_load_si128 )
-			} while(_MCFCRT_EXPECT(rem != 0));
-			_mm_sfence();
-//=============================================================================
-			break;
-		// non-temporal, unaligned read
-			do {
-		STEP(037, _mm_stream_si128, _mm_loadu_si128)
-		STEP(036, _mm_stream_si128, _mm_loadu_si128)
-		STEP(035, _mm_stream_si128, _mm_loadu_si128)
-		STEP(034, _mm_stream_si128, _mm_loadu_si128)
-		STEP(033, _mm_stream_si128, _mm_loadu_si128)
-		STEP(032, _mm_stream_si128, _mm_loadu_si128)
-		STEP(031, _mm_stream_si128, _mm_loadu_si128)
-		STEP(030, _mm_stream_si128, _mm_loadu_si128)
-			} while(_MCFCRT_EXPECT(rem != 0));
-			_mm_sfence();
-//=============================================================================
-#undef STEP
+#undef COPY_WORD
+			} while(_MCFCRT_EXPECT((size_t)(ewp - wp) > 32));
 		}
-	}
-	rem = (n - off) % 16;
-#define STEP(b_)	\
-	if(_MCFCRT_EXPECT(rem & (b_ / 8))){	\
-		wp -= b_ / 8;	\
-		rp -= b_ / 8;	\
-		*(volatile uint##b_##_t *)wp = *(uint##b_##_t *)rp;	\
-	}
+	} else {
+		// See comments in the other branch.
+		switch((size_t)(ewp - wp - 1) / 32 % 16){
+			do {
+#define COPY_WORD(k_)	\
+			__MCFCRT_memcpy_nontemp32_fwd(&wp, &rp);	\
+		case (k_):	\
+			;
 //=============================================================================
-	STEP(64)
-	STEP(32)
-	STEP(16)
-	STEP( 8)
+		COPY_WORD(017)  COPY_WORD(016)  COPY_WORD(015)  COPY_WORD(014)
+		COPY_WORD(013)  COPY_WORD(012)  COPY_WORD(011)  COPY_WORD(010)
+		COPY_WORD(007)  COPY_WORD(006)  COPY_WORD(005)  COPY_WORD(004)
+		COPY_WORD(003)  COPY_WORD(002)  COPY_WORD(001)  COPY_WORD(000)
 //=============================================================================
-#undef STEP
-	if(_MCFCRT_EXPECT(off != 0)){
-		_mm_storeu_si128((__m128i *)s1 - 1, mis_w);
+#undef COPY_WORD
+			} while(_MCFCRT_EXPECT((size_t)(ewp - wp) > 32));
+		}
+		// Don't forget to emit a store fence.
+		_mm_sfence();
 	}
+	// Copy the final, potentially unaligned word.
+	wp = ewp;
+	rp = erp;
+	__MCFCRT_memcpy_piece32_bwd(&wp, &rp);
+}
+void __MCFCRT_memcpy_large_bwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp){
+	_MCFCRT_ASSERT(ewp - bwp == erp - brp);
+	_MCFCRT_ASSERT(ewp - bwp >= 64);
+	unsigned char *wp = ewp;
+	const unsigned char *rp = erp;
+	// Copy the final, potentially unaligned word.
+	__MCFCRT_memcpy_piece32_bwd(&wp, &rp);
+	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
+	wp = (unsigned char *)((uintptr_t)(wp + 15) & (uintptr_t)-16);
+	rp = brp + (wp - bwp);
+	// Copy words to aligned locations.
+	if(_MCFCRT_EXPECT((size_t)(wp - bwp) < 0x100000)){
+		// We will copy the initial word separately, hence the last (0,32] bytes are excluded here.
+		switch((size_t)(wp - bwp - 1) / 32 % 16){
+			do {
+#define COPY_WORD(k_)	\
+			__MCFCRT_memcpy_aligned32_bwd(&wp, &rp);	\
+		case (k_):	\
+			;
+//=============================================================================
+		COPY_WORD(017)  COPY_WORD(016)  COPY_WORD(015)  COPY_WORD(014)
+		COPY_WORD(013)  COPY_WORD(012)  COPY_WORD(011)  COPY_WORD(010)
+		COPY_WORD(007)  COPY_WORD(006)  COPY_WORD(005)  COPY_WORD(004)
+		COPY_WORD(003)  COPY_WORD(002)  COPY_WORD(001)  COPY_WORD(000)
+//=============================================================================
+#undef COPY_WORD
+			} while(_MCFCRT_EXPECT((size_t)(wp - bwp) > 32));
+		}
+	} else {
+		// See comments in the other branch.
+		switch((size_t)(wp - bwp - 1) / 32 % 16){
+			do {
+#define COPY_WORD(k_)	\
+			__MCFCRT_memcpy_nontemp32_bwd(&wp, &rp);	\
+		case (k_):	\
+			;
+//=============================================================================
+		COPY_WORD(017)  COPY_WORD(016)  COPY_WORD(015)  COPY_WORD(014)
+		COPY_WORD(013)  COPY_WORD(012)  COPY_WORD(011)  COPY_WORD(010)
+		COPY_WORD(007)  COPY_WORD(006)  COPY_WORD(005)  COPY_WORD(004)
+		COPY_WORD(003)  COPY_WORD(002)  COPY_WORD(001)  COPY_WORD(000)
+//=============================================================================
+#undef COPY_WORD
+			} while(_MCFCRT_EXPECT((size_t)(wp - bwp) > 32));
+		}
+		// Don't forget to emit a store fence.
+		_mm_sfence();
+	}
+	// Copy the initial, potentially unaligned word.
+	wp = bwp;
+	rp = brp;
+	__MCFCRT_memcpy_piece32_fwd(&wp, &rp);
 }

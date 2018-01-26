@@ -14,6 +14,8 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	const unsigned char *rp2 = s2;
 	size_t cnt = n / UINTPTR_BYTES;
 	switch(cnt % 32){
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 		uintptr_t w, c;
 #define STEP(k_)	\
 			__builtin_memcpy(&w, rp1, UINTPTR_BYTES);	\
@@ -25,7 +27,6 @@ int memcmp(const void *s1, const void *s2, size_t n){
 			rp1 += UINTPTR_BYTES;	\
 			rp2 += UINTPTR_BYTES;	\
 			--cnt;	\
-			__attribute__((__fallthrough__));	\
 	case (k_):	\
 			;
 //=============================================================================
@@ -37,6 +38,7 @@ int memcmp(const void *s1, const void *s2, size_t n){
 		} while(_MCFCRT_EXPECT(cnt != 0));
 //=============================================================================
 #undef STEP
+#pragma GCC diagnostic pop
 	}
 	cnt = n % UINTPTR_BYTES;
 diff_byte:

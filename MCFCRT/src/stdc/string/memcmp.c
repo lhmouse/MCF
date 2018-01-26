@@ -5,6 +5,9 @@
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
 
+#pragma GCC diagnostic ignored "-Wswitch-unreachable"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
 #define UINTPTR_BYTES     (sizeof(uintptr_t))
 
 #undef memcmp
@@ -12,43 +15,40 @@
 int memcmp(const void *s1, const void *s2, size_t n){
 	const unsigned char *rp1 = s1;
 	const unsigned char *rp2 = s2;
-	size_t cnt = n / UINTPTR_BYTES;
-	switch(cnt % 32){
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-		uintptr_t w, c;
+	const unsigned char *const erp2 = rp2 + n;
+	switch((size_t)(erp2 - rp2) / UINTPTR_BYTES % 32){
 #define STEP(k_)	\
-			__builtin_memcpy(&w, rp1, UINTPTR_BYTES);	\
-			__builtin_memcpy(&c, rp2, UINTPTR_BYTES);	\
-			if(_MCFCRT_EXPECT_NOT(w != c)){	\
-				cnt = UINTPTR_BYTES;	\
-				goto diff_byte;	\
-			}	\
-			rp1 += UINTPTR_BYTES;	\
-			rp2 += UINTPTR_BYTES;	\
-			--cnt;	\
+		if(_MCFCRT_EXPECT_NOT(*(const uintptr_t *)rp1 != *(const uintptr_t *)rp2)){	\
+			break;	\
+		}	\
+		rp1 += UINTPTR_BYTES;	\
+		rp2 += UINTPTR_BYTES;	\
 	case (k_):	\
-			;
+		;
 //=============================================================================
 		do {
 	STEP(037)  STEP(036)  STEP(035)  STEP(034)  STEP(033)  STEP(032)  STEP(031)  STEP(030)
 	STEP(027)  STEP(026)  STEP(025)  STEP(024)  STEP(023)  STEP(022)  STEP(021)  STEP(020)
 	STEP(017)  STEP(016)  STEP(015)  STEP(014)  STEP(013)  STEP(012)  STEP(011)  STEP(010)
 	STEP(007)  STEP(006)  STEP(005)  STEP(004)  STEP(003)  STEP(002)  STEP(001)  STEP(000)
-		} while(_MCFCRT_EXPECT(cnt != 0));
+		} while(_MCFCRT_EXPECT((size_t)(erp2 - rp2) / UINTPTR_BYTES != 0));
 //=============================================================================
 #undef STEP
-#pragma GCC diagnostic pop
 	}
-	cnt = n % UINTPTR_BYTES;
-diff_byte:
-	while(_MCFCRT_EXPECT(cnt != 0)){
-		if(*rp1 != *rp2){
-			return (*rp1 < *rp2) ? -1 : 1;
-		}
-		++rp1;
-		++rp2;
-		--cnt;
+	switch((size_t)(erp2 - rp2) % UINTPTR_BYTES){
+#define STEP(k_)	\
+		if(_MCFCRT_EXPECT_NOT(*rp1 != *rp2)){	\
+			return (*rp1 < *rp2) ? -1 : 1;	\
+		}	\
+		rp1 += 1;	\
+		rp2 += 1;	\
+	case (k_):	\
+		;
+//=============================================================================
+	STEP(017)  STEP(016)  STEP(015)  STEP(014)  STEP(013)  STEP(012)  STEP(011)  STEP(010)
+	STEP(007)  STEP(006)  STEP(005)  STEP(004)  STEP(003)  STEP(002)  STEP(001)  STEP(000)
+//=============================================================================
+#undef STEP
 	}
 	return 0;
 }

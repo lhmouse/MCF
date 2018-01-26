@@ -97,7 +97,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_cnd_destroy(cnd_t *__cond) _MC
 	(void)__cond;
 }
 
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_c11thread_translate_timeout(const struct timespec *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_c11thread_translate_timeout(const struct timespec *__utc_timeout) _MCFCRT_NOEXCEPT {
 	const double __utc_timeout_ms = (double)__utc_timeout->tv_sec * 1.0e3 + (double)__utc_timeout->tv_nsec / 1.0e6;
 	const double __utc_now_ms = (double)_MCFCRT_GetUtcClock();
 	const double __delta_ms = __utc_timeout_ms - __utc_now_ms;

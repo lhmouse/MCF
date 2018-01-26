@@ -182,11 +182,11 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_destroy(__gthread_co
 	return 0;
 }
 
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_wait(__gthread_cond_t *__cond, __gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_wait(__gthread_cond_t *_MCFCRT_RESTRICT __cond, __gthread_mutex_t *_MCFCRT_RESTRICT __mutex) _MCFCRT_NOEXCEPT {
 	_MCFCRT_WaitForConditionVariableForever(__cond, &__MCFCRT_gthread_unlock_callback_mutex, &__MCFCRT_gthread_relock_callback_mutex, (_MCFCRT_STD intptr_t)__mutex, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT);
 	return 0;
 }
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_wait_recursive(__gthread_cond_t *__cond, __gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_wait_recursive(__gthread_cond_t *_MCFCRT_RESTRICT __cond, __gthread_recursive_mutex_t *_MCFCRT_RESTRICT __recur_mutex) _MCFCRT_NOEXCEPT {
 	_MCFCRT_WaitForConditionVariableForever(__cond, &__MCFCRT_gthread_unlock_callback_recursive_mutex, &__MCFCRT_gthread_relock_callback_recursive_mutex, (_MCFCRT_STD intptr_t)__recur_mutex, _MCFCRT_CONDITION_VARIABLE_SUGGESTED_SPIN_COUNT);
 	return 0;
 }
@@ -285,7 +285,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_yield(void) _MCFCRT_NOEXC
 //-----------------------------------------------------------------------------
 typedef struct timespec __gthread_time_t;
 
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_gthread_translate_timeout(const __gthread_time_t *_MCFCRT_RESTRICT __utc_timeout) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_gthread_translate_timeout(const __gthread_time_t *__utc_timeout) _MCFCRT_NOEXCEPT {
 	const double __utc_timeout_ms = (double)__utc_timeout->tv_sec * 1.0e3 + (double)__utc_timeout->tv_nsec / 1.0e6;
 	const double __utc_now_ms = (double)_MCFCRT_GetUtcClock();
 	const double __delta_ms = __utc_timeout_ms - __utc_now_ms;

@@ -10,10 +10,10 @@
 
 static inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
-	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
@@ -21,18 +21,18 @@ static inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRIC
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_store_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 }
 
 static inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
-	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
@@ -40,10 +40,10 @@ static inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRIC
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_stream_si128((__m128i *)*__wp, _mm_lddqu_si128((const __m128i *)*__rp));
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 }
 
 void __MCFCRT_memcpy_large_fwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp){

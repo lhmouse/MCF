@@ -88,21 +88,205 @@ extern inline void __MCFCRT_memcpy_piece16_bwd(unsigned char **_MCFCRT_RESTRICT 
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	__MCFCRT_memcpy_piece16_fwd(__wp, __rp);
-	__MCFCRT_memcpy_piece16_fwd(__wp, __rp);
+	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
 }
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	__MCFCRT_memcpy_piece16_bwd(__wp, __rp);
-	__MCFCRT_memcpy_piece16_bwd(__wp, __rp);
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 }
 
-extern void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+}
 
-extern void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp += 16;
+	*__rp += 16;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	*__wp -= 16;
+	*__rp -= 16;
+	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+}
+
+// Functions that copy blocks larger than 64 bytes.
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
+	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
+	unsigned char *__wp = __bwp;
+	const unsigned char *__rp = __brp;
+	// Copy the initial, potentially unaligned QQWORD.
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)__wp & (_MCFCRT_STD uintptr_t)-16);
+	__rp = __erp - (__ewp - __wp);
+	// Copy QQWORDs to aligned locations.
+	// We will copy the final QQWORD separately, hence the last (0,32] bytes are excluded here.
+	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
+		do {
+		// TODO: Rewrite to make use of AVX in the future.
+#define __MCFCRT_COPY_(k_)	\
+		__MCFCRT_memcpy_aligned32_fwd(&__wp, &__rp);	\
+	case (k_):	\
+		;
+//=============================================================================
+	__MCFCRT_COPY_(017)  __MCFCRT_COPY_(016)  __MCFCRT_COPY_(015)  __MCFCRT_COPY_(014)
+	__MCFCRT_COPY_(013)  __MCFCRT_COPY_(012)  __MCFCRT_COPY_(011)  __MCFCRT_COPY_(010)
+	__MCFCRT_COPY_(007)  __MCFCRT_COPY_(006)  __MCFCRT_COPY_(005)  __MCFCRT_COPY_(004)
+	__MCFCRT_COPY_(003)  __MCFCRT_COPY_(002)  __MCFCRT_COPY_(001)  __MCFCRT_COPY_(000)
+//=============================================================================
+#undef __MCFCRT_COPY_
+		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __wp) > 32));
+	}
+	// Copy the final, potentially unaligned QQWORD.
+	__wp = __ewp;
+	__rp = __erp;
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+}
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
+	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
+	unsigned char *__wp = __ewp;
+	const unsigned char *__rp = __erp;
+	// Copy the final, potentially unaligned QQWORD.
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__wp + 15) & (_MCFCRT_STD uintptr_t)-16);
+	__rp = __brp + (__wp - __bwp);
+	// Copy QQWORDs to aligned locations.
+	// We will copy the initial QQWORD separately, hence the last (0,32] bytes are excluded here.
+	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
+		do {
+		// TODO: Rewrite to make use of AVX in the future.
+#define __MCFCRT_COPY_(k_)	\
+		__MCFCRT_memcpy_aligned32_fwd(&__wp, &__rp);	\
+	case (k_):	\
+		;
+//=============================================================================
+	__MCFCRT_COPY_(017)  __MCFCRT_COPY_(016)  __MCFCRT_COPY_(015)  __MCFCRT_COPY_(014)
+	__MCFCRT_COPY_(013)  __MCFCRT_COPY_(012)  __MCFCRT_COPY_(011)  __MCFCRT_COPY_(010)
+	__MCFCRT_COPY_(007)  __MCFCRT_COPY_(006)  __MCFCRT_COPY_(005)  __MCFCRT_COPY_(004)
+	__MCFCRT_COPY_(003)  __MCFCRT_COPY_(002)  __MCFCRT_COPY_(001)  __MCFCRT_COPY_(000)
+//=============================================================================
+#undef __MCFCRT_COPY_
+		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__wp - __bwp) > 32));
+	}
+	// Copy the initial, potentially unaligned QQWORD.
+	__wp = __bwp;
+	__rp = __brp;
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+}
+
+// Functions that copy blocks larger than 64 bytes using non-temporal semantics.
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
+	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
+	unsigned char *__wp = __bwp;
+	const unsigned char *__rp = __brp;
+	// Copy the initial, potentially unaligned QQWORD.
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)__wp & (_MCFCRT_STD uintptr_t)-16);
+	__rp = __erp - (__ewp - __wp);
+	// Copy QQWORDs to aligned locations.
+	// We will copy the final QQWORD separately, hence the last (0,32] bytes are excluded here.
+	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
+		do {
+		// TODO: Rewrite to make use of AVX in the future.
+#define __MCFCRT_COPY_(k_)	\
+		__MCFCRT_memcpy_nontemp32_fwd(&__wp, &__rp);	\
+	case (k_):	\
+		;
+//=============================================================================
+	__MCFCRT_COPY_(017)  __MCFCRT_COPY_(016)  __MCFCRT_COPY_(015)  __MCFCRT_COPY_(014)
+	__MCFCRT_COPY_(013)  __MCFCRT_COPY_(012)  __MCFCRT_COPY_(011)  __MCFCRT_COPY_(010)
+	__MCFCRT_COPY_(007)  __MCFCRT_COPY_(006)  __MCFCRT_COPY_(005)  __MCFCRT_COPY_(004)
+	__MCFCRT_COPY_(003)  __MCFCRT_COPY_(002)  __MCFCRT_COPY_(001)  __MCFCRT_COPY_(000)
+//=============================================================================
+#undef __MCFCRT_COPY_
+		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __wp) > 32));
+	}
+	// Don't forget to emit a store fence.
+	_mm_sfence();
+	// Copy the final, potentially unaligned QQWORD.
+	__wp = __ewp;
+	__rp = __erp;
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+}
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
+	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
+	unsigned char *__wp = __ewp;
+	const unsigned char *__rp = __erp;
+	// Copy the final, potentially unaligned QQWORD.
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
+	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__wp + 15) & (_MCFCRT_STD uintptr_t)-16);
+	__rp = __brp + (__wp - __bwp);
+	// Copy QQWORDs to aligned locations.
+	// We will copy the initial QQWORD separately, hence the last (0,32] bytes are excluded here.
+	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
+		do {
+		// TODO: Rewrite to make use of AVX in the future.
+#define __MCFCRT_COPY_(k_)	\
+		__MCFCRT_memcpy_nontemp32_bwd(&__wp, &__rp);	\
+	case (k_):	\
+		;
+//=============================================================================
+	__MCFCRT_COPY_(017)  __MCFCRT_COPY_(016)  __MCFCRT_COPY_(015)  __MCFCRT_COPY_(014)
+	__MCFCRT_COPY_(013)  __MCFCRT_COPY_(012)  __MCFCRT_COPY_(011)  __MCFCRT_COPY_(010)
+	__MCFCRT_COPY_(007)  __MCFCRT_COPY_(006)  __MCFCRT_COPY_(005)  __MCFCRT_COPY_(004)
+	__MCFCRT_COPY_(003)  __MCFCRT_COPY_(002)  __MCFCRT_COPY_(001)  __MCFCRT_COPY_(000)
+//=============================================================================
+#undef __MCFCRT_COPY_
+		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__wp - __bwp) > 32));
+	}
+	// Don't forget to emit a store fence.
+	_mm_sfence();
+	// Copy the initial, potentially unaligned QQWORD.
+	__wp = __bwp;
+	__rp = __brp;
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+}
 
 // Dispatchers.
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {

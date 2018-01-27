@@ -4,6 +4,3 @@
 
 #define __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN     extern inline
 #include "_memcpy_impl.h"
-
-#pragma GCC diagnostic ignored "-Wswitch-unreachable"
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"

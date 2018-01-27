@@ -29,7 +29,7 @@ __pch.h.gch: __pch.h
 	${CC} -x c-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CFLAGS}" | sed "s/-include __pch\\.h//") ${CFLAGS} -Wno-error $< -o $@
 
 __pch.hpp: ${srcdir}/src/env/_crtdef.hpp
-	echo "#include \"$<\"" > $@
+	echo "#include \"$$(cygpath -m "$<" || readlink -f "$<")\"" > $@
 
 __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@

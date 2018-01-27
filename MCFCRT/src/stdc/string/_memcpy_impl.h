@@ -101,6 +101,9 @@ extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT 
 extern void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
 
+extern void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+
 // Dispatchers.
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
@@ -254,12 +257,12 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_fwd(unsigned cha
 	          break;
 	case 32:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
 	          break;
-	          // Deal with another common size.
-	case 64:  __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
-	          __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
-	          break;
 	          // Deal with large blocks.
-	default:  __MCFCRT_memcpy_large_fwd(__bwp, __ewp, __brp, __erp);
+	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) < 0x100000)){
+	            __MCFCRT_memcpy_large_fwd(__bwp, __ewp, __brp, __erp);
+	          } else {
+	            __MCFCRT_memcpy_huge_fwd(__bwp, __ewp, __brp, __erp);
+	          }
 	          break;
 	}
 }
@@ -415,12 +418,12 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_bwd(unsigned cha
 	          break;
 	case  1:  __MCFCRT_memcpy_piece01_bwd(&__wp, &__rp);
 	          break;
-	          // Deal with another common size.
-	case 64:  __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
-	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
-	          break;
 	          // Deal with large blocks.
-	default:  __MCFCRT_memcpy_large_bwd(__bwp, __ewp, __brp, __erp);
+	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) < 0x100000)){
+	            __MCFCRT_memcpy_large_bwd(__bwp, __ewp, __brp, __erp);
+	          } else {
+	            __MCFCRT_memcpy_huge_bwd(__bwp, __ewp, __brp, __erp);
+	          }
 	          break;
 	}
 }

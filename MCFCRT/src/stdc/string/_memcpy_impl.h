@@ -168,7 +168,6 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned ch
 	// Copy QQWORDs to aligned locations.
 	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
 		do {
-		// TODO: Rewrite to make use of AVX in the future.
 #define __MCFCRT_COPY_(k_)	\
 		__MCFCRT_memcpy_aligned32_fwd(&__wp, &__rp);	\
 	case (k_):	\
@@ -209,7 +208,6 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned ch
 	// Copy QQWORDs to aligned locations.
 	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
 		do {
-		// TODO: Rewrite to make use of AVX in the future.
 #define __MCFCRT_COPY_(k_)	\
 		__MCFCRT_memcpy_aligned32_bwd(&__wp, &__rp);	\
 	case (k_):	\
@@ -252,7 +250,6 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned cha
 	// Copy QQWORDs to aligned locations.
 	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
 		do {
-		// TODO: Rewrite to make use of AVX in the future.
 #define __MCFCRT_COPY_(k_)	\
 		__MCFCRT_memcpy_nontemp32_fwd(&__wp, &__rp);	\
 	case (k_):	\
@@ -295,7 +292,6 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned cha
 	// Copy QQWORDs to aligned locations.
 	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
 		do {
-		// TODO: Rewrite to make use of AVX in the future.
 #define __MCFCRT_COPY_(k_)	\
 		__MCFCRT_memcpy_nontemp32_bwd(&__wp, &__rp);	\
 	case (k_):	\

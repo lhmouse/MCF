@@ -152,15 +152,20 @@ extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRIC
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
-	unsigned char *__wp = __bwp;
+	// Stash potentially unaligned QQWORDs in both ends of the source range.
+	// They might be subsequently clobbered if the source and destination ranges overlap.
+	unsigned char __stash[64];
+	unsigned char *__wp = __stash;
 	const unsigned char *__rp = __brp;
-	// Copy the initial, potentially unaligned QQWORD.
 	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	__wp = __stash + 64;
+	__rp = __erp;
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
-	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)__wp & (_MCFCRT_STD uintptr_t)-16);
+	// We will copy the final QQWORD separately, hence the last (0,32] bytes are excluded here.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__bwp + 32) & (_MCFCRT_STD uintptr_t)-32);
 	__rp = __erp - (__ewp - __wp);
 	// Copy QQWORDs to aligned locations.
-	// We will copy the final QQWORD separately, hence the last (0,32] bytes are excluded here.
 	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
 		do {
 		// TODO: Rewrite to make use of AVX in the future.
@@ -177,28 +182,36 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned ch
 #undef __MCFCRT_COPY_
 		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __wp) > 32));
 	}
-	// Copy the final, potentially unaligned QQWORD.
+	// Pop the stash.
+	__wp = __bwp;
+	__rp = __stash;
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
 	__wp = __ewp;
-	__rp = __erp;
+	__rp = __stash + 64;
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
-	unsigned char *__wp = __ewp;
-	const unsigned char *__rp = __erp;
-	// Copy the final, potentially unaligned QQWORD.
+	// Stash potentially unaligned QQWORDs in both ends of the source range.
+	// They might be subsequently clobbered if the source and destination ranges overlap.
+	unsigned char __stash[64];
+	unsigned char *__wp = __stash;
+	const unsigned char *__rp = __brp;
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	__wp = __stash + 64;
+	__rp = __erp;
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
-	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__wp + 15) & (_MCFCRT_STD uintptr_t)-16);
+	// We will copy the initial QQWORD separately, hence the last (0,32] bytes are excluded here.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__ewp - 1) & (_MCFCRT_STD uintptr_t)-32);
 	__rp = __brp + (__wp - __bwp);
 	// Copy QQWORDs to aligned locations.
-	// We will copy the initial QQWORD separately, hence the last (0,32] bytes are excluded here.
 	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
 		do {
 		// TODO: Rewrite to make use of AVX in the future.
 #define __MCFCRT_COPY_(k_)	\
-		__MCFCRT_memcpy_aligned32_fwd(&__wp, &__rp);	\
+		__MCFCRT_memcpy_aligned32_bwd(&__wp, &__rp);	\
 	case (k_):	\
 		;
 //=============================================================================
@@ -210,25 +223,33 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned ch
 #undef __MCFCRT_COPY_
 		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__wp - __bwp) > 32));
 	}
-	// Copy the initial, potentially unaligned QQWORD.
+	// Pop the stash.
 	__wp = __bwp;
-	__rp = __brp;
+	__rp = __stash;
 	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	__wp = __ewp;
+	__rp = __stash + 64;
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
 
 // Functions that copy blocks larger than 64 bytes using non-temporal semantics.
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
-	unsigned char *__wp = __bwp;
+	// Stash potentially unaligned QQWORDs in both ends of the source range.
+	// They might be subsequently clobbered if the source and destination ranges overlap.
+	unsigned char __stash[64];
+	unsigned char *__wp = __stash;
 	const unsigned char *__rp = __brp;
-	// Copy the initial, potentially unaligned QQWORD.
 	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	__wp = __stash + 64;
+	__rp = __erp;
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
-	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)__wp & (_MCFCRT_STD uintptr_t)-16);
+	// We will copy the final QQWORD separately, hence the last (0,32] bytes are excluded here.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__bwp + 32) & (_MCFCRT_STD uintptr_t)-32);
 	__rp = __erp - (__ewp - __wp);
 	// Copy QQWORDs to aligned locations.
-	// We will copy the final QQWORD separately, hence the last (0,32] bytes are excluded here.
 	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
 		do {
 		// TODO: Rewrite to make use of AVX in the future.
@@ -245,25 +266,33 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned cha
 #undef __MCFCRT_COPY_
 		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __wp) > 32));
 	}
-	// Don't forget to emit a store fence.
+	// Don't forget the a store fence.
 	_mm_sfence();
-	// Copy the final, potentially unaligned QQWORD.
+	// Pop the stash.
+	__wp = __bwp;
+	__rp = __stash;
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
 	__wp = __ewp;
-	__rp = __erp;
+	__rp = __stash + 64;
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
-	unsigned char *__wp = __ewp;
-	const unsigned char *__rp = __erp;
-	// Copy the final, potentially unaligned QQWORD.
+	// Stash potentially unaligned QQWORDs in both ends of the source range.
+	// They might be subsequently clobbered if the source and destination ranges overlap.
+	unsigned char __stash[64];
+	unsigned char *__wp = __stash;
+	const unsigned char *__rp = __brp;
+	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	__wp = __stash + 64;
+	__rp = __erp;
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 	// If there is misalignment at all, align the write pointer to 32-byte boundaries, rounding downwards.
-	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__wp + 15) & (_MCFCRT_STD uintptr_t)-16);
+	// We will copy the initial QQWORD separately, hence the last (0,32] bytes are excluded here.
+	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__ewp - 1) & (_MCFCRT_STD uintptr_t)-32);
 	__rp = __brp + (__wp - __bwp);
 	// Copy QQWORDs to aligned locations.
-	// We will copy the initial QQWORD separately, hence the last (0,32] bytes are excluded here.
 	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
 		do {
 		// TODO: Rewrite to make use of AVX in the future.
@@ -280,12 +309,15 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned cha
 #undef __MCFCRT_COPY_
 		} while(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__wp - __bwp) > 32));
 	}
-	// Don't forget to emit a store fence.
+	// Don't forget the a store fence.
 	_mm_sfence();
-	// Copy the initial, potentially unaligned QQWORD.
+	// Pop the stash.
 	__wp = __bwp;
-	__rp = __brp;
+	__rp = __stash;
 	__MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
+	__wp = __ewp;
+	__rp = __stash + 64;
+	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
 
 // Dispatchers.

@@ -67,7 +67,7 @@ static bool CheckSentry(uintptr_t uCookie, const unsigned char *pbyData, size_t 
 	return true;
 }
 
-static _MCFCRT_Mutex g_vMutex = { 0 };
+static _MCFCRT_Mutex   g_vMutex    = { 0 };
 static _MCFCRT_AvlRoot g_avlBlocks = _MCFCRT_NULLPTR;
 
 static void CheckForMemoryLeaksUnlocked(void){

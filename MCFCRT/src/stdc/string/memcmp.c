@@ -16,8 +16,9 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	const unsigned char *rp1 = s1;
 	const unsigned char *rp2 = s2;
 	const unsigned char *const erp2 = rp2 + n;
-	switch((size_t)(erp2 - rp2) / UINTPTR_BYTES % 32){
-#define STEP(k_)	\
+	switch((size_t)(erp2 - rp2) / UINTPTR_BYTES % 8){
+		do {
+#define COMPARE_STEP_(k_)	\
 		if(_MCFCRT_EXPECT_NOT(*(const uintptr_t *)rp1 != *(const uintptr_t *)rp2)){	\
 			break;	\
 		}	\
@@ -26,17 +27,14 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	case (k_):	\
 		;
 //=============================================================================
-		do {
-	STEP(037)  STEP(036)  STEP(035)  STEP(034)  STEP(033)  STEP(032)  STEP(031)  STEP(030)
-	STEP(027)  STEP(026)  STEP(025)  STEP(024)  STEP(023)  STEP(022)  STEP(021)  STEP(020)
-	STEP(017)  STEP(016)  STEP(015)  STEP(014)  STEP(013)  STEP(012)  STEP(011)  STEP(010)
-	STEP(007)  STEP(006)  STEP(005)  STEP(004)  STEP(003)  STEP(002)  STEP(001)  STEP(000)
-		} while(_MCFCRT_EXPECT((size_t)(erp2 - rp2) / UINTPTR_BYTES != 0));
+	COMPARE_STEP_(7)  COMPARE_STEP_(6)  COMPARE_STEP_(5)  COMPARE_STEP_(4)
+	COMPARE_STEP_(3)  COMPARE_STEP_(2)  COMPARE_STEP_(1)  COMPARE_STEP_(0)
 //=============================================================================
-#undef STEP
+#undef COMPARE_STEP_
+		} while(_MCFCRT_EXPECT((size_t)(erp2 - rp2) / UINTPTR_BYTES != 0));
 	}
 	switch((size_t)(erp2 - rp2) % UINTPTR_BYTES){
-#define STEP(k_)	\
+#define COMPARE_STEP_(k_)	\
 		if(_MCFCRT_EXPECT_NOT(*rp1 != *rp2)){	\
 			return (*rp1 < *rp2) ? -1 : 1;	\
 		}	\
@@ -45,10 +43,10 @@ int memcmp(const void *s1, const void *s2, size_t n){
 	case (k_):	\
 		;
 //=============================================================================
-	STEP(017)  STEP(016)  STEP(015)  STEP(014)  STEP(013)  STEP(012)  STEP(011)  STEP(010)
-	STEP(007)  STEP(006)  STEP(005)  STEP(004)  STEP(003)  STEP(002)  STEP(001)  STEP(000)
+	COMPARE_STEP_(7)  COMPARE_STEP_(6)  COMPARE_STEP_(5)  COMPARE_STEP_(4)
+	COMPARE_STEP_(3)  COMPARE_STEP_(2)  COMPARE_STEP_(1)  COMPARE_STEP_(0)
 //=============================================================================
-#undef STEP
+#undef COMPARE_STEP_
 	}
 	return 0;
 }

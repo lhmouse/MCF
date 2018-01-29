@@ -148,7 +148,7 @@ extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRIC
 	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
 }
 
-// Functions that copy blocks larger than 64 bytes.
+// Functions that copy blocks no smaller than 64 bytes.
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
@@ -230,7 +230,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned ch
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
 
-// Functions that copy blocks larger than 64 bytes using non-temporal semantics.
+// Functions that copy blocks no smaller than 64 bytes using non-temporal semantics.
 __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
@@ -248,13 +248,15 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned cha
 	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__bwp + 32) & (_MCFCRT_STD uintptr_t)-32);
 	__rp = __erp - (__ewp - __wp);
 	// Copy QQWORDs to aligned locations.
-	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 8){
+	switch((_MCFCRT_STD size_t)(__ewp - __wp - 1) / 32 % 16){
 		do {
 #define __MCFCRT_COPY_STEP_(k_)	\
 		__MCFCRT_memcpy_nontemp32_fwd(&__wp, &__rp);	\
 	case (k_):	\
 		;
 //=============================================================================
+	__MCFCRT_COPY_STEP_(017)  __MCFCRT_COPY_STEP_(016)  __MCFCRT_COPY_STEP_(015)  __MCFCRT_COPY_STEP_(014)
+	__MCFCRT_COPY_STEP_(013)  __MCFCRT_COPY_STEP_(012)  __MCFCRT_COPY_STEP_(011)  __MCFCRT_COPY_STEP_(010)
 	__MCFCRT_COPY_STEP_(007)  __MCFCRT_COPY_STEP_(006)  __MCFCRT_COPY_STEP_(005)  __MCFCRT_COPY_STEP_(004)
 	__MCFCRT_COPY_STEP_(003)  __MCFCRT_COPY_STEP_(002)  __MCFCRT_COPY_STEP_(001)  __MCFCRT_COPY_STEP_(000)
 //=============================================================================
@@ -288,13 +290,15 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned cha
 	__wp = (unsigned char *)((_MCFCRT_STD uintptr_t)(__ewp - 1) & (_MCFCRT_STD uintptr_t)-32);
 	__rp = __brp + (__wp - __bwp);
 	// Copy QQWORDs to aligned locations.
-	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 8){
+	switch((_MCFCRT_STD size_t)(__wp - __bwp - 1) / 32 % 16){
 		do {
 #define __MCFCRT_COPY_STEP_(k_)	\
 		__MCFCRT_memcpy_nontemp32_bwd(&__wp, &__rp);	\
 	case (k_):	\
 		;
 //=============================================================================
+	__MCFCRT_COPY_STEP_(017)  __MCFCRT_COPY_STEP_(016)  __MCFCRT_COPY_STEP_(015)  __MCFCRT_COPY_STEP_(014)
+	__MCFCRT_COPY_STEP_(013)  __MCFCRT_COPY_STEP_(012)  __MCFCRT_COPY_STEP_(011)  __MCFCRT_COPY_STEP_(010)
 	__MCFCRT_COPY_STEP_(007)  __MCFCRT_COPY_STEP_(006)  __MCFCRT_COPY_STEP_(005)  __MCFCRT_COPY_STEP_(004)
 	__MCFCRT_COPY_STEP_(003)  __MCFCRT_COPY_STEP_(002)  __MCFCRT_COPY_STEP_(001)  __MCFCRT_COPY_STEP_(000)
 //=============================================================================

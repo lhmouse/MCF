@@ -3,23 +3,15 @@
 // Copyleft 2013 - 2018, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../ext/rep_stos.h"
 
 #undef wmemset
 
+extern void __MCFCRT_memset_impl_fwd(unsigned char *wp, unsigned char *ewp, uint32_t c32);
+
 wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n){
-	wchar_t *wp = s;
-	uintptr_t word;
-	word = (uint16_t)c;
-#ifdef _WIN64
-	word += word << 16;
-	word += word << 32;
-	wp = (wchar_t *)_MCFCRT_rep_stosq((uint64_t *)wp, (uint64_t)word, n / 4);
-	wp = (wchar_t *)_MCFCRT_rep_stosw((uint16_t *)wp, (uint16_t)word, n % 4);
-#else
-	word += word << 16;
-	wp = (wchar_t *)_MCFCRT_rep_stosd((uint32_t *)wp, (uint32_t)word, n / 2);
-	wp = (wchar_t *)_MCFCRT_rep_stosw((uint16_t *)wp, (uint16_t)word, n % 2);
-#endif
+	unsigned char *wp = (void *)s;
+	uint32_t c32 = (uint16_t)c;
+	c32 += c32 << 16;
+	__MCFCRT_memset_impl_fwd(wp, wp + n, c32);
 	return s;
 }

@@ -39,6 +39,7 @@ noinst_HEADERS = \
 	src/stdc/math/_asm_sse2.h	\
 	src/stdc/math/_asm_sse3.h	\
 	src/stdc/string/_memcpy_impl.h	\
+	src/stdc/string/_memset_impl.h	\
 	src/stdc/string/_sse2.h	\
 	src/stdc/string/_ssse3.h
 
@@ -212,6 +213,7 @@ mcfcrt_sources = \
 	src/stdc/stdlib/malloc.c	\
 	src/stdc/stdlib/realloc.c	\
 	src/stdc/string/_memcpy_impl.c	\
+	src/stdc/string/_memset_impl.c	\
 	src/stdc/string/memchr.c	\
 	src/stdc/string/memcmp.c	\
 	src/stdc/string/memcpy.c	\

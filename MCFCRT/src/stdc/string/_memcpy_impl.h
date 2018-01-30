@@ -321,7 +321,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_fwd(unsigned cha
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	unsigned char *__wp = __bwp;
 	const unsigned char *__rp = __brp;
-	switch((_MCFCRT_STD size_t)(__erp - __rp)){
+	switch((_MCFCRT_STD size_t)(__ewp - __wp)){
 	          // Deal with empty blocks.
 	case  0:  break;
 	          // Deal with tiny blocks using a detailed table.
@@ -482,7 +482,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_bwd(unsigned cha
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	unsigned char *__wp = __ewp;
 	const unsigned char *__rp = __erp;
-	switch((_MCFCRT_STD size_t)(__rp - __brp)){
+	switch((_MCFCRT_STD size_t)(__wp - __bwp)){
 	          // Deal with empty blocks.
 	case  0:  break;
 	          // Deal with tiny blocks using a detailed table.

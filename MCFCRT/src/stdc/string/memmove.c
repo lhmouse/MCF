@@ -2,10 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2018, LH_Mouse. All wrongs reserved.
 
-#include "_memcpy_impl.h"
+#include "../../env/_crtdef.h"
 #include "../../env/expect.h"
 
 #undef memmove
+
+extern void __MCFCRT_memcpy_impl_bwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp);
+extern void __MCFCRT_memcpy_impl_fwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp);
 
 void *memmove(void *s1, const void *s2, size_t n){
 	unsigned char *wp = s1;

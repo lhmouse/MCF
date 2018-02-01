@@ -11,7 +11,7 @@ void *memcpy(void *restrict s1, const void *restrict s2, size_t n){
 	unsigned char *wp = s1;
 	const unsigned char *rp = s2;
 #ifndef NDEBUG
-	__MCFCRT_memset_impl_bwd(wp, wp + n, 0xDEADBEEFDEADBEEF);
+	__MCFCRT_memset_impl_bwd(wp, wp + n, 0xDEADBEEF);
 #endif
 	__MCFCRT_memcpy_impl_fwd(wp, wp + n, rp, rp + n);
 	return s1;

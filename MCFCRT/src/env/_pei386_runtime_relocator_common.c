@@ -157,7 +157,7 @@ void __MCFCRT_pei386_relocator_common(HMODULE hModule, const DWORD *pdwTableBegi
 		return;
 	}
 	// Get section table.
-	const IMAGE_SECTION_HEADER *pSectionTable;
+	const IMAGE_SECTION_HEADER *pSectionTable = _MCFCRT_NULLPTR;
 	const unsigned uSectionCount = GetSectionTable(&pSectionTable, hModule);
 	// Mark all sections writeable before altering them.
 	UnprotectedSection *const pUnprotectResults = _MCFCRT_ALLOCA(uSectionCount * sizeof(UnprotectedSection));

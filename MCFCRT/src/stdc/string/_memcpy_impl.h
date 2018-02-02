@@ -8,7 +8,7 @@
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
 #include "../../env/xassert.h"
-#include <xmmintrin.h>
+#include <emmintrin.h>
 
 #ifndef __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN
 #  define __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
@@ -74,7 +74,7 @@ extern inline void __MCFCRT_memcpy_piece08_bwd(unsigned char **_MCFCRT_RESTRICT 
 
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_piece16_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
-	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
@@ -82,16 +82,16 @@ __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_piece16_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
-	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
@@ -100,19 +100,19 @@ extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT 
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_storeu_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_store_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
-	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_store_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
@@ -121,19 +121,19 @@ extern inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRIC
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_store_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_store_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_store_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_stream_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
-	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_stream_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
@@ -142,10 +142,10 @@ extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRIC
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_stream_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp -= 16;
 	*__rp -= 16;
-	_mm_stream_ps((float *)*__wp, _mm_loadu_ps((const float *)*__rp));
+	_mm_stream_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
 // Functions that copy blocks no smaller than 64 bytes.

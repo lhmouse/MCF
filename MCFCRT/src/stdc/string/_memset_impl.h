@@ -55,80 +55,80 @@ extern inline void __MCFCRT_memset_piece04_bwd(unsigned char **_MCFCRT_RESTRICT 
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_piece08_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
-	_mm_storel_pi((__m64 *)*__wp, __x);
+extern inline void __MCFCRT_memset_piece08_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
+	_mm_storel_epi64((__m128i *)*__wp, __x);
 	*__wp += 8;
 }
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_piece08_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
+extern inline void __MCFCRT_memset_piece08_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
 	*__wp -= 8;
-	_mm_storel_pi((__m64 *)*__wp, __x);
+	_mm_storel_epi64((__m128i *)*__wp, __x);
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_piece16_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
-	_mm_storeu_ps((float *)*__wp, __x);
+extern inline void __MCFCRT_memset_piece16_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
+	_mm_storeu_si128((__m128i *)*__wp, __x);
 	*__wp += 16;
 }
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_piece16_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
+extern inline void __MCFCRT_memset_piece16_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
 	*__wp -= 16;
-	_mm_storeu_ps((float *)*__wp, __x);
-}
-
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
-	// TODO: Rewrite to make use of AVX in the future.
-	_mm_storeu_ps((float *)*__wp, __x);
-	*__wp += 16;
-	_mm_storeu_ps((float *)*__wp, __x);
-	*__wp += 16;
-}
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_piece32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
-	// TODO: Rewrite to make use of AVX in the future.
-	*__wp -= 16;
-	_mm_storeu_ps((float *)*__wp, __x);
-	*__wp -= 16;
-	_mm_storeu_ps((float *)*__wp, __x);
+	_mm_storeu_si128((__m128i *)*__wp, __x);
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
+extern inline void __MCFCRT_memset_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_store_ps((float *)*__wp, __x);
+	_mm_storeu_si128((__m128i *)*__wp, __x);
 	*__wp += 16;
-	_mm_store_ps((float *)*__wp, __x);
+	_mm_storeu_si128((__m128i *)*__wp, __x);
 	*__wp += 16;
 }
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_aligned32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
+extern inline void __MCFCRT_memset_piece32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
-	_mm_store_ps((float *)*__wp, __x);
+	_mm_storeu_si128((__m128i *)*__wp, __x);
 	*__wp -= 16;
-	_mm_store_ps((float *)*__wp, __x);
+	_mm_storeu_si128((__m128i *)*__wp, __x);
 }
 
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
+extern inline void __MCFCRT_memset_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
-	_mm_stream_ps((float *)*__wp, __x);
+	_mm_store_si128((__m128i *)*__wp, __x);
 	*__wp += 16;
-	_mm_stream_ps((float *)*__wp, __x);
+	_mm_store_si128((__m128i *)*__wp, __x);
 	*__wp += 16;
 }
 __attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memset_nontemp32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128 __x) _MCFCRT_NOEXCEPT {
+extern inline void __MCFCRT_memset_aligned32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
-	_mm_stream_ps((float *)*__wp, __x);
+	_mm_store_si128((__m128i *)*__wp, __x);
 	*__wp -= 16;
-	_mm_stream_ps((float *)*__wp, __x);
+	_mm_store_si128((__m128i *)*__wp, __x);
+}
+
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memset_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	_mm_stream_si128((__m128i *)*__wp, __x);
+	*__wp += 16;
+	_mm_stream_si128((__m128i *)*__wp, __x);
+	*__wp += 16;
+}
+__attribute__((__gnu_inline__, __always_inline__))
+extern inline void __MCFCRT_memset_nontemp32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, __m128i __x) _MCFCRT_NOEXCEPT {
+	// TODO: Rewrite to make use of AVX in the future.
+	*__wp -= 16;
+	_mm_stream_si128((__m128i *)*__wp, __x);
+	*__wp -= 16;
+	_mm_stream_si128((__m128i *)*__wp, __x);
 }
 
 // Functions that fill blocks no smaller than 64 bytes.
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128 __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the initial, potentially unaligned QQWORD.
 	unsigned char *__wp = __bwp;
@@ -156,7 +156,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_fwd(unsigned ch
 	__wp = __ewp;
 	__MCFCRT_memset_piece32_bwd(&__wp, __x);
 }
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128 __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the final, potentially unaligned QQWORD.
 	unsigned char *__wp = __ewp;
@@ -186,7 +186,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_bwd(unsigned ch
 }
 
 // Functions that fill blocks no smaller than 64 bytes using non-temporal semantics.
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128 __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the initial, potentially unaligned QQWORD.
 	unsigned char *__wp = __bwp;
@@ -216,7 +216,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_fwd(unsigned cha
 	__wp = __ewp;
 	__MCFCRT_memset_piece32_bwd(&__wp, __x);
 }
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128 __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the final, potentially unaligned QQWORD.
 	unsigned char *__wp = __ewp;
@@ -250,7 +250,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_bwd(unsigned cha
 // Dispatchers.
 __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_impl_fwd(unsigned char *__bwp, unsigned char *__ewp, _MCFCRT_STD uint32_t __c) _MCFCRT_NOEXCEPT {
 	unsigned char *__wp = __bwp;
-	__m128 __x = _mm_castsi128_ps(_mm_set1_epi32((int)__c));
+	const __m128i __x = _mm_set1_epi32((int)__c);
 	switch((_MCFCRT_STD size_t)(__ewp - __wp)){
 	          // Deal with empty blocks.
 	case  0:  break;
@@ -413,7 +413,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_impl_fwd(unsigned cha
 }
 __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_impl_bwd(unsigned char *__bwp, unsigned char *__ewp, _MCFCRT_STD uint32_t __c) _MCFCRT_NOEXCEPT {
 	unsigned char *__wp = __ewp;
-	__m128 __x = _mm_castsi128_ps(_mm_set1_epi32((int)__c));
+	const __m128i __x = _mm_set1_epi32((int)__c);
 	switch((_MCFCRT_STD size_t)(__wp - __bwp)){
 	          // Deal with empty blocks.
 	case  0:  break;

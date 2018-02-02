@@ -403,7 +403,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_impl_fwd(unsigned cha
 	          __MCFCRT_memset_piece32_fwd(&__wp, __x);
 	          break;
 	          // Deal with large blocks.
-	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) < 0x100000)){
+	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) <= 0x200000)){
 	            __MCFCRT_memset_large_fwd(__bwp, __ewp, __x);
 	          } else {
 	            __MCFCRT_memset_huge_fwd(__bwp, __ewp, __x);
@@ -566,7 +566,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_impl_bwd(unsigned cha
 	          __MCFCRT_memset_piece32_bwd(&__wp, __x);
 	          break;
 	          // Deal with large blocks.
-	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) < 0x100000)){
+	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) <= 0x200000)){
 	            __MCFCRT_memset_large_bwd(__bwp, __ewp, __x);
 	          } else {
 	            __MCFCRT_memset_huge_bwd(__bwp, __ewp, __x);

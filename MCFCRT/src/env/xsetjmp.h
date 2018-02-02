@@ -9,7 +9,9 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-typedef _MCFCRT_STD uintptr_t _MCFCRT_jmp_buf[5];
+// `__builtin_setjmp()` makes use of the first 5 elements.
+// The additional 3 are reserved for future use.
+typedef _MCFCRT_STD uintptr_t _MCFCRT_jmp_buf[5 + 3];
 
 // See <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59039> for the purpose of this wrapper.
 __attribute__((__noreturn__))

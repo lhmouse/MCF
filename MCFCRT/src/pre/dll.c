@@ -6,7 +6,7 @@
 #include "module.h"
 #include "tls.h"
 #include "../mcfcrt.h"
-#include "../env/_fpu.h"
+#include "../env/cpu.h"
 #include "../env/xassert.h"
 #include "../env/standard_streams.h"
 #include "../env/crt_module.h"
@@ -83,7 +83,7 @@ static unsigned long WrappedDllStartup(void *pOpaque){
 
 __attribute__((__stdcall__))
 BOOL __MCFCRT_DllStartup(HINSTANCE hInstance, DWORD dwReason, LPVOID pReserved){
-	__MCFCRT_FpuInitialize();
+	__MCFCRT_CpuResetFloatingPointEnvironment();
 	DllStartupParams vParams = { hInstance, dwReason, pReserved };
 	const unsigned long dwResult = _MCFCRT_WrapThreadProcWithSehTop(&WrappedDllStartup, &vParams);
 	return dwResult != 0;

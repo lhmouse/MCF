@@ -66,7 +66,7 @@ pkginclude_env_HEADERS = \
 	src/env/expect.h	\
 	src/env/offset_of.h	\
 	src/env/pp.h	\
-	src/env/_fpu.h	\
+	src/env/cpu.h	\
 	src/env/_seh_top.h	\
 	src/env/_nt_timeout.h	\
 	src/env/_mopthread.h	\
@@ -127,7 +127,7 @@ mcfcrt_pre_sources = \
 
 mcfcrt_sources = \
 	src/mcfcrt.c	\
-	src/env/_fpu.c	\
+	src/env/cpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\
 	src/env/_mopthread.c	\

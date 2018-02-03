@@ -6,7 +6,7 @@
 #include "module.h"
 #include "tls.h"
 #include "../mcfcrt.h"
-#include "../env/_fpu.h"
+#include "../env/cpu.h"
 #include "../env/xassert.h"
 #include "../env/standard_streams.h"
 #include "../env/crt_module.h"
@@ -82,7 +82,7 @@ static unsigned long WrappedTlsCallback(void *pOpaque){
 
 __attribute__((__stdcall__))
 void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
-	__MCFCRT_FpuInitialize();
+	__MCFCRT_CpuResetFloatingPointEnvironment();
 	TlsCallbackParams vParams = { hInstance, dwReason, pReserved };
 	_MCFCRT_WrapThreadProcWithSehTop(&WrappedTlsCallback, &vParams);
 }
@@ -119,7 +119,7 @@ static unsigned long WrappedExeStartup(void *pOpaque){
 __attribute__((__noreturn__, __stdcall__))
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
-	__MCFCRT_FpuInitialize();
+	__MCFCRT_CpuResetFloatingPointEnvironment();
 	const unsigned long dwResult = _MCFCRT_WrapThreadProcWithSehTop(&WrappedExeStartup, _MCFCRT_NULLPTR);
 	_MCFCRT_Exit((unsigned)dwResult);
 }

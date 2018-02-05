@@ -11,6 +11,10 @@
 #include "../../env/cpu.h"
 #include <emmintrin.h>
 
+#if defined(__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN) || (defined(__OPTIMIZE__) && !defined(__OPTIMIZE_SIZE__))
+#  define __MCFCRT_MEMCPY_IMPL_EMIT_DEFINITION      1
+#endif
+
 #ifndef __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN
 #  define __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
 #endif
@@ -149,8 +153,19 @@ extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRIC
 	_mm_stream_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
+extern void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+
+extern void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+
+extern void __MCFCRT_memcpy_impl_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memcpy_impl_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT;
+
+#ifdef __MCFCRT_MEMCPY_IMPL_EMIT_DEFINITION
+
 // Functions that copy blocks no smaller than 64 bytes.
-__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Stash potentially unaligned QQWORDs in both ends of the source range.
@@ -190,7 +205,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_fwd(unsigned ch
 	__rp = __stash + 64;
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
-__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Stash potentially unaligned QQWORDs in both ends of the source range.
@@ -232,7 +247,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_large_bwd(unsigned ch
 }
 
 // Functions that copy blocks no smaller than 64 bytes using non-temporal semantics.
-__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Stash potentially unaligned QQWORDs in both ends of the source range.
@@ -274,7 +289,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_fwd(unsigned cha
 	__rp = __stash + 64;
 	__MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 }
-__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp){
+__MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, const unsigned char *__brp, const unsigned char *__erp) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp == __erp - __brp);
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Stash potentially unaligned QQWORDs in both ends of the source range.
@@ -646,6 +661,8 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_bwd(unsigned cha
 	          break;
 	}
 }
+
+#endif // __MCFCRT_MEMCPY_IMPL_EMIT_DEFINITION
 
 #pragma GCC diagnostic pop
 

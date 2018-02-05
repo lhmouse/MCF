@@ -11,6 +11,10 @@
 #include "../../env/cpu.h"
 #include <emmintrin.h>
 
+#if defined(__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN) || (defined(__OPTIMIZE__) && !defined(__OPTIMIZE_SIZE__))
+#  define __MCFCRT_MEMSET_IMPL_EMIT_DEFINITION      1
+#endif
+
 #ifndef __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN
 #  define __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
 #endif
@@ -128,8 +132,19 @@ extern inline void __MCFCRT_memset_nontemp32_bwd(unsigned char **_MCFCRT_RESTRIC
 	_mm_stream_si128((__m128i *)*__wp, __x);
 }
 
+extern void __MCFCRT_memset_large_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memset_large_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT;
+
+extern void __MCFCRT_memset_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memset_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT;
+
+extern void __MCFCRT_memset_impl_fwd(unsigned char *__bwp, unsigned char *__ewp, _MCFCRT_STD uint32_t __c) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_memset_impl_bwd(unsigned char *__bwp, unsigned char *__ewp, _MCFCRT_STD uint32_t __c) _MCFCRT_NOEXCEPT;
+
+#ifdef __MCFCRT_MEMSET_IMPL_EMIT_DEFINITION
+
 // Functions that fill blocks no smaller than 64 bytes.
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the initial, potentially unaligned QQWORD.
 	unsigned char *__wp = __bwp;
@@ -157,7 +172,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_fwd(unsigned ch
 	__wp = __ewp;
 	__MCFCRT_memset_piece32_bwd(&__wp, __x);
 }
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the final, potentially unaligned QQWORD.
 	unsigned char *__wp = __ewp;
@@ -187,7 +202,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_large_bwd(unsigned ch
 }
 
 // Functions that fill blocks no smaller than 64 bytes using non-temporal semantics.
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_fwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the initial, potentially unaligned QQWORD.
 	unsigned char *__wp = __bwp;
@@ -217,7 +232,7 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_fwd(unsigned cha
 	__wp = __ewp;
 	__MCFCRT_memset_piece32_bwd(&__wp, __x);
 }
-__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x){
+__MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_huge_bwd(unsigned char *__bwp, unsigned char *__ewp, __m128i __x) _MCFCRT_NOEXCEPT {
 	_MCFCRT_ASSERT(__ewp - __bwp >= 64);
 	// Fill the final, potentially unaligned QQWORD.
 	unsigned char *__wp = __ewp;
@@ -575,6 +590,8 @@ __MCFCRT_MEMSET_IMPL_INLINE_OR_EXTERN void __MCFCRT_memset_impl_bwd(unsigned cha
 	          break;
 	}
 }
+
+#endif // __MCFCRT_MEMSET_IMPL_EMIT_DEFINITION
 
 #pragma GCC diagnostic pop
 

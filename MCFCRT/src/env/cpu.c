@@ -4,7 +4,9 @@
 
 #include "cpu.h"
 #include "expect.h"
+#include "once_flag.h"
 #include "bail.h"
+#include "xassert.h"
 #include <cpuid.h>
 
 #define RND_NEAREST     (0u)            // 四舍六入五凑双。
@@ -23,8 +25,8 @@
 #define EXCEPT_DM       (1u << 1)       // 非规格化数异常。
 #define EXCEPT_IM       (1u << 0)       // 无效操作异常。
 
-static const uint16_t s_fcw_init   = (RND_NEAREST << 10) | (PRCS_EXTENDED << 8) | ((EXCEPT_PM | EXCEPT_UM | EXCEPT_DM) << 0);
-static const uint32_t s_mxcsr_init = (RND_NEAREST << 13) |                        ((EXCEPT_PM | EXCEPT_UM | EXCEPT_DM) << 7);
+static const uint16_t g_fcw_init   = (RND_NEAREST << 10) | (PRCS_EXTENDED << 8) | ((EXCEPT_PM | EXCEPT_UM | EXCEPT_DM) << 0);
+static const uint32_t g_mxcsr_init = (RND_NEAREST << 13) |                        ((EXCEPT_PM | EXCEPT_UM | EXCEPT_DM) << 7);
 
 void __MCFCRT_CpuResetFloatingPointEnvironment(void){
 	__asm__ volatile (
@@ -32,31 +34,51 @@ void __MCFCRT_CpuResetFloatingPointEnvironment(void){
 		"fldcw %0 \n"
 		"ldmxcsr %1 \n"
 		:
-		: "m"(s_fcw_init), "m"(s_mxcsr_init)
+		: "m"(g_fcw_init), "m"(g_mxcsr_init)
 	);
 }
 
-static volatile size_t s_cache_sizes[4];
+static _MCFCRT_OnceFlag g_once;
+static unsigned g_cache_sizes[_MCFCRT_kCpuCacheLevelMax + 1];
 
-size_t _MCFCRT_CpuGetCacheSize(_MCFCRT_CpuCacheLevel level){
-	if((unsigned)level >= 4){
-		return 0;
+static void FetchCpuInfoOnce(void){
+	const _MCFCRT_OnceResult result = _MCFCRT_WaitForOnceFlagForever(&g_once);
+	if(result == _MCFCRT_kOnceResultFinished){
+		return;
 	}
-	size_t size = __atomic_load_n(s_cache_sizes + level, __ATOMIC_RELAXED);
-	if(_MCFCRT_EXPECT_NOT(size == 0)){
-		// Reference:
-		//   Intel® 64 and IA-32 Architectures Software Developer’s Manual, Volume 2 (2A, 2B & 2C):
-		//     Table 3-17. Information Returned by CPUID Instruction
+	_MCFCRT_ASSERT(result == _MCFCRT_kOnceResultInitial);
+
+	// Reference:
+	//   Intel® 64 and IA-32 Architectures Software Developer’s Manual, Volume 2 (2A, 2B & 2C):
+	//     Table 3-17. Information Returned by CPUID Instruction
+	// Iterate from cache level 1, until there are no more levels.
+	unsigned level = 1;
+	do {
 		unsigned eax, ebx, ecx, edx;
 		if(!__get_cpuid_count(0x04, level, &eax, &ebx, &ecx, &edx)){
 			_MCFCRT_Bail(L"__get_cpuid_count() 失败。");
+		}
+		if((eax & 0x1F) == 0){
+			// No more cache levels. Stop.
+			break;
 		}
 		const unsigned ways = ((ebx >> 22) & 0x3FF) + 1;
 		const unsigned partitions = ((ebx >> 12) & 0x3FF) + 1;
 		const unsigned line_size = (ebx & 0xFFF) + 1;
 		const unsigned sets = ecx + 1;
-		size = (size_t)ways * partitions * line_size * sets;
-		__atomic_store_n(s_cache_sizes + level, size, __ATOMIC_RELAXED);
+		g_cache_sizes[level] = ways * partitions * line_size * sets;
+	} while(++level < _MCFCRT_kCpuCacheLevelMax);
+	// Set up boundary values.
+	g_cache_sizes[_MCFCRT_kCpuCacheLevelMin] = g_cache_sizes[_MCFCRT_kCpuCacheLevel1];
+	g_cache_sizes[_MCFCRT_kCpuCacheLevelMax] = g_cache_sizes[level - 1];
+
+	_MCFCRT_SignalOnceFlagAsFinished(&g_once);
+}
+
+size_t _MCFCRT_CpuGetCacheSize(_MCFCRT_CpuCacheLevel level){
+	if(_MCFCRT_EXPECT_NOT((unsigned)level > _MCFCRT_kCpuCacheLevelMax)){
+		return 0;
 	}
-	return size;
+	FetchCpuInfoOnce();
+	return g_cache_sizes[level];
 }

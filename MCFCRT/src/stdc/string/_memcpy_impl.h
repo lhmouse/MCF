@@ -474,7 +474,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_fwd(unsigned cha
 	          __MCFCRT_memcpy_piece32_fwd(&__wp, &__rp);
 	          break;
 	          // Deal with large blocks.
-	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) <= _MCFCRT_CpuGetCacheSize(_MCFCRT_kCpuCacheL3) / 4)){
+	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) <= _MCFCRT_CpuGetCacheSize(_MCFCRT_kCpuCacheLevelMax) / 4)){
 	            __MCFCRT_memcpy_large_fwd(__bwp, __ewp, __brp, __erp);
 	          } else {
 	            __MCFCRT_memcpy_huge_fwd(__bwp, __ewp, __brp, __erp);
@@ -638,7 +638,7 @@ __MCFCRT_MEMCPY_IMPL_INLINE_OR_EXTERN void __MCFCRT_memcpy_impl_bwd(unsigned cha
 	          __MCFCRT_memcpy_piece32_bwd(&__wp, &__rp);
 	          break;
 	          // Deal with large blocks.
-	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) <= _MCFCRT_CpuGetCacheSize(_MCFCRT_kCpuCacheL3) / 4)){
+	default:  if(_MCFCRT_EXPECT((_MCFCRT_STD size_t)(__ewp - __bwp) <= _MCFCRT_CpuGetCacheSize(_MCFCRT_kCpuCacheLevelMax) / 4)){
 	            __MCFCRT_memcpy_large_bwd(__bwp, __ewp, __brp, __erp);
 	          } else {
 	            __MCFCRT_memcpy_huge_bwd(__bwp, __ewp, __brp, __erp);

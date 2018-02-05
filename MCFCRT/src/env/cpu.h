@@ -12,12 +12,16 @@ _MCFCRT_EXTERN_C_BEGIN
 extern void __MCFCRT_CpuResetFloatingPointEnvironment(void) _MCFCRT_NOEXCEPT;
 
 typedef enum __MCFCRT_tagCpuCacheLevel {
-	_MCFCRT_kCpuCacheL0 = 0,
-	_MCFCRT_kCpuCacheL1 = 1,
-	_MCFCRT_kCpuCacheL2 = 2,
-	_MCFCRT_kCpuCacheL3 = 3,
+	_MCFCRT_kCpuCacheLevelMin = 0,
+	_MCFCRT_kCpuCacheLevel1   = 1,
+	_MCFCRT_kCpuCacheLevel2   = 2,
+	_MCFCRT_kCpuCacheLevel3   = 3,
+	_MCFCRT_kCpuCacheLevelMax = 7,
 } _MCFCRT_CpuCacheLevel;
 
+// For `_MCFCRT_kCpuCacheLevelMin`: Returns the size of the first level of cache.
+// For `_MCFCRT_kCpuCacheLevel{1,2,3,4}` : Returns the size of the specified level of cache.
+// For `_MCFCRT_kCpuCacheLevelMax` : Returns the size of the last level of cache.
 extern _MCFCRT_STD size_t _MCFCRT_CpuGetCacheSize(_MCFCRT_CpuCacheLevel __level) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END

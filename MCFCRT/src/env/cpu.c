@@ -30,7 +30,7 @@ static const uint32_t g_mxcsr_init = (RND_NEAREST << 13) |                      
 
 void __MCFCRT_CpuResetFloatingPointEnvironment(void){
 	__asm__ volatile (
-		"fnclex \n"
+		"fninit \n"
 		"fldcw %0 \n"
 		"ldmxcsr %1 \n"
 		:

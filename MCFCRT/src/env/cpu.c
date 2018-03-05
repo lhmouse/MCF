@@ -55,9 +55,7 @@ static void FetchCpuInfoOnce(void){
 	unsigned level = 1;
 	do {
 		unsigned eax, ebx, ecx, edx;
-		if(!__get_cpuid_count(0x04, level, &eax, &ebx, &ecx, &edx)){
-			_MCFCRT_Bail(L"__get_cpuid_count() 失败。");
-		}
+		__cpuid_count(0x04, level, eax, ebx, ecx, edx);
 		if((eax & 0x1F) == 0){
 			// No more cache levels. Stop.
 			break;

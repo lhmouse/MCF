@@ -5,8 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "../../env/expect.h"
 
-#pragma GCC diagnostic ignored "-Wswitch-unreachable"
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#if __GNUC__ >= 7
+#  pragma GCC diagnostic ignored "-Wswitch-unreachable"
+#  pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 
 #define UINTPTR_BYTES     (sizeof(uintptr_t))
 

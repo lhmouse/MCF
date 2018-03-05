@@ -22,8 +22,10 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-unreachable"
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#if __GNUC__ >= 7
+#  pragma GCC diagnostic ignored "-Wswitch-unreachable"
+#  pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 
 __attribute__((__gnu_inline__, __always_inline__))
 extern inline void __MCFCRT_memcpy_piece01_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {

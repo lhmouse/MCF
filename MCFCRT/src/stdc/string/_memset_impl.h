@@ -22,8 +22,10 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-unreachable"
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#if __GNUC__ >= 7
+#  pragma GCC diagnostic ignored "-Wswitch-unreachable"
+#  pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 #pragma GCC diagnostic ignored "-Wconversion"
 
 __attribute__((__gnu_inline__, __always_inline__))

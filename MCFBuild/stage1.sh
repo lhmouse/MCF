@@ -1,6 +1,6 @@
 #!/bin/bash
 
-_cc="gcc"
+_cc="i686-w64-mingw32-gcc"
 _dest="../_Build/stage1"
 
 if [[ -n "${OPTIMIZE}" ]]; then

@@ -38,36 +38,37 @@ static inline char *Really_atoi_u(_MCFCRT_atoi_result *restrict result_out, uint
 char *_MCFCRT_atoi_d(_MCFCRT_atoi_result *restrict result_out, intptr_t *restrict value_out, const char *restrict buffer){
 	return _MCFCRT_atoi0d(result_out, value_out, buffer, UINT_MAX);
 }
-char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
-	return _MCFCRT_atoi0u(result_out, value_out, buffer, UINT_MAX);
-}
-char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
-	return _MCFCRT_atoi0x(result_out, value_out, buffer, UINT_MAX);
-}
-char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
-	return _MCFCRT_atoi0X(result_out, value_out, buffer, UINT_MAX);
-}
 char *_MCFCRT_atoi0d(_MCFCRT_atoi_result *restrict result_out, intptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
-	const char *begin;
-	uintptr_t abs, mask, bound;
-	if(buffer[0] != '-'){
-		begin = buffer;
-		mask = 0;
-		bound = (uintptr_t)INTPTR_MAX;
-	} else {
-		begin = buffer + 1;
-		mask = (uintptr_t)-1;
-		bound = -(uintptr_t)INTPTR_MIN;
+	const char *begin = buffer;
+	uintptr_t mask = 0;
+	if(*begin == '-'){
+		++begin;
+		mask = ~mask;
+	} else if(*begin == '+'){
+		++begin;
 	}
-	char *end = Really_atoi_u(result_out, &abs, begin, max_digits, bound, "00112233445566778899", 10);
+	uintptr_t abs;
+	char *end = Really_atoi_u(result_out, &abs, begin, max_digits, INTPTR_MAX ^ mask, "00112233445566778899", 10);
 	*value_out = (intptr_t)((abs ^ mask) - mask);
 	return end;
+}
+
+char *_MCFCRT_atoi_u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
+	return _MCFCRT_atoi0u(result_out, value_out, buffer, UINT_MAX);
 }
 char *_MCFCRT_atoi0u(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899", 10);
 }
+
+char *_MCFCRT_atoi_x(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
+	return _MCFCRT_atoi0x(result_out, value_out, buffer, UINT_MAX);
+}
 char *_MCFCRT_atoi0x(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);
+}
+
+char *_MCFCRT_atoi_X(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer){
+	return _MCFCRT_atoi0X(result_out, value_out, buffer, UINT_MAX);
 }
 char *_MCFCRT_atoi0X(_MCFCRT_atoi_result *restrict result_out, uintptr_t *restrict value_out, const char *restrict buffer, unsigned max_digits){
 	return Really_atoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, "00112233445566778899aAbBcCdDeEfF", 16);

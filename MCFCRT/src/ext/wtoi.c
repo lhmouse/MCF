@@ -38,36 +38,37 @@ static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, u
 wchar_t *_MCFCRT_wtoi_d(_MCFCRT_wtoi_result *restrict result_out, intptr_t *restrict value_out, const wchar_t *restrict buffer){
 	return _MCFCRT_wtoi0d(result_out, value_out, buffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
-	return _MCFCRT_wtoi0u(result_out, value_out, buffer, UINT_MAX);
-}
-wchar_t *_MCFCRT_wtoi_x(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
-	return _MCFCRT_wtoi0x(result_out, value_out, buffer, UINT_MAX);
-}
-wchar_t *_MCFCRT_wtoi_X(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
-	return _MCFCRT_wtoi0X(result_out, value_out, buffer, UINT_MAX);
-}
 wchar_t *_MCFCRT_wtoi0d(_MCFCRT_wtoi_result *restrict result_out, intptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
-	const wchar_t *begin;
-	uintptr_t abs, mask, bound;
-	if(buffer[0] != L'-'){
-		begin = buffer;
-		mask = 0;
-		bound = (uintptr_t)INTPTR_MAX;
-	} else {
-		begin = buffer + 1;
-		mask = (uintptr_t)-1;
-		bound = -(uintptr_t)INTPTR_MIN;
+	const wchar_t *begin = buffer;
+	uintptr_t mask = 0;
+	if(*begin == L'-'){
+		++begin;
+		mask = ~mask;
+	} else if(*begin == L'+'){
+		++begin;
 	}
-	wchar_t *end = Really_wtoi_u(result_out, &abs, begin, max_digits, bound, L"00112233445566778899", 10);
+	uintptr_t abs;
+	wchar_t *end = Really_wtoi_u(result_out, &abs, begin, max_digits, INTPTR_MAX ^ mask, L"00112233445566778899", 10);
 	*value_out = (intptr_t)((abs ^ mask) - mask);
 	return end;
+}
+
+wchar_t *_MCFCRT_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
+	return _MCFCRT_wtoi0u(result_out, value_out, buffer, UINT_MAX);
 }
 wchar_t *_MCFCRT_wtoi0u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	return Really_wtoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, L"00112233445566778899", 10);
 }
+
+wchar_t *_MCFCRT_wtoi_x(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
+	return _MCFCRT_wtoi0x(result_out, value_out, buffer, UINT_MAX);
+}
 wchar_t *_MCFCRT_wtoi0x(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	return Really_wtoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, L"00112233445566778899aAbBcCdDeEfF", 16);
+}
+
+wchar_t *_MCFCRT_wtoi_X(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer){
+	return _MCFCRT_wtoi0X(result_out, value_out, buffer, UINT_MAX);
 }
 wchar_t *_MCFCRT_wtoi0X(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits){
 	return Really_wtoi_u(result_out, value_out, buffer, max_digits, UINTPTR_MAX, L"00112233445566778899aAbBcCdDeEfF", 16);

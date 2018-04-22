@@ -33,33 +33,47 @@ static inline char *Really_itoa_u(char *restrict buffer, uintptr_t value, unsign
 char *_MCFCRT_itoa_d(char *buffer, intptr_t value){
 	return _MCFCRT_itoa0d(buffer, value, 0);
 }
+char *_MCFCRT_itoa0d(char *buffer, intptr_t value, unsigned min_digits){
+	char *begin = buffer;
+	uintptr_t mask = 0;
+	if(value < 0){
+		*(begin++) = '-';
+		mask = ~mask;
+	}
+	return Really_itoa_u(begin, ((uintptr_t)value ^ mask) - mask, min_digits, "0123456789", 10);
+}
+
+char *_MCFCRT_itoaS_d(char *buffer, intptr_t value){
+	return _MCFCRT_itoaS0d(buffer, value, 0);
+}
+char *_MCFCRT_itoaS0d(char *buffer, intptr_t value, unsigned min_digits){
+	char *begin = buffer;
+	uintptr_t mask = 0;
+	if(value < 0){
+		*(begin++) = '-';
+		mask = ~mask;
+	} else {
+		*(begin++) = '+';
+	}
+	return Really_itoa_u(begin, ((uintptr_t)value ^ mask) - mask, min_digits, "0123456789", 10);
+}
+
 char *_MCFCRT_itoa_u(char *buffer, uintptr_t value){
 	return _MCFCRT_itoa0u(buffer, value, 0);
-}
-char *_MCFCRT_itoa_x(char *buffer, uintptr_t value){
-	return _MCFCRT_itoa0x(buffer, value, 0);
-}
-char *_MCFCRT_itoa_X(char *buffer, uintptr_t value){
-	return _MCFCRT_itoa0X(buffer, value, 0);
-}
-char *_MCFCRT_itoa0d(char *buffer, intptr_t value, unsigned min_digits){
-	char *begin;
-	uintptr_t abs;
-	if(value >= 0){
-		begin = buffer;
-		abs = (uintptr_t)value;
-	} else {
-		buffer[0] = L'-';
-		begin = buffer + 1;
-		abs = -(uintptr_t)value;
-	}
-	return Really_itoa_u(begin, abs, min_digits, "0123456789", 10);
 }
 char *_MCFCRT_itoa0u(char *buffer, uintptr_t value, unsigned min_digits){
 	return Really_itoa_u(buffer, value, min_digits, "0123456789", 10);
 }
+
+char *_MCFCRT_itoa_x(char *buffer, uintptr_t value){
+	return _MCFCRT_itoa0x(buffer, value, 0);
+}
 char *_MCFCRT_itoa0x(char *buffer, uintptr_t value, unsigned min_digits){
 	return Really_itoa_u(buffer, value, min_digits, "0123456789abcdef", 16);
+}
+
+char *_MCFCRT_itoa_X(char *buffer, uintptr_t value){
+	return _MCFCRT_itoa0X(buffer, value, 0);
 }
 char *_MCFCRT_itoa0X(char *buffer, uintptr_t value, unsigned min_digits){
 	return Really_itoa_u(buffer, value, min_digits, "0123456789ABCDEF", 16);

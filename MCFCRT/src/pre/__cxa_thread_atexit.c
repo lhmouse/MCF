@@ -6,5 +6,5 @@
 
 int __cxa_thread_atexit(void (*func)(void *), void *param, void *dso_handle){
 	(void)dso_handle;
-	return _MCFCRT_AtThreadExit((_MCFCRT_AtThreadExitCallback)func, (intptr_t)param) ? 0 : -1;
+	return _MCFCRT_AtThreadExit((_MCFCRT_AtThreadExitCallback)(intptr_t)func, (intptr_t)param) ? 0 : -1;
 }

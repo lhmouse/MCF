@@ -6,5 +6,5 @@
 
 int __cxa_atexit(void (*func)(void *), void *param, void *dso_handle){
 	(void)dso_handle;
-	return _MCFCRT_AtModuleExit((_MCFCRT_AtModuleExitCallback)func, (intptr_t)param) ? 0 : -1;
+	return _MCFCRT_AtModuleExit((_MCFCRT_AtModuleExitCallback)(intptr_t)func, (intptr_t)param) ? 0 : -1;
 }

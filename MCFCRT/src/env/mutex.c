@@ -23,12 +23,23 @@ __attribute__((__dllimport__, __stdcall__, __const__)) extern BOOLEAN RtlDllShut
 #  define BSFB(v_)              ((uintptr_t)(v_)            )
 #else
 #  define BSUSR(v_)             ((uintptr_t)(v_)                                        )
-#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)) #endif
+#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
+#endif
 
-#define MASK_LOCKED             ((uintptr_t)( BSFB(0x01))) #define MASK_THREADS_SPINNING   ((uintptr_t)( BSFB(0x0E))) #define MASK_SPIN_FAILURE_COUNT ((uintptr_t)( BSFB(0xF0))) #define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSFB(0xFF))) 
-#define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING)) #define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE)) 
-#define SPIN_FAILURE_COUNT_ONE  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT & -MASK_SPIN_FAILURE_COUNT)) #define SPIN_FAILURE_COUNT_MAX  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT / SPIN_FAILURE_COUNT_ONE)) 
-#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED)) #define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE)) 
+#define MASK_LOCKED             ((uintptr_t)( BSFB(0x01)))
+#define MASK_THREADS_SPINNING   ((uintptr_t)( BSFB(0x0E)))
+#define MASK_SPIN_FAILURE_COUNT ((uintptr_t)( BSFB(0xF0)))
+#define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSFB(0xFF)))
+
+#define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
+#define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE))
+
+#define SPIN_FAILURE_COUNT_ONE  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT & -MASK_SPIN_FAILURE_COUNT))
+#define SPIN_FAILURE_COUNT_MAX  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT / SPIN_FAILURE_COUNT_ONE))
+
+#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
+#define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
+
 #define MIN_SPIN_COUNT          ((uintptr_t)16)
 #define MAX_SPIN_MULTIPLIER     ((uintptr_t)32)
 

@@ -15,7 +15,6 @@ void _MCFCRT_SetLastError(unsigned long ulErrorCode){
 }
 
 __attribute__((__dllimport__, __stdcall__)) extern NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLanguageId, DWORD dwMessageId, MESSAGE_RESOURCE_ENTRY **ppEntry);
-
 __attribute__((__dllimport__, __stdcall__)) extern void * RtlPcToFileHeader(void *pAddress, void **ppBase);
 
 static inline bool IsLineBreak(wchar_t wcChar){
@@ -39,9 +38,9 @@ bool _MCFCRT_GetErrorDescription(const wchar_t **restrict ppwszText, size_t *res
 		*puLength = sizeof(kUnicodeUnavailable) / sizeof(wchar_t) - 1;
 		return false;
 	}
-	const wchar_t *const pwcBegin = (const wchar_t *)pEntry->Text;
+	const wchar_t *const pwcBegin = (const void *)pEntry->Text;
 	// Strip trailing line break characters.
-	const wchar_t *pwcLineEnd = (const wchar_t *)((const unsigned char *)pEntry + pEntry->Length);
+	const wchar_t *pwcLineEnd = (const void *)((const unsigned char *)pEntry + pEntry->Length);
 	while((pwcBegin < pwcLineEnd) && IsLineBreak(pwcLineEnd[-1])){
 		--pwcLineEnd;
 	}

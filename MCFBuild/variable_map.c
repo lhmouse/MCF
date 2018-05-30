@@ -40,7 +40,7 @@ typedef struct tagElement {
 	alignas(uintptr_t) wchar_t awcString[];
 } Element;
 
-const MCFBUILD_VariableMap *MCFBUILD_VariableMapGetEmpty(void){
+const MCFBUILD_VariableMap * MCFBUILD_VariableMapGetEmpty(void){
 	static const MCFBUILD_VariableMap s_vMap;
 	return &s_vMap;
 }

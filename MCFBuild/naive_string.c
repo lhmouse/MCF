@@ -7,7 +7,7 @@
 #include "endian.h"
 #include "sha256.h"
 
-const MCFBUILD_NaiveString *MCFBUILD_NaiveStringGetEmpty(void){
+const MCFBUILD_NaiveString * MCFBUILD_NaiveStringGetEmpty(void){
 	static const MCFBUILD_NaiveString s_vString;
 	return &s_vString;
 }
@@ -32,7 +32,7 @@ void MCFBUILD_NaiveStringMove(MCFBUILD_NaiveString *restrict pString, MCFBUILD_N
 #endif
 }
 
-const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString){
+const wchar_t * MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString){
 	// If the string is empty, return a pointer to something allocated statically.
 	if(pString->uSize == 0){
 		return L"";
@@ -45,7 +45,7 @@ const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString 
 	}
 	return (wchar_t *)pbyStorage;
 }
-wchar_t *MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString){
+wchar_t * MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString){
 	unsigned char *pbyStorage = pString->pbyStorage;
 	return (wchar_t *)pbyStorage;
 }

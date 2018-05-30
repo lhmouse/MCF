@@ -23,7 +23,7 @@ typedef struct MCFBUILD_tagVariableMapEnumerationCookie {
 	MCFBUILD_STD size_t uOffsetNext;
 } MCFBUILD_VariableMapEnumerationCookie;
 
-extern const MCFBUILD_VariableMap *MCFBUILD_VariableMapGetEmpty(void) MCFBUILD_NOEXCEPT;
+extern const MCFBUILD_VariableMap * MCFBUILD_VariableMapGetEmpty(void) MCFBUILD_NOEXCEPT;
 
 // This function constructs an empty `MCFBUILD_VariableMap`.
 extern void MCFBUILD_VariableMapConstruct(MCFBUILD_VariableMap *pMap) MCFBUILD_NOEXCEPT;

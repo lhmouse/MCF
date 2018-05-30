@@ -13,7 +13,7 @@ typedef struct tagElement {
 	alignas(uintptr_t) wchar_t awszString[];
 } Element;
 
-const MCFBUILD_StringStack *MCFBUILD_StringStackGetEmpty(void){
+const MCFBUILD_StringStack * MCFBUILD_StringStackGetEmpty(void){
 	static const MCFBUILD_StringStack s_vStack;
 	return &s_vStack;
 }

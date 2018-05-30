@@ -516,7 +516,7 @@ typedef struct tagStringVectorHeader {
 	MCFBUILD_NaiveString aStrings[];
 } StringVectorHeader;
 
-static StringVectorHeader *CreateStringVector(size_t uStringCount){
+static StringVectorHeader * CreateStringVector(size_t uStringCount){
 	size_t uSizeToAlloc;
 	if(__builtin_mul_overflow(uStringCount, sizeof(MCFBUILD_NaiveString), &uSizeToAlloc)){
 		return 0;

@@ -17,7 +17,7 @@ typedef struct MCFBUILD_tagNaiveString {
 	MCFBUILD_STD size_t uSize;
 } MCFBUILD_NaiveString;
 
-extern const MCFBUILD_NaiveString *MCFBUILD_NaiveStringGetEmpty(void) MCFBUILD_NOEXCEPT;
+extern const MCFBUILD_NaiveString * MCFBUILD_NaiveStringGetEmpty(void) MCFBUILD_NOEXCEPT;
 
 extern void MCFBUILD_NaiveStringConstruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern void MCFBUILD_NaiveStringDestruct(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
@@ -25,10 +25,10 @@ extern void MCFBUILD_NaiveStringMove(MCFBUILD_NaiveString *MCFBUILD_RESTRICT pSt
 
 // This function returns a pointer to a null-terminated, immutable string.
 // This function will never return a null pointer.
-extern const wchar_t *MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
+extern const wchar_t * MCFBUILD_NaiveStringGetNullTerminated(const MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 // This function returns a pointer to a potentially unterminated, mutable string.
 // This function may return a null pointer if `*pString` is empty.
-extern wchar_t *MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
+extern wchar_t * MCFBUILD_NaiveStringGetData(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 extern MCFBUILD_STD size_t MCFBUILD_NaiveStringGetLength(MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;
 
 extern bool MCFBUILD_NaiveStringIsEmpty(const MCFBUILD_NaiveString *pString) MCFBUILD_NOEXCEPT;

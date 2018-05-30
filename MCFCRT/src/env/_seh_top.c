@@ -4,8 +4,7 @@
 
 #include "_seh_top.h"
 
-__MCFCRT_C_CDECL
-EXCEPTION_DISPOSITION __MCFCRT_SehTopDispatcher(EXCEPTION_RECORD *pRecord, void *pEstablisherFrame, CONTEXT *pContext, void *pDispatcherContext){
+__MCFCRT_C_CDECL EXCEPTION_DISPOSITION __MCFCRT_SehTopDispatcher(EXCEPTION_RECORD *pRecord, void *pEstablisherFrame, CONTEXT *pContext, void *pDispatcherContext){
 	(void)pEstablisherFrame;
 	(void)pContext;
 	(void)pDispatcherContext;

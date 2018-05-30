@@ -10,8 +10,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-__MCFCRT_C_CDECL
-extern EXCEPTION_DISPOSITION __MCFCRT_SehTopDispatcher(EXCEPTION_RECORD *__pRecord, void *__pEstablisherFrame, CONTEXT *__pContext, void *__pDispatcherContext) _MCFCRT_NOEXCEPT;
+__MCFCRT_C_CDECL extern EXCEPTION_DISPOSITION __MCFCRT_SehTopDispatcher(EXCEPTION_RECORD *__pRecord, void *__pEstablisherFrame, CONTEXT *__pContext, void *__pDispatcherContext) _MCFCRT_NOEXCEPT;
 
 __attribute__((__unused__, __always_inline__, __artificial__)) static inline void __MCFCRT_SehTopInstaller_x86(void *__pSehNode) _MCFCRT_NOEXCEPT {
 	void *__pUnused;

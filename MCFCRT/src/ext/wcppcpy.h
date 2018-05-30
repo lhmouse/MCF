@@ -9,7 +9,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern wchar_t *_MCFCRT_wcppcpy(wchar_t *__s1, wchar_t *__es1, const wchar_t *_MCFCRT_RESTRICT __s2) _MCFCRT_NOEXCEPT;
+extern wchar_t * _MCFCRT_wcppcpy(wchar_t *__s1, wchar_t *__es1, const wchar_t *_MCFCRT_RESTRICT __s2) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

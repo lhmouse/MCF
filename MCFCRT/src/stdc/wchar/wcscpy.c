@@ -7,7 +7,7 @@
 
 #undef wcscpy
 
-wchar_t *wcscpy(wchar_t *restrict s1, const wchar_t *restrict s2){
+wchar_t * wcscpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	_MCFCRT_wcpcpy(s1, s2);
 	return s1;
 }

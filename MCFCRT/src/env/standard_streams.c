@@ -10,7 +10,7 @@
 static_assert(sizeof (wchar_t) == sizeof (char16_t), "What?");
 static_assert(alignof(wchar_t) == alignof(char16_t), "What?");
 
-static inline void *VirtualAllocHelper(size_t uSize){
+static inline void * VirtualAllocHelper(size_t uSize){
 	return VirtualAlloc(_MCFCRT_NULLPTR, uSize, MEM_COMMIT, PAGE_READWRITE);
 }
 static inline void VirtualFreeHelper(void *pAddress){

@@ -24,7 +24,7 @@ extern bool __MCFCRT_MopthreadDetach(_MCFCRT_STD uintptr_t __uTid) _MCFCRT_NOEXC
 
 // Returns a pointer to a HANDLE, which is a pseudo handle if __uTid refers the calling thread, or NULL on failure.
 // The returned pointer must be unlocked.
-extern const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(_MCFCRT_STD uintptr_t __uTid) _MCFCRT_NOEXCEPT;
+extern const _MCFCRT_ThreadHandle * __MCFCRT_MopthreadLockHandle(_MCFCRT_STD uintptr_t __uTid) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_MopthreadUnlockHandle(const _MCFCRT_ThreadHandle *__phThread) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END

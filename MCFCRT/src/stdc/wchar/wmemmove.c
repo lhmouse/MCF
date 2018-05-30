@@ -6,8 +6,8 @@
 
 #undef wmemmove
 
-extern void *memmove(void *s1, const void *s2, size_t n);
+extern void * memmove(void *s1, const void *s2, size_t n);
 
-wchar_t *wmemmove(wchar_t *s1, const wchar_t *s2, size_t n){
+wchar_t * wmemmove(wchar_t *s1, const wchar_t *s2, size_t n){
 	return memmove(s1, s2, n * sizeof(wchar_t));
 }

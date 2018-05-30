@@ -10,7 +10,7 @@
 extern void __MCFCRT_memcpy_impl_bwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp);
 extern void __MCFCRT_memcpy_impl_fwd(unsigned char *bwp, unsigned char *ewp, const unsigned char *brp, const unsigned char *erp);
 
-void *memmove(void *s1, const void *s2, size_t n){
+void * memmove(void *s1, const void *s2, size_t n){
 	unsigned char *wp = s1;
 	const unsigned char *rp = s2;
 	size_t pred = (uintptr_t)wp - (uintptr_t)rp;

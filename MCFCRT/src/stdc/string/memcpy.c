@@ -7,7 +7,7 @@
 
 #undef memcpy
 
-void *memcpy(void *restrict s1, const void *restrict s2, size_t n){
+void * memcpy(void *restrict s1, const void *restrict s2, size_t n){
 	unsigned char *wp = s1;
 	const unsigned char *rp = s2;
 #ifndef NDEBUG

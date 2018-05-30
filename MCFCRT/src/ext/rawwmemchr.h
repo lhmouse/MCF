@@ -9,7 +9,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern wchar_t *_MCFCRT_rawwmemchr(const wchar_t *__s, wchar_t __c) _MCFCRT_NOEXCEPT;
+extern wchar_t * _MCFCRT_rawwmemchr(const wchar_t *__s, wchar_t __c) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

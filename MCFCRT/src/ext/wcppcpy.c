@@ -8,7 +8,7 @@
 #include "../stdc/string/_sse2.h"
 #include "rep_movs.h"
 
-wchar_t *_MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
+wchar_t * _MCFCRT_wcppcpy(wchar_t *s1, wchar_t *es1, const wchar_t *restrict s2){
 	_MCFCRT_ASSERT(s1 < es1);
 	const size_t n = (size_t)(es1 - 1 - s1);
 

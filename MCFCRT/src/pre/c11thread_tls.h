@@ -46,7 +46,7 @@ __MCFCRT_C11THREAD_TLS_INLINE_OR_EXTERN void __MCFCRT_tss_delete(tss_t __key) _M
 	_MCFCRT_TlsFreeKey(__key);
 }
 
-__MCFCRT_C11THREAD_TLS_INLINE_OR_EXTERN void *__MCFCRT_tss_get(tss_t __key) _MCFCRT_NOEXCEPT {
+__MCFCRT_C11THREAD_TLS_INLINE_OR_EXTERN void * __MCFCRT_tss_get(tss_t __key) _MCFCRT_NOEXCEPT {
 	void *__storage;
 	const bool __success = _MCFCRT_TlsGet(__key, &__storage);
 	if(!__success){

@@ -16,7 +16,7 @@ void _MCFCRT_SetLastError(unsigned long ulErrorCode){
 
 __attribute__((__dllimport__, __stdcall__)) extern NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLanguageId, DWORD dwMessageId, MESSAGE_RESOURCE_ENTRY **ppEntry);
 
-__attribute__((__dllimport__, __stdcall__)) extern void *RtlPcToFileHeader(void *pAddress, void **ppBase);
+__attribute__((__dllimport__, __stdcall__)) extern void * RtlPcToFileHeader(void *pAddress, void **ppBase);
 
 static inline bool IsLineBreak(wchar_t wcChar){
 	return (wcChar == 0) || (wcChar == L'\n') || (wcChar == L'\r');

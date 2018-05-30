@@ -9,7 +9,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern void *_MCFCRT_rawmemchr(const void *__s, int __c) _MCFCRT_NOEXCEPT;
+extern void * _MCFCRT_rawmemchr(const void *__s, int __c) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

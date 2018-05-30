@@ -8,7 +8,7 @@
 
 #undef wmemchr
 
-wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
+wchar_t * wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。

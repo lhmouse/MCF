@@ -324,7 +324,7 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 	return bSuccess;
 }
 
-const _MCFCRT_ThreadHandle *__MCFCRT_MopthreadLockHandle(uintptr_t uTid){
+const _MCFCRT_ThreadHandle * __MCFCRT_MopthreadLockHandle(uintptr_t uTid){
 	if(_MCFCRT_EXPECT_NOT(uTid == 0)){
 		return _MCFCRT_NULLPTR;
 	}

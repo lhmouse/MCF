@@ -24,17 +24,17 @@ typedef struct __MCFCRT_tagAvlNodeHeader {
 	struct __MCFCRT_tagAvlNodeHeader *__pNext;
 } _MCFCRT_AvlNodeHeader, *_MCFCRT_AvlRoot;
 
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlPrev(const _MCFCRT_AvlNodeHeader *__pNode) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlPrev(const _MCFCRT_AvlNodeHeader *__pNode) _MCFCRT_NOEXCEPT {
 	return __pNode->__pPrev;
 }
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlNext(const _MCFCRT_AvlNodeHeader *__pNode) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlNext(const _MCFCRT_AvlNodeHeader *__pNode) _MCFCRT_NOEXCEPT {
 	return __pNode->__pNext;
 }
 
 extern void _MCFCRT_AvlInternalAttach(_MCFCRT_AvlNodeHeader *__pNode, _MCFCRT_AvlNodeHeader *__pParent, _MCFCRT_AvlNodeHeader **__ppRefl) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_AvlInternalDetach(const _MCFCRT_AvlNodeHeader *__pNode) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlFront(const _MCFCRT_AvlRoot *__ppRoot) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlFront(const _MCFCRT_AvlRoot *__ppRoot) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
@@ -43,7 +43,7 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlFront(const
 	}
 	return (_MCFCRT_AvlNodeHeader *)__pRet;
 }
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlBack(const _MCFCRT_AvlRoot *__ppRoot) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlBack(const _MCFCRT_AvlRoot *__ppRoot) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
@@ -150,7 +150,7 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN void _MCFCRT_AvlDetach(const _MCFCRT_AvlNodeH
 	_MCFCRT_AvlInternalDetach(__pNode);
 }
 
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetLowerBound(const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlGetLowerBound(const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
@@ -164,7 +164,7 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetLowerBou
 	}
 	return (_MCFCRT_AvlNodeHeader *)__pRet;
 }
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetUpperBound(const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlGetUpperBound(const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){
@@ -178,7 +178,7 @@ __MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlGetUpperBou
 	}
 	return (_MCFCRT_AvlNodeHeader *)__pRet;
 }
-__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader *_MCFCRT_AvlFind(const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT {
+__MCFCRT_AVL_TREE_INLINE_OR_EXTERN _MCFCRT_AvlNodeHeader * _MCFCRT_AvlFind(const _MCFCRT_AvlRoot *__ppRoot, _MCFCRT_STD intptr_t __nOther, _MCFCRT_AvlComparatorNodeOther __pfnComparatorNodeOther) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_AvlNodeHeader *__pRet = _MCFCRT_NULLPTR;
 	const _MCFCRT_AvlNodeHeader *__pCur = *__ppRoot;
 	while(__pCur){

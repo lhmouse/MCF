@@ -14,10 +14,10 @@
 #  define __MCFCRT_HEAP_DEBUG     1
 #endif
 
-static inline void *Underlying_malloc_zf(size_t size, bool zero_fill){
+static inline void * Underlying_malloc_zf(size_t size, bool zero_fill){
 	return LocalAlloc(zero_fill ? LPTR : LMEM_FIXED, size);
 }
-static inline void *Underlying_realloc_zf(void *ptr, size_t size, bool zero_fill){
+static inline void * Underlying_realloc_zf(void *ptr, size_t size, bool zero_fill){
 	return LocalReAlloc(ptr, size, zero_fill ? LPTR : LMEM_FIXED);
 }
 static inline void Underlying_free(void *ptr){
@@ -32,7 +32,7 @@ static inline void InvokeHeapCallback(void *pBlockNew, size_t uSizeNew, void *pB
 	(*pfnCallback)(pBlockNew, uSizeNew, pBlockOld, pRetAddrOuter, pRetAddrInner);
 }
 
-void *__MCFCRT_HeapAlloc(size_t uSizeNew, bool bFillsWithZero, const void *pRetAddrOuter){
+void * __MCFCRT_HeapAlloc(size_t uSizeNew, bool bFillsWithZero, const void *pRetAddrOuter){
 	size_t uSizeToAlloc;
 	void *pStorageNew, *pBlockNew;
 
@@ -64,7 +64,7 @@ void *__MCFCRT_HeapAlloc(size_t uSizeNew, bool bFillsWithZero, const void *pRetA
 	InvokeHeapCallback(pBlockNew, uSizeNew, _MCFCRT_NULLPTR, pRetAddrOuter, __builtin_return_address(0));
 	return pBlockNew;
 }
-void *__MCFCRT_HeapRealloc(void *pBlockOld, size_t uSizeNew, bool bFillsWithZero, const void *pRetAddrOuter){
+void * __MCFCRT_HeapRealloc(void *pBlockOld, size_t uSizeNew, bool bFillsWithZero, const void *pRetAddrOuter){
 	size_t uSizeOld, uSizeToAlloc;
 	void *pStorageOld, *pStorageNew, *pBlockNew;
 

@@ -6,7 +6,7 @@
 #include "../env/expect.h"
 #include "../stdc/string/_sse2.h"
 
-wchar_t *_MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
+wchar_t * _MCFCRT_rawwmemchr(const wchar_t *s, wchar_t c){
 	// 如果 arp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。

@@ -24,7 +24,7 @@ extern bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback __pfnProc, _MCFCRT
 extern const char __MCFCRT_ImageBase[]
 	__asm__("__image_base__");
 
-__MCFCRT_MODULE_INLINE_OR_EXTERN void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT {
+__MCFCRT_MODULE_INLINE_OR_EXTERN void * _MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT {
 	return (void *)__MCFCRT_ImageBase;
 }
 

@@ -7,7 +7,6 @@
 
 #undef realloc
 
-__attribute__((__noinline__))
-void *realloc(void *p, size_t cb){
+__attribute__((__noinline__)) void *realloc(void *p, size_t cb){
 	return _MCFCRT_realloc(p, cb);
 }

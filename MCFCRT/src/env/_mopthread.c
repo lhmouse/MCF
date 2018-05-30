@@ -19,8 +19,7 @@
 #undef GetCurrentThread
 #define GetCurrentThread()   ((HANDLE)-2)
 
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtDuplicateObject(HANDLE hSourceProcess, HANDLE hSource, HANDLE hTargetProcess, HANDLE *pTarget, ACCESS_MASK dwDesiredAccess, ULONG dwAttributes, DWORD dwOptions);
+__attribute__((__dllimport__, __stdcall__)) extern NTSTATUS NtDuplicateObject(HANDLE hSourceProcess, HANDLE hSource, HANDLE hTargetProcess, HANDLE *pTarget, ACCESS_MASK dwDesiredAccess, ULONG dwAttributes, DWORD dwOptions);
 
 static const _MCFCRT_ThreadHandle g_hPseudoSelfHandle = (_MCFCRT_ThreadHandle)GetCurrentThread();
 
@@ -138,8 +137,7 @@ static void DetachInitialThread(void){
 	}
 }
 
-__attribute__((__noreturn__))
-static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, MopthreadControl *restrict pControl, void (*pfnModifier)(void *, size_t, intptr_t), intptr_t nContext){
+__attribute__((__noreturn__)) static inline void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, MopthreadControl *restrict pControl, void (*pfnModifier)(void *, size_t, intptr_t), intptr_t nContext){
 	switch(pControl->eState){
 	case kStateJoinable:
 		if(pfnModifier){
@@ -185,8 +183,7 @@ static unsigned long MopthreadProc(void *pParam){
 	(*(pControl->pfnProc))(pControl->abyParams);
 	return 0;
 }
-__attribute__((__noreturn__, __stdcall__))
-static unsigned long NativeMopthreadProc(void *pParam){
+__attribute__((__noreturn__, __stdcall__)) static unsigned long NativeMopthreadProc(void *pParam){
 	MopthreadControl *const restrict pControl = pParam;
 	_MCFCRT_DEBUG_CHECK(pControl);
 	_MCFCRT_WrapThreadProcWithSehTop(&MopthreadProc, pControl);
@@ -245,8 +242,7 @@ uintptr_t __MCFCRT_MopthreadCreate(void (*pfnProc)(void *), const void *pParams,
 uintptr_t __MCFCRT_MopthreadCreateDetached(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams){
 	return ReallyCreateMopthread(pfnProc, pParams, uSizeOfParams, false);
 }
-__attribute__((__noreturn__))
-void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, size_t, intptr_t), intptr_t nContext){
+__attribute__((__noreturn__)) void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, size_t, intptr_t), intptr_t nContext){
 	const uintptr_t uTid = _MCFCRT_GetCurrentThreadId();
 
 	_MCFCRT_WaitForMutexForever(&g_mtxControl, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);

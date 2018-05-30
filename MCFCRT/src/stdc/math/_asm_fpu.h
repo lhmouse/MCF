@@ -329,8 +329,7 @@ static inline long double __MCFCRT_fyl2xp1(long double __y, long double __x) _MC
 	return __ret;
 }
 
-__attribute__((__const__))
-static inline long double __MCFCRT_fldz(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fldz(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fldz \n"
@@ -338,8 +337,7 @@ static inline long double __MCFCRT_fldz(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-__attribute__((__const__))
-static inline long double __MCFCRT_fld1(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fld1(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fld1 \n"
@@ -347,8 +345,7 @@ static inline long double __MCFCRT_fld1(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-__attribute__((__const__))
-static inline long double __MCFCRT_fldl2e(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fldl2e(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fldl2e \n"
@@ -356,8 +353,7 @@ static inline long double __MCFCRT_fldl2e(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-__attribute__((__const__))
-static inline long double __MCFCRT_fldl2t(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fldl2t(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fldl2t \n"
@@ -365,8 +361,7 @@ static inline long double __MCFCRT_fldl2t(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-__attribute__((__const__))
-static inline long double __MCFCRT_fldlg2(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fldlg2(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fldlg2 \n"
@@ -374,8 +369,7 @@ static inline long double __MCFCRT_fldlg2(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-__attribute__((__const__))
-static inline long double __MCFCRT_fldln2(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fldln2(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fldln2 \n"
@@ -383,8 +377,7 @@ static inline long double __MCFCRT_fldln2(void) _MCFCRT_NOEXCEPT {
 	);
 	return __ret;
 }
-__attribute__((__const__))
-static inline long double __MCFCRT_fldpi(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) static inline long double __MCFCRT_fldpi(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__ (
 		"fldpi \n"

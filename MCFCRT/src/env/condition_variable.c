@@ -9,13 +9,10 @@
 #include "expect.h"
 #include <ntdef.h>
 
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__)) extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__)) extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-__attribute__((__dllimport__, __stdcall__, __const__))
-extern BOOLEAN RtlDllShutdownInProgress(void);
+__attribute__((__dllimport__, __stdcall__, __const__)) extern BOOLEAN RtlDllShutdownInProgress(void);
 
 #ifndef __BYTE_ORDER__
 #  error Byte order is unknown.
@@ -26,26 +23,13 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 #  define BSFB(v_)              ((uintptr_t)(v_)            )
 #else
 #  define BSUSR(v_)             ((uintptr_t)(v_)                                        )
-#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
-#endif
+#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)) #endif
 
-#define MASK_THREADS_RELEASED   ((uintptr_t)( BSFB(0x03)))
-#define MASK_THREADS_SPINNING   ((uintptr_t)( BSFB(0x0C)))
-#define MASK_SPIN_FAILURE_COUNT ((uintptr_t)( BSFB(0xF0)))
-#define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSFB(0xFF)))
-
-#define THREADS_RELEASED_ONE    ((uintptr_t)(MASK_THREADS_RELEASED & -MASK_THREADS_RELEASED))
-#define THREADS_RELEASED_MAX    ((uintptr_t)(MASK_THREADS_RELEASED / THREADS_RELEASED_ONE))
-
-#define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
-#define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE))
-
-#define SPIN_FAILURE_COUNT_ONE  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT & -MASK_SPIN_FAILURE_COUNT))
-#define SPIN_FAILURE_COUNT_MAX  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT / SPIN_FAILURE_COUNT_ONE))
-
-#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
-#define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
-
+#define MASK_THREADS_RELEASED   ((uintptr_t)( BSFB(0x03))) #define MASK_THREADS_SPINNING   ((uintptr_t)( BSFB(0x0C))) #define MASK_SPIN_FAILURE_COUNT ((uintptr_t)( BSFB(0xF0))) #define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSFB(0xFF))) 
+#define THREADS_RELEASED_ONE    ((uintptr_t)(MASK_THREADS_RELEASED & -MASK_THREADS_RELEASED)) #define THREADS_RELEASED_MAX    ((uintptr_t)(MASK_THREADS_RELEASED / THREADS_RELEASED_ONE)) 
+#define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING)) #define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE)) 
+#define SPIN_FAILURE_COUNT_ONE  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT & -MASK_SPIN_FAILURE_COUNT)) #define SPIN_FAILURE_COUNT_MAX  ((uintptr_t)(MASK_SPIN_FAILURE_COUNT / SPIN_FAILURE_COUNT_ONE)) 
+#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED)) #define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE)) 
 static_assert(__builtin_popcountll(MASK_THREADS_RELEASED) == __builtin_popcountll(MASK_THREADS_SPINNING), "MASK_THREADS_RELEASED must have the same number of bits set as MASK_THREADS_SPINNING.");
 
 #define MIN_SPIN_COUNT          ((uintptr_t)64)
@@ -55,8 +39,7 @@ static inline size_t Min(size_t uSelf, size_t uOther){
 	return (uSelf <= uOther) ? uSelf : uOther;
 }
 
-__attribute__((__always_inline__))
-static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut){
+__attribute__((__always_inline__)) static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl, _MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, size_t uMaxSpinCountInitial, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut){
 	size_t uMaxSpinCount, uSpinMultiplier;
 	bool bSignaled, bSpinnable;
 	{
@@ -193,8 +176,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	(*pfnRelockCallback)(nContext, nUnlocked);
 	return true;
 }
-__attribute__((__always_inline__))
-static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToReleaseOrSignal){
+__attribute__((__always_inline__)) static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToReleaseOrSignal){
 	uintptr_t uCountToRelease; // Number of threads spinning to release
 	uintptr_t uCountToSignal; // Number of threads trapped to signal
 	{

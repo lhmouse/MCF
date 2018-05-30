@@ -27,73 +27,62 @@ _MCFCRT_EXTERN_C_BEGIN
 #  pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece01_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece01_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*(volatile _MCFCRT_STD uint8_t *)*__wp = *(const _MCFCRT_STD uint8_t *)*__rp;
 	*__wp += 1;
 	*__rp += 1;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece01_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece01_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*__wp -= 1;
 	*__rp -= 1;
 	*(volatile _MCFCRT_STD uint8_t *)*__wp = *(const _MCFCRT_STD uint8_t *)*__rp;
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece02_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece02_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*(volatile _MCFCRT_STD uint16_t *)*__wp = *(const _MCFCRT_STD uint16_t *)*__rp;
 	*__wp += 2;
 	*__rp += 2;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece02_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece02_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*__wp -= 2;
 	*__rp -= 2;
 	*(volatile _MCFCRT_STD uint16_t *)*__wp = *(const _MCFCRT_STD uint16_t *)*__rp;
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece04_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece04_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*(volatile _MCFCRT_STD uint32_t *)*__wp = *(const _MCFCRT_STD uint32_t *)*__rp;
 	*__wp += 4;
 	*__rp += 4;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece04_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece04_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*__wp -= 4;
 	*__rp -= 4;
 	*(volatile _MCFCRT_STD uint32_t *)*__wp = *(const _MCFCRT_STD uint32_t *)*__rp;
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece08_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece08_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*(volatile _MCFCRT_STD uint64_t *)*__wp = *(const _MCFCRT_STD uint64_t *)*__rp;
 	*__wp += 8;
 	*__rp += 8;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece08_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece08_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*__wp -= 8;
 	*__rp -= 8;
 	*(volatile _MCFCRT_STD uint64_t *)*__wp = *(const _MCFCRT_STD uint64_t *)*__rp;
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece16_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece16_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
 	*__rp += 16;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece16_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece16_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	*__wp -= 16;
 	*__rp -= 16;
 	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
@@ -102,8 +91,7 @@ extern inline void __MCFCRT_memcpy_piece32_fwd(unsigned char **_MCFCRT_RESTRICT 
 	*__wp += 16;
 	*__rp += 16;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
@@ -113,8 +101,7 @@ extern inline void __MCFCRT_memcpy_piece32_bwd(unsigned char **_MCFCRT_RESTRICT 
 	_mm_storeu_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	_mm_store_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
@@ -123,8 +110,7 @@ extern inline void __MCFCRT_memcpy_aligned32_fwd(unsigned char **_MCFCRT_RESTRIC
 	*__wp += 16;
 	*__rp += 16;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;
@@ -134,8 +120,7 @@ extern inline void __MCFCRT_memcpy_aligned32_bwd(unsigned char **_MCFCRT_RESTRIC
 	_mm_store_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 }
 
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	_mm_stream_si128((__m128i *)*__wp, _mm_loadu_si128((const __m128i *)*__rp));
 	*__wp += 16;
@@ -144,8 +129,7 @@ extern inline void __MCFCRT_memcpy_nontemp32_fwd(unsigned char **_MCFCRT_RESTRIC
 	*__wp += 16;
 	*__rp += 16;
 }
-__attribute__((__gnu_inline__, __always_inline__))
-extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
+__attribute__((__gnu_inline__, __always_inline__)) extern inline void __MCFCRT_memcpy_nontemp32_bwd(unsigned char **_MCFCRT_RESTRICT __wp, const unsigned char **_MCFCRT_RESTRICT __rp) _MCFCRT_NOEXCEPT {
 	// TODO: Rewrite to make use of AVX in the future.
 	*__wp -= 16;
 	*__rp -= 16;

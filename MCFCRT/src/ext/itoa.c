@@ -5,8 +5,7 @@
 #include "itoa.h"
 #include "rep_movs.h"
 
-__attribute__((__always_inline__))
-static inline char *Really_itoa_u(char *restrict buffer, uintptr_t value, unsigned min_digits, const char *restrict table, unsigned radix){
+__attribute__((__always_inline__)) static inline char *Really_itoa_u(char *restrict buffer, uintptr_t value, unsigned min_digits, const char *restrict table, unsigned radix){
 	char temp[64];
 	char *const end = temp + 64;
 

@@ -7,7 +7,6 @@
 
 #undef free
 
-__attribute__((__noinline__))
-void free(void *p){
+__attribute__((__noinline__)) void free(void *p){
 	_MCFCRT_free(p);
 }

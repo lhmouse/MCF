@@ -5,8 +5,7 @@
 #include "wtoi.h"
 #include "rep_scas.h"
 
-__attribute__((__always_inline__))
-static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits, uintptr_t bound, const wchar_t *restrict dual_table, unsigned radix){
+__attribute__((__always_inline__)) static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *restrict result_out, uintptr_t *restrict value_out, const wchar_t *restrict buffer, unsigned max_digits, uintptr_t bound, const wchar_t *restrict dual_table, unsigned radix){
 	unsigned digits_read = 0;
 	_MCFCRT_wtoi_result result = _MCFCRT_wtoi_result_no_digit;
 	// Parse digits.

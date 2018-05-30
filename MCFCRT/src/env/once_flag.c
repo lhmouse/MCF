@@ -9,13 +9,10 @@
 #include "expect.h"
 #include <ntdef.h>
 
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
-__attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__)) extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__)) extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-__attribute__((__dllimport__, __stdcall__, __const__))
-extern BOOLEAN RtlDllShutdownInProgress(void);
+__attribute__((__dllimport__, __stdcall__, __const__)) extern BOOLEAN RtlDllShutdownInProgress(void);
 
 #ifndef __BYTE_ORDER__
 #  error Byte order is unknown.
@@ -26,18 +23,11 @@ extern BOOLEAN RtlDllShutdownInProgress(void);
 #  define BSFB(v_)              ((uintptr_t)(v_)            )
 #else
 #  define BSUSR(v_)             ((uintptr_t)(v_)                                        )
-#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT))
-#endif
+#  define BSFB(v_)              ((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)) #endif
 
-#define MASK_LOCKED             ((uintptr_t)( BSUSR(0x01)              ))
-#define MASK_FINISHED           ((uintptr_t)(                BSFB(0x01)))
-#define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSUSR(0x01) & ~BSFB(0xFF)))
-
-#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
-#define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
-
-__attribute__((__always_inline__))
-static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
+#define MASK_LOCKED             ((uintptr_t)( BSUSR(0x01)              )) #define MASK_FINISHED           ((uintptr_t)(                BSFB(0x01))) #define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSUSR(0x01) & ~BSFB(0xFF))) 
+#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED)) #define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE)) 
+__attribute__((__always_inline__)) static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
 		bool bFinished, bTaken = false;
 		{
@@ -95,8 +85,7 @@ static inline _MCFCRT_OnceResult ReallyWaitForOnceFlag(volatile uintptr_t *puCon
 		}
 	}
 }
-__attribute__((__always_inline__))
-static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFinished){
+__attribute__((__always_inline__)) static inline void ReallySignalOnceFlag(volatile uintptr_t *puControl, bool bFinished){
 	uintptr_t uCountToSignal;
 	{
 		uintptr_t uOld, uNew;

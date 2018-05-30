@@ -4,7 +4,6 @@
 
 #include "xsetjmp.h"
 
-__attribute__((__noreturn__))
-void __MCFCRT_longjmp_wrapper(void **env){
+__attribute__((__noreturn__)) void __MCFCRT_longjmp_wrapper(void **env){
 	__builtin_longjmp(env, 1);
 }

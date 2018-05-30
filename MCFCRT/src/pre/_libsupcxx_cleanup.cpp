@@ -3,8 +3,7 @@
 // Copyleft 2013 - 2018, LH_Mouse. All wrongs reserved.
 
 namespace __gnu_cxx {
-	__attribute__((__weak__))
-	void __freeres();
+	__attribute__((__weak__)) 	void __freeres();
 }
 
 extern "C" void __MCFCRT_libsupcxx_cleanup(){

@@ -7,7 +7,6 @@
 
 #undef calloc
 
-__attribute__((__noinline__))
-void *calloc(size_t nmemb, size_t size){
+__attribute__((__noinline__)) void *calloc(size_t nmemb, size_t size){
 	return _MCFCRT_calloc(nmemb, size);
 }

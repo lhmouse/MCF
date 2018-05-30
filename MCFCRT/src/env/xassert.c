@@ -8,8 +8,7 @@
 #include "../ext/wcppcpy.h"
 #include "../ext/itow.h"
 
-__attribute__((__noreturn__))
-void __MCFCRT_OnAssertionFailure(const wchar_t *pwszExpression, const wchar_t *pwszFile, unsigned long ulLine, const wchar_t *pwszMessage){
+__attribute__((__noreturn__)) void __MCFCRT_OnAssertionFailure(const wchar_t *pwszExpression, const wchar_t *pwszFile, unsigned long ulLine, const wchar_t *pwszMessage){
 	wchar_t awcBuffer[1024];
 	wchar_t *pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"调试断言失败。\n\n表达式：");
 	pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 256, pwszExpression); // 如果表达式太长，在此处截断。

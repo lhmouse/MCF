@@ -15,12 +15,9 @@ extern bool _MCFCRT_AtCrtModuleQuickExit(_MCFCRT_AtCrtModuleExitCallback __pfnPr
 
 extern void __MCFCRT_DiscardCrtModuleQuickExitCallbacks(void) _MCFCRT_NOEXCEPT;
 
-__attribute__((__noreturn__))
-extern void _MCFCRT_ImmediateExit(unsigned __uExitCode) _MCFCRT_NOEXCEPT;
-__attribute__((__noreturn__))
-extern void _MCFCRT_QuickExit(unsigned __uExitCode) _MCFCRT_NOEXCEPT;
-__attribute__((__noreturn__))
-extern void _MCFCRT_Exit(unsigned __uExitCode) _MCFCRT_NOEXCEPT;
+__attribute__((__noreturn__)) extern void _MCFCRT_ImmediateExit(unsigned __uExitCode) _MCFCRT_NOEXCEPT;
+__attribute__((__noreturn__)) extern void _MCFCRT_QuickExit(unsigned __uExitCode) _MCFCRT_NOEXCEPT;
+__attribute__((__noreturn__)) extern void _MCFCRT_Exit(unsigned __uExitCode) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

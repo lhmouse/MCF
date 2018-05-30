@@ -15,16 +15,13 @@
 #include "../env/mcfwin.h"
 
 extern unsigned _MCFCRT_Main(void);
-__attribute__((__weak__))
-extern void _MCFCRT_OnCtrlEvent(bool bIsSigInt);
+__attribute__((__weak__)) extern void _MCFCRT_OnCtrlEvent(bool bIsSigInt);
 
 // -Wl,-e@__MCFCRT_ExeStartup
-__attribute__((__noreturn__, __stdcall__))
-extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
+__attribute__((__noreturn__, __stdcall__)) extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("@__MCFCRT_ExeStartup");
 
-__attribute__((__force_align_arg_pointer__, __stdcall__))
-static BOOL CtrlHandler(DWORD dwCtrlType){
+__attribute__((__force_align_arg_pointer__, __stdcall__)) static BOOL CtrlHandler(DWORD dwCtrlType){
 	if(_MCFCRT_OnCtrlEvent){
 		const bool bIsSigInt = ((dwCtrlType == CTRL_C_EVENT) || (dwCtrlType == CTRL_BREAK_EVENT));
 		_MCFCRT_OnCtrlEvent(bIsSigInt);
@@ -80,8 +77,7 @@ static unsigned long WrappedTlsCallback(void *pOpaque){
 	}
 }
 
-__attribute__((__stdcall__))
-void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
+__attribute__((__stdcall__)) void __MCFCRT_ExeTlsCallback(PVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	__MCFCRT_CpuResetFloatingPointEnvironment();
 	TlsCallbackParams vParams = { hInstance, dwReason, pReserved };
 	_MCFCRT_WrapThreadProcWithSehTop(&WrappedTlsCallback, &vParams);
@@ -116,8 +112,7 @@ static unsigned long WrappedExeStartup(void *pOpaque){
 	return uExitCode;
 }
 
-__attribute__((__noreturn__, __stdcall__))
-DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
+__attribute__((__noreturn__, __stdcall__)) DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 	__MCFCRT_CpuResetFloatingPointEnvironment();
 	const unsigned long dwResult = _MCFCRT_WrapThreadProcWithSehTop(&WrappedExeStartup, _MCFCRT_NULLPTR);

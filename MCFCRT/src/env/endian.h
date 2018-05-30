@@ -14,16 +14,13 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 #define __MCFCRT_ENDIAN_DEFINE(__name_ld_, __name_st_, __name_mv_, __type_, __op_)	\
-	__attribute__((__artificial__))	\
-	__MCFCRT_ENDIAN_INLINE_OR_EXTERN __type_ __name_ld_(const __type_ *__r) _MCFCRT_NOEXCEPT {	\
+	__attribute__((__artificial__)) __MCFCRT_ENDIAN_INLINE_OR_EXTERN __type_ __name_ld_(const __type_ *__r) _MCFCRT_NOEXCEPT {	\
 		return __op_(*__r);	\
 	}	\
-	__attribute__((__artificial__))	\
-	__MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_st_(__type_ *__w, __type_ __n) _MCFCRT_NOEXCEPT {	\
+	__attribute__((__artificial__)) __MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_st_(__type_ *__w, __type_ __n) _MCFCRT_NOEXCEPT {	\
 		*__w = __op_(__n);	\
 	}	\
-	__attribute__((__artificial__))	\
-	__MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_mv_(__type_ *__w, const __type_ *__r) _MCFCRT_NOEXCEPT {	\
+	__attribute__((__artificial__)) __MCFCRT_ENDIAN_INLINE_OR_EXTERN void __name_mv_(__type_ *__w, const __type_ *__r) _MCFCRT_NOEXCEPT {	\
 		*__w = __op_(*__r);	\
 	}
 

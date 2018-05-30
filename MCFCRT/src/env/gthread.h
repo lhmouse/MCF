@@ -263,8 +263,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_detach(__gthread_t __tid)
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_equal(__gthread_t __tid1, __gthread_t __tid2) _MCFCRT_NOEXCEPT {
 	return __tid1 == __tid2;
 }
-__attribute__((__const__))
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN __gthread_t __MCFCRT_gthread_self(void) _MCFCRT_NOEXCEPT {
+__attribute__((__const__)) __MCFCRT_GTHREAD_INLINE_OR_EXTERN __gthread_t __MCFCRT_gthread_self(void) _MCFCRT_NOEXCEPT {
 	return _MCFCRT_GetCurrentThreadId();
 }
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_yield(void) _MCFCRT_NOEXCEPT {

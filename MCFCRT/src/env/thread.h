@@ -33,8 +33,7 @@ extern long _MCFCRT_ResumeThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEP
 extern bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle __hThread, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
-__attribute__((__const__))
-extern _MCFCRT_STD uintptr_t _MCFCRT_GetCurrentThreadId(void) _MCFCRT_NOEXCEPT;
+__attribute__((__const__)) extern _MCFCRT_STD uintptr_t _MCFCRT_GetCurrentThreadId(void) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

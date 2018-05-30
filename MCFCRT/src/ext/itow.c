@@ -5,8 +5,7 @@
 #include "itow.h"
 #include "rep_movs.h"
 
-__attribute__((__always_inline__))
-static inline wchar_t *Really_itow_u(wchar_t *restrict buffer, uintptr_t value, unsigned min_digits, const wchar_t *restrict table, unsigned radix){
+__attribute__((__always_inline__)) static inline wchar_t *Really_itow_u(wchar_t *restrict buffer, uintptr_t value, unsigned min_digits, const wchar_t *restrict table, unsigned radix){
 	wchar_t temp[64];
 	wchar_t *const end = temp + 64;
 

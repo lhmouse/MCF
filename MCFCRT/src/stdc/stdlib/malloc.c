@@ -7,7 +7,6 @@
 
 #undef malloc
 
-__attribute__((__noinline__))
-void *malloc(size_t cb){
+__attribute__((__noinline__)) void *malloc(size_t cb){
 	return _MCFCRT_malloc(cb);
 }

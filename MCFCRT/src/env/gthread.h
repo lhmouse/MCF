@@ -215,14 +215,14 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_broadcast(__gthread_
 typedef _MCFCRT_STD uintptr_t __gthread_t;
 
 typedef struct __MCFCRT_gthread_control {
-	void *(*__proc)(void *);
+	void * (*__proc)(void *);
 	void *__param;
 	void *__exit_code;
 } __MCFCRT_gthread_control_t;
 
 extern void __MCFCRT_gthread_mopthread_wrapper(void *__params) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT {
+__MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_create(__gthread_t *__tid_ret, void * (*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT {
 	__MCFCRT_gthread_control_t __control = { __proc, __param, (void *)0xDEADBEEF };
 	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_MopthreadCreate(&__MCFCRT_gthread_mopthread_wrapper, &__control, sizeof(__control));
 	if(__tid == 0){

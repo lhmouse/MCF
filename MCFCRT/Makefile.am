@@ -246,8 +246,8 @@ MCFCRT_2_dll_SOURCES = \
 	${mcfcrt_sources}
 
 MCFCRT_2_dll_LDFLAGS = \
-	-shared -static -nostdlib -mwindows	\
-	-Wl,-e@__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
+	-shared -static -nostdlib	\
+	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows:6.0,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 

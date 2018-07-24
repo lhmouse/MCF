@@ -31,8 +31,9 @@ static inline long double fpu_hypot(long double x, long double y){
 			xr.__val = x;
 			yr.__val = y;
 			rr.__sign = (bool)(xr.__sign & yr.__sign);
-			rr.__exp = 0x7FFF; // Special exponent for NaN.
-			rr.__mts_q = (xr.__mts_q & yr.__mts_q) | 1; // Make sure the result is not zero.
+			rr.__exp = 0x7FFF; // Set the special exponent for NaN.
+			rr.__mts_l = 0xFFFFFFFF; // Eneure a non-zero mantissa.
+			rr.__mts_h = xr.__mts_h & yr.__mts_h;
 			return rr.__val;
 		}
 		return x;

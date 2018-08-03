@@ -10,31 +10,25 @@
 extern void _pei386_runtime_relocator(void);
 extern void __MCFCRT_libsupcxx_cleanup(void);
 
-typedef void (*Pvfv)(void);
+extern const intptr_t __CTOR_LIST__[], __CTOR_END__[];
+extern const intptr_t __DTOR_LIST__[], __DTOR_END__[];
 
-extern const Pvfv __CTOR_LIST__[];
-extern const Pvfv __DTOR_LIST__[];
-
-static void RunGlobalConstructors(void){
-	const Pvfv *ppfnBegin, *ppfnEnd;
-	ppfnEnd = ppfnBegin = __CTOR_LIST__ + 1;
-	while(*ppfnEnd){
-		++ppfnEnd;
-	}
-	while(ppfnBegin != ppfnEnd){
-		--ppfnEnd;
-		(**ppfnEnd)();
+static void Run_global_ctors(void){
+	for(const intptr_t *ptr = __CTOR_LIST__ + 1; ptr != __CTOR_END__; ++ptr){
+		const intptr_t value = *ptr;
+		if(value <= 0){
+			continue;
+		}
+		(*(void (*)(void))value)();
 	}
 }
-static void RunGlobalDestructors(void){
-	const Pvfv *ppfnBegin, *ppfnEnd;
-	ppfnEnd = ppfnBegin = __DTOR_LIST__ + 1;
-	while(*ppfnEnd){
-		++ppfnEnd;
-	}
-	while(ppfnBegin != ppfnEnd){
-		(**ppfnBegin)();
-		++ppfnBegin;
+static void Run_global_dtors(void){
+	for(const intptr_t *ptr = __DTOR_END__ - 1; ptr != __DTOR_LIST__; --ptr){
+		const intptr_t value = *ptr;
+		if(value <= 0){
+			continue;
+		}
+		(*(void (*)(void))value)();
 	}
 }
 
@@ -50,13 +44,13 @@ static void Dispose_atexit_queue(void){
 bool __MCFCRT_ModuleInit(void){
 	_pei386_runtime_relocator();
 	__MCFCRT_TlsInit();
-	RunGlobalConstructors();
+	Run_global_ctors();
 	return true;
 }
 void __MCFCRT_ModuleUninit(void){
 	Dispose_atexit_queue();
+	Run_global_dtors();
 	__MCFCRT_TlsUninit();
-	RunGlobalDestructors();
 	__MCFCRT_libsupcxx_cleanup();
 }
 

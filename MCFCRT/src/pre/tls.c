@@ -18,8 +18,6 @@ bool __MCFCRT_TlsInit(void){
 	return true;
 }
 void __MCFCRT_TlsUninit(void){
-	__MCFCRT_TlsCleanup();
-
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 

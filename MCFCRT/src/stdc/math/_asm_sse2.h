@@ -90,7 +90,7 @@ static inline float __MCFCRT_xmmabsss(float __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
 		"andnps %0, %2 \n"
 		: "=x"(__ret)
-		: "0"(-(float)0), "x"(__x)
+		: "0"(-0.0f), "x"(__x)
 	);
 	return __ret;
 }
@@ -99,7 +99,7 @@ static inline double __MCFCRT_xmmabssd(double __x) _MCFCRT_NOEXCEPT {
 	__asm__ (
 		"andnpd %0, %2 \n"
 		: "=x"(__ret)
-		: "0"(-(double)0), "x"(__x)
+		: "0"(-0.0), "x"(__x)
 	);
 	return __ret;
 }
@@ -111,7 +111,7 @@ static inline float __MCFCRT_xmmcopysignss(float __x, float __y) _MCFCRT_NOEXCEP
 		"andps %1, %4 \n"
 		"xorps %0, %1 \n"
 		: "=&x"(__ret), "=&x"(__dumb)
-		: "0"(__x), "1"(__y), "x"(-(float)0)
+		: "0"(__x), "1"(__y), "x"(-0.0f)
 	);
 	return __ret;
 }
@@ -122,7 +122,7 @@ static inline double __MCFCRT_xmmcopysignsd(double __x, double __y) _MCFCRT_NOEX
 		"andpd %1, %4 \n"
 		"xorpd %0, %1 \n"
 		: "=&x"(__ret), "=&x"(__dumb)
-		: "0"(__x), "1"(__y), "x"(-(double)0)
+		: "0"(__x), "1"(__y), "x"(-0.0)
 	);
 	return __ret;
 }

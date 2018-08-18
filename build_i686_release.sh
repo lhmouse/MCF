@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e
+#!/bin/bash -e
 
 prefix="$(pwd)/release/mingw32"
 mkdir -p "$prefix"

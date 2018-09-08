@@ -23,7 +23,8 @@ static inline long double fpu_cbrt(long double x){
 	}
 	const long double xabs = __MCFCRT_fabs(x);
 	// x^(1/3) = 2^(log2(x)/3)
-	const long double ylog2x = __MCFCRT_fyl2x(1, xabs) / 3;
+	const long double three = 3;
+	const long double ylog2x = __MCFCRT_fyl2x(1 / three, xabs);
 	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
 	long double ret = __MCFCRT_fscale(1, i) * (__MCFCRT_f2xm1(m) + 1);
 	if(xsign){

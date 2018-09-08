@@ -113,8 +113,8 @@ static inline long double fpu_pow(long double x, long double y){
 		bool bits[3];
 		rsign = (__MCFCRT_fmod(&bits, y, 2) != 0);
 	}
-	// x^y = 2^(y* log2(x))
-	const long double ylog2x = y * __MCFCRT_fyl2x(1, xabs);
+	// x^y = 2^(y*log2(x))
+	const long double ylog2x = __MCFCRT_fyl2x(y, xabs);
 	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
 	long double ret = __MCFCRT_fscale(1, i) * (__MCFCRT_f2xm1(m) + 1);
 	if(rsign){
